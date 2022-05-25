@@ -1,0 +1,30 @@
+{
+    "setups": {
+        "l200": {
+            "paths": {
+                "orig": "$_/inputs/tier/",
+                "gendata": "$_/generated/tier",
+                "config": "$_/inputs/cfg",
+                "par": "$_/generated/par",
+                "log": "$_/generated/tmp/log",
+                "tmp_par": "$_/generated/tmp/par",
+                "plt": "$_/generated/plt",
+                "par_overwrite": "$_/inputs/par_overwrite",
+                "src": {
+                    "python": "$_/src/python"
+                }
+            },
+            "execenv": {
+                "default": {
+                    "env": {
+                        "VENV_BASE_DIR": "$_/venv"
+                    },
+                    "exec": [
+                        "/lfs/l1/legend/legend-prodenv/tools/bin/venv",
+                        "default"
+                    ]
+                }
+            }
+        }
+    }
+}
