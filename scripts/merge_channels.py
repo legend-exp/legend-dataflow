@@ -3,7 +3,7 @@ import snakemake as smk
 from utils import *
 import pathlib
 
-channel_files = snakemake.input[0]
+channel_files = snakemake.input
 
 if isinstance(channel_files,str):
     if channel_files.split('.')[-1] == 'chanlist':
