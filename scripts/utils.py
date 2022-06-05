@@ -31,6 +31,9 @@ def plts_path(setup):
 def par_overwrite_path(setup):
     return setup["paths"]["par_overwrite"]
 
+def log_path(setup):
+    return setup["paths"]["log"]
+
 
 def key_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}"
