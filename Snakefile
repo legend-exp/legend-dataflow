@@ -6,7 +6,7 @@ import pathlib, os, json
 
 subst_vars_in_snakemake_config(workflow, config)
 
-setup = config["setups"]["l200"]
+setup = config["setups"]["l200hades"]
 configs = config_path(setup)
 swenv = runcmd(setup, "default")
 
@@ -21,7 +21,7 @@ rule do_nothing:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen")
-    shell("rm {log_path}/*")
+    shell(f'rm {log_path(setup)}/*')
 
 #Placeholder can email or maybe put message in slack
 onerror:
@@ -31,7 +31,7 @@ onerror:
 # based on available tier0 files.
 rule autogen_keylist:
     output:
-        temp(os.path.join(log_path,"all{keypart}.filekeylist"))
+        temp(os.path.join(log_path(setup),"all{keypart}.filekeylist"))
     params:
         setup = lambda wildcards: setup
     script:
@@ -48,16 +48,16 @@ rule build_channel_keylist:
     input:
         read_filelist_tcm_cal_channel
     output:
-        temp(os.path.join(log_path,"all-{experiment}-{period}-{run}-cal-channels.chankeylist"))
+        temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-channels.chankeylist"))
     script:
         "scripts/create_chankeylist.py"
 
 
 checkpoint gen_filelist:
     input:
-        os.path.join(log_path,"{label}.{extension}keylist")
+        os.path.join(log_path(setup),"{label}.{extension}keylist")
     output:
-        os.path.join(log_path,"{label}-{tier}.{extension}list")
+        os.path.join(log_path(setup),"{label}-{tier}.{extension}list")
     params:
         setup = lambda wildcards: setup
     script:
@@ -112,7 +112,7 @@ rule build_tier_tcm:
 
 rule build_pars_dsp_tau:
     input:
-        files = os.path.join(log_path,"all-{experiment}-{period}-{run}-cal-raw.filelist")#read_filelist_raw_cal_channel
+        files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist")#read_filelist_raw_cal_channel
     output:
         decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
         plots = temp(get_pattern_plts_tmp_channel(setup, "dsp","decay_constant"))
@@ -125,7 +125,7 @@ rule build_pars_dsp_tau:
 #This rule builds all the energy grids used for the energy optimisation using calibration dsp files (These could be temporary?)
 rule build_pars_dsp_egrids:
     input:
-        files = os.path.join(log_path,"all-{experiment}-{period}-{run}-cal-raw.filelist"),#read_filelist_raw_cal_channel,
+        files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),#read_filelist_raw_cal_channel,
         decay_const = get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
     output:
         temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid"))
@@ -138,7 +138,7 @@ rule build_pars_dsp_egrids:
 #This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
-        files = os.path.join(log_path,"all-{experiment}-{period}-{run}-cal-raw.filelist"),
+        files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),
         peak_files = expand(get_energy_grids_pattern_combine(setup), peak = [238.632,   583.191, 727.330, 860.564, 1620.5, 2614.553]),
         decay_const = get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
     output:
@@ -165,7 +165,7 @@ rule build_pars_dsp:
     input:
         read_filelist_pars_dsp_cal_channel
     output:
-        get_pattern_pars(setup, "dsp", "dsp_pars")
+        get_pattern_pars(setup, "dsp")
     group: "merge-dsp"
     script:
         "scripts/merge_channels.py"
@@ -176,7 +176,7 @@ def get_pars_dsp_file(wildcards):
     """
     #check pars overwrite
     #check which pars file needed
-    return os.path.join(f"{pars_path(setup)}","dsp","cal",wildcards.period,wildcards.run, f"dsp_pars-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-dsp.json")
+    return os.path.join(f"{pars_path(setup)}","dsp","cal",wildcards.period,wildcards.run, f"{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-pars_dsp.json")
 
 rule build_dsp:
     input:
@@ -243,14 +243,14 @@ def get_pars_hit_file(wildcards):
     default = get_pattern_pars(setup,"hit", "hit_pars")
     #check pars overwrite
     #check which pars file needed
-    return os.path.join(f"{pars_path(setup)}","hit","cal",wildcards.period,wildcards.run, f"hit_pars-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-hit.json")
+    return os.path.join(f"{pars_path(setup)}","hit","cal",wildcards.period,wildcards.run, f"{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-pars_hit.json")
 
 
 checkpoint build_pars_hit:
     input:
         read_filelist_pars_hit_cal_channel
     output:
-        get_pattern_pars(setup,"hit", "hit_pars")
+        get_pattern_pars(setup,"hit")
     group: "merge-hit"
     script:
         "scripts/merge_channels.py"

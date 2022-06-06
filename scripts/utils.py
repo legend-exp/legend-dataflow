@@ -42,27 +42,30 @@ def get_pattern_evts(setup, tier):
     if tier == "daq":
         return os.path.join(f"{inputdata_path(setup)}","daq", "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.fcio")
     else:
-        return os.path.join(f"{evts_path(setup)}", tier, "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-" + tier + ".lh5")
+        return os.path.join(f"{evts_path(setup)}", tier, "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_" + tier + ".lh5")
 
-def get_pattern_pars(setup, tier, name):
-    return os.path.join(f"{pars_path(setup)}", tier,  "cal", "{period}", "{run}", name+"-{experiment}-{period}-{run}-cal-"+tier+".json")
+def get_pattern_pars(setup, tier, name = None):
+    if name is not None:
+        return os.path.join(f"{pars_path(setup)}", tier,  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-pars_"+tier+"_"+name+".json")
+    else:
+        return os.path.join(f"{pars_path(setup)}", tier,  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-pars_"+tier+".json")
 
 def get_pattern_pars_tmp_channel(setup, tier, name):
     if name =="energy_grid":
-        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" , "energy_grid", "{channel}", "energy_grid-{experiment}-{period}-{run}-{peak}-{channel}-dsp.pkl")
+        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" , "energy_grid", "{channel}", "{experiment}-{period}-{run}-{channel}-{peak}-pars_dsp_energy_grid.pkl")
     elif name == "energy_grid_at_qbb":
-        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}",  "{run}", "energy_grid_qbb", "{channel}", "energy_grid-{experiment}-{period}-{run}-qbb-{channel}-dsp.pkl")
+        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}",  "{run}", "energy_grid_qbb", "{channel}", "{experiment}-{period}-{run}-{channel}-qbb-pars_dsp_energy_grid.pkl")
     else:
-        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" , name, "{channel}", name+"-{experiment}-{period}-{run}-{channel}-"+tier+".json")
+        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , name, "{experiment}-{period}-{run}-{channel}-pars_"+tier+"_"+name+".json")
 
 def get_pattern_plts_tmp_channel(setup, tier, name):
-    return os.path.join(f"{plts_path(setup)}", "plts",tier,"cal", "{period}", "{run}",name+"-{experiment}-{period}-{run}-{channel}-"+tier+".pdf")
+    return os.path.join(f"{plts_path(setup)}", "plts",tier,"cal", "{period}", "{run}","{experiment}-{period}-{run}-{channel}-plts_"+tier+"_"+name+".pdf")
 
 def get_pattern_plts(setup, tier, name):
-    return os.path.join(f"{plts_path(setup)}", tier,"cal", "{period}", "{run}", name+"-{experiment}-{period}-{run}-"+tier+".pdf")
+    return os.path.join(f"{plts_path(setup)}", tier,"cal", "{period}", "{run}", "{experiment}-{period}-{run}-plts_"+tier+"_"+name+".pdf")
 
 def get_energy_grids_pattern_combine(setup):
-    return os.path.join(f"{tmp_par_path(setup)}", "dsp", "cal",  "{{period}}", "{{run}}" , "energy_grid", "{{channel}}", "energy_grid-{{experiment}}-{{period}}-{{run}}-{peak}-{{channel}}-dsp.pkl")
+    return os.path.join(f"{tmp_par_path(setup)}", "dsp", "cal",  "{{period}}", "{{run}}" , "energy_grid", "{{channel}}", "{{experiment}}-{{period}}-{{run}}-{{channel}}-{peak}-pars_dsp_energy_grid.pkl")
 
 def runcmd(setup, envname):
     envcfg = setup["execenv"][envname]
