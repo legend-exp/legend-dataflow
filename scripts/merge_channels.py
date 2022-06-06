@@ -16,7 +16,7 @@ out_dict = {}
 for channel in channel_files:
     with open(channel,"r") as r:
         channel_dict = json.load(r)
-    name, experiment, period, run,channel_name, tier = os.path.basename(channel).split("-")
+    experiment, period, run,channel_name, name = os.path.basename(channel).split("-")
 
     out_dict[channel_name] = channel_dict
 
