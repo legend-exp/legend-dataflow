@@ -39,6 +39,8 @@ def load_all_grids(files, parameters):
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs='*',type=str)
+argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
+argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
@@ -47,6 +49,11 @@ argparser.add_argument("--decay_const", help="decay_const", type=str, required=T
 argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
 args = argparser.parse_args()
     
+cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
+configs = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+channel_dict = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]['processing_chain']
+opt_dict = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]["optimiser_config"]
+
 final_db_dict = {
     "pz": {
 	"tau": 2886.0

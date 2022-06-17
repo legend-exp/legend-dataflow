@@ -8,17 +8,17 @@ from collections import OrderedDict
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
+argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
+argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--plot_path", help="plot path", type=str, required=False)
 argparser.add_argument("--output_file", help="output file", type=str, required=True)
 
 argparser.add_argument("input", help="input file", nargs='*',type=str)
 args = argparser.parse_args()
 
-
-f_config = os.path.join(f"{args.configs}", "main_initial_dsp_config.json")
-
-with open(f_config) as f:
-    config_dic = json.load(f, object_pairs_hook=OrderedDict) 
+cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
+channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+channel_dict = channel_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['processing_chain']
 
 input_file = args.input
 
