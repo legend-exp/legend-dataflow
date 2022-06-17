@@ -27,7 +27,68 @@ cal_energy_param = 'cuspEmax_ctc'
 
 #out_dict = cal_aoe(files, cal_dict, energy_param, cal_energy_param, dt_corr=False, cut_parameters=cut_parameters, plot_savepath=args.plot_file)
 
-out_dict = {"ecal_pars":[1,1],"aoe_pars":[1,1]}
+"""
+cal_dict = "ecal": {
+            "function": "a+b*x",
+            "parameter": "cuspEmax_ctc",
+            "params":{
+                "a":1,
+                "b":1
+            }
+        },
+        "eres":{
+            "function": "sqrt(a+b*x)",
+            "parameter": "cuspEmax_ctc",
+            "params":{
+                "a":1,
+                "b":1
+            }
+        },
+        "aoecal": {
+            "current_parameter": "A_max",
+            "energy_parameter": "cuspEmax",
+            "cal_energy_parameter": "cuspEmax_ctc",
+            "mean":{
+                "function": "a+b*x",
+                "params":{
+                    "a":1,
+                    "b":1
+                    }
+                },
+            "sigma":{
+                "function": "sqrt(a+(B/x)**c)",
+                "params":{
+                    "a":1,
+                    "b":1,
+                    "c":1
+                }
+            }
+        }
+"""
+
+#out_dict = {"ecal_pars":cal_dict,"aoe_pars":cal_dict}
+
+cal_dict = {
+    "corrections":{
+        "cuspEmax_ctc":{
+            "a":0,
+            "b":0
+        },
+        "A_max/cuspEmax":{
+            "a":0,
+            "b":0,
+            "c":0,
+            "d":0,
+            "e":0
+        }
+    },
+    "cuts":{
+        "A/E":{
+            "a":-1
+            "b":1
+        }
+    }
+}
 
 if args.hit_pars is not None:
     pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
