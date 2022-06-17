@@ -1,7 +1,6 @@
 import snakemake as smk
-import os, re, glob
-
-from utils import *
+from util.FileKey import *
+from util.patterns import *
 
 setup = snakemake.params.setup
 
@@ -9,12 +8,16 @@ dataset_file = snakemake.input[0]
 tier = snakemake.wildcards.tier
 keypart = snakemake.wildcards.label
 
-name = f'{tier}_pars'
 
-d = parse_channel_keypart(keypart)
+filenames = ChannelFileKey.get_channel_files(setup, keypart, tier, dataset_file)
 
-par_pattern = get_pattern_pars_tmp_channel(setup,tier,name)
-par_pattern_rx = re.compile(smk.io.regex(par_pattern))
+with open(snakemake.output[0], 'w') as f:
+    for fn in filenames:
+        f.write(f"{fn}\n")
+
+"""
+d = ChannelFileKey.parse_keypart(keypart)
+par_pattern = get_pattern_pars_tmp_channel(setup,tier)
 
 filenames = []
 with open(dataset_file) as f:
@@ -26,3 +29,4 @@ with open(dataset_file) as f:
 with open(snakemake.output[0], 'w') as f:
     for fn in filenames:
         f.write(f"{fn}\n")
+"""
