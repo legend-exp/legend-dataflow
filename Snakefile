@@ -21,7 +21,7 @@ rule do_nothing:
 onstart:
     print("Starting workflow")
     shell(f'rm {pars_path(setup)}/key_resolve.jsonl || true')
-    ds.pars_key_resolve.write_par_catalog(setup,['-l60-*-*-cal'],os.path.join(pars_path(setup),'key_resolve.jsonl'))
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'key_resolve.jsonl'))
 
 onsuccess:
     print("Workflow finished, no error")

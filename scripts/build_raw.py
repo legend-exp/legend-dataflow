@@ -1,7 +1,7 @@
 import argparse, os, pathlib
 
 import pygama
-from pygama.io.daq_to_raw import * 
+from pygama.raw.build_raw import * 
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -13,4 +13,4 @@ pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 # ToDo: Atomic file creation
 
-daq_to_raw(args.input, args.output, config={"daq":"ORCA"})
+build_raw(args.input, in_stream_type='ORCA', out_spec=args.output)
