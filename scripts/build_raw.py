@@ -13,4 +13,13 @@ pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 # ToDo: Atomic file creation
 
-build_raw(args.input, in_stream_type='ORCA', out_spec=args.output)
+out_spec = {
+  "ORFlashCamADCWaveformDecoder" : {
+    "ch{key:03d}/raw" : {
+      "key_list" : ["*"],
+      "out_stream" : args.output
+    }
+  }
+}
+
+build_raw(args.input, in_stream_type='ORCA', out_spec=out_spec)
