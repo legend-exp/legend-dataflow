@@ -44,6 +44,9 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
             for entry in list(d):
                 if entry not in ['experiment', 'period', 'run', 'datatype', 'timestamp']:
                     d.pop(entry)
+            for wildcard in ['experiment', 'period', 'run', 'datatype', 'timestamp']:
+                if wildcard not in d:
+                    d[wildcard] = '*'
             return cls(**d)
         
     def get_path_from_filekey(self, path_patttern):
