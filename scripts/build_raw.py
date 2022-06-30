@@ -1,9 +1,7 @@
 import argparse, os, pathlib
 
 import pygama
-from pygama.io.fcdaq import * 
-
-import numpy as np
+from pygama.io.daq_to_raw import * 
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -15,4 +13,4 @@ pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 # ToDo: Atomic file creation
 
-process_flashcam(args.input, args.output, np.inf)
+daq_to_raw(args.input, args.output, config={"daq":"ORCA"})

@@ -13,7 +13,7 @@ class pars_catalog(CalibCatalog):
     @staticmethod
     def match_pars_files(filelist1, filelist2):
         for file2 in filelist2:
-            fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)#, f'{par_pattern()}.json'
+            fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)
             for j,file1 in enumerate(filelist1):
                 fk1 = ProcessingFileKey.get_filekey_from_pattern(file1)
                 if fk1.processing_step == fk2.processing_step and fk1.datatype == fk2.datatype:

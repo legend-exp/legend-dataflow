@@ -5,6 +5,7 @@ from .utils import *
 import argparse
 from .FileKey import *
 from .patterns import *
+import pathlib
 
 class pars_key_resolve():
     
@@ -72,7 +73,7 @@ class pars_key_resolve():
     @staticmethod
     def get_keys(keypart, setup):
         d = FileKey.parse_keypart(keypart)
-        tier0_pattern = get_pattern_evts(setup, "daq")
+        tier0_pattern = get_pattern_tier_daq(setup)
         tier0_pattern_rx = re.compile(smk.io.regex(tier0_pattern))
         fn_glob_pattern = smk.io.expand(tier0_pattern, **d._asdict())[0]
         files = glob.glob(fn_glob_pattern)
@@ -95,5 +96,6 @@ class pars_key_resolve():
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
         entrylist = pars_key_resolve.match_all_entries(keylist)
+        pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
         pars_key_resolve.write_to_jsonl(entrylist, filename)
         

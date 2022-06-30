@@ -7,9 +7,9 @@ from scripts.util.patterns import *
 
 subst_vars_in_snakemake_config(workflow, config)
 
-setup = config["setups"]["l200hades"]
+setup = config["setups"]["l200"]
 configs = config_path(setup)
-swenv = runcmd(setup, "default")
+swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
@@ -21,7 +21,7 @@ rule do_nothing:
 onstart:
     print("Starting workflow")
     shell(f'rm {pars_path(setup)}/key_resolve.jsonl || true')
-    ds.pars_key_resolve.write_par_catalog(setup,['-l200-*-*-cal'],os.path.join(pars_path(setup),'key_resolve.jsonl'))
+    ds.pars_key_resolve.write_par_catalog(setup,['-l60-*-*-cal'],os.path.join(pars_path(setup),'key_resolve.jsonl'))
 
 onsuccess:
     print("Workflow finished, no error")
@@ -89,9 +89,9 @@ rule autogen_output:
 
 rule build_raw:
     input:
-        get_pattern_evts(setup, "daq")
+        get_pattern_tier_daq(setup)
     output:
-        get_pattern_evts(setup, "raw")
+        get_pattern_tier_raw(setup)
     group: "tier-raw"
     resources:
         runtime=300
@@ -101,9 +101,9 @@ rule build_raw:
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
     input:
-        get_pattern_evts(setup, "raw")
+        get_pattern_tier_raw(setup)
     output:
-        get_pattern_evts(setup, "tcm")
+        get_pattern_tier_tcm(setup)
     group: "tier-tcm"
     resources:
         runtime=300
@@ -180,7 +180,7 @@ rule build_pars_dsp:
     input:
         read_filelist_pars_dsp_cal_channel
     output:
-        get_pattern_pars(setup, "dsp")
+        get_pattern_par_dsp(setup)
     group: "merge-dsp"
     script:
         "scripts/merge_channels.py"
@@ -193,13 +193,13 @@ def get_pars_dsp_file(wildcards):
 
 rule build_dsp:
     input:
-        raw_file = get_pattern_evts(setup, "raw"),
+        raw_file = get_pattern_tier_raw(setup),
         pars_file = get_pars_dsp_file
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
     output:
-        get_pattern_evts(setup, "dsp")
+        get_pattern_tier_dsp(setup)
     group: "tier-dsp"
     resources:
         runtime=300
@@ -262,17 +262,17 @@ checkpoint build_pars_hit:
     input:
         read_filelist_pars_hit_cal_channel
     output:
-        get_pattern_pars(setup,"hit")
+        get_pattern_par_hit(setup)
     group: "merge-hit"
     script:
         "scripts/merge_channels.py"
 
 rule build_hit:
     input:
-        dsp_file = get_pattern_evts(setup, "dsp"),
+        dsp_file = get_pattern_tier_dsp(setup),
         pars_file = get_pars_hit_file
     output:
-        get_pattern_evts(setup, "hit")
+        get_pattern_tier_hit(setup)
     group: "tier-hit"
     resources:
         runtime=300

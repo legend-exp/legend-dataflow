@@ -32,12 +32,12 @@ with open(snakemake.output[0], 'w') as f:
         f.write(f"{key}\n")
 """
 
-key = FileKey.parse_keypart('-l200')
-fn_glob_pattern = key.get_path_from_filekey(get_pattern_evts(setup, "daq"))[0]
+key = FileKey.parse_keypart(keypart)
+fn_glob_pattern = key.get_path_from_filekey(get_pattern_tier_daq(setup))[0]
 files = glob.glob(fn_glob_pattern)
 keys = []
 for f in files:
-    key = FileKey.get_filekey_from_pattern(f,get_pattern_evts(setup, "daq"))
+    key = FileKey.get_filekey_from_pattern(f,get_pattern_tier_daq(setup))
     keys.append(key.name)
 
 with open(snakemake.output[0], 'w') as f:

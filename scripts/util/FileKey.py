@@ -86,7 +86,7 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
 
     @staticmethod
     def tier_files(setup, dataset_file, tier):
-        fn_pattern = get_pattern_evts(setup, tier)
+        fn_pattern = get_pattern_tier(setup, tier)
         files = []
         with open(dataset_file) as f:
             for line in f:

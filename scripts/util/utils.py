@@ -15,11 +15,41 @@ from datetime import datetime
 def inputdata_path(setup):
     return setup["paths"]["orig"]
 
-def evts_path(setup):
-    return setup["paths"]["gendata"]
+def tier_daq_path(setup):
+    return setup["paths"]["orig"]
+
+def tier_tcm_path(setup):
+    return setup["paths"]["tier_tcm"]
+
+def tier_raw_path(setup):
+    return setup["paths"]["tier_raw"]
+
+def tier_dsp_path(setup):
+    return setup["paths"]["tier_dsp"]
+
+def tier_hit_path(setup):
+    return setup["paths"]["tier_hit"]
+
+def tier_evt_path(setup):
+    return setup["paths"]["tier_evt"]
 
 def config_path(setup):
     return setup["paths"]["config"]
+
+def par_raw_path(setup):
+    return setup["paths"]["par_raw"]
+
+def par_tcm_path(setup):
+    return setup["paths"]["par_tcm"]
+
+def par_dsp_path(setup):
+    return setup["paths"]["par_dsp"]
+
+def par_hit_path(setup):
+    return setup["paths"]["par_hit"]
+
+def par_evt_path(setup):
+    return setup["paths"]["par_evt"]
 
 def pars_path(setup):
     return setup["paths"]["par"]
@@ -34,16 +64,13 @@ def par_overwrite_path(setup):
     return setup["paths"]["par_overwrite"]
 
 def log_path(setup):
-    return setup["paths"]["log"]
+    return setup["paths"]["tmp_log"]
 
-def runcmd(setup, envname):
-    envcfg = setup["execenv"][envname]
-    execcmd = envcfg["exec"]
-    joined_cmd = execcmd if isinstance(execcmd, str) else " ".join(execcmd)
-    envdefs = ""
-    if "env" in envcfg:
-        envdefs = " ".join([f"{key}={value}" for key, value in envcfg["env"].items()]) + " "
-    return  envdefs + joined_cmd
+def runcmd(setup):
+    exec_cmd = setup['execenv']['cmd']
+    exec_arg = setup['execenv']['arg']
+    path_install  = setup['paths']['install']
+    return f'PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}'
 
 """
 def parse_keypart(keypart):
@@ -139,7 +166,7 @@ def run_splitter(files):
 
 def unix_time(value):
     if isinstance(value, str):
-        return datetime.timestamp(datetime.strptime(value, '%Y%m%dT%H%M%S'))
+        return datetime.timestamp(datetime.strptime(value, '%Y%m%dT%H%M%SZ'))
     else:
         raise ValueError("Can't convert type {t} to unix time".format(t = type(value)))
 
