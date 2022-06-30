@@ -69,25 +69,53 @@ cal_dict = "ecal": {
 #out_dict = {"ecal_pars":cal_dict,"aoe_pars":cal_dict}
 
 cal_dict = {
-    "corrections":{
-        "cuspEmax_ctc":{
-            "a":0,
-            "b":0
+    "001": {
+        "operation1": {
+            "inputs":["cuspEmax"],
+            "outputs":["cal_energy"] ,
+            "function":"a+b*cuspEmax",
+            "pars":{"a":1, "b":1}
         },
-        "A_max/cuspEmax":{
-            "a":0,
-            "b":0,
-            "c":0,
-            "d":0,
-            "e":0
+
+        "operation2": {
+            "inputs":["A_max", "cuspEmax", "cuspEmax_ctc"],
+            "outputs":["aoe_classifier"] ,
+            "function":"(((A_max/cuspEmax)/(a+b*cuspEmax_ctc)) -1 )/sqrt(c+(d/cuspEmax_ctc)**e)",
+            "pars":{"a":1, "b":1, "c":1, "d":1, "e":1}
+        },
+
+        "operation3": {
+            "inputs":["aoe_classifier"],
+            "outputs":["aoe_pass"] ,
+            "function":"a<aoe_pass<b",
+            "pars":{"a":-1, "b":1}
         }
     },
-    "cuts":{
-        "A/E":{
-            "a":-1
-            "b":1
+
+    "002": {
+        "operation1": {
+            "inputs":["cuspEmax"],
+            "outputs":["cal_energy"] ,
+            "function":"a+b*cuspEmax",
+            "pars":{"a":1, "b":1}
+        },
+
+        "operation2": {
+            "inputs":["A_max", "cuspEmax", "cuspEmax_ctc"],
+            "outputs":["aoe_classifier"] ,
+            "function":"(((A_max/cuspEmax)/(a+b*cuspEmax_ctc)) -1 )/sqrt(c+(d/cuspEmax_ctc)**e)",
+            "pars":{"a":1, "b":1, "c":1, "d":1, "e":1}
+        },
+
+        "operation3": {
+            "inputs":["aoe_classifier"],
+            "outputs":["aoe_pass"] ,
+            "function":"a<aoe_pass<b",
+            "pars":{"a":-1, "b":1}
         }
+        
     }
+
 }
 
 if args.hit_pars is not None:
