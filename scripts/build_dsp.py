@@ -1,7 +1,7 @@
 import argparse, os, pathlib
 
 import pygama
-from pygama.io.raw_to_dsp import raw_to_dsp
+from pygama.dsp.build_dsp import build_dsp
 
 import json
 from collections import OrderedDict
@@ -22,9 +22,6 @@ channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp,
 
 channel_dict = channel_dict['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 
-print(channel_dict)
-
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-#raw_to_dsp(args.input, args.output, {}, database = database_dic, chan_config=f_config, verbose=True, overwrite=False)
-pathlib.Path(args.output).touch()
+build_dsp(args.input, args.output, {}, chan_config=channel_dict, verbose=True, overwrite=False) #database = database_dic,
