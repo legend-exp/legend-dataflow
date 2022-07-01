@@ -54,7 +54,7 @@ rule build_channel_keylist:
     input:
         read_filelist_tcm_cal_channel
     output:
-        temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-channels.chankeylist"))
+        temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
     shell:
         "{swenv} python3 {basedir}/scripts/create_chankeylist.py --output_file {output} {input}"
 
@@ -172,7 +172,8 @@ def read_filelist_pars_dsp_cal_channel(wildcards):
     """
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
-    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-channels"
+    print(wildcards)
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
     print(label)
     with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[0].open() as f:
         files = f.read().splitlines()
@@ -198,7 +199,7 @@ def get_pars_dsp_file(wildcards):
 rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
-        pars_file = '/data1/users/marshall/prod-ref/v01.00/database.json' # get_pars_dsp_file 
+        pars_file = get_pars_dsp_file #'/data1/users/marshall/prod-ref/v01.00/database.json'
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"

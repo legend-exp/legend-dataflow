@@ -137,11 +137,10 @@ class ProcessingFileKey(FileKey):
         
 class ChannelFileKey(FileKey):
     
-    channel_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?$'
-    #(\\-(?P<timestamp>[^-]+) )?
+    channel_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$'
     
-    def __new__(cls, experiment, period, run, datatype,   channel):
-        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype, '20220628T221955Z')
+    def __new__(cls, experiment, period, run, datatype,timestamp, channel):
+        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype,timestamp) #'20220628T221955Z'
         self.channel = channel
         return self
     
