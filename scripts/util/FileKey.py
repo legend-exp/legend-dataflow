@@ -137,11 +137,11 @@ class ProcessingFileKey(FileKey):
         
 class ChannelFileKey(FileKey):
     
-    channel_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$'
+    channel_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?$'
+    #(\\-(?P<timestamp>[^-]+) )?
     
-    
-    def __new__(cls, experiment, period, run, datatype, timestamp,  channel):
-        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype, timestamp)
+    def __new__(cls, experiment, period, run, datatype,   channel):
+        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype, '20220628T221955Z')
         self.channel = channel
         return self
     
@@ -165,12 +165,15 @@ class ChannelFileKey(FileKey):
     
     @staticmethod
     def get_channel_files(setup, keypart, tier, dataset_file):
-        d = FileKey.parse_keypart(keypart)
+        d = ChannelFileKey.parse_keypart(keypart)
         par_pattern = get_pattern_pars_tmp_channel(setup,tier)
         filenames = []
         with open(dataset_file) as f:
-            for channel in f:
-                file = smk.io.expand(par_pattern, **d.__dict__() , channel = channel)[0]
+            chan_list = f.read().splitlines()
+            for chan in chan_list:
+                wildcards_dict = d.__dict__()
+                wildcards_dict.pop("channel")
+                file = smk.io.expand(par_pattern, **wildcards_dict , channel = chan)[0]
                 filenames.append(file)
         return filenames
     

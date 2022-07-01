@@ -1,6 +1,6 @@
 import os,json
 import snakemake as smk
-from utils import *
+#from util.utils import *
 import pathlib
 
 channel_files = snakemake.input
@@ -16,7 +16,7 @@ out_dict = {}
 for channel in channel_files:
     with open(channel,"r") as r:
         channel_dict = json.load(r)
-    experiment, period, run,channel_name, name = os.path.basename(channel).split("-")
+    experiment, period, run,datatype, timestamp,channel_name, name = os.path.basename(channel).split("-")
 
     out_dict[channel_name] = channel_dict
 

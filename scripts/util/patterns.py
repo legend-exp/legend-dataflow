@@ -100,14 +100,14 @@ def get_pattern_pars_overwrite(setup, tier, name = None):
 
 def get_pattern_pars_tmp_channel(setup, tier, name=None):
     if name =="energy_grid":
-        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" , "pars_dsp_energy_grid", "{channel}", "{experiment}-{period}-{run}-{channel}-{peak}-pars_dsp_energy_grid.pkl")
+        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" , "par_dsp_energy_grid", "{channel}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-{peak}-par_dsp_energy_grid.pkl")
     elif name == "energy_grid_at_qbb":
-        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}",  "{run}", "pars_dsp_energy_grid", "{channel}", "{experiment}-{period}-{run}-{channel}-qbb-pars_dsp_energy_grid.pkl")
+        return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}",  "{run}", "par_dsp_energy_grid", "{channel}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-qbb-par_dsp_energy_grid.pkl")
     else:
         if name is None:
-            return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , "pars_"+tier, "{experiment}-{period}-{run}-{channel}-pars_"+tier+".json")
+            return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , "par_"+tier, "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+".json")
         else:
-            return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , "pars_"+tier+"_"+name, "{experiment}-{period}-{run}-{channel}-pars_"+tier+"_"+name+".json")
+            return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , "par_"+tier+"_"+name, "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+"_"+name+".json")
 
 def get_pattern_plts_tmp_channel(setup, tier, name):
     return os.path.join(f"{plts_path(setup)}", "plts",tier,"cal", "{period}", "{run}","{experiment}-{period}-{run}-{channel}-plts_"+tier+"_"+name+".pdf")

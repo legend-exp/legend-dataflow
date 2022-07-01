@@ -22,6 +22,9 @@ channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp,
 
 channel_dict = channel_dict['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 
+with open(args.pars_file, 'r') as db:
+    database_dic = json.load(db)
+
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-build_dsp(args.input, args.output, {}, chan_config=channel_dict, verbose=True, overwrite=False) #database = database_dic,
+build_dsp(args.input, args.output, {}, database = database_dic, chan_config=channel_dict, verbose=True)
