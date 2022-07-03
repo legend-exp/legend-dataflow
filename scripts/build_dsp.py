@@ -6,15 +6,19 @@ from pygama.dsp.build_dsp import build_dsp
 import json
 from collections import OrderedDict
 from util.metadata_loading import *
+import logging
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--pars_file", help="database file for detector", type=str)
+argparser.add_argument("--log", help="log file", type=str)
 argparser.add_argument("input", help="input file", type=str)
 argparser.add_argument("output", help="output file", type=str)
 args = argparser.parse_args()
+
+logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
 
@@ -27,4 +31,4 @@ with open(args.pars_file, 'r') as db:
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-build_dsp(args.input, args.output, {}, database = database_dic, chan_config=channel_dict, verbose=True)
+build_dsp(args.input, args.output, {}, database = database_dic, chan_config=channel_dict)
