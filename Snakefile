@@ -26,7 +26,7 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f'rm {log_path(setup)}/*')
+    shell(f'rm -r {log_path(setup)}/*')
 
 #Placeholder, can email or maybe put message in slack
 onerror:
@@ -92,11 +92,13 @@ rule build_raw:
         get_pattern_tier_daq(setup)
     output:
         get_pattern_tier_raw(setup)
+    log:
+        get_pattern_log(setup, "tier_raw")
     group: "tier-raw"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_raw.py --configs {configs} {input} {output}"
+        "{swenv} python3 {basedir}/scripts/build_raw.py --log {log} --configs {configs} {input} {output}"
 
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
@@ -104,11 +106,13 @@ rule build_tier_tcm:
         get_pattern_tier_raw(setup)
     output:
         get_pattern_tier_tcm(setup)
+    log:
+        get_pattern_log(setup, "tier_tcm")
     group: "tier-tcm"
     resources:
         runtime=300
-    run:
-        pathlib.Path(output[0]).touch()
+    shell:
+        "{swenv} python3 {basedir}/scripts/build_tcm.py --log {log} --configs {configs} {input} {output}"
 
 #def read_filelist_raw_cal_channel(wildcards):
 #    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
@@ -125,12 +129,14 @@ rule build_pars_dsp_tau:
         channel = "{channel}"
     output:
         decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp"))#get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")
-        #plots = temp(get_pattern_plts_tmp_channel(setup, "dsp","decay_constant"))
+        #plots = temp(get_pattern_plts_tmp_channel(setup, "dsp",'')) ,"decay_constant"
+    log:
+        get_pattern_log_channel(setup, "par_dsp_decay_constant")
     group: "pars-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_tau.py --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} "
+        "{swenv} python3 {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
 
 """
 #This rule builds all the energy grids used for the energy optimisation using calibration dsp files (These could be temporary?)
@@ -193,23 +199,24 @@ def get_pars_dsp_file(wildcards):
     This function will get the pars file for the run checking the pars_overwrite 
     """
     out = ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "dsp")
-    print(out)
     return out
 
 rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
-        pars_file = get_pars_dsp_file #'/data1/users/marshall/prod-ref/v01.00/database.json'
+        pars_file = '/data1/users/marshall/prod-ref/v01.00/database.json' #get_pars_dsp_file
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
     output:
         get_pattern_tier_dsp(setup)
+    log:
+        get_pattern_log(setup, "tier_dsp")
     group: "tier-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_dsp.py --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp}  {input.raw_file} {output}"
+        "{swenv} python3 {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp}  {input.raw_file} {output}"
 
 
 
