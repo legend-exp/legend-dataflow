@@ -13,6 +13,9 @@ def par_pattern():
 def par_overwrite_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-pars_{name}-overwrite"
 
+def full_channel_pattern():
+    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
+
 def get_pattern_tier_daq(setup):
     return os.path.join(f"{tier_daq_path(setup)}", "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
 
@@ -110,7 +113,7 @@ def get_pattern_pars_tmp_channel(setup, tier, name=None):
             return os.path.join(f"{tmp_par_path(setup)}", tier, "cal",  "{period}", "{run}" ,  "{channel}" , "par_"+tier+"_"+name, "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+"_"+name+".json")
 
 def get_pattern_plts_tmp_channel(setup, tier, name):
-    return os.path.join(f"{plts_path(setup)}", "plts",tier,"cal", "{period}", "{run}","{experiment}-{period}-{run}-{channel}-plts_"+tier+"_"+name+".pdf")
+    return os.path.join(f"{plts_path(setup)}", "plts",tier,"cal", "{period}", "{run}","{experiment}-{period}-{run}-{timestamp}-{channel}-plts_"+tier+"_"+name+".pdf")
 
 def get_pattern_plts(setup, tier, name):
     return os.path.join(f"{plts_path(setup)}", tier,"cal", "{period}", "{run}", "{experiment}-{period}-{run}-plts_"+tier+"_"+name+".pdf")
@@ -118,3 +121,8 @@ def get_pattern_plts(setup, tier, name):
 def get_energy_grids_pattern_combine(setup):
     return os.path.join(f"{tmp_par_path(setup)}", "dsp", "cal",  "{{period}}", "{{run}}" , "energy_grid", "{{channel}}", "{{experiment}}-{{period}}-{{run}}-{{channel}}-{peak}-pars_dsp_energy_grid.pkl")
 
+def get_pattern_log(setup, processing_step):
+    return os.path.join(f"{log_path(setup)}",processing_step , "{experiment}-{period}-{run}-{datatype}-{timestamp}-"+processing_step+".log")
+
+def get_pattern_log_channel(setup, processing_step):
+    return os.path.join(f"{log_path(setup)}",processing_step , "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"+processing_step+".log")
