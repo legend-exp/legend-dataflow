@@ -22,10 +22,10 @@ out_spec = '''
   "ORFlashCamADCWaveformDecoder" : {
     "ch{key:03d}/raw" : {
       "key_list" : ["*"],
-      "out_stream" : "filekey"
+      "out_stream" : "{filekey}"
     }
   }
 }
 '''
 
-build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec_json), filekey = args.output)
+build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = args.output)
