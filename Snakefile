@@ -128,7 +128,7 @@ rule build_pars_dsp_tau:
         datatype = "cal",
         channel = "{channel}"
     output:
-        decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp"))#get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")
+        decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"))
         #plots = temp(get_pattern_plts_tmp_channel(setup, "dsp",'')) ,"decay_constant"
     log:
         get_pattern_log_channel(setup, "par_dsp_decay_constant")
@@ -138,41 +138,44 @@ rule build_pars_dsp_tau:
     shell:
         "{swenv} python3 {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
 
-"""
+
 #This rule builds all the energy grids used for the energy optimisation using calibration dsp files (These could be temporary?)
 rule build_pars_dsp_egrids:
     input:
         files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),#read_filelist_raw_cal_channel,
-        decay_const = get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
+        decay_const = '/data1/users/marshall/prod-ref/v01.00/database.json'#get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
     params:
         timestamp = "{timestamp}",
-        datatype = "{datatype}"
+        datatype = "cal",
+        channel = "{channel}",
+        peak="{peak}"
     output:
-        temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid"))
+        get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid")
     group: "pars-dsp-energy"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_egrids.py --decay_const {input.decay_const} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --output_path {output} {input.files}"
+        "{swenv} python3 {basedir}/scripts/pars_dsp_egrids.py --decay_const {input.decay_const} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel}  --peak {params.peak}  --output_path {output} {input.files}"
 
 #This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
         files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),
-        peak_files = expand(get_energy_grids_pattern_combine(setup), peak = [238.632,   583.191, 727.330, 860.564, 1620.5, 2614.553]),
-        decay_const = get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
+        peak_files = expand(get_energy_grids_pattern_combine(setup), peak = [583.191, 727.330, 860.564, 1620.5, 2614.553]), #238.632,
+        decay_const = '/data1/users/marshall/prod-ref/v01.00/database.json'#get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
     params:
         timestamp = "{timestamp}",
-        datatype = "{datatype}"
+        datatype = "cal",
+        channel = "{channel}"
     output:
-        dsp_pars = temp(get_pattern_pars_tmp_channel(setup, "dsp", "dsp_pars")),
-        qbb_grid = temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid_at_qbb"))
+        dsp_pars = get_pattern_pars_tmp_channel(setup, "dsp"),
+        qbb_grid = get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid_at_qbb")
     group: "pars-dsp-energy_opt"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_eopt.py --final_dsp_pars {output.dsp_pars} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} {input.files}"
-"""
+        "{swenv} python3 {basedir}/scripts/pars_dsp_eopt.py --final_dsp_pars {output.dsp_pars} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel}  --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} {input.peak_files}"
+
 
 def read_filelist_pars_dsp_cal_channel(wildcards):
     """
