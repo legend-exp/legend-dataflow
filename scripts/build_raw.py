@@ -3,6 +3,7 @@ import logging
 
 import pygama
 from pygama.raw.build_raw import * 
+import numpy as np
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -28,4 +29,9 @@ out_spec = '''
 }
 '''
 
-build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = args.output)
+rand_num = f'{np.random.randint(0,99999):05d}'
+temp_output = f'{args.output}.{rand_num}'
+
+build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = temp_output)
+
+os.rename(temp_output, args.output)

@@ -1,6 +1,7 @@
 import  os, logging
 import argparse, pathlib
 from pygama.evt.build_tcm import *
+import numpy as np
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -11,8 +12,11 @@ args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 
-print(args.input, args.output)
-
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-build_tcm([(args.input, '/ch*/raw')], 'eventnumber', out_file=args.output, out_name='hardware_tcm', wo_mode='o')
+rand_num = f'{np.random.randint(0,99999):05d}'
+temp_output = f'{args.output}.{rand_num}'
+
+build_tcm([(args.input, '/ch*/raw')], 'eventnumber', out_file=temp_output, out_name='hardware_tcm', wo_mode='o')
+
+os.rename(temp_output, args.output)
