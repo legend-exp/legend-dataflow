@@ -2,6 +2,7 @@ import argparse, os, pathlib
 
 import pygama
 from pygama.dsp.build_dsp import build_dsp
+import numpy as np
 
 import json
 from collections import OrderedDict
@@ -33,4 +34,9 @@ with open(args.pars_file, 'r') as db:
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-build_dsp(args.input, args.output, {}, database = database_dic, chan_config=channel_dict)
+rand_num = f'{np.random.randint(0,99999):05d}'
+temp_output = f'{args.output}.{rand_num}'
+
+build_dsp(args.input, temp_output, {}, database = database_dic, chan_config=channel_dict)
+
+os.rename(temp_output, args.output)
