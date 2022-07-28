@@ -56,7 +56,7 @@ rule build_channel_keylist:
     output:
         temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
     shell:
-        "{swenv} python3 {basedir}/scripts/create_chankeylist.py --output_file {output} {input}"
+        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --output_file {output} {input}"
 
 
 checkpoint gen_filelist:
@@ -98,7 +98,7 @@ rule build_raw:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_raw.py --log {log} --configs {configs} {input} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} {input} {output}"
 
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
@@ -112,7 +112,7 @@ rule build_tier_tcm:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_tcm.py --log {log} --configs {configs} {input} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_tcm.py --log {log} --configs {configs} {input} {output}"
 
 #def read_filelist_raw_cal_channel(wildcards):
 #    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
@@ -136,7 +136,7 @@ rule build_pars_dsp_tau:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
 
 """
 #This rule builds all the energy grids used for the energy optimisation using calibration dsp files (These could be temporary?)
@@ -153,7 +153,7 @@ rule build_pars_dsp_egrids:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_egrids.py --decay_const {input.decay_const} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --output_path {output} {input.files}"
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_egrids.py --decay_const {input.decay_const} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --output_path {output} {input.files}"
 
 #This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
@@ -171,7 +171,7 @@ rule build_pars_dsp_eopt:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_dsp_eopt.py --final_dsp_pars {output.dsp_pars} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} {input.files}"
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --final_dsp_pars {output.dsp_pars} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} {input.files}"
 """
 
 def read_filelist_pars_dsp_cal_channel(wildcards):
@@ -216,7 +216,7 @@ rule build_dsp:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp}  {input.raw_file} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp}  {input.raw_file} {output}"
 
 
 
@@ -237,7 +237,7 @@ rule build_energy_calibration:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_hit_ecal.py --configs {configs}  --save_path {output.ecal_file} {input.files}"
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --configs {configs}  --save_path {output.ecal_file} {input.files}"
 
 
 #This rule builds the a/e calibration using the calibration dsp files 
@@ -252,7 +252,7 @@ rule build_aoe_calibration:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/pars_hit_aoe.py  --configs {configs}  --hit_pars {output.hit_pars} --ecal_file {input.ecal_file} {input.files}"     
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --configs {configs}  --hit_pars {output.hit_pars} --ecal_file {input.ecal_file} {input.files}"     
 
 
 def read_filelist_pars_hit_cal_channel(wildcards):
@@ -289,4 +289,4 @@ rule build_hit:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 {basedir}/scripts/build_hit.py  --configs {configs} --pars_file {input.pars_file} {input.dsp_file} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --pars_file {input.pars_file} {input.dsp_file} {output}"

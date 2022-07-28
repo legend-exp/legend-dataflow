@@ -28,4 +28,4 @@ out_spec = '''
 }
 '''
 
-build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = args.output)
+build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = args.output, buffer_size=1024)

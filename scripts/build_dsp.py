@@ -18,7 +18,9 @@ argparser.add_argument("input", help="input file", type=str)
 argparser.add_argument("output", help="output file", type=str)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
+logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
+logging.getLogger('numba').setLevel(logging.INFO)
+logging.getLogger('parse').setLevel(logging.INFO)
 
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
 
