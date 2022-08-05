@@ -140,7 +140,7 @@ class ChannelFileKey(FileKey):
     channel_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$'
     
     def __new__(cls, experiment, period, run, datatype,timestamp, channel):
-        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype,timestamp) #'20220628T221955Z'
+        self = super(ChannelFileKey,cls).__new__(cls, experiment, period, run, datatype,timestamp)
         self.channel = channel
         return self
     
@@ -176,5 +176,53 @@ class ChannelFileKey(FileKey):
                 filenames.append(file)
         return filenames
     
+    @classmethod
+    def get_filekey_from_pattern(cls, filename, pattern=None):
+        if pattern is None:
+            key_pattern_rx = re.compile(smk.io.regex(key_pattern()))
+        else:
+            key_pattern_rx = re.compile(smk.io.regex(pattern))
+        if key_pattern_rx.match(filename) is None:
+            print("pattern does not match")
+        else:
+            d = key_pattern_rx.match(filename).groupdict()
+            for entry in list(d):
+                if entry not in ['experiment', 'period', 'run', 'datatype', 'timestamp', 'channel']:
+                    d.pop(entry)
+            for wildcard in ['experiment', 'period', 'run', 'datatype', 'timestamp', 'channel']:
+                if wildcard not in d:
+                    d[wildcard] = '*'
+            return cls(**d)
 
-        
+class ChannelProcessingFileKey(FileKey):
+    
+    def __new__(cls, experiment, period, run, datatype,timestamp, channel, processing_step):
+        self = super(ChannelProcessingFileKey,cls).__new__(cls, experiment, period, run, datatype,timestamp)
+        self.channel = channel
+        self.processing_step = processing_step
+        return self
+    
+    @property
+    def name(self):
+        return f'{self.experiment}-{self.period}-{self.run}-{self.datatype}-{self.timestamp}-{self.channel}-{self.processing_step}'
+    
+    @classmethod
+    def get_filekey_from_pattern(cls, filename, pattern=None):
+        if pattern is None:
+            key_pattern_rx = re.compile(smk.io.regex(full_channel_pattern()))
+        else:
+            key_pattern_rx = re.compile(smk.io.regex(pattern))
+        if key_pattern_rx.match(filename) is None:
+            print("pattern does not match")
+        else:
+            d = key_pattern_rx.match(filename).groupdict()
+            for entry in list(d):
+                if entry not in ['experiment', 'period', 'run', 'datatype', 'timestamp', 'channel','processing_step']:
+                    d.pop(entry)
+            for wildcard in ['experiment', 'period', 'run', 'datatype', 'timestamp', 'channel','processing_step']:
+                if wildcard not in d:
+                    d[wildcard] = '*'
+            return cls(**d)   
+    
+    def get_path_from_filekey(self, path_patttern):
+        return smk.io.expand(path_patttern, **self._asdict(), **self.__dict__)

@@ -57,6 +57,9 @@ def pars_path(setup):
 def tmp_par_path(setup):
     return setup["paths"]["tmp_par"]
 
+def tmp_plts_path(setup):
+    return setup["paths"]["tmp_plt"]
+
 def plts_path(setup):
     return setup["paths"]["plt"]
 
