@@ -26,7 +26,7 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f'rm -r {log_path(setup)}/*')
+    #shell(f'rm {log_path(setup)}/* || true')
 
 #Placeholder, can email or maybe put message in slack
 onerror:
@@ -45,7 +45,7 @@ rule autogen_keylist:
 
 def read_filelist_tcm_cal_channel(wildcards):
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-    with checkpoints.gen_filelist.get(label=label, tier="raw", extension="file").output[0].open() as f:
+    with checkpoints.gen_filelist.get(label=label, tier="tcm", extension="file").output[0].open() as f:
         files = f.read().splitlines()
         return files
         
@@ -53,10 +53,13 @@ def read_filelist_tcm_cal_channel(wildcards):
 rule build_channel_keylist:
     input:
         read_filelist_tcm_cal_channel
+    params:
+        timestamp = "{timestamp}",
+        datatype = "cal"
     output:
         temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
     shell:
-        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --output_file {output} {input}"
+        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} {input}"
 
 
 checkpoint gen_filelist:
@@ -132,13 +135,13 @@ rule build_pars_dsp_tau:
         #plots = temp(get_pattern_plts_tmp_channel(setup, "dsp",'')) ,"decay_constant"
     log:
         get_pattern_log_channel(setup, "par_dsp_decay_constant")
-    group: "pars-dsp"
+    group: "par-dsp"
     resources:
         runtime=300
     shell:
         "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
 
-
+"""
 #This rule builds all the energy grids used for the energy optimisation using calibration dsp files (These could be temporary?)
 rule build_pars_dsp_egrids:
     input:
@@ -156,34 +159,37 @@ rule build_pars_dsp_egrids:
         runtime=300
     shell:
         "{swenv} python3 -B  {basedir}/scripts/pars_dsp_egrids.py --decay_const {input.decay_const} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel}  --peak {params.peak}  --output_path {output} {input.files}"
+"""
 
 #This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
         files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),
-        peak_files = expand(get_energy_grids_pattern_combine(setup), peak = [583.191, 727.330, 860.564, 1620.5, 2614.553]), #238.632,
-        decay_const = '/data1/users/marshall/prod-ref/v01.00/database.json'#get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
+        #peak_files = expand(get_energy_grids_pattern_combine(setup), peak = [583.191, 727.330, 860.564, 1620.5, 2614.553]), #238.632,
+        decay_const = get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")#get_pattern_pars_tmp_channel(setup, "dsp","decay_constant")
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
         channel = "{channel}"
     output:
         dsp_pars = get_pattern_pars_tmp_channel(setup, "dsp"),
-        qbb_grid = get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid_at_qbb")
-    group: "pars-dsp-energy_opt"
+        qbb_grid = get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid_at_qbb"),#get_pattern_pars_tmp_channel(setup, "dsp", "eopt_results")
+        alpha_dict = get_pattern_pars_tmp_channel(setup, "hit", "ctc")
+    log:
+        get_pattern_log_channel(setup, "pars_dsp_eopt")
+    group: "par-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --final_dsp_pars {output.dsp_pars} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel}  --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} {input.peak_files}"
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel} --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} --final_dsp_pars {output.dsp_pars} --alpha_dict {output.alpha_dict}" # {input.peak_files}
 
 
 def read_filelist_pars_dsp_cal_channel(wildcards):
     """
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
-    print(wildcards)
+
     label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    print(label)
     with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[0].open() as f:
         files = f.read().splitlines()
         return files 
@@ -207,7 +213,7 @@ def get_pars_dsp_file(wildcards):
 rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
-        pars_file = '/data1/users/marshall/prod-ref/v01.00/database.json' #get_pars_dsp_file
+        pars_file = get_pars_dsp_file #'/data1/users/marshall/prod-ref/v01.00/database.json'
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -232,37 +238,53 @@ def read_filelist_dsp_cal(wildcards):
 #This rule builds the energy calibration using the calibration dsp files 
 rule build_energy_calibration:
     input:
-        files = read_filelist_dsp_cal
+        files = read_filelist_dsp_cal,
+        ctc_dict = get_pattern_pars_tmp_channel(setup, "hit", "ctc")
+    params:
+        timestamp = "{timestamp}",
+        datatype = "cal",
+        channel = "{channel}"
     output:
-        ecal_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"))
-        #plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","energy_cal")) --plot_path {output.plot_file}
-    group: "par-hit-ecal"
+        ecal_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
+        results_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")),
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","energy_cal")) 
+    log:
+        get_pattern_log_channel(setup, "pars_hit_energy_cal")
+    group: "par-hit"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --configs {configs}  --save_path {output.ecal_file} {input.files}"
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --results_path {output.results_file} {input.files}" # 
 
 
 #This rule builds the a/e calibration using the calibration dsp files 
 rule build_aoe_calibration:
     input:
         files = read_filelist_dsp_cal,
-        ecal_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")
+        ecal_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
+        eres_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")
+    params:
+        timestamp = "{timestamp}",
+        datatype = "cal",
+        channel = "{channel}"
     output:
-        hit_pars = temp(get_pattern_pars_tmp_channel(setup, "hit", "hit_pars"))
-        #plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","aoe_cal")) --plot_file {output.plot_file}
-    group: "par-hit-aoe"
+        hit_pars = temp(get_pattern_pars_tmp_channel(setup, "hit")),
+        aoe_results = temp(get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal_results")),
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","aoe_cal")) 
+    log:
+        get_pattern_log_channel(setup, "pars_hit_aoe_cal")
+    group: "par-hit"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --configs {configs}  --hit_pars {output.hit_pars} --ecal_file {input.ecal_file} {input.files}"     
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --aoe_results {output.aoe_results} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --eres_file {input.eres_file} --ecal_file {input.ecal_file} {input.files}"     
 
 
 def read_filelist_pars_hit_cal_channel(wildcards):
     """
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
-    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-channels"
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
     with checkpoints.gen_filelist.get(label=label, tier="hit", extension="chan").output[0].open() as f:
         files = f.read().splitlines()
         return files 
@@ -271,7 +293,7 @@ def get_pars_hit_file(wildcards):
     """
     This function will get the pars file for the run checking the pars_overwrite 
     """
-    return ds.pars_catalog.get_par_file(setup, wilcards.timestamp, "hit")
+    return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit")
 
 checkpoint build_pars_hit:
     input:
@@ -288,8 +310,13 @@ rule build_hit:
         pars_file = get_pars_hit_file
     output:
         get_pattern_tier_hit(setup)
+    params:
+        timestamp = "{timestamp}",
+        datatype = "{datatype}"
+    log:
+        get_pattern_log(setup, "tier_hit")
     group: "tier-hit"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --pars_file {input.pars_file} {input.dsp_file} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output} {input.dsp_file} "
