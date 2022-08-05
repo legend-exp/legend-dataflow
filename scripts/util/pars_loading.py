@@ -8,7 +8,7 @@ from .FileKey import *
 
 class pars_catalog(CalibCatalog):
     
-    pars_overwrite_pattern = '{experiment}-{period}-{run}-{datatype}-{timestamp}-{processing_step}-overwrite.{ext}'
+    pars_overwrite_pattern = '{experiment}-{period}-{run}-{datatype}-{timestamp}-{processing_step}_overwrite.{ext}'
     
     @staticmethod
     def match_pars_files(filelist1, filelist2):
@@ -54,8 +54,8 @@ class pars_catalog(CalibCatalog):
         pars_files_overwrite = pars_catalog.get_calib_files(par_overwrite_file, timestamp)
         if len(pars_files_overwrite)>0:
             pars_files, pars_files_overwrite = pars_catalog.match_pars_files(pars_files, pars_files_overwrite)
-        pars_files = pars_catalog.select_pars_files(pars_files, "pars_dsp")
-        pars_overwrite_files = pars_catalog.select_pars_overwrite_files(pars_files_overwrite, "pars_dsp")
+        pars_files = pars_catalog.select_pars_files(pars_files, f'par_{name}')
+        pars_overwrite_files = pars_catalog.select_pars_overwrite_files(pars_files_overwrite, f'par_{name}')
         pars_files = [ProcessingFileKey.get_full_path_from_filename(par_file, f'{par_pattern()}.json', get_pattern_pars(setup, name))[0] for par_file in pars_files]
         if len(pars_overwrite_files)>0:
             pars_overwrite_files = [ProcessingFileKey.get_full_path_from_filename(par_overwrite_file, f'{par_overwrite_pattern()}.json', get_pattern_pars_overwrite(setup, name))[0] for par_overwrite_file in pars_overwrite_files]
