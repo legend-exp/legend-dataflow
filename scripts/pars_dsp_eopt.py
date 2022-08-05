@@ -123,13 +123,15 @@ kwarg_dict = [{'peak_dicts':kwarg_dicts_cusp, 'ctc_param':'QDrift', 'idx_list':i
 
 
 sample_x = np.array([[1,1],[1,5], [12,1], [12,5], [4,3], [8,3]])
-sample_y = []
-sample_y_cusp = []
+
 results_cusp = []
-sample_y_zac = []
 results_zac = []
-sample_y_trap = []
 results_trap = []
+
+sample_y_cusp = []
+sample_y_zac = []
+sample_y_trap = []
+
 for i,x in enumerate(sample_x):
     
     db_dict["cusp"] = {"sigma":f'{x[0]}*us', "flat":f'{x[1]}*us'}
@@ -144,21 +146,48 @@ for i,x in enumerate(sample_x):
                 verbosity=0)
     
     res = om.new_fom(tb_out, kwarg_dict[0])
-    if np.isnan(res['y_val']):
-        res['y_val']=15
-    sample_y_cusp.append(res['y_val'])
     results_cusp.append(res)
+    sample_y_cusp.append(res['y_val'])
+    
     res = om.new_fom(tb_out, kwarg_dict[1])
-    if np.isnan(res['y_val']):
-        res['y_val']=15
-    sample_y_zac.append(res['y_val'])
-    res = om.new_fom(tb_out, kwarg_dict[2])
     results_zac.append(res)
-    if np.isnan(res['y_val']):
-        res['y_val']=15
-    sample_y_trap.append(res['y_val'])
+    sample_y_zac.append(res['y_val'])
+    
+    res = om.new_fom(tb_out, kwarg_dict[2])
     results_trap.append(res)
+    sample_y_trap.append(res['y_val'])
+    
     log.info(f'{i+1} Finished')
+
+if np.isnan(sample_y_cusp).all():
+    max_cusp =15
+else:
+    max_cusp = np.ceil(np.nanmax(sample_y_cusp)*2)
+if np.isnan(sample_y_zac).all():
+    max_trap =15
+else:
+    max_zac = np.ceil(np.nanmax(sample_y_zac)*2)
+if np.isnan(sample_y_trap).all():
+    max_trap =15
+else:
+    max_trap = np.ceil(np.nanmax(sample_y_trap)*2)
+
+nan_vals = [max_cusp, max_zac, max_trap]
+
+for i in range(len(sample_x)):
+
+    if np.isnan(sample_y_cusp[i]):
+        results_cusp[i]['y_val']=max_cusp
+        sample_y_cusp[i] = max_cusp
+    
+    if np.isnan(sample_y_zac[i]):
+        results_zac[i]['y_val']=max_zac
+        sample_y_zac[i] = max_zac
+        
+    if np.isnan(sample_y_trap[i]):
+        results_trap[i]['y_val']=max_trap
+        sample_y_trap[i] = max_trap
+        
 
 #n_events_cusp = [res["n_sig"] for res in results_cusp]
 #allowed_n_sig_cusp = 
@@ -195,7 +224,8 @@ bopt_trap.optimal_x = sample_x[best_idx]
 optimisers = [bopt_cusp,bopt_zac,bopt_trap]
 
 out_param_dict, out_results_list = om.run_optimisation(tb_data, dsp_config, [om.new_fom], optimisers, 
-                                                    fom_kwargs=kwarg_dict,db_dict=db_dict, n_iter=20)
+                                                    fom_kwargs=kwarg_dict,db_dict=db_dict, 
+                                                    nan_val = nan_vals, n_iter=20)
 
 db_dict.update(out_param_dict)
 
