@@ -51,15 +51,15 @@ def read_filelist_tcm_cal_channel(wildcards):
         
 
 rule build_channel_keylist:
-    input:
-        read_filelist_tcm_cal_channel
+    #input:
+        #read_filelist_tcm_cal_channel
     params:
         timestamp = "{timestamp}",
         datatype = "cal"
     output:
-        temp(os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
+        os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist")
     shell:
-        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} {input}"
+        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} " #{input}
 
 
 checkpoint gen_filelist:
@@ -213,7 +213,8 @@ def get_pars_dsp_file(wildcards):
 rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
-        pars_file = get_pars_dsp_file #'/data1/users/marshall/prod-ref/v01.00/database.json'
+        tcm_file = get_pattern_tier_tcm(setup),
+        pars_file = get_pars_dsp_file
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -246,8 +247,8 @@ rule build_energy_calibration:
         channel = "{channel}"
     output:
         ecal_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
-        results_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")),
-        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","energy_cal")) 
+        results_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results"),
+        plot_file = get_pattern_plts_tmp_channel(setup, "hit","energy_cal")
     log:
         get_pattern_log_channel(setup, "pars_hit_energy_cal")
     group: "par-hit"
@@ -269,8 +270,8 @@ rule build_aoe_calibration:
         channel = "{channel}"
     output:
         hit_pars = temp(get_pattern_pars_tmp_channel(setup, "hit")),
-        aoe_results = temp(get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal_results")),
-        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","aoe_cal")) 
+        aoe_results = get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal_results"),
+        plot_file = get_pattern_plts_tmp_channel(setup, "hit","aoe_cal")
     log:
         get_pattern_log_channel(setup, "pars_hit_aoe_cal")
     group: "par-hit"
@@ -307,7 +308,7 @@ checkpoint build_pars_hit:
 rule build_hit:
     input:
         dsp_file = get_pattern_tier_dsp(setup),
-        pars_file = get_pars_hit_file
+        pars_file = get_pars_hit_file 
     output:
         get_pattern_tier_hit(setup)
     params:
