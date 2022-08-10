@@ -31,21 +31,30 @@ def build_hit(f_dsp:str, hit_dict:dict, f_hit:str,
         
             data = lh5.load_dfs(f_dsp, ["cuspEmax", "trapEmax", "zacEmax", "dt_eff", "A_max"], f'{channel}/dsp')
 
-            data["cusp_ctc"] = ecal.apply_ctc(data["cuspEmax"],data["dt_eff"], pars_dict["cusp_ctc"]["pars"]["a"])
-            data["zac_ctc"] = ecal.apply_ctc(data["zacEmax"],data["dt_eff"], pars_dict["zac_ctc"]["pars"]["a"])
-            data["trap_ctc"] = ecal.apply_ctc(data["trapEmax"],data["dt_eff"], pars_dict["trap_ctc"]["pars"]["a"])
+            if "cusp_ctc" in pars_dict:
+                data["cusp_ctc"] = ecal.apply_ctc(data["cuspEmax"],data["dt_eff"], pars_dict["cusp_ctc"]["pars"]["a"])
+                data["zac_ctc"] = ecal.apply_ctc(data["zacEmax"],data["dt_eff"], pars_dict["zac_ctc"]["pars"]["a"])
+                data["trap_ctc"] = ecal.apply_ctc(data["trapEmax"],data["dt_eff"], pars_dict["trap_ctc"]["pars"]["a"])
 
-            data["cusp_cal"] = pgf.poly(data["cusp_ctc"], [pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["b"]])
-            data["zac_cal"] = pgf.poly(data["zac_ctc"], [pars_dict["Energy_cal_zacEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_zacEmax_ctc"]["pars"]["b"]])
-            data["trap_cal"] = pgf.poly(data["trap_ctc"], [pars_dict["Energy_cal_trapEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_trapEmax_ctc"]["pars"]["b"]])
+                data["cusp_cal"] = pgf.poly(data["cusp_ctc"], [pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["b"]])
+                data["zac_cal"] = pgf.poly(data["zac_ctc"], [pars_dict["Energy_cal_zacEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_zacEmax_ctc"]["pars"]["b"]])
+                data["trap_cal"] = pgf.poly(data["trap_ctc"], [pars_dict["Energy_cal_trapEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_trapEmax_ctc"]["pars"]["b"]])
 
-            data["AoE"] = data["A_max"]/pgf.poly(data["cuspEmax"], [pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["b"]])
+                data["AoE"] = data["A_max"]/pgf.poly(data["cuspEmax"], [pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax_ctc"]["pars"]["b"]])
+            else:
+                data["cusp_cal"] = pgf.poly(data["cuspEmax"], [pars_dict["Energy_cal_cuspEmax"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax"]["pars"]["b"]])
+                data["zac_cal"] = pgf.poly(data["zacEmax"], [pars_dict["Energy_cal_zacEmax"]["pars"]["a"],pars_dict["Energy_cal_zacEmax"]["pars"]["b"]])
+                data["trap_cal"] = pgf.poly(data["trapEmax"], [pars_dict["Energy_cal_trapEmax"]["pars"]["a"],pars_dict["Energy_cal_trapEmax"]["pars"]["b"]])
+
+                data["AoE"] = data["A_max"]/pgf.poly(data["cuspEmax"], [pars_dict["Energy_cal_cuspEmax"]["pars"]["a"],pars_dict["Energy_cal_cuspEmax"]["pars"]["b"]])
+
+            
 
             aoe_mu_pars = [pars_dict["AoE_Classifier"]["pars"]["a"],pars_dict["AoE_Classifier"]["pars"]["b"]]
             aoe_sigma_pars = [pars_dict["AoE_Classifier"]["pars"]["c"],pars_dict["AoE_Classifier"]["pars"]["d"]]
 
             data["AoE_classifier"] = cae.get_classifier(data["AoE"], data["cusp_cal"], aoe_mu_pars, aoe_sigma_pars)
-            data['Passed_AoE_low_cut'] = (data["AoE"]>pars_dict["AoE_Low_Cut"]["pars"]["a"])
+            data['Passed_AoE_low_cut'] = (data["AoE_classifier"]>pars_dict["AoE_Low_Cut"]["pars"]["a"])
             data['Passed_AoE_double_cut'] = (data["AoE_classifier"]>pars_dict["AoE_Low_Cut"]["pars"]["a"])&(data["AoE_classifier"]<pars_dict["AoE_Double_Sided_Cut"]["pars"]["b"])
 
             log.info(f'Writing to file: {f_hit}')
