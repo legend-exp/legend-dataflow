@@ -125,7 +125,7 @@ rule build_tier_tcm:
 
 rule build_pars_dsp_tau:
     input:
-        files = os.path.join(log_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist")#read_filelist_raw_cal_channel
+        files = read_filelist_raw_cal_channel
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
