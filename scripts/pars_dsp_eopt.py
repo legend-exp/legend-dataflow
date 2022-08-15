@@ -238,20 +238,14 @@ with open(args.final_dsp_pars, 'w') as w:
     json.dump(db_dict, w, indent=4)
 
 out_alpha_dict = {}
-out_alpha_dict["cusp_ctc"] = {"inputs":["cuspEmax", "dt_eff"],
-                              "outputs":["cuspEmax_ctc"],
-                              "function": "cuspEmax*(1+dt_eff*a)",
-                              "pars":{"a":bopt_cusp.optimal_results["alpha"]}}
+out_alpha_dict["cuspEmax_ctc"] = {"expression": "cuspEmax*(1+dt_eff*@a)",
+                              "parameters":{"a":bopt_cusp.optimal_results["alpha"]}}
 
-out_alpha_dict["zac_ctc"] = {"inputs":["zacEmax", "dt_eff"],
-                              "outputs":["zacEmax_ctc"],
-                              "function": "zacEmax*(1+dt_eff*a)",
-                              "pars":{"a":bopt_zac.optimal_results["alpha"]}}
+out_alpha_dict["zacEmax_ctc"] = {"expression": "zacEmax*(1+dt_eff*@a)",
+                              "parameters":{"a":bopt_zac.optimal_results["alpha"]}}
     
-out_alpha_dict["trap_ctc"] = {"inputs":["trapEmax", "dt_eff"],
-                              "outputs":["trapEmax_ctc"],
-                              "function": "trapEmax*(1+dt_eff*a)",
-                              "pars":{"a":bopt_trap.optimal_results["alpha"]}}
+out_alpha_dict["trapEmax_ctc"] = {"expression": "trapEmax*(1+dt_eff*@a)",
+                              "parameters":{"a":bopt_trap.optimal_results["alpha"]}}
 
 
 pathlib.Path(os.path.dirname(args.alpha_dict)).mkdir(parents=True, exist_ok=True)
