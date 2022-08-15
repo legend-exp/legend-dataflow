@@ -117,11 +117,11 @@ rule build_tier_tcm:
     shell:
         "{swenv} python3 -B {basedir}/scripts/build_tcm.py --log {log} --configs {configs} {input} {output}"
 
-#def read_filelist_raw_cal_channel(wildcards):
-#    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-#    with checkpoints.gen_filelist.get(label=label, tier="raw").output[0].open() as f:
-#        files = f.read().splitlines()
-#        return files
+def read_filelist_raw_cal_channel(wildcards):
+    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
+    with checkpoints.gen_filelist.get(label=label, tier="raw", extension="file").output[0].open() as f:
+        files = f.read().splitlines()
+        return files
 
 rule build_pars_dsp_tau:
     input:
