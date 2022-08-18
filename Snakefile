@@ -13,7 +13,7 @@ swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
-localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output,  build_channel_keylist
+localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output,  build_channel_keylist, build_pars_dsp, build_pars_hit
 
 rule do_nothing:
     input:
