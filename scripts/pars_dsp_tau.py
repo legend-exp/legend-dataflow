@@ -18,7 +18,9 @@ argparser.add_argument("--output_file", help="output file", type=str, required=T
 argparser.add_argument("input", help="input files", nargs='*',type=str)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
+logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
+logging.getLogger('numba').setLevel(logging.INFO)
+logging.getLogger('parse').setLevel(logging.INFO)
 
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
 channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
