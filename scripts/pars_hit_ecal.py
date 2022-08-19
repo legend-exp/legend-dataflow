@@ -44,6 +44,10 @@ if __name__ == '__main__':
 
     out_dict, result_dict = run_energy_cal(args.files, lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, plot_path= args.plot_path) #cut_parameters = cut_parameters, 
     
+    out_dict.update({"cuspEmax_cal": {
+                      "expression": "@a*cuspEmax+@b",
+                      "parameters": out_dict["cuspEmax_ctc_cal"]["parameters"]
+                    }})
 
     with open(args.save_path,'w') as fp:
         pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
