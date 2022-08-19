@@ -37,19 +37,23 @@ with open(args.ecal_file, 'r') as o:
 with open(args.eres_file, 'r') as o:
     eres_dict = json.load(o)
 
-energy_param = 'cuspEmax'
-cal_energy_param = 'cuspEmax_ctc'
+energy_param = 'cuspEmax_cal'
+cal_energy_param = 'cuspEmax_ctc_cal'
 
-eres_pars = [eres_dict[cal_energy_param]['m0'],eres_dict[cal_energy_param]['m1']]
+eres_pars = [eres_dict['cuspEmax_ctc_cal']['m0'],eres_dict['cuspEmax_ctc_cal']['m1']]
     
 
 cal_dict, out_dict = cal_aoe(files, f'{args.channel}/dsp',cal_dict, energy_param, cal_energy_param, eres_pars,
                             dt_corr=False, cut_parameters={}, plot_savepath=args.plot_file)
 
+outputs= [ "cuspEmax_ctc_cal", "zacEmax_ctc_cal", "trapEmax_ctc_cal", 
+            "AoE_Classifier", "AoE_Low_Cut", "AoE_Double_Sided_Cut"]
+final_hit_dict = {"outputs":outputs, "operations":cal_dict}
+
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.hit_pars, 'w') as w:
-    json.dump(cal_dict,w, indent=4)
+    json.dump(final_hit_dict,w, indent=4)
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
 with open(args.aoe_results, 'w') as w:
