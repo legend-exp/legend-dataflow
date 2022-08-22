@@ -9,25 +9,15 @@ import pygama.pargen.cuts as cts
 import pygama.lgdo.lh5_store as lh5
 import pygama.math.histogram as pgh
 
+log = logging.getLogger(__name__)
 
 def run_energy_cal(files, lh5_path = 'dsp',plot_path=None, hit_dict={}):
 
     energy_params = ['cuspEmax_ctc', 'zacEmax_ctc', 'trapEmax_ctc'] #
 
-    df = lh5.load_dfs([files.replace("dsp", "raw")], ["timestamp"], lh5_path.replace("dsp", "raw"))
-    df["trapTmax"] = lh5.load_nda(files, ["trapTmax"], lh5_path)["trapTmax"]
-    pulser_props = cts.find_pulser_properties(df, energy="trapTmax")
-    if len(pulser_props) > 0:
-        out_df = cts.tag_pulsers(df, pulser_props, window=0.001)
-        ids = (out_df.isPulser == 1)
-        log.debug(f"pulser found: {pulser_props}")
-        energy = df.trapTmax.values[~ids]
-        guess_keV =  2620 / np.nanpercentile(energy, 99)
-    else:
-        guess_keV = None
         
     out_dict, result_dict = energy_cal_th(files, energy_params, lh5_path =lh5_path, hit_dict=hit_dict, 
-                                        plot_path = plot_path, p_val=0, threshold=100, guess_keV=guess_keV)  
+                                        plot_path = plot_path, p_val=0, threshold=100)  
 
     return out_dict, result_dict 
 
@@ -51,7 +41,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
     logging.getLogger('numba').setLevel(logging.INFO)
     logging.getLogger('parse').setLevel(logging.INFO)
-    logging.getLogger('matplotlib.font_manager').setLevel(logging.INFO)
+    logging.getLogger('matplotlib').setLevel(logging.INFO)
     logging.getLogger('lgdo.lh5_store').setLevel(logging.INFO)
 
     with open(args.ctc_dict,'r') as r:

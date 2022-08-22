@@ -36,9 +36,9 @@ if isinstance(input_file, list):
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
 if args.plot_path:
-    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, args.channel, plot_path=args.plot_path) 
+    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', plot_path=args.plot_path) 
 else:
-    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, args.channel) 
+    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw') 
 
 with open(args.output_file,"w") as f:
     json.dump(out_dict,f, indent=4)
