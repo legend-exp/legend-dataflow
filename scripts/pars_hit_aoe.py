@@ -47,7 +47,7 @@ cal_dict, out_dict = cal_aoe(files, f'{args.channel}/dsp',cal_dict, energy_param
                             dt_corr=False, cut_parameters={}, plot_savepath=args.plot_file)
 
 outputs= [ "cuspEmax_ctc_cal", "zacEmax_ctc_cal", "trapEmax_ctc_cal", 
-            "AoE_Classifier", "AoE_Low_Cut", "AoE_Double_Sided_Cut", "Quality_cut"]
+            "AoE_Classifier", "AoE_Low_Cut", "AoE_Double_Sided_Cut", "Quality_cuts"]
 final_hit_dict = {"outputs":outputs, "operations":cal_dict}
 
 
