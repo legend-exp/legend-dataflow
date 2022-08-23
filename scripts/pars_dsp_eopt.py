@@ -1,3 +1,8 @@
+from pygama.dsp.utils import numba_defaults
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 import json, os
 from collections import OrderedDict
 import argparse

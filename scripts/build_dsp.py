@@ -1,7 +1,11 @@
 import argparse, os, pathlib
+from pygama.dsp.utils import numba_defaults
 
-import pygama
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 from pygama.dsp.build_dsp import build_dsp
+
 import numpy as np
 
 import json
@@ -37,6 +41,8 @@ pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 rand_num = f'{np.random.randint(0,99999):05d}'
 temp_output = f'{args.output}.{rand_num}'
 
-build_dsp(args.input, temp_output, {}, database = database_dic, chan_config=channel_dict)
+
+
+build_dsp(args.input, temp_output, {}, database = database_dic, chan_config=channel_dict, write_mode='r')
 
 os.rename(temp_output, args.output)
