@@ -11,16 +11,6 @@ import pygama.math.histogram as pgh
 
 log = logging.getLogger(__name__)
 
-def run_energy_cal(files, lh5_path = 'dsp',plot_path=None, hit_dict={}):
-
-    energy_params = ['cuspEmax_ctc', 'zacEmax_ctc', 'trapEmax_ctc'] #
-
-        
-    out_dict, result_dict = energy_cal_th(files, energy_params, lh5_path =lh5_path, hit_dict=hit_dict, 
-                                        plot_path = plot_path, p_val=0, threshold=100)  
-
-    return out_dict, result_dict 
-
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument("files", help="files", nargs='*',type=str)
@@ -45,12 +35,21 @@ if __name__ == '__main__':
     logging.getLogger('lgdo.lh5_store').setLevel(logging.INFO)
 
     with open(args.ctc_dict,'r') as r:
-        hit_dict = json.load(r)
+        hit_dict = json.load(r)#[args.channel]["ctc_params"]
 
-    out_dict, result_dict = run_energy_cal(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, plot_path= args.plot_path) #cut_parameters = cut_parameters, 
+    cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
+    channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+    channel_dict = channel_dict['snakemake_rules']['pars_hit_ecal']["inputs"]['ecal_config'][args.channel]
+
+    with open(channel_dict,"r") as r:
+        kwarg_dict = json.load(r)
+
+    out_dict, result_dict = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
+                                        plot_path= args.plot_path, **kwarg_dict)  
+
     
     out_dict.update({"cuspEmax_cal": {
-                      "expression": "@a*cuspEmax+@b",
+                      "expression": "a*cuspEmax+b",
                       "parameters": out_dict["cuspEmax_ctc_cal"]["parameters"]
                     }})
 

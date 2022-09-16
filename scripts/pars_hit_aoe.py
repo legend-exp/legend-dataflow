@@ -28,8 +28,9 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
 
-
-files = sorted(args.files)
+with open(args.files[0]) as f:
+    files = f.read().splitlines()
+files = sorted(files)
 
 with open(args.ecal_file, 'r') as o:
     cal_dict = json.load(o)
@@ -37,16 +38,20 @@ with open(args.ecal_file, 'r') as o:
 with open(args.eres_file, 'r') as o:
     eres_dict = json.load(o)
 
-energy_param = 'cuspEmax_cal'
-cal_energy_param = 'cuspEmax_ctc_cal'
+cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
+channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+channel_dict = channel_dict['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
 
-eres_pars = [eres_dict['cuspEmax_ctc_cal']['m0'],eres_dict['cuspEmax_ctc_cal']['m1']]
+with open(channel_dict,"r") as r:
+    kwarg_dict = json.load(r)
+
+eres_pars = eres_dict[kwarg_dict["cal_energy_param"]]['eres_pars']
     
 
-cal_dict, out_dict = cal_aoe(files, f'{args.channel}/dsp',cal_dict, energy_param, cal_energy_param, eres_pars,
-                            dt_corr=False, cut_parameters={}, plot_savepath=args.plot_file)
+cal_dict, out_dict = cal_aoe(files, f'{args.channel}/dsp',cal_dict, eres_pars,
+                             plot_savepath=args.plot_file, **kwarg_dict)
 
-outputs= [ "cuspEmax_ctc_cal", "zacEmax_ctc_cal", "trapEmax_ctc_cal", 
+outputs= [ "cuspEmax_ctc_cal", "zacEmax_ctc_cal", "trapEmax_ctc_cal", "AoE_Corrected",
             "AoE_Classifier", "AoE_Low_Cut", "AoE_Double_Sided_Cut", "Quality_cuts"]
 final_hit_dict = {"outputs":outputs, "operations":cal_dict}
 

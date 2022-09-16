@@ -30,7 +30,10 @@ logging.getLogger('parse').setLevel(logging.INFO)
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
 channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
 channel_dict = channel_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['processing_chain'][args.channel]
+kwarg_dict = channel_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['tau_config'][args.channel]
 
+with open(kwarg_dict,"r") as r:
+    kwarg_dict = json.load(r)
 
 input_file = args.input
 if isinstance(input_file, list):
@@ -41,9 +44,9 @@ if isinstance(input_file, list):
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
 if args.plot_path:
-    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', plot_path=args.plot_path) 
+    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', plot_path=args.plot_path, **kwarg_dict) 
 else:
-    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw') 
+    out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict) 
 
 with open(args.output_file,"w") as f:
     json.dump(out_dict,f, indent=4)
