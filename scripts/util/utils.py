@@ -69,6 +69,9 @@ def par_overwrite_path(setup):
 def log_path(setup):
     return setup["paths"]["tmp_log"]
 
+def filelist_path(setup):
+    return setup["paths"]["tmp_filelists"]
+
 def runcmd(setup):
     exec_cmd = setup['execenv']['cmd']
     exec_arg = setup['execenv']['arg']
