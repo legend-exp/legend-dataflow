@@ -4,6 +4,8 @@ import pathlib
 import argparse
 import logging
 
+from util.metadata_loading import *
+
 from pygama.pargen.ecal_th import energy_cal_th
 import pygama.pargen.cuts as cts
 import pygama.lgdo.lh5_store as lh5
@@ -35,7 +37,7 @@ if __name__ == '__main__':
     logging.getLogger('lgdo.lh5_store').setLevel(logging.INFO)
 
     with open(args.ctc_dict,'r') as r:
-        hit_dict = json.load(r)#[args.channel]["ctc_params"]
+        hit_dict = json.load(r)[args.channel]["ctc_params"]
 
     cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
     channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
