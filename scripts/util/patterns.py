@@ -11,7 +11,10 @@ def par_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_{name}"
 
 def par_overwrite_pattern():
-    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_{name}-overwrite"
+    return par_pattern()+"-overwrite"
+
+def processing_overwrite_pattern():
+    return processing_pattern()+"-overwrite"
 
 def full_channel_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
@@ -97,9 +100,9 @@ def get_pattern_pars(setup, tier, name = None):
 
 def get_pattern_pars_overwrite(setup, tier, name = None):
     if name is not None:
-        return os.path.join(f"{par_overwrite_path(setup)}", tier,  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_"+tier+"_"+name+"-overwrite.json")
+        return os.path.join(f"{par_overwrite_path(setup)}", tier,  "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+"_"+name+"-overwrite.json")
     else:
-        return os.path.join(f"{par_overwrite_path(setup)}", tier,  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_"+tier+"-overwrite.json")
+        return os.path.join(f"{par_overwrite_path(setup)}", tier,  "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+"-overwrite.json")
 
 def get_pattern_pars_tmp_channel(setup, tier, name=None):
     if name =="energy_grid":
