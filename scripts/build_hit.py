@@ -2,14 +2,17 @@ import argparse, pathlib
 import numpy as np
 import os,json
 
+from util.metadata_loading import *
+from util.Props import *
+
 from pygama.hit.build_hit import build_hit
 
 import time
 import logging
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("input", help="input file", type=str)
-argparser.add_argument("--pars_file", help="hit pars file", type=str)
+argparser.add_argument("--input", help="input file", type=str)
+argparser.add_argument("--pars_file", help="hit pars file", nargs="*")
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -29,11 +32,22 @@ logging.getLogger('h5py._conv').setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
-with open(args.pars_file) as f:
-    pars_dict = json.load(f)
+cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
+channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+channel_dict = channel_dict['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+
+if isinstance(args.pars_file, list):
+    pars_dict = Props.read_from(args.pars_file)
+else:
+    with open(args.pars_file) as f:
+        pars_dict = json.load(f)
 
 hit_dict ={}
 for channel in pars_dict:
+    if args.channel in channel_dict:
+        with open(channel_dict[args.channel], "r") as r:
+            cfg_dict = json.load(r)
+        Props.add_to(pars_dict[channel], cfg_dict)
     hit_dict[f'{channel}/dsp']=pars_dict[channel]
 
 t_start = time.time()

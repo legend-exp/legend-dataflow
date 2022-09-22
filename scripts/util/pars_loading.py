@@ -8,7 +8,7 @@ from .FileKey import *
 
 class pars_catalog(CalibCatalog):
     
-    pars_overwrite_pattern = processing_overwrite_pattern()'.{ext}'
+    pars_overwrite_pattern = processing_overwrite_pattern()+'.{ext}'
     
     @staticmethod
     def match_pars_files(filelist1, filelist2):
