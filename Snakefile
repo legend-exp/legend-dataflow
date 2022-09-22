@@ -123,6 +123,7 @@ def read_filelist_raw_cal_channel(wildcards):
         files = f.read().splitlines()
         return files
 
+
 rule build_pars_dsp_tau:
     input:
         files = read_filelist_raw_cal_channel
@@ -152,7 +153,7 @@ rule build_pars_dsp_eopt:
         datatype = "cal",
         channel = "{channel}"
     output:
-        dsp_pars = get_pattern_pars_tmp_channel(setup, "dsp"),
+        dsp_pars = temp(get_pattern_pars_tmp_channel(setup, "dsp")),
         qbb_grid = get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid_at_qbb")
     log:
         get_pattern_log_channel(setup, "pars_dsp_eopt")
@@ -173,6 +174,7 @@ def read_filelist_pars_dsp_cal_channel(wildcards):
         files = f.read().splitlines()
         return files 
 
+
 rule build_pars_dsp:
     input:
         read_filelist_pars_dsp_cal_channel
@@ -181,6 +183,7 @@ rule build_pars_dsp:
     group: "merge-dsp"
     script:
         "scripts/merge_channels.py"
+
 
 def get_pars_dsp_file(wildcards):
     """
@@ -194,7 +197,7 @@ rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
         tcm_file = get_pattern_tier_tcm(setup),
-        pars_file = get_pars_dsp_file
+        pars_file = ancient(get_pars_dsp_file)
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -206,7 +209,7 @@ rule build_dsp:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp}  {input.raw_file} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output}"
 
 
 
@@ -219,8 +222,8 @@ def read_filelist_dsp_cal(wildcards):
 #This rule builds the energy calibration using the calibration dsp files 
 rule build_energy_calibration:
     input:
-        files = =read_filelist_dsp_cal,
-        ctc_dict = get_pattern_pars_tmp_channel(setup, "hit", "ctc")
+        files = read_filelist_dsp_cal,
+        ctc_dict = ancient(get_pars_dsp_file)#get_pattern_pars_tmp_channel(setup, "dsp")
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
@@ -300,4 +303,4 @@ rule build_hit:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output} {input.dsp_file} "
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output} --input {input.dsp_file} "
