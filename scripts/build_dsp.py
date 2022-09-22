@@ -34,8 +34,6 @@ channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp,
 
 channel_dict = channel_dict['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 
-print(args.pars_file)
-
 if isinstance(args.pars_file, list):
     database_dic = Props.read_from(args.pars_file)
 else:
