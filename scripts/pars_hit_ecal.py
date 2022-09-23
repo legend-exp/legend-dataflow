@@ -5,6 +5,7 @@ import argparse
 import logging
 
 from util.metadata_loading import *
+from util.Props import *
 
 from pygama.pargen.ecal_th import energy_cal_th
 import pygama.pargen.cuts as cts
@@ -15,8 +16,8 @@ log = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("files", help="files", nargs='*',type=str)
-    argparser.add_argument("--ctc_dict", help="ctc_dict", type=str)
+    argparser.add_argument("--files", help="files", nargs='*',type=str)
+    argparser.add_argument("--ctc_dict", help="ctc_dict", nargs="*")
     
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -36,8 +37,14 @@ if __name__ == '__main__':
     logging.getLogger('matplotlib').setLevel(logging.INFO)
     logging.getLogger('lgdo.lh5_store').setLevel(logging.INFO)
 
-    with open(args.ctc_dict,'r') as r:
-        hit_dict = json.load(r)[args.channel]["ctc_params"]
+    if isinstance(args.ctc_dict, list):
+        database_dic = Props.read_from(args.ctc_dict)
+    else:
+        with open(args.ctc_dict) as f:
+            database_dic = json.load(f)
+
+    
+    hit_dict = database_dic[args.channel]["ctc_params"]
 
     cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
     channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)

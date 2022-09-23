@@ -238,7 +238,7 @@ rule build_energy_calibration:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --results_path {output.results_file} {input.files}" # 
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --results_path {output.results_file} --files {input.files}" # 
 
 
 #This rule builds the a/e calibration using the calibration dsp files 
