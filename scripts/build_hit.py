@@ -33,8 +33,8 @@ logging.getLogger('h5py._conv').setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
-channel_dict = channel_dict['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+channel_dict_path = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+channel_dict = channel_dict_path['snakemake_rules']['tier_hit']["inputs"]['hit_config']
 
 if isinstance(args.pars_file, list):
     pars_dict = Props.read_from(args.pars_file)
@@ -44,8 +44,8 @@ else:
 
 hit_dict ={}
 for channel in pars_dict:
-    if args.channel in channel_dict:
-        with open(channel_dict[args.channel], "r") as r:
+    if channel in channel_dict:
+        with open(channel_dict[channel], "r") as r:
             cfg_dict = json.load(r)
         Props.add_to(pars_dict[channel], cfg_dict)
     hit_dict[f'{channel}/dsp']=pars_dict[channel]
