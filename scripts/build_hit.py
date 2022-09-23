@@ -6,6 +6,7 @@ from util.metadata_loading import *
 from util.Props import *
 
 from pygama.hit.build_hit import build_hit
+import pygama.lgdo.lh5_store as lh5
 
 import time
 import logging
@@ -43,12 +44,14 @@ else:
         pars_dict = json.load(f)
 
 hit_dict ={}
+channels_present = lh5.ls(args.input)
 for channel in pars_dict:
     if channel in channel_dict:
         with open(channel_dict[channel], "r") as r:
             cfg_dict = json.load(r)
         Props.add_to(pars_dict[channel], cfg_dict)
-    hit_dict[f'{channel}/dsp']=pars_dict[channel]
+    if channel in channels_present:
+        hit_dict[f'{channel}/dsp']=pars_dict[channel]
 
 t_start = time.time()
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
