@@ -1,44 +1,36 @@
-#import snakemake as smk
-#import os, re, glob
-
-#from utils import *
 from util.FileKey import *
 import glob
 
 keypart = snakemake.wildcards.keypart
 setup = snakemake.params.setup
 
-"""
-d = parse_keypart(keypart)
-
-
-tier0_pattern = get_pattern_evts(setup, "daq")
-tier0_pattern_rx = re.compile(smk.io.regex(tier0_pattern))
-fn_glob_pattern = smk.io.expand(tier0_pattern, experiment = d["experiment"], period = d["period"], run = d["run"], datatype = d["datatype"], timestamp = d["timestamp"])[0]
-
-files = glob.glob(fn_glob_pattern)
-
-keys = []
-for f in files:
-    m  = tier0_pattern_rx.match(f)
-    if m is not None:
-
-        d = m.groupdict()
-        key = smk.io.expand(f"{key_pattern()}", experiment = d["experiment"], period = d["period"], run = d["run"], datatype  = d["datatype"], timestamp = d["timestamp"])[0]
-        keys.append(key)
-
-with open(snakemake.output[0], 'w') as f:
-    for key in keys:
-        f.write(f"{key}\n")
-"""
-
 key = FileKey.parse_keypart(keypart)
-fn_glob_pattern = key.get_path_from_filekey(get_pattern_tier_daq(setup))[0]
-files = glob.glob(fn_glob_pattern)
+
+item_list = []
+for item in key:
+    if "," in item:
+        item = item.split(",")
+    if isinstance(item, list):
+        item_list.append(item)
+    else:
+        item_list.append([item])
+
+filekeys=[]
+for i in item_list[0]:
+    for j in item_list[1]:
+        for k in item_list[2]:
+            for l in item_list[3]:
+                for m in item_list[4]:
+                    filekeys.append(FileKey(i,j,k,l,m))
+
 keys = []
-for f in files:
-    key = FileKey.get_filekey_from_pattern(f,get_pattern_tier_daq(setup))
-    keys.append(key.name)
+for key in filekeys:
+    fn_glob_pattern = key.get_path_from_filekey(get_pattern_tier_daq(setup))[0]
+    files = glob.glob(fn_glob_pattern)
+
+    for f in files:
+        key = FileKey.get_filekey_from_pattern(f,get_pattern_tier_daq(setup))
+        keys.append(key.name)
 
 with open(snakemake.output[0], 'w') as f:
     for key in keys:
