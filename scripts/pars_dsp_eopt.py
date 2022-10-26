@@ -246,11 +246,20 @@ if opt_dict["run_eopt"]==True:
     out_alpha_dict = {}
     out_alpha_dict["cuspEmax_ctc"] = {"expression": "cuspEmax*(1+dt_eff*a)",
                                 "parameters":{"a":bopt_cusp.optimal_results["alpha"]}}
+    
+    out_alpha_dict["cuspEftp_ctc"] = {"expression": "cuspEftp*(1+dt_eff*a)",
+                                "parameters":{"a":bopt_cusp.optimal_results["alpha"]}}
 
     out_alpha_dict["zacEmax_ctc"] = {"expression": "zacEmax*(1+dt_eff*a)",
                                 "parameters":{"a":bopt_zac.optimal_results["alpha"]}}
+    
+    out_alpha_dict["zacEftp_ctc"] = {"expression": "zacEftp*(1+dt_eff*a)",
+                                "parameters":{"a":bopt_zac.optimal_results["alpha"]}}
         
     out_alpha_dict["trapEmax_ctc"] = {"expression": "trapEmax*(1+dt_eff*a)",
+                                "parameters":{"a":bopt_trap.optimal_results["alpha"]}}
+
+    out_alpha_dict["trapEftp_ctc"] = {"expression": "trapEftp*(1+dt_eff*a)",
                                 "parameters":{"a":bopt_trap.optimal_results["alpha"]}}
 
     db_dict.update({"ctc_params":out_alpha_dict})
