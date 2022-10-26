@@ -25,6 +25,24 @@ out_spec = '''
       "key_list" : ["*"],
       "out_stream" : "{filekey}"
     }
+  },
+  "OrcaHeaderDecoder" : {
+    "OrcaHeader" : {
+      "key_list" : [ "*" ],
+      "out_stream" : "{filekey}"
+    }
+  },
+  "ORFlashCamListenerConfigDecoder" : {
+    "FCConfig" : {
+      "key_list" : [ "*" ],
+      "out_stream" : "{filekey}"
+    }
+  },
+  "*" : {
+    "{name}" : {
+      "key_list" : [ "*" ],
+      "out_stream" : "{filekey}"
+    }
   }
 }
 '''
