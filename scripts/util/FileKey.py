@@ -163,9 +163,9 @@ class ChannelFileKey(FileKey):
         return out
     
     @staticmethod
-    def get_channel_files(setup, keypart, tier, dataset_file):
+    def get_channel_files(setup, keypart, tier, dataset_file, name=None):
         d = ChannelFileKey.parse_keypart(keypart)
-        par_pattern = get_pattern_pars_tmp_channel(setup,tier)
+        par_pattern = get_pattern_pars_tmp_channel(setup,tier, name)
         filenames = []
         with open(dataset_file) as f:
             chan_list = f.read().splitlines()
