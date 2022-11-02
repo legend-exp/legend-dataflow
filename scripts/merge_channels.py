@@ -4,6 +4,7 @@ import pathlib
 import pickle as pkl
 import numpy as np
 import argparse
+import pygama.pargen.energy_optimisation as om
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", nargs='*',type=str)
