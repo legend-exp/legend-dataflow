@@ -1,30 +1,38 @@
 {
     "setups": {
-        "l200": {
-            "paths": {
-                "orig": "$_/inputs/tier/",
-                "gendata": "$_/generated/tier",
-                "config": "$_/inputs/cfg",
-                "par": "$_/generated/par",
-                "log": "$_/generated/tmp/log",
-                "tmp_par": "$_/generated/tmp/par",
-                "plt": "$_/generated/plt",
-                "par_overwrite": "$_/inputs/par_overwrite",
-                "src": {
-                    "python": "$_/src/python"
-                }
-            },
-            "execenv": {
-                "default": {
-                    "env": {
-                        "VENV_BASE_DIR": "$_/venv"
-                    },
-                    "exec": [
-                        "/lfs/l1/legend/legend-prodenv/tools/bin/venv",
-                        "default"
-                    ]
-                }
-            }
-        }
+       "l200": {
+          "paths": {
+             "orig":           "/data1/shared/l60/l60-daq/daq-v01",
+             "config":         "$_/inputs/cfg",
+             "par_overwrite":  "$_/inputs/par_overwrite",
+ 
+             "tier":           "$_/generated/tier",
+             "tier_raw":       "$_/generated/tier/raw",
+             "tier_tcm":       "$_/generated/tier/tcm",
+             "tier_dsp":       "$_/generated/tier/dsp",
+             "tier_hit":       "$_/generated/tier/hit",
+             "tier_evt":       "$_/generated/tier/evt",
+ 
+             "par":            "$_/generated/par",
+             "par_raw":        "$_/generated/par/raw",
+             "par_tcm":        "$_/generated/par/tcm",
+             "par_dsp":        "$_/generated/par/dsp",
+             "par_hit":        "$_/generated/par/hit",
+             "par_evt":        "$_/generated/par/evt",
+ 
+             "plt":            "$_/generated/plt",
+             "tmp_plt":        "$_/generated/tmp/plt",
+             "tmp_log":        "$_/generated/tmp/log",
+             "tmp_filelists":  "$_/generated/tmp/filelists",
+             "tmp_par":        "$_/generated/tmp/par",
+             "src":            "$_/software/python/src",
+             "install":        "$_/software/python/install",
+             "cache":          "$_/software/python/cache"
+          },
+          "execenv": {
+             "cmd": "apptainer run",
+             "arg": "/data1/shared/l60/l60-prodven-v1/containers/legendexp_legend-base_latest.sif"
+          }
+       }
     }
-}
+ }
