@@ -24,6 +24,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
 argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
 argparser.add_argument("--log", help="log_file", type=str)
 
@@ -33,6 +34,8 @@ argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
 argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
+argparser.add_argument("--plot_path", help="plot_path", type=str)
+
 
 argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
 args = argparser.parse_args()
@@ -200,19 +203,24 @@ if opt_dict["run_eopt"]==True:
             results_trap[i]['y_val']=max_trap
             sample_y_trap[i] = max_trap
 
+    kernel = ConstantKernel(0.1)* RBF(3)+ConstantKernel(2.5, constant_value_bounds="fixed")+WhiteKernel(noise_level=1e-02)
+
 
     bopt_cusp = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_cusp.kernel = ConstantKernel(1.9, constant_value_bounds="fixed")+ConstantKernel(1.0, constant_value_bounds="fixed") * RBF(1, length_scale_bounds="fixed")
+    bopt_cusp.kernel = kernel
+    bopt_cusp.lambda_param=1
     bopt_cusp.add_dimension("cusp", "sigma", 1, 16, "us")
     bopt_cusp.add_dimension("cusp", "flat", 1.5, 3, "us")
 
     bopt_zac = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_zac.kernel = ConstantKernel(1.9, constant_value_bounds="fixed")+ConstantKernel(1.0, constant_value_bounds="fixed") * RBF(1, length_scale_bounds="fixed")
+    bopt_zac.kernel = kernel
+    bopt_zac.lambda_param=1
     bopt_zac.add_dimension("zac", "sigma", 1, 16, "us")
     bopt_zac.add_dimension("zac", "flat", 1.5, 3, "us")
 
     bopt_trap = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_trap.kernel = ConstantKernel(1.9, constant_value_bounds="fixed")+ConstantKernel(1.0, constant_value_bounds="fixed") * RBF(1, length_scale_bounds="fixed")
+    bopt_trap.kernel = kernel
+    bopt_zac.lambda_param=1
     bopt_trap.add_dimension("etrap", "rise", 1, 12, "us")
     bopt_trap.add_dimension("etrap", "flat", 1.5, 3, "us")
 
@@ -275,5 +283,13 @@ pathlib.Path(os.path.dirname(args.final_dsp_pars)).mkdir(parents=True, exist_ok=
 with open(args.final_dsp_pars, 'w') as w:
     json.dump(db_dict, w, indent=4)
 
+if args.plot_path:
+    if args.inplots:
+        with open(args.inplots, "rb") as r:
+            plot_dict = pkl.load(r)
+    else:
+        plot_dict ={}
 
-
+    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+    with open(args.plot_path, "wb") as w:
+        pkl.dump(plot_dict, w)

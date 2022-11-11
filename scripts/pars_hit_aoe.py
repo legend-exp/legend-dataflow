@@ -3,6 +3,7 @@ import os,json
 import pathlib
 import argparse
 import logging
+import pickle as pkl
 
 from util.metadata_loading import *
 
@@ -13,6 +14,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs='*',type=str)
 argparser.add_argument("--ecal_file", help="ecal_file",type=str, required=True)
 argparser.add_argument("--eres_file", help="eres_file",type=str, required=True)
+argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -21,7 +23,7 @@ argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
 argparser.add_argument("--log", help="log_file", type=str)
 
-argparser.add_argument("--plot_file", help="plot_file",type=str)
+argparser.add_argument("--plot_file", help="plot_file",type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars",type=str)
 argparser.add_argument("--aoe_results", help="aoe_results",type=str)
 args = argparser.parse_args()
@@ -49,13 +51,24 @@ with open(args.eres_file, 'r') as o:
 
 eres_pars = eres_dict[kwarg_dict["cal_energy_param"]]['eres_pars']
     
+if args.plot_file:
+    cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
+                            eres_pars=eres_pars, display=1, **kwarg_dict) 
+    if args.inplots:
+        with open(args.inplots, "rb") as r:
+            out_plot_dict = pkl.load(r)
+        out_plot_dict.update(plot_dict)
+    else:
+        out_plot_dict = plot_dict
 
-cal_dict, out_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, eres_pars=eres_pars,
-                             plot_savepath=args.plot_file, **kwarg_dict) 
+    pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
+    with open(args.plot_file, "wb") as w:
+        pkl.dump(out_plot_dict, w)
+else:
+    cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
+                            eres_pars=eres_pars, **kwarg_dict) 
 
-#outputs= [ "cuspEmax_ctc_cal", "zacEmax_ctc_cal", "trapEmax_ctc_cal", "AoE_Corrected",
-#            "AoE_Classifier", "AoE_Low_Cut", "AoE_Double_Sided_Cut", "Quality_cuts"]
-final_hit_dict = { "operations":cal_dict} #"outputs":outputs,
+final_hit_dict = { "operations":cal_dict}
 
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)

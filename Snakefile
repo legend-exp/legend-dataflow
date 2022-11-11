@@ -220,23 +220,23 @@ def get_pars_dsp_file(wildcards):
     return out
 
 
-# rule build_dsp:
-#     input:
-#         raw_file = get_pattern_tier_raw(setup),
-#         tcm_file = get_pattern_tier_tcm(setup),
-#         pars_file = ancient(get_pars_dsp_file)
-#     params:
-#         timestamp = "{timestamp}",
-#         datatype = "{datatype}"
-#     output:
-#         get_pattern_tier_dsp(setup)
-#     log:
-#         get_pattern_log(setup, "tier_dsp")
-#     group: "tier-dsp"
-#     resources:
-#         runtime=300
-#     shell:
-#         "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output}"
+rule build_dsp:
+    input:
+        raw_file = get_pattern_tier_raw(setup),
+        tcm_file = get_pattern_tier_tcm(setup),
+        pars_file = ancient(get_pars_dsp_file)
+    params:
+        timestamp = "{timestamp}",
+        datatype = "{datatype}"
+    output:
+        get_pattern_tier_dsp(setup)
+    log:
+        get_pattern_log(setup, "tier_dsp")
+    group: "tier-dsp"
+    resources:
+        runtime=300
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output}"
 
 
 
@@ -258,7 +258,7 @@ rule build_energy_calibration:
     output:
         ecal_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
         results_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")),
-        plot_file = get_pattern_plts_tmp_channel(setup, "hit","energy_cal")
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","energy_cal"))
     log:
         get_pattern_log_channel(setup, "pars_hit_energy_cal")
     group: "par-hit"
@@ -273,7 +273,8 @@ rule build_aoe_calibration:
     input:
         files = os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-dsp.filelist"),
         ecal_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
-        eres_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")
+        eres_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results"),
+        inplots = get_pattern_plts_tmp_channel(setup, "hit","energy_cal")
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
@@ -281,14 +282,14 @@ rule build_aoe_calibration:
     output:
         hit_pars = temp(get_pattern_pars_tmp_channel(setup, "hit")),
         aoe_results = temp(get_pattern_pars_tmp_channel(setup, "hit", "results")),
-        plot_file = get_pattern_plts_tmp_channel(setup, "hit","aoe_cal")
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit"))
     log:
         get_pattern_log_channel(setup, "pars_hit_aoe_cal")
     group: "par-hit"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --aoe_results {output.aoe_results} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --eres_file {input.eres_file} --ecal_file {input.ecal_file} {input.files}"     
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --eres_file {input.eres_file} --ecal_file {input.ecal_file} {input.files}"     
 
 
 def read_filelist_pars_hit_cal_channel(wildcards):
@@ -300,6 +301,17 @@ def read_filelist_pars_hit_cal_channel(wildcards):
         files = f.read().splitlines()
         return files 
 
+def read_filelist_plts_hit_cal_channel(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(label=label, tier="hit", extension="chan").output[0].open() as f:
+        files = f.read().splitlines()
+        files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
+        return files 
+
 def read_filelist_pars_hit_cal_channel_results(wildcards):
     """
     This function will read the filelist of the channels and return a list of dsp files one for each channel
@@ -309,23 +321,27 @@ def read_filelist_pars_hit_cal_channel_results(wildcards):
         files = f.read().splitlines()
         return files 
 
-def get_pars_hit_file(wildcards):
-    """
-    This function will get the pars file for the run checking the pars_overwrite 
-    """
-    return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit")
+
 
 
 checkpoint build_pars_hit:
     input:
         ancient(read_filelist_pars_hit_cal_channel),
-        read_filelist_pars_hit_cal_channel_results
+        read_filelist_pars_hit_cal_channel_results,
+        read_filelist_plts_hit_cal_channel
     output:
         get_pattern_par_hit(setup),
-        get_pattern_par_hit(setup, name="results")
+        get_pattern_par_hit(setup, name="results"),
+        get_pattern_plts(setup, "hit")
     group: "merge-hit"
     shell:
         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
+
+def get_pars_hit_file(wildcards):
+    """
+    This function will get the pars file for the run checking the pars_overwrite 
+    """
+    return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit")
 
 
 rule build_hit:

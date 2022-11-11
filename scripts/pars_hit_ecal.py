@@ -3,6 +3,7 @@ import os,json
 import pathlib
 import argparse
 import logging
+import pickle as pkl
 
 from util.metadata_loading import *
 from util.Props import *
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     
     argparser.add_argument("--log", help="log_file", type=str)
     
-    argparser.add_argument("--plot_path", help="plot_path", type=str)
+    argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
     argparser.add_argument("--save_path", help="save_path", type=str)
     argparser.add_argument("--results_path", help="results_path", type=str)
     args = argparser.parse_args()
@@ -53,9 +54,16 @@ if __name__ == '__main__':
     with open(channel_dict,"r") as r:
         kwarg_dict = json.load(r)
 
-    out_dict, result_dict = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
-                                        plot_path= args.plot_path, **kwarg_dict)  
+    if args.plot_path:
+        out_dict, result_dict,plot_dict = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
+                                            display=1, **kwarg_dict)  
 
+        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+        with open(args.plot_path,"wb") as f:
+            pkl.dump(plot_dict,f)
+    else:
+        out_dict, result_dict = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
+                                            **kwarg_dict)
     
     out_dict.update({"cuspEmax_cal": {
                       "expression": "a*cuspEmax+b",

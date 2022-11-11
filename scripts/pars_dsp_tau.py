@@ -8,6 +8,7 @@ import pygama
 import pygama.pargen.extract_tau as dpp
 from util.metadata_loading import *
 import logging
+import pickle as pkl
 
 import json
 from collections import OrderedDict 
@@ -46,7 +47,10 @@ if kwarg_dict["run_tau"]==True:
 
     
     if args.plot_path:
-        out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', plot_path=args.plot_path, **kwarg_dict) 
+        out_dict,plot_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict, display=1) 
+        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+        with open(args.plot_path,"wb") as f:
+            pkl.dump(plot_dict,f)
     else:
         out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict) 
 else:
