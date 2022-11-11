@@ -133,36 +133,38 @@ rule build_pars_dsp_tau:
         datatype = "cal",
         channel = "{channel}"
     output:
-        decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"))
-        #plots = temp(get_pattern_plts_tmp_channel(setup, "dsp",'')) ,"decay_constant"
+        decay_const = temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
+        plots = temp(get_pattern_plts_tmp_channel(setup, "dsp","decay_constant")) 
     log:
         get_pattern_log_channel(setup, "par_dsp_decay_constant")
     group: "par-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --output_file {output.decay_const} {input.files} " #--plot_path {output.plots}
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --plot_path {output.plots} --output_file {output.decay_const} {input.files} "
 
 
 #This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
         files = os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-raw.filelist"),
-        decay_const = get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")
+        decay_const = get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+        inplots = get_pattern_plts_tmp_channel(setup, "dsp","decay_constant")
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
         channel = "{channel}"
     output:
         dsp_pars = temp(get_pattern_pars_tmp_channel(setup, "dsp")),
-        qbb_grid = temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid"))
+        qbb_grid = temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid")),
+        plots = temp(get_pattern_plts_tmp_channel(setup, "dsp")) 
     log:
         get_pattern_log_channel(setup, "pars_dsp_eopt")
     group: "par-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel} --raw_filelist {input.files} --decay_const {input.decay_const} --qbb_grid_path {output.qbb_grid} --final_dsp_pars {output.dsp_pars}" # {input.peak_files}
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel} --raw_filelist {input.files} --inplots {input.inplots} --decay_const {input.decay_const} --plot_path {output.plots} --qbb_grid_path {output.qbb_grid} --final_dsp_pars {output.dsp_pars}" # {input.peak_files}
 
 
 def read_filelist_pars_dsp_cal_channel(wildcards):
@@ -173,6 +175,17 @@ def read_filelist_pars_dsp_cal_channel(wildcards):
     label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
     with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[0].open() as f:
         files = f.read().splitlines()
+        return files 
+
+def read_filelist_plts_dsp_cal_channel(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[0].open() as f:
+        files = f.read().splitlines()
+        files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
         return files 
 
 def read_filelist_pars_dsp_cal_channel_results(wildcards):
@@ -188,10 +201,12 @@ def read_filelist_pars_dsp_cal_channel_results(wildcards):
 rule build_pars_dsp:
     input:
         ancient(read_filelist_pars_dsp_cal_channel),
-        read_filelist_pars_dsp_cal_channel_results
+        read_filelist_pars_dsp_cal_channel_results,
+        read_filelist_plts_dsp_cal_channel
     output:
         get_pattern_par_dsp(setup),
-        get_pattern_par_dsp(setup, name="energy_grid")
+        get_pattern_par_dsp(setup, name="energy_grid"),
+        get_pattern_plts(setup, "dsp")
     group: "merge-dsp"
     shell:
         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
