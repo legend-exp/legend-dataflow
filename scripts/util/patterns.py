@@ -25,6 +25,9 @@ def get_pattern_tier_daq(setup):
 def get_pattern_tier_raw(setup):
     return os.path.join(f"{tier_raw_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw.lh5")
 
+def get_pattern_tier_trim(setup):
+    return os.path.join(f"{tier_trim_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw_windowed.lh5"), os.path.join(f"{tier_trim_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw_presummed.lh5") 
+
 def get_pattern_tier_tcm(setup):
     return os.path.join(f"{tier_tcm_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_tcm.lh5")
 
@@ -42,6 +45,8 @@ def get_pattern_tier(setup,tier):
         return get_pattern_tier_daq(setup)
     elif tier =="raw":
         return get_pattern_tier_raw(setup)
+    elif tier == "trim":
+        return get_pattern_tier_trim(setup)
     elif tier =="tcm":
         return get_pattern_tier_tcm(setup)
     elif tier =="dsp":
@@ -58,6 +63,12 @@ def get_pattern_par_raw(setup, name=None):
         return os.path.join(f"{par_raw_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw_"+name+".json")
     else:
         return os.path.join(f"{par_raw_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw.json")
+
+def get_pattern_par_trim(setup, name=None):
+    if name is not None:
+        return os.path.join(f"{par_trim_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_trim_"+name+".json")
+    else:
+        return os.path.join(f"{par_rim_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_trim.json")
 
 def get_pattern_par_tcm(setup, name=None):
     if name is not None:
@@ -89,6 +100,8 @@ def get_pattern_par_evt(setup, name=None):
 def get_pattern_pars(setup, tier, name = None):
     if tier =="raw":
         return get_pattern_par_raw(setup, name=name)
+    elif tier =="trim":
+        return get_pattern_par_trim(setup, name=name)
     elif tier =="tcm":
         return get_pattern_par_tcm(setup, name=name)
     elif tier =="dsp":

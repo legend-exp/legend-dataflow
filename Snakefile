@@ -104,6 +104,19 @@ rule build_raw:
     shell:
         "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} {input} {output}"
 
+rule build_trim:
+    input:
+        get_pattern_tier_raw(setup)
+    output:
+        get_pattern_tier_trim(setup)
+    log:
+        get_pattern_log(setup, "tier_trim")
+    group: "tier-trim"
+    resources:
+        runtime=300
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/build_trim.py --log {log} --configs {configs} {input} {output}"
+
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
     input:
