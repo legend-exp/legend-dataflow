@@ -17,18 +17,12 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 # both trimmed files are sent to the same directory as of now
 pathlib.Path(os.path.dirname(args.output[0])).mkdir(parents=True, exist_ok=True)
 
-# TODO: move this to the actual config... and drop in the correct values for the processors s
+# TODO: move this to the actual config... and drop in the correct values for the processors
+# Note: the window value is actually set in the data_trimmer.py script
 trim_config = '''
 {
-    "outputs" : [ "windowed", "presummed" ],
-    "processors" : {
-        "windowed": {
-            "function": "double_windower",
-            "module": "pygama.dsp.processors",
-            "args": ["waveform", "1000", "1000", "windowed(len(waveform)-2000, 'f')"],
-            "unit": "ADC"
-        },
-        
+    "outputs" : ["presummed" ],
+    "processors" : {        
         "presummed": {
             "function": "presum",
             "module": "pygama.dsp.processors",

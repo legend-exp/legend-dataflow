@@ -52,15 +52,8 @@ def test_data_trimmer_waveform_lengths(lgnd_test_data):
 
     dsp_config = '''
     {
-        "outputs" : [ "windowed", "presummed" ],
-        "processors" : {
-            "windowed": {
-                "function": "double_windower",
-                "module": "pygama.dsp.processors",
-                "args": ["waveform", "1000", "1000", "windowed(len(waveform)-2000, 'f')"],
-                "unit": "ADC"
-            },
-            
+        "outputs" : [ "presummed" ],
+        "processors" : {            
             "presummed": {
                 "function": "presum",
                 "module": "pygama.dsp.processors",
@@ -98,9 +91,9 @@ def test_data_trimmer_waveform_lengths(lgnd_test_data):
     presum_rate_end_idx = presum_rate_string.find(",")
     presum_rate = int(presum_rate_string[presum_rate_start_idx:presum_rate_end_idx])
 
-    # Read in the start index from the config file so that we can change the t0 later 
-    window_start_index = int(jsonfile["processors"]["windowed"]["args"][1])
-    window_end_index = int(jsonfile["processors"]["windowed"]["args"][2])
+    # This needs to be overwritten with the correct windowing values set in data_trimmer.py 
+    window_start_index = 1000
+    window_end_index = 1000
 
 
     sto = lgdo.LH5Store()

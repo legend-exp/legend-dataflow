@@ -3,9 +3,6 @@ from __future__ import annotations
 import pygama.lgdo as lgdo
 import numpy as np
 from pygama.dsp.processing_chain import build_processing_chain as bpc
-import sys
-import matplotlib.pyplot as plt
-import time
 import json
 
 def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_config: str | dict) -> None:
@@ -23,6 +20,10 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
         Name of an lh5 file that will contain presummed waveforms 
     dsp_config 
         Either the path to the dsp config file to use, or a dictionary of config
+    
+    Notes 
+    ----- 
+    The windowing indices need to be set inside this file, set window_start_index and window_end_index appropriately
     """
     # In the future, put a build_processing_chain-esque dsp and write statement into the read_chunk() loop part of build_raw
 
@@ -59,8 +60,9 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
     presum_rate_end_idx = presum_rate_string.find(",")
     presum_rate = int(presum_rate_string[presum_rate_start_idx:presum_rate_end_idx])
 
-    # Read in the start index from the config file so that we can change the t0 later 
-    window_start_index = int(dsp_dict["processors"]["windowed"]["args"][1])
+    # Need to override this value to get the correct waveform window
+    window_start_index = int(1000)
+    window_end_index = int(1000)
 
     # loop over the tables in the file, allows for the case of multiple channels per file 
     for raw_group in lh5_tables:        
@@ -71,22 +73,10 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
         proc_chain, mask, dsp_out = bpc(raw_table, dsp_dict)
         proc_chain.execute()
 
-        # Retype the dsp output of the windowed waveform from float32 back down to uint16:
-        dsp_out["windowed"].nda = dsp_out["windowed"].nda.astype(np.uint16)
-
-        # Write the presummed waveform to file 
-        # Overwrite the waveform values with those from the processed waveform
-        raw_table["waveform"]["values"].nda = dsp_out["presummed"].nda
-
-        # For the presummed waveform, overwrite the dt:
-        raw_table["waveform"]["dt"].nda = np.full(len(raw_table["waveform"]["dt"]), raw_table["waveform"]["dt"].nda[0]*float(presum_rate)) # The clock rate should be the same across the file
-        
-        # Write to raw files
-        sto.write_object(raw_table, "raw", presummed_file, group=raw_group.split("/raw")[0], wo_mode="a")
-
         # Write the windowed waveform to a file 
-        # Overwrite the waveform values with those from the processed waveform
-        raw_table["waveform"]["values"].nda =  dsp_out["windowed"].nda
+        # Overwrite the waveform values with a windowed view of the same raw_table waveform values 
+        # This is more memory efficient than using build_processing_chain to allocate a new array
+        raw_table["waveform"]["values"].nda =  raw_table["waveform"]["values"].nda[ : , window_start_index:-window_end_index]
 
         # For the windowed waveform, change the t0 by the windowing (t0+start_index*dt?) or units of (t0/dt+start_index) in samples
         raw_table["waveform"]["t0"].nda /= raw_table["waveform"]["dt"].nda * float(presum_rate) # undo the clock rate transform from the presummed wf
@@ -94,3 +84,13 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
         raw_table["waveform"]["t0"].attrs['units'] = "samples" # Changed the units to samples
 
         sto.write_object(raw_table, "raw", windowed_file, group=raw_group.split("/raw")[0], wo_mode="a")
+
+        # Write the presummed waveform to file 
+        # Overwrite the waveform values with those from the processed waveform
+        raw_table["waveform"]["values"].nda = dsp_out["presummed"].nda
+
+        # For the presummed waveform, overwrite the dt:
+        raw_table["waveform"]["dt"].nda *= float(presum_rate)
+        
+        # Write to raw files
+        sto.write_object(raw_table, "raw", presummed_file, group=raw_group.split("/raw")[0], wo_mode="a")
