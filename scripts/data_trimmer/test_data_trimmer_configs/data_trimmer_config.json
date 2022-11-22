@@ -2,9 +2,9 @@
     "outputs" : ["presummed"],
     "processors" : {        
         "presummed": {
-            "function": "presum",
+            "function": "unnorm_presum",
             "module": "pygama.dsp.processors",
-            "args": ["waveform", "presummed(len(waveform)/4, 'f')"],
+            "args": ["waveform", "presummed(len(waveform)/4, 'uint32')"],
             "unit": "ADC"
         }
     }

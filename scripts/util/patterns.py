@@ -26,7 +26,7 @@ def get_pattern_tier_raw(setup):
     return os.path.join(f"{tier_raw_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw.lh5")
 
 def get_pattern_tier_trim(setup):
-    return os.path.join(f"{tier_trim_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw_windowed.lh5"), os.path.join(f"{tier_trim_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw_presummed.lh5") 
+    return os.path.join(f"{tier_trim_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw_trimmed.lh5")
 
 def get_pattern_tier_tcm(setup):
     return os.path.join(f"{tier_tcm_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_tcm.lh5")

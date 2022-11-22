@@ -4,8 +4,10 @@ import pygama.lgdo as lgdo
 import numpy as np
 from pygama.dsp.processing_chain import build_processing_chain as bpc
 import json
+import copy
 
-def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_config: str | dict) -> None:
+
+def data_trimmer(raw_file: str, trimmed_file: str, dsp_config: str | dict) -> None:
     """
     Takes in a raw file, and returns two files, one containing the presummed waveform, and the other 
     containing a windowed waveform.
@@ -14,19 +16,16 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
     ----------
     raw_file
         A raw lh5 file to window and presum
-    windowed_file
-        Name of an lh5 file that will contain windowed waveforms 
-    presummed_file
-        Name of an lh5 file that will contain presummed waveforms 
+    trimmed_file
+        Name of an lh5 file that will contain windowed and trimmed waveforms, under the group ``.../raw/presummed_waveform`` and ``.../raw/windowed_waveform``
     dsp_config 
         Either the path to the dsp config file to use, or a dictionary of config
     
     Notes 
     ----- 
     The windowing indices need to be set inside this file, set window_start_index and window_end_index appropriately
+    The presummed waveform is unnormalized! The normalization is stored inside a table of the same length as t0 in waveform as "presum_len" 
     """
-    # In the future, put a build_processing_chain-esque dsp and write statement into the read_chunk() loop part of build_raw
-
     # Read in the raw file
     sto = lgdo.LH5Store()
     lh5_tables = lgdo.ls(raw_file)
@@ -74,23 +73,36 @@ def data_trimmer(raw_file: str, windowed_file: str, presummed_file: str, dsp_con
         proc_chain.execute()
 
         # Write the windowed waveform to a file 
+        # Just manipulate the existing raw table so we don't have to allocate new memory 
+        raw_table["windowed_waveform"] = raw_table.pop('waveform')
+        raw_table.update_datatype()
+
         # Overwrite the waveform values with a windowed view of the same raw_table waveform values 
         # This is more memory efficient than using build_processing_chain to allocate a new array
-        raw_table["waveform"]["values"].nda =  raw_table["waveform"]["values"].nda[ : , window_start_index:-window_end_index]
+        raw_table["windowed_waveform"]["values"].nda =  raw_table["windowed_waveform"]["values"].nda[ : , window_start_index:-window_end_index]
+        
+        original_t0_units = raw_table["windowed_waveform"]["t0"].attrs['units']
 
-        # For the windowed waveform, change the t0 by the windowing (t0+start_index*dt?) or units of (t0/dt+start_index) in samples
-        raw_table["waveform"]["t0"].nda /= raw_table["waveform"]["dt"].nda * float(presum_rate) # undo the clock rate transform from the presummed wf
-        raw_table["waveform"]["t0"].nda += float(window_start_index)
-        raw_table["waveform"]["t0"].attrs['units'] = "samples" # Changed the units to samples
+        # For the windowed waveform, change the t0 by the windowing to units of (t0/dt+start_index) in samples
+        raw_table["windowed_waveform"]["t0"].nda /= raw_table["windowed_waveform"]["dt"].nda 
+        raw_table["windowed_waveform"]["t0"].nda += float(window_start_index)
+        raw_table["windowed_waveform"]["t0"].attrs['units'] = "samples" # Changed the units to samples
 
-        sto.write_object(raw_table, "raw", windowed_file, group=raw_group.split("/raw")[0], wo_mode="a")
-
+        # Create a new table that contains the presummed waveform WaveformTable
+        presummed_table = lgdo.WaveformTable(size= len(raw_table["windowed_waveform"]["t0"].nda), t0 = 0, t0_units=copy.deepcopy(raw_table["windowed_waveform"]["t0"].attrs['units']),  dt = 0, dt_units= copy.deepcopy(raw_table["windowed_waveform"]["dt"].attrs['units']), wf_len= int((len(raw_table["windowed_waveform"]["values"].nda[0])+window_start_index+window_end_index)/presum_rate) , dtype= np.uint32 )
+        raw_table.add_field("presummed_waveform", presummed_table, use_obj_size = True)
+        
         # Write the presummed waveform to file 
         # Overwrite the waveform values with those from the processed waveform
-        raw_table["waveform"]["values"].nda = dsp_out["presummed"].nda
+        raw_table["presummed_waveform"]["values"].nda = dsp_out["presummed"].nda
 
+        # Change the t0 back to the original units and values
+        raw_table["presummed_waveform"]["t0"].nda -= float(window_start_index)
+        raw_table["presummed_waveform"]["t0"].nda *= raw_table["presummed_waveform"]["dt"].nda 
+        raw_table["presummed_waveform"]["t0"].attrs['units'] = str(original_t0_units) 
+        
         # For the presummed waveform, overwrite the dt:
-        raw_table["waveform"]["dt"].nda *= float(presum_rate)
+        raw_table["presummed_waveform"]["dt"].nda = float(presum_rate)*raw_table["windowed_waveform"]["dt"].nda
         
         # Write to raw files
-        sto.write_object(raw_table, "raw", presummed_file, group=raw_group.split("/raw")[0], wo_mode="a")
+        sto.write_object(raw_table, "raw", trimmed_file, group=raw_group.split("/raw")[0], wo_mode="a")
