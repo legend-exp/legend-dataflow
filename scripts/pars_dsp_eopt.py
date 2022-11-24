@@ -107,7 +107,8 @@ if opt_dict["run_eopt"]==True:
                                             kev_widths,
                                             cut_parameters = opt_dict["cut_parameters"],
                                             n_events= opt_dict["n_events"],
-                                            threshold = opt_dict["threshold"]
+                                            threshold = opt_dict["threshold"],
+                                            wf_field = opt_dict["wf_field"]
                                             )
 
     t1 = time.time()
