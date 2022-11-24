@@ -59,7 +59,7 @@ if __name__ == '__main__':
                                             display=1, **kwarg_dict)  
 
         bins = np.arange(-500,500,1)
-        bls = lh5.load_nda(sorted(args.files),["baseline"], lh5_path=f'{args.channel}/dsp')["baseline"]
+        bls = lh5.load_nda(sorted(args.files),["baseline"], f'{args.channel}/dsp')["baseline"]
         bl_array,bins = np.histogram(bls, bins=bins)
         plot_dict["baseline"] = {"bl_array":bl_array, "bins":(bins[1:]+bins[:-1])/2}
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
