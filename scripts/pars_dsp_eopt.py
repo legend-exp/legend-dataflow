@@ -210,20 +210,20 @@ if opt_dict["run_eopt"]==True:
     bopt_cusp = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
     bopt_cusp.kernel = kernel
     bopt_cusp.lambda_param=1
-    bopt_cusp.add_dimension("cusp", "sigma", 1, 16, "us")
-    bopt_cusp.add_dimension("cusp", "flat", 1.5, 3, "us")
+    bopt_cusp.add_dimension("cusp", "sigma", 1, 16, 2,"us")
+    bopt_cusp.add_dimension("cusp", "flat", 1.5, 3, 2,"us")
 
     bopt_zac = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
     bopt_zac.kernel = kernel
     bopt_zac.lambda_param=1
-    bopt_zac.add_dimension("zac", "sigma", 1, 16, "us")
-    bopt_zac.add_dimension("zac", "flat", 1.5, 3, "us")
+    bopt_zac.add_dimension("zac", "sigma", 1, 16, 2,"us")
+    bopt_zac.add_dimension("zac", "flat", 1.5, 3, 2,"us")
 
     bopt_trap = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
     bopt_trap.kernel = kernel
     bopt_zac.lambda_param=1
-    bopt_trap.add_dimension("etrap", "rise", 1, 12, "us")
-    bopt_trap.add_dimension("etrap", "flat", 1.5, 3, "us")
+    bopt_trap.add_dimension("etrap", "rise", 1, 12, 2,"us")
+    bopt_trap.add_dimension("etrap", "flat", 1.5, 3, 2,"us")
 
     bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp)
     bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac)
@@ -254,22 +254,22 @@ if opt_dict["run_eopt"]==True:
 
     out_alpha_dict = {}
     out_alpha_dict["cuspEmax_ctc"] = {"expression": "cuspEmax*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_cusp.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_cusp.optimal_results["alpha"],9)}}
     
     out_alpha_dict["cuspEftp_ctc"] = {"expression": "cuspEftp*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_cusp.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_cusp.optimal_results["alpha"],9)}}
 
     out_alpha_dict["zacEmax_ctc"] = {"expression": "zacEmax*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_zac.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_zac.optimal_results["alpha"],9)}}
     
     out_alpha_dict["zacEftp_ctc"] = {"expression": "zacEftp*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_zac.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_zac.optimal_results["alpha"],9)}}
         
     out_alpha_dict["trapEmax_ctc"] = {"expression": "trapEmax*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_trap.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_trap.optimal_results["alpha"],9)}}
 
     out_alpha_dict["trapEftp_ctc"] = {"expression": "trapEftp*(1+dt_eff*a)",
-                                "parameters":{"a":bopt_trap.optimal_results["alpha"]}}
+                                "parameters":{"a":round(bopt_trap.optimal_results["alpha"],9)}}
 
     db_dict.update({"ctc_params":out_alpha_dict})
 
