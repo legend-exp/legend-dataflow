@@ -94,15 +94,19 @@ rule autogen_output:
 rule build_raw:
     input:
         get_pattern_tier_daq(setup)
+    params:
+        timestamp = "{timestamp}",
+        datatype = "{datatype}"
     output:
         get_pattern_tier_raw(setup)
     log:
         get_pattern_log(setup, "tier_raw")
     group: "tier-raw"
     resources:
+        mem_swap=110,
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} {input} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} {input} {output}"
 
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
