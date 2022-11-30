@@ -1,10 +1,9 @@
 import os,json
-#from util.utils import *
 import pathlib
 import pickle as pkl
 import numpy as np
 import argparse
-import pygama.pargen.energy_optimisation as om
+import pygama
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", nargs='*',type=str)
@@ -45,19 +44,3 @@ for i,out_file in enumerate(args.output):
         pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
         with open(out_file,"wb") as w:
             pkl.dump(out_dict, w)
-
-
-###combine plot files?
-
-#merge
-
-#for channel in channel_files:
-#    with open(channel,"rb") as r:
-#        channel_dict = pkl.load(r)
-#    experiment, period, run,datatype, timestamp,channel_name, name = os.path.basename(channel).split("-")
-
-#    out_dict[channel_name] = channel_dict
-
-#pathlib.Path(os.path.dirname(snakemake.output[1])).mkdir(parents=True, exist_ok=True)
-#with open(snakemake.output[1],"wb") as w:
-#    pkl.dump(plot_dict, w)
