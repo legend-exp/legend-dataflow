@@ -22,8 +22,6 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-# ToDo: Atomic file creation
-
 cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
 channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
 channel_dict = channel_dict['snakemake_rules']['tier_raw']["inputs"]['raw_config']
