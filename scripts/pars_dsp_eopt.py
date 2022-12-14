@@ -9,8 +9,10 @@ import argparse
 import pathlib
 import pickle as pkl
 import numpy as np
-from util.metadata_loading import *
 from sklearn.gaussian_process.kernels import *
+
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 import logging
 import time
@@ -53,8 +55,8 @@ log = logging.getLogger(__name__)
 
 t0 = time.time()
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-configs = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+conf = LegendMetadata(path = args.configs)
+configs = conf.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 dsp_config = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]['processing_chain'][args.channel]
 opt_json = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]["optimiser_config"][args.channel]
 

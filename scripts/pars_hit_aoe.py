@@ -5,7 +5,7 @@ import argparse
 import logging
 import pickle as pkl
 
-from util.metadata_loading import *
+from legendmeta import LegendMetadata
 
 from pygama.pargen.AoE_cal import cal_aoe
 
@@ -39,9 +39,8 @@ files = sorted(files)
 with open(args.ecal_file, 'r') as o:
     cal_dict = json.load(o)
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
-channel_dict = channel_dict['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
+configs = LegendMetadata(path = args.configs)
+channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
 
 with open(channel_dict,"r") as r:
     kwarg_dict = json.load(r)

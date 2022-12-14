@@ -6,7 +6,7 @@ numba_defaults.boundscheck = True
 import argparse, os, pathlib
 import pygama
 import pygama.pargen.extract_tau as dpp
-from util.metadata_loading import *
+from legendmeta import LegendMetadata
 import logging
 import pickle as pkl
 
@@ -28,8 +28,8 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-config_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
+configs = LegendMetadata(path = args.configs)
+config_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 channel_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['processing_chain'][args.channel]
 kwarg_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['tau_config'][args.channel] 
 

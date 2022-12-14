@@ -5,8 +5,8 @@ numba_defaults.boundscheck = True
 
 from pygama.dsp.build_dsp import build_dsp
 
-from util.metadata_loading import *
-from util.Props import *
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 import argparse, os, pathlib
 import numpy as np
@@ -28,11 +28,8 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-
-channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
-
-channel_dict = channel_dict['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
+configs = LegendMetadata(path = args.configs)
+channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 
 if isinstance(args.pars_file, list):
     database_dic = Props.read_from(args.pars_file)

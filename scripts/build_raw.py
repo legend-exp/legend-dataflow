@@ -1,8 +1,8 @@
 import argparse, os, pathlib, json
 import logging
 
-from util.metadata_loading import *
-from util.Props import *
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 import pygama
 from pygama.raw.build_raw import * 
@@ -22,9 +22,8 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-channel_dict = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
-channel_dict = channel_dict['snakemake_rules']['tier_raw']["inputs"]['raw_config']
+configs = LegendMetadata(path = args.configs)
+channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_raw']["inputs"]['raw_config']
 with open(channel_dict, "r") as f:
   out_spec = json.load(f)
 

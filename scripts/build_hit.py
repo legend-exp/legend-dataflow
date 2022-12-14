@@ -2,8 +2,8 @@ import argparse, pathlib
 import numpy as np
 import os,json
 
-from util.metadata_loading import *
-from util.Props import *
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 from pygama.hit.build_hit import build_hit
 import pygama.lgdo.lh5_store as lh5
@@ -33,9 +33,9 @@ logging.getLogger('h5py._conv').setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
-cfg_file = os.path.join(args.configs, 'key_resolve.jsonl')
-channel_dict_path = config_catalog.get_config(cfg_file, args.configs, args.timestamp, args.datatype)
-channel_dict = channel_dict_path['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+
+configs = LegendMetadata(path = args.configs)
+channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
 
 if isinstance(args.pars_file, list):
     pars_dict = Props.read_from(args.pars_file)
