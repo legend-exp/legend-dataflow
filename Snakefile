@@ -1,4 +1,4 @@
-import pathlib, os, json
+import pathlib, os, json, sys
 import scripts as ds
 from scripts.util.patterns import *
 
@@ -215,14 +215,12 @@ rule build_pars_dsp:
     shell:
         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
 
-
 def get_pars_dsp_file(wildcards):
     """
     This function will get the pars file for the run checking the pars_overwrite 
     """
     out = ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "dsp")
     return out
-
 
 rule build_dsp:
     input:
@@ -347,11 +345,10 @@ def get_pars_hit_file(wildcards):
     """
     return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit")
 
-
 rule build_hit:
     input:
         dsp_file = get_pattern_tier_dsp(setup),
-        pars_file = get_pars_hit_file 
+        pars_file = get_pars_hit_file
     output:
         get_pattern_tier_hit(setup)
     params:
