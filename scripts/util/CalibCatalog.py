@@ -24,7 +24,6 @@ import copy
 import os
 from string import Template
 from .utils import *
-from .patterns import *
 
 class PropsStream():
     @staticmethod
@@ -48,17 +47,6 @@ class CalibCatalog(namedtuple('CalibCatalog', ['entries'])):
 
     class Entry(namedtuple('Entry', ['valid_from','file'])):
         __slots__ = ()
-
-
-    @staticmethod
-    def get(value):
-        if isinstance(value, CalibCatalog):
-            return value
-        if isinstance(value, str):
-            return CalibCatalog.read_from(value)
-        else:
-            raise ValueError("Can't get CalibCatalog from value of type {t}".format(t = type(source)))
-
 
     @staticmethod
     def read_from(file_name):
