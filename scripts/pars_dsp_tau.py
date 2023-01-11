@@ -29,7 +29,7 @@ logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
 
 configs = LegendMetadata(path = args.configs)
-config_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
+config_dict = configs.on(args.timestamp, system=args.datatype)
 channel_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['processing_chain'][args.channel]
 kwarg_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['tau_config'][args.channel] 
 

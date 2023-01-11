@@ -40,7 +40,7 @@ with open(args.ecal_file, 'r') as o:
     cal_dict = json.load(o)
 
 configs = LegendMetadata(path = args.configs)
-channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
+channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
 
 with open(channel_dict,"r") as r:
     kwarg_dict = json.load(r)
@@ -76,4 +76,4 @@ with open(args.hit_pars, 'w') as w:
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
 with open(args.aoe_results, 'w') as w:
-    json.dump(out_dict,w, indent=4)
+    json.dump({"ecal": eres_dict,"aoe":out_dict},w, indent=4)

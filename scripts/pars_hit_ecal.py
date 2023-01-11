@@ -47,7 +47,7 @@ if __name__ == '__main__':
     hit_dict = database_dic[args.channel]["ctc_params"]
 
     configs = LegendMetadata(path = args.configs)
-    channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_ecal']["inputs"]['ecal_config'][args.channel]
+    channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_ecal']["inputs"]['ecal_config'][args.channel]
 
     with open(channel_dict,"r") as r:
         kwarg_dict = json.load(r)
@@ -57,8 +57,8 @@ if __name__ == '__main__':
                                             display=1, **kwarg_dict)  
 
         bins = np.arange(-500,500,1)
-        bls = lh5.load_nda(sorted(args.files),["baseline"], f'{args.channel}/dsp')["baseline"]
-        bl_array,bins = np.histogram(bls, bins=bins)
+        bls = lh5.load_nda(sorted(args.files),["bl_mean"], f'{args.channel}/dsp')["bl_mean"]
+        bl_array, bins,_ = pgh.get_hist(bls, bins=bins)
         plot_dict["baseline"] = {"bl_array":bl_array, "bins":(bins[1:]+bins[:-1])/2}
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path,"wb") as f:
