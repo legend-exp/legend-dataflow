@@ -56,7 +56,7 @@ log = logging.getLogger(__name__)
 t0 = time.time()
 
 conf = LegendMetadata(path = args.configs)
-configs = conf.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
+configs = conf.on(args.timestamp, system=args.datatype)
 dsp_config = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]['processing_chain'][args.channel]
 opt_json = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]["optimiser_config"][args.channel]
 
@@ -113,6 +113,16 @@ if opt_dict["run_eopt"]==True:
                                             wf_field = opt_dict["wf_field"]
                                             )
 
+    sto = lh5.LH5Store()
+    sto.write_object(
+                obj=tb_data,
+                name="raw",
+                lh5_file="/data1/users/marshall/eopt_wfs.lh5",
+                wo_mode="o",
+            )
+    
+    with open("/data1/users/marshall/eopt_idxs.json","w") as w:
+        json.dump(idx_list, w)
     t1 = time.time()
     log.info(f'Data Loaded in {(t1-t0)/60} minutes')
 
@@ -124,6 +134,12 @@ if opt_dict["run_eopt"]==True:
                     dsp_config,
                     db_dict=db_dict,
                     verbosity=0)
+    full_dt = (init_data["tp_99"].nda-init_data["tp_0_est"].nda)[idx_list[-1]]
+    flat_val = f'{np.ceil(np.nanpercentile(full_dt, 99)/100)/10}*us'
+
+    db_dict["cusp"] = {"flat":flat_val}
+    db_dict["zac"] = {"flat":flat_val}
+    db_dict["etrap"] = {"flat":flat_val}
     
     tb_data.add_column("dt_eff",init_data["dt_eff"])
 
@@ -152,9 +168,9 @@ if opt_dict["run_eopt"]==True:
 
     for i,x in enumerate(sample_x):
         
-        db_dict["cusp"] = {"sigma":f'{x[0]}*us', "flat":f'{x[1]}*us'}
-        db_dict["zac"] = {"sigma":f'{x[0]}*us', "flat":f'{x[1]}*us'}
-        db_dict["etrap"] = {"rise":f'{x[0]}*us', "flat":f'{x[1]}*us'}
+        db_dict["cusp"]["sigma"] = f'{x[0]}*us'
+        db_dict["zac"]["sigma"] = f'{x[0]}*us'
+        db_dict["etrap"]["rise"] = f'{x[0]}*us'
 
         log.info(f'Initialising values {i+1} : {db_dict}')
         
@@ -206,26 +222,18 @@ if opt_dict["run_eopt"]==True:
             results_trap[i]['y_val']=max_trap
             sample_y_trap[i] = max_trap
 
-    kernel = ConstantKernel(0.1)* RBF(3)+ConstantKernel(2.5, constant_value_bounds="fixed")+WhiteKernel(noise_level=1e-02)
-
 
     bopt_cusp = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_cusp.kernel = kernel
     bopt_cusp.lambda_param=1
     bopt_cusp.add_dimension("cusp", "sigma", 1, 16, 2,"us")
-    bopt_cusp.add_dimension("cusp", "flat", 1.5, 3, 2,"us")
 
     bopt_zac = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_zac.kernel = kernel
     bopt_zac.lambda_param=1
     bopt_zac.add_dimension("zac", "sigma", 1, 16, 2,"us")
-    bopt_zac.add_dimension("zac", "flat", 1.5, 3, 2,"us")
 
     bopt_trap = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_trap.kernel = kernel
     bopt_zac.lambda_param=1
     bopt_trap.add_dimension("etrap", "rise", 1, 12, 2,"us")
-    bopt_trap.add_dimension("etrap", "flat", 1.5, 3, 2,"us")
 
     bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp)
     bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac)
@@ -249,7 +257,9 @@ if opt_dict["run_eopt"]==True:
                                                         fom_kwargs=kwarg_dict,db_dict=db_dict, 
                                                         nan_val = nan_vals, n_iter=opt_dict["n_iter"])
 
-    db_dict.update(out_param_dict)
+    Props.add_to(db_dict, out_param_dict)
+
+    #db_dict.update(out_param_dict)
 
     t2 = time.time()
     log.info(f'Optimiser finished in {(t2-t1)/60} minutes')
@@ -292,6 +302,15 @@ if args.plot_path:
             plot_dict = pkl.load(r)
     else:
         plot_dict ={}
+
+    plot_dict["trap_optimisation"]  = {"kernel_space":bopt_trap.plot(init_samples = sample_x),
+                                        "acq_space": bopt_trap.plot_acq(init_samples = sample_x)}
+
+    plot_dict["cusp_optimisation"]  = {"kernel_space":bopt_cusp.plot(init_samples = sample_x),
+                                        "acq_space": bopt_cusp.plot_acq(init_samples = sample_x)}
+
+    plot_dict["zac_optimisation"]  = {"kernel_space":bopt_zac.plot(init_samples = sample_x),
+                                        "acq_space": bopt_zac.plot_acq(init_samples = sample_x)}
 
     pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_path, "wb") as w:
