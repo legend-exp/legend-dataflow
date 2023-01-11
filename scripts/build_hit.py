@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 
 
 configs = LegendMetadata(path = args.configs)
-channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
 
 if isinstance(args.pars_file, list):
     pars_dict = Props.read_from(args.pars_file)

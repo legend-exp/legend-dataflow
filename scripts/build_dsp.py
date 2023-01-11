@@ -29,7 +29,7 @@ logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
 
 configs = LegendMetadata(path = args.configs)
-channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
+channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_dsp']["inputs"]['processing_chain']
 
 if isinstance(args.pars_file, list):
     database_dic = Props.read_from(args.pars_file)

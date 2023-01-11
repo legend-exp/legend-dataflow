@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 configs = LegendMetadata(path = args.configs)
-channel_dict = configs.at(args.timestamp, system=args.datatype)['snakemake_rules']['tier_raw']["inputs"]['raw_config']
+channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_raw']["inputs"]['raw_config']
 with open(channel_dict, "r") as f:
   out_spec = json.load(f)
 
