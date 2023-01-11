@@ -1,0 +1,4 @@
+cores: 180
+default-resources:
+  - mem_swap=3500
+retries: 2
