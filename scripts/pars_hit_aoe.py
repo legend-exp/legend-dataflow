@@ -49,10 +49,21 @@ with open(args.eres_file, 'r') as o:
     eres_dict = json.load(o)
 
 eres_pars = eres_dict[kwarg_dict["cal_energy_param"]]['eres_pars']
+
+if kwarg_dict["run_aoe"] ==True:
+    kwarg_dict.pop("run_aoe")
     
+    if args.plot_file:
+        cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
+                                eres_pars=eres_pars, display=1, **kwarg_dict) 
+    else:
+        cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
+                                eres_pars=eres_pars, **kwarg_dict) 
+else:
+    out_dict = {}
+    plot_dict = {}
+
 if args.plot_file:
-    cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
-                            eres_pars=eres_pars, display=1, **kwarg_dict) 
     if args.inplots:
         with open(args.inplots, "rb") as r:
             out_plot_dict = pkl.load(r)
@@ -63,11 +74,9 @@ if args.plot_file:
     pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_file, "wb") as w:
         pkl.dump(out_plot_dict, w)
-else:
-    cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
-                            eres_pars=eres_pars, **kwarg_dict) 
 
 final_hit_dict = { "operations":cal_dict}
+
 
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
