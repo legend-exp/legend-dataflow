@@ -30,6 +30,6 @@ with open(channel_dict, "r") as f:
 rand_num = f'{np.random.randint(0,99999):05d}'
 temp_output = f'{args.output}.{rand_num}'
 
-build_raw(args.input, in_stream_type='ORCA', out_spec=json.loads(out_spec), filekey = temp_output, buffer_size=1024)
+build_raw(args.input, in_stream_type='ORCA', out_spec=out_spec, filekey = temp_output, buffer_size=1024)
 
 os.rename(temp_output, args.output)
