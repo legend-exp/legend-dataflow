@@ -1,4 +1,5 @@
 cores: 180
-default-resources:
+restart-times: 2
+max-jobs-per-second: 1
+resources:
   - mem_swap=3500
-retries: 2
