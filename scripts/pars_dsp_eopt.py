@@ -135,7 +135,10 @@ if opt_dict["run_eopt"]==True:
                     db_dict=db_dict,
                     verbosity=0)
     full_dt = (init_data["tp_99"].nda-init_data["tp_0_est"].nda)[idx_list[-1]]
-    flat_val = f'{np.ceil(np.nanpercentile(full_dt, 99)/100)/10}*us'
+    flat_val = np.ceil(1.1*np.nanpercentile(full_dt, 99)/100)/10
+    if flat_val<1.:
+        flat_val=1.
+    flat_val = f'{flat_val}*us'
 
     db_dict["cusp"] = {"flat":flat_val}
     db_dict["zac"] = {"flat":flat_val}
