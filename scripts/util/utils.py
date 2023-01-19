@@ -36,6 +36,13 @@ def tier_evt_path(setup):
 def config_path(setup):
     return setup["paths"]["config"]
 
+def chan_map_path(setup):
+    return setup["paths"]["chan_map"]
+
+def detector_db_path(setup):
+    return setup["paths"]["detector_db"]
+
+
 def par_raw_path(setup):
     return setup["paths"]["par_raw"]
 

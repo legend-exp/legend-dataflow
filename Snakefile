@@ -9,6 +9,7 @@ subst_vars_in_snakemake_config(workflow, config)
 
 setup = config["setups"]["l200"]
 configs = config_path(setup)
+chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
 
 basedir = workflow.basedir
@@ -106,7 +107,7 @@ rule build_raw:
         mem_swap=110,
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} {input} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} --chan_maps {chan_maps} --datatype {params.datatype} --timestamp {params.timestamp} {input} {output}"
 
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
