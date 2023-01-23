@@ -112,17 +112,6 @@ if opt_dict["run_eopt"]==True:
                                             threshold = opt_dict["threshold"],
                                             wf_field = opt_dict["wf_field"]
                                             )
-
-    sto = lh5.LH5Store()
-    sto.write_object(
-                obj=tb_data,
-                name="raw",
-                lh5_file="/data1/users/marshall/eopt_wfs.lh5",
-                wo_mode="o",
-            )
-    
-    with open("/data1/users/marshall/eopt_idxs.json","w") as w:
-        json.dump(idx_list, w)
     t1 = time.time()
     log.info(f'Data Loaded in {(t1-t0)/60} minutes')
 
@@ -138,6 +127,8 @@ if opt_dict["run_eopt"]==True:
     flat_val = np.ceil(1.1*np.nanpercentile(full_dt, 99)/100)/10
     if flat_val<1.:
         flat_val=1.
+    elif flat_val>2.5:
+        flat_val=2.5
     flat_val = f'{flat_val}*us'
 
     db_dict["cusp"] = {"flat":flat_val}
