@@ -8,8 +8,8 @@ key = FileKey.parse_keypart(keypart)
 
 item_list = []
 for item in key:
-    if "/" in item:
-        item = item.split("/")
+    if "&" in item:
+        item = item.split("&")
     if isinstance(item, list):
         item_list.append(item)
     else:
