@@ -19,6 +19,9 @@ def processing_overwrite_pattern():
 def full_channel_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
 
+def get_pattern_unsorted_data(setup):
+    return os.path.join(f"{unsorteddata_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
+
 def get_pattern_tier_daq(setup):
     return os.path.join(f"{tier_daq_path(setup)}", "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
 

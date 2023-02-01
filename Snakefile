@@ -14,7 +14,7 @@ swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
-localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output,  build_channel_keylist#, build_pars_dsp, build_pars_hit
+localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output
 
 rule do_nothing:
     input:
@@ -38,6 +38,8 @@ onerror:
 # Auto-generate "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]].keylist"
 # based on available tier0 files.
 rule autogen_keylist:
+    input:
+        configs
     output:
         temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
     params:
@@ -45,28 +47,33 @@ rule autogen_keylist:
     script:
         "scripts/create_keylist.py"
 
-def read_filelist_tcm_cal_channel(wildcards):
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-    with checkpoints.gen_filelist.get(label=label, tier="tcm", extension="file").output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-        
+rule autogen_daqkeylist:
+    output:
+        temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
+    params:
+        setup = lambda wildcards: setup
+    script:
+        "scripts/create_daqlist.py"
 
 rule build_channel_keylist:
-    #input:
-        #read_filelist_tcm_cal_channel
     params:
         timestamp = "{timestamp}",
         datatype = "cal"
     output:
         temp(os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
     shell:
-        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} " #{input}
+        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} "
+
+def get_keylist_file(wildcards):
+    if wildcards.tier =="daq" and wildcards.extension=="file":
+        return os.path.join(filelist_path(setup),"{label}.daqkeylist")
+    else:
+        return os.path.join(filelist_path(setup),"{label}.{extension}keylist")
 
 
 checkpoint gen_filelist:
     input:
-        os.path.join(filelist_path(setup),"{label}.{extension}keylist")
+        get_keylist_file
     output:
         os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
     params:
@@ -91,6 +98,15 @@ rule autogen_output:
         "{label}-{tier}.gen"
     run:
         pathlib.Path(output[0]).touch()
+
+rule sort_data:
+    input:
+        get_pattern_unsorted_data(setup)
+    output:
+        get_pattern_tier_daq(setup)
+    shell:
+        "if [ $USER = 'test' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
+
 
 rule build_raw:
     input:
@@ -205,7 +221,7 @@ def read_filelist_pars_dsp_cal_channel_results(wildcards):
 
 rule build_pars_dsp:
     input:
-        ancient(read_filelist_pars_dsp_cal_channel),
+        read_filelist_pars_dsp_cal_channel,
         read_filelist_pars_dsp_cal_channel_results,
         read_filelist_plts_dsp_cal_channel
     output:
@@ -329,7 +345,7 @@ def read_filelist_pars_hit_cal_channel_results(wildcards):
 
 checkpoint build_pars_hit:
     input:
-        ancient(read_filelist_pars_hit_cal_channel),
+        read_filelist_pars_hit_cal_channel,
         read_filelist_pars_hit_cal_channel_results,
         read_filelist_plts_hit_cal_channel
     output:

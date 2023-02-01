@@ -12,6 +12,9 @@ from datetime import datetime
 # import snakemake as smk
 # setup = smk.load_configfile("config.json")["setups"]["l200"]
 
+def unsorteddata_path(setup):
+    return setup["paths"]["unsorted"]
+
 def inputdata_path(setup):
     return setup["paths"]["orig"]
 
@@ -41,7 +44,6 @@ def chan_map_path(setup):
 
 def detector_db_path(setup):
     return setup["paths"]["detector_db"]
-
 
 def par_raw_path(setup):
     return setup["paths"]["par_raw"]
