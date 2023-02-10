@@ -124,7 +124,7 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None):
         return os.path.join(f"{tmp_plts_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"+tier+"_"+name+".pkl")
 
 def get_pattern_plts(setup, tier):
-    return os.path.join(f"{plts_path(setup)}", tier,"cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-plt_"+tier+".pkl")
+    return os.path.join(f"{plts_path(setup)}", tier,"cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-plt_"+tier+".dir")
 
 def get_energy_grids_pattern_combine(setup):
     return os.path.join(f"{tmp_par_path(setup)}", "dsp", "cal",  "{{period}}", "{{run}}" , "par_dsp_energy_grid", "{{channel}}", "{{experiment}}-{{period}}-{{run}}-cal-{{timestamp}}-{{channel}}-{peak}-par_dsp_energy_grid.pkl")
