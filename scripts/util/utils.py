@@ -5,6 +5,7 @@ import shutil
 import copy
 import string
 from datetime import datetime
+from pathlib import Path
 #from dateutil import parser
 
 # For testing/debugging, use
@@ -185,3 +186,20 @@ def unix_time(value):
     else:
         raise ValueError("Can't convert type {t} to unix time".format(t = type(value)))
 
+def check_log_files(log_path, output_file):
+    with open(output_file, "w") as f:
+        for file in Path(log_path).rglob("*.log"):
+            with open(file) as r:
+                text = r.read()
+                if "ERROR" in text:
+                    for line in text.splitlines():
+                        if "ERROR" in line:
+                            f.write(f"{file} : {line}\n")
+                else:
+                    pass
+            os.remove(file)
+            text=None
+    walk = list(os.walk(log_path))
+    for path, _, _ in walk[::-1]:
+        if len(os.listdir(path)) == 0:
+            os.rmdir(path)
