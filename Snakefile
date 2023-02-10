@@ -27,8 +27,9 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
+    ds.check_log_files(log_path(setup) , "summary.log")
     #shell(f'rm {filelist_path(setup)}/* || true')
-    shell(f'rm -r {log_path(setup)}/* || true')
+    
 
 #Placeholder, can email or maybe put message in slack
 onerror:
