@@ -73,7 +73,7 @@ if args.plot_file:
 
     pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_file, "wb") as w:
-        pkl.dump(out_plot_dict, w)
+        pkl.dump(out_plot_dict, w, protocol= pkl.HIGHEST_PROTOCOL)
 
 final_hit_dict = { "operations":cal_dict}
 

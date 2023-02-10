@@ -308,4 +308,4 @@ if args.plot_path:
 
     pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_path, "wb") as w:
-        pkl.dump(plot_dict, w)
+        pkl.dump(plot_dict, w, protocol= pkl.HIGHEST_PROTOCOL)

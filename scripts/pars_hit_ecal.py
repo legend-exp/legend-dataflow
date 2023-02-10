@@ -62,7 +62,7 @@ if __name__ == '__main__':
         plot_dict["baseline"] = {"bl_array":bl_array, "bins":(bins[1:]+bins[:-1])/2}
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path,"wb") as f:
-            pkl.dump(plot_dict,f)
+            pkl.dump(plot_dict,f, protocol= pkl.HIGHEST_PROTOCOL)
     else:
         out_dict, result_dict = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
                                             **kwarg_dict)

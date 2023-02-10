@@ -50,7 +50,7 @@ if kwarg_dict["run_tau"]==True:
         out_dict,plot_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict, display=1) 
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path,"wb") as f:
-            pkl.dump(plot_dict,f)
+            pkl.dump(plot_dict,f, protocol= pkl.HIGHEST_PROTOCOL)
     else:
         out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict) 
 else:
