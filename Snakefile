@@ -1,6 +1,7 @@
 import pathlib, os, json, sys
 import scripts as ds
 from scripts.util.patterns import *
+from datetime import datetime
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
@@ -21,14 +22,13 @@ rule do_nothing:
 
 onstart:
     print("Starting workflow")
-    shell(f'rm {pars_path(setup)}/key_resolve.jsonl || true')
-    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'key_resolve.jsonl'))
+    shell(f'rm {pars_path(setup)}/validity.jsonl || true')
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'validity.jsonl'))
 
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    ds.check_log_files(log_path(setup) , "summary.log")
-    #shell(f'rm {filelist_path(setup)}/* || true')
+    shell(f'rm {filelist_path(setup)}/* || true')
     
 
 #Placeholder, can email or maybe put message in slack
@@ -88,25 +88,38 @@ def read_filelist(wildcards):
         files = f.read().splitlines()
         return files 
 
+rule gen_fiileDB_config:
+    output:
+        "fdb_config.json"
+    script:
+        "scripts/gen_fiileDB_config.py"
+       
+
+
 # Create "{label}-{tier}.gen", based on "{label}.keylist" via
 # "{label}-{tier}.filelist". Will implicitly trigger creation of all files
 # in "{label}-{tier}.filelist".
 # Example: "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]]-{tier}.gen":
 rule autogen_output:
     input:
-        read_filelist
+        filelist = read_filelist,
+        #fileDBconfig = 
     output:
-        "{label}-{tier}.gen"
-    run:
-        pathlib.Path(output[0]).touch()
-
-rule sort_data:
-    input:
-        get_pattern_unsorted_data(setup)
-    output:
-        get_pattern_tier_daq(setup)
+        gen_output = "{label}-{tier}.gen",
+        summary_log = f"{log_path(setup)}/summary_{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
+        #fileDB = "fdb.h5" #where should this sit?
+    params:
+        log_path = tmp_log_path(setup), 
     shell:
-        "if [ $USER = 'test' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
+        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --filelist {input} --gen_output {output.gen_output} --summary_log {output.summary_log}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
+
+# rule sort_data:
+#     input:
+#         get_pattern_unsorted_data(setup)
+#     output:
+#         get_pattern_tier_daq(setup)
+#     shell:
+#         "if [ $USER = 'legend-mgt' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
 
 
 rule build_raw:
