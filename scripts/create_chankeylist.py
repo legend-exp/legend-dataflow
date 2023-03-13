@@ -14,10 +14,10 @@ argparser.add_argument("--output_file", help="output_file", type=str, required=T
 args = argparser.parse_args()
 
 configs = LegendMetadata(path = args.configs)
-channel_map = configs.on(args.timestamp, system=args.datatype)["hardware_configuration"]["channel_map"]
+channel_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
 
 
-channels = [chan for chan in channel_map if channel_map[chan]["software_status"]=="On" ]
+channels = [chan for chan in channel_map if channel_map[chan]["processable"] is True ]
 
 with open(args.output_file, 'w') as f:
     for chan in channels:
