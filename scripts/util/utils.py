@@ -19,8 +19,11 @@ def unsorteddata_path(setup):
 def inputdata_path(setup):
     return setup["paths"]["orig"]
 
-def tier_daq_path(setup):
-    return setup["paths"]["orig"]
+def tier_path(setup):
+    return setup["paths"]["tier"]
+
+def tier_tcm_path(setup):
+    return setup["paths"]["tier_tcm"]
 
 def tier_tcm_path(setup):
     return setup["paths"]["tier_tcm"]
@@ -77,6 +80,9 @@ def par_overwrite_path(setup):
     return setup["paths"]["par_overwrite"]
 
 def log_path(setup):
+    return setup["paths"]["log"]
+
+def tmp_log_path(setup):
     return setup["paths"]["tmp_log"]
 
 def filelist_path(setup):
@@ -186,20 +192,3 @@ def unix_time(value):
     else:
         raise ValueError("Can't convert type {t} to unix time".format(t = type(value)))
 
-def check_log_files(log_path, output_file):
-    with open(output_file, "w") as f:
-        for file in Path(log_path).rglob("*.log"):
-            with open(file) as r:
-                text = r.read()
-                if "ERROR" in text:
-                    for line in text.splitlines():
-                        if "ERROR" in line:
-                            f.write(f"{file} : {line}\n")
-                else:
-                    pass
-            os.remove(file)
-            text=None
-    walk = list(os.walk(log_path))
-    for path, _, _ in walk[::-1]:
-        if len(os.listdir(path)) == 0:
-            os.rmdir(path)
