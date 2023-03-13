@@ -1,20 +1,18 @@
 import os
 from .utils import *
 
+#key_mask
 def key_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}"
 
 def processing_pattern():
-    return key_pattern()+'-{processing_step}'
-
-def par_pattern():
-    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_{name}"
+    return key_pattern()+'-{processing_step}.{ext}'
 
 def par_overwrite_pattern():
-    return par_pattern()+"-overwrite"
+    return key_pattern()+"-{processing_step}-overwrite"
 
 def processing_overwrite_pattern():
-    return processing_pattern()+"-overwrite"
+    return par_overwrite_pattern()+".{ext}"
 
 def full_channel_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
@@ -130,7 +128,7 @@ def get_energy_grids_pattern_combine(setup):
     return os.path.join(f"{tmp_par_path(setup)}", "dsp", "cal",  "{{period}}", "{{run}}" , "par_dsp_energy_grid", "{{channel}}", "{{experiment}}-{{period}}-{{run}}-cal-{{timestamp}}-{{channel}}-{peak}-par_dsp_energy_grid.pkl")
 
 def get_pattern_log(setup, processing_step):
-    return os.path.join(f"{log_path(setup)}",processing_step , "{experiment}-{period}-{run}-{datatype}-{timestamp}-"+processing_step+".log")
+    return os.path.join(f"{tmp_log_path(setup)}",processing_step , "{experiment}-{period}-{run}-{datatype}-{timestamp}-"+processing_step+".log")
 
 def get_pattern_log_channel(setup, processing_step):
-    return os.path.join(f"{log_path(setup)}",processing_step , "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"+processing_step+".log")
+    return os.path.join(f"{tmp_log_path(setup)}",processing_step , "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"+processing_step+".log")
