@@ -64,12 +64,19 @@ else:
     plot_dict = {}
 
 if args.plot_file:
+    if "common" in list(plot_dict):
+        common_dict = plot_dict.pop("common")
+    else:
+        common_dict = None
     if args.inplots:
         with open(args.inplots, "rb") as r:
             out_plot_dict = pkl.load(r)
         out_plot_dict.update(plot_dict)
     else:
         out_plot_dict = plot_dict
+
+    if "common"in list(plot_dict) and common_dict is not None:
+        plot_dict("common").update(common_dict)
 
     pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_file, "wb") as w:
