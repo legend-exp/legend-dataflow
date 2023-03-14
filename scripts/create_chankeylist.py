@@ -9,15 +9,18 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+argparser.add_argument("--channelmap", help="Channel Map", type=str, required=True)
 
 argparser.add_argument("--output_file", help="output_file", type=str, required=True)
 args = argparser.parse_args()
 
 configs = LegendMetadata(path = args.configs)
-channel_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
+status_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
 
+channel_map = LegendMetadata(path = args.channelmap)
+chmap = channel_map.channelmaps.on(args.timestamp)
 
-channels = [chan for chan in channel_map if channel_map[chan]["processable"] is True ]
+channels = [f"ch{chmap[chan].daq.fcid:03}" for chan in status_map if status_map[chan]["processable"] is True ]
 
 with open(args.output_file, 'w') as f:
     for chan in channels:
