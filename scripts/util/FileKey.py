@@ -45,7 +45,7 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
         else:
             key_pattern_rx = re.compile(smk.io.regex(pattern))
         if key_pattern_rx.match(filename) is None:
-            print("pattern does not match")
+            pass
         else:
             d = key_pattern_rx.match(filename).groupdict()
             for entry in list(d):
