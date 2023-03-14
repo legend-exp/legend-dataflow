@@ -21,7 +21,9 @@ def full_channel_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
 
 def get_pattern_unsorted_data(setup):
-    return os.path.join(f"{unsorteddata_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
+    if sandbox_path(setup) is not None:
+        return os.path.join(f"{sandbox_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
+    else: return None
 
 def get_pattern_tier_daq(setup):
     return os.path.join(f"{tier_daq_path(setup)}", "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")

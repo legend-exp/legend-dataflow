@@ -5,7 +5,6 @@ import shutil
 import copy
 import string
 from datetime import datetime
-from pathlib import Path
 #from dateutil import parser
 
 # For testing/debugging, use
@@ -13,11 +12,14 @@ from pathlib import Path
 # import snakemake as smk
 # setup = smk.load_configfile("config.json")["setups"]["l200"]
 
-def unsorteddata_path(setup):
-    return setup["paths"]["unsorted"]
+def sandbox_path(setup):
+    if "sandbox_path" in setup["paths"]:
+        return setup["paths"]["sandbox_path"]
+    else:
+        return None
 
 def tier_daq_path(setup):
-    return setup["paths"]["orig"]
+    return setup["paths"]["tier_daq"]
 
 def tier_path(setup):
     return setup["paths"]["tier"]
