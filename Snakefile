@@ -111,7 +111,7 @@ rule autogen_output:
     params:
         log_path = tmp_log_path(setup), 
     shell:
-        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --filelist {input} --gen_output {output.gen_output} --summary_log {output.summary_log}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
+        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
 
 # rule sort_data:
 #     input:
