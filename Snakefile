@@ -49,15 +49,6 @@ rule autogen_keylist:
     script:
         "scripts/create_keylist.py"
 
-rule autogen_daqkeylist:
-    output:
-        temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
-    params:
-        setup = lambda wildcards: setup,
-        search_pattern = get_pattern_unsorted_data
-    script:
-        "scripts/create_keylist.py"
-
 rule build_channel_keylist:
     params:
         timestamp = "{timestamp}",
@@ -67,16 +58,10 @@ rule build_channel_keylist:
     shell:
         "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --channelmap {chan_maps} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} "
 
-def get_keylist_file(wildcards):
-    if wildcards.tier =="daq" and wildcards.extension=="file":
-        return os.path.join(filelist_path(setup),"{label}.daqkeylist")
-    else:
-        return os.path.join(filelist_path(setup),"{label}.{extension}keylist")
-
 
 checkpoint gen_filelist:
     input:
-        get_keylist_file
+        os.path.join(filelist_path(setup),"{label}.{extension}keylist")
     output:
         os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
     params:
@@ -114,15 +99,6 @@ rule autogen_output:
         log_path = tmp_log_path(setup), 
     shell:
         "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
-
-# rule sort_data:
-#     input:
-#         get_pattern_unsorted_data(setup)
-#     output:
-#         get_pattern_tier_daq(setup)
-#     shell:
-#         "if [ $USER = 'legend-mgt' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
-
 
 rule build_raw:
     input:
