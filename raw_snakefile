@@ -88,7 +88,7 @@ rule sort_data:
     output:
         get_pattern_tier_daq(setup)
     shell:
-        "if [ $USER = 'marshall' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
+        "if [ $USER = 'legend-mgt' ]; then mv {input} {output}; else echo 'action not allowed for $USER' ;fi"
 
 rule build_raw:
     input:
