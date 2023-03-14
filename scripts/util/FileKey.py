@@ -22,7 +22,11 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
     @property
     def key(self):
         return f'-{self.name}'
-        
+
+    def _list(self):
+        return list(self)
+    
+    @property
     def __str__(self):
         return self.name
     
@@ -32,7 +36,7 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
     
     @classmethod
     def get_filekey_from_filename(cls, filename):
-        return cls.get_filekey_from_pattern(key_string, processing_pattern())
+        return cls.get_filekey_from_pattern(cls.key_pattern, processing_pattern())
     
     @classmethod
     def get_filekey_from_pattern(cls, filename, pattern=None):
@@ -70,11 +74,17 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
                 d[key] = "*"
         return cls(**d)
         
-    def get_path_from_filekey(self, pattern, name=None):
-        if name is None:
+    def get_path_from_filekey(self, pattern, **kwargs):
+        if kwargs is None:
             return smk.io.expand(pattern, **self._asdict())
         else:
-            return smk.io.expand(pattern, **self._asdict(), name=name[self.datatype])
+            for entry,value in kwargs.items():
+                if isinstance(value, dict):
+                    if len(list(set(value).intersection(self._list()))[0])>0:
+                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
+                    else:
+                        kwargs.pop(entry)
+            return smk.io.expand(pattern, **self._asdict(), **kwargs)
     
     # get_path_from_key
     @classmethod
@@ -93,7 +103,7 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
     
 class ProcessingFileKey(FileKey):
     _fields = FileKey._fields+("processing_step", )
-    pattern = processing_pattern()
+    key_pattern = processing_pattern()
     
     def __new__(cls, experiment, period, run, datatype, timestamp, processing_step):
         self = super(ProcessingFileKey, cls).__new__(cls, experiment, period, run, datatype, timestamp)
@@ -111,8 +121,15 @@ class ProcessingFileKey(FileKey):
             self.identifier=None
         
         return self
-    
-    general_pattern = processing_pattern()
+
+    def _list(self):
+        total = super()._list() + [self.processing_step]
+        return total
+
+    def _asdict(self):
+        dic = super()._asdict()
+        dic["processing_step"]= self.processing_step
+        return dic
     
     @property
     def processing_step(self):
@@ -123,31 +140,55 @@ class ProcessingFileKey(FileKey):
     
     @property
     def name(self):
-        if self.identifier is not None:
-            return f"{super().name}-{self.processing_step}"
-        else:
-            return f"{super().name}-{self.processing_step}"
+        print(self.identifier)
+        return f"{super().name}-{self.processing_step}"
     
-    def get_path_from_filekey(self, pattern, name=None):
-        if isinstance(pattern, str):
-            if name is None:
+    def get_path_from_filekey(self, pattern, **kwargs):
+        if not isinstance(pattern, str):
+            pattern = pattern(self.tier, self.identifier)
+        if kwargs is None:
                 return smk.io.expand(pattern, **self._asdict())
-            else:
-                return smk.io.expand(pattern, **self._asdict(), name=name[self.datatype])
         else:
-            final_pattern = pattern(self.tier, self.identifier)
-            return smk.io.expand(final_pattern, **self._asdict())
+            for entry,value in kwargs.items():
+                if isinstance(value, dict):
+                    if len(list(set(value).intersection(self._list()))[0])>0:
+                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
+                    else:
+                        kwargs.pop(entry)
+            return smk.io.expand(pattern, **self._asdict(), **kwargs)
+        
 
     
-class ChannelProcKey(ProcessingFileKey):
+class ChannelProcKey(FileKey):
+
+    re_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$'
     
-    _fields = ProcessingFileKey._fields+("channel",)
+    _fields = FileKey._fields+("channel",)
     
-    def __new__(cls, experiment, period, run, datatype,timestamp, channel, processing_step):
-        self = super(ChannelProcKey,cls).__new__(cls, experiment, period, run, datatype,timestamp, processing_step)
+    def __new__(cls, experiment, period, run, datatype,timestamp, channel):
+        self = super(ChannelProcKey,cls).__new__(cls, experiment, period, run, datatype,timestamp)
         self.channel = channel
         return self
     
     @property
     def name(self):
         return f'{super(Filekey).name}-{self.channel}-{super().processing_step}'
+    
+    def _asdict(self):
+        dic = super()._asdict()
+        dic["channel"]= self.channel
+        return dic
+
+    @staticmethod
+    def get_channel_files(setup, keypart, tier, dataset_file, name=None):
+        d = ChannelProcKey.parse_keypart(keypart)
+        par_pattern = get_pattern_pars_tmp_channel(setup,tier, name)
+        filenames = []
+        with open(dataset_file) as f:
+            chan_list = f.read().splitlines()
+            for chan in chan_list:
+                wildcards_dict = d._asdict()
+                wildcards_dict.pop("channel")
+                file = smk.io.expand(par_pattern, **wildcards_dict , channel = chan)[0]
+                filenames.append(file)
+        return filenames

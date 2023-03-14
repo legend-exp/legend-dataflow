@@ -16,7 +16,7 @@ from pathlib import Path
 def unsorteddata_path(setup):
     return setup["paths"]["unsorted"]
 
-def inputdata_path(setup):
+def tier_daq_path(setup):
     return setup["paths"]["orig"]
 
 def tier_path(setup):

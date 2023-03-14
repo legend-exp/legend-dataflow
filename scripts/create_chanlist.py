@@ -12,8 +12,7 @@ if "_" in tier:
     name = tier.split("_", 1)[1]
     tier = tier.split("_", 1)[0]
     
-
-filenames = ChannelFileKey.get_channel_files(setup, keypart, tier, dataset_file, name=name)
+filenames = ChannelProcKey.get_channel_files(setup, keypart, tier, dataset_file, name=name)
 
 with open(snakemake.output[0], 'w') as f:
     for fn in filenames:

@@ -9,19 +9,23 @@ import pathlib
 
 class pars_key_resolve():
     
-    name_dict = {"cal":["dsp","hit"], 'lar':['dsp','hit']}
+    name_dict = {"cal":["par_dsp","par_hit"], 'lar':['par_dsp','par_hit']}
     
     def __init__(self, valid_from, category, apply):
         self.valid_from = valid_from
         self.category = category
         self.apply = apply
+        
+    def __str__(self):
+        return f"{self.__dict__}"
+        
     
     def get_json(self):
         return json.dumps(self.__dict__)
     
     @classmethod
     def from_filekey(cls, filekey):
-        return cls(filekey.timestamp, "all", filekey.get_file(f'{par_pattern()}.json', pars_key_resolve.name_dict))
+        return cls(filekey.timestamp, "all", filekey.get_path_from_filekey(processing_pattern(), processing_step=pars_key_resolve.name_dict, ext="json"))
     
     @staticmethod
     def write_to_jsonl(file_names, path):
@@ -53,9 +57,9 @@ class pars_key_resolve():
     
     @staticmethod    
     def match_entries(entry1, entry2):
-        datatype2 = FileKey.get_filekey_from_filename(entry2.apply[0]).datatype
+        datatype2 = ProcessingFileKey.get_filekey_from_filename(entry2.apply[0]).datatype
         for entry in entry1.apply:
-            if FileKey.get_filekey_from_filename(entry).datatype == datatype2:
+            if ProcessingFileKey.get_filekey_from_filename(entry).datatype == datatype2:
                 pass
             else:
                 entry2.apply.append(entry)
@@ -98,4 +102,3 @@ class pars_key_resolve():
         entrylist = pars_key_resolve.match_all_entries(keylist)
         pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
         pars_key_resolve.write_to_jsonl(entrylist, filename)
-        

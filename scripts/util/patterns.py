@@ -8,6 +8,9 @@ def key_pattern():
 def processing_pattern():
     return key_pattern()+'-{processing_step}.{ext}'
 
+def par_pattern():
+    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_{name}"
+
 def par_overwrite_pattern():
     return key_pattern()+"-{processing_step}-overwrite"
 
