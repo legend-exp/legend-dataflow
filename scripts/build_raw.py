@@ -19,33 +19,28 @@ argparser.add_argument("--chan_maps", help="chan map", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
+os.makedirs(os.path.dirname(args.log),exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename=args.log, filemode='w')
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 configs = LegendMetadata(path = args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_raw']["inputs"]
-with open(channel_dict["gen_config"], "r") as f:
-  all_config = json.load(f)  
+all_config = Props.read_from(channel_dict["gen_config"]) 
 
 
 if "ged_config" in list(channel_dict) or "spm_config" in list(channel_dict):
-  with open(channel_dict["ged_config"], "r") as f:
-    ged_config = json.load(f)
-  with open(channel_dict["spm_config"], "r") as f:
-    spm_config = json.load(f)
-  hardware_configs = LegendMetadata(path = args.chan_maps)
-  ge_chans = []
-  spm_chans = []
-  chan_map = hardware_configs.channelmaps.on(args.timestamp)
-  for field in chan_map:
-      if chan_map[field]["system"] == "spms":
-          spm_chans.append(chan_map[field]["daq"]["fcid"])
-      else:
-          ge_chans.append(chan_map[field]["daq"]["fcid"])
 
-  ged_config[list(ged_config)[0]]["geds"]["key_list"]= sorted(ge_chans)
-  spm_config[list(spm_config)[0]]["spms"]["key_list"]= sorted(spm_chans)
+  ged_config = Props.read_from(channel_dict["ged_config"])
+  spm_config = Props.read_from(channel_dict["spm_config"])
+
+  chmap = LegendMetadata(path = args.chan_maps)
+  spm_channels = list(chmap.channelmaps.on(args.timestamp).map("system", unique=False)["spms"].map("daq.fcid"))
+  ged_channels = list(chmap.channelmaps.on(args.timestamp).map("daq.fcid"))
+  for spm_channel in spm_channels:ged_channels.remove(spm_channel)
+
+  ged_config[list(ged_config)[0]]["geds"]["key_list"]= sorted(ged_channels)
+  spm_config[list(spm_config)[0]]["spms"]["key_list"]= sorted(spm_channels)
   Props.add_to(all_config, ged_config)
   Props.add_to(all_config, spm_config)
 
