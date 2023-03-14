@@ -44,7 +44,8 @@ rule autogen_keylist:
     output:
         temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
     params:
-        setup = lambda wildcards: setup
+        setup = lambda wildcards: setup,
+        search_pattern = lambda wildcards: get_pattern_tier_daq(setup)
     script:
         "scripts/create_keylist.py"
 
@@ -52,9 +53,10 @@ rule autogen_daqkeylist:
     output:
         temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
     params:
-        setup = lambda wildcards: setup
+        setup = lambda wildcards: setup,
+        search_pattern = get_pattern_unsorted_data
     script:
-        "scripts/create_daqlist.py"
+        "scripts/create_keylist.py"
 
 rule build_channel_keylist:
     params:
@@ -88,7 +90,7 @@ def read_filelist(wildcards):
         files = f.read().splitlines()
         return files 
 
-rule gen_fiileDB_config:
+rule gen_fileDB_config:
     output:
         "fdb_config.json"
     script:

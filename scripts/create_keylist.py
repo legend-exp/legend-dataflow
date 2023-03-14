@@ -2,16 +2,20 @@ from util.FileKey import *
 import glob
 import os
 
-configs=snakemake.input[0]
-ignored_keyslist = os.path.join(configs, 'ignore_keys.keylist')
-if os.path.isfile(ignored_keyslist):
-    with open(ignored_keyslist, 'r') as f:
-        ignore_keys = f.read().splitlines()
-else:
-    print("no ignore_keys.keylist file found")
+ignore_keys = []
+if snakemake.input:
+    configs=snakemake.input[0]
+    ignored_keyslist = os.path.join(configs, 'ignore_keys.keylist')
+    if os.path.isfile(ignored_keyslist):
+        with open(ignored_keyslist, 'r') as f:
+            ignore_keys = f.read().splitlines()
+    else:
+        print("no ignore_keys.keylist file found")
+
 
 keypart = snakemake.wildcards.keypart
 setup = snakemake.params.setup
+search_pattern = snakemake.params.search_pattern
 
 key = FileKey.parse_keypart(keypart)
 
@@ -34,11 +38,11 @@ for i in item_list[0]:
 
 keys = []
 for key in filekeys:
-    fn_glob_pattern = key.get_path_from_filekey(get_pattern_tier_daq(setup))[0]
+    fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
 
     for f in files:
-        key = FileKey.get_filekey_from_pattern(f,get_pattern_tier_daq(setup))
+        key = FileKey.get_filekey_from_pattern(f,search_pattern)
         if key.name in ignore_keys:
             pass
         else:
