@@ -63,7 +63,7 @@ rule build_channel_keylist:
     output:
         temp(os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
     shell:
-        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} "
+        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --channelmap {chan_maps} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} "
 
 def get_keylist_file(wildcards):
     if wildcards.tier =="daq" and wildcards.extension=="file":
@@ -106,7 +106,7 @@ rule autogen_output:
         #fileDBconfig = 
     output:
         gen_output = "{label}-{tier}.gen",
-        summary_log = f"{log_path(setup)}/summary_{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
+        summary_log = f"{log_path(setup)}/summary-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
         #fileDB = "fdb.h5" #where should this sit?
     params:
         log_path = tmp_log_path(setup), 
