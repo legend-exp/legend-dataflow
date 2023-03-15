@@ -94,11 +94,12 @@ rule autogen_output:
     output:
         gen_output = "{label}-{tier}.gen",
         summary_log = f"{log_path(setup)}/summary-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
+        warning_log = f"{log_path(setup)}/warning-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
         #fileDB = "fdb.h5" #where should this sit?
     params:
         log_path = tmp_log_path(setup), 
     shell:
-        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
+        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --warning_log {output.warning_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
 
 
 #This rule builds the tcm files each raw file

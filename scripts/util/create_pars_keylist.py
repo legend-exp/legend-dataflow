@@ -96,7 +96,6 @@ class pars_key_resolve():
         keylist = []
         for keypar in keypart:
             keylist += pars_key_resolve.get_keys(keypar, setup, search_pattern)
-        print(keylist)
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
         entrylist = pars_key_resolve.match_all_entries(keylist)
