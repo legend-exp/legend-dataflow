@@ -63,8 +63,6 @@ opt_json = configs['snakemake_rules']['pars_dsp_eopt']["inputs"]["optimiser_conf
 with open(opt_json, 'r') as r:
     opt_dict = json.load(r)
 
-
-
 with open(args.decay_const, 'r') as t:
     db_dict = json.load(t)
 
@@ -77,7 +75,6 @@ if opt_dict["run_eopt"]==True:
 
     peaks_keV = np.array(opt_dict["peaks"])
     kev_widths = [tuple(kev_width) for kev_width in opt_dict["kev_widths"]]
-
 
     kwarg_dicts_cusp = []
     kwarg_dicts_trap = []
@@ -158,6 +155,9 @@ if opt_dict["run_eopt"]==True:
     sample_y_zac = []
     sample_y_trap = []
 
+    err_y_cusp = []
+    err_y_zac = []
+    err_y_trap = []
 
 
     for i,x in enumerate(sample_x):
@@ -176,14 +176,17 @@ if opt_dict["run_eopt"]==True:
         res = fom(tb_out, kwarg_dict[0])
         results_cusp.append(res)
         sample_y_cusp.append(res['y_val'])
+        err_y_cusp.append(res['y_err'])
         
         res = fom(tb_out, kwarg_dict[1])
         results_zac.append(res)
         sample_y_zac.append(res['y_val'])
+        err_y_zac.append(res['y_err'])
         
         res = fom(tb_out, kwarg_dict[2])
         results_trap.append(res)
         sample_y_trap.append(res['y_val'])
+        err_y_trap.append(res['y_err'])
         
         log.info(f'{i+1} Finished')
 
@@ -216,22 +219,23 @@ if opt_dict["run_eopt"]==True:
             results_trap[i]['y_val']=max_trap
             sample_y_trap[i] = max_trap
 
+    kernel = ConstantKernel(2.0, constant_value_bounds="fixed") + 1.0* RBF(1.0, length_scale_bounds=[0.5,2.5])+ WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
 
-    bopt_cusp = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
+    bopt_cusp = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"], kernel=kernel)
     bopt_cusp.lambda_param=1
     bopt_cusp.add_dimension("cusp", "sigma", 1, 16, 2,"us")
 
-    bopt_zac = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
+    bopt_zac = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"], kernel=kernel)
     bopt_zac.lambda_param=1
     bopt_zac.add_dimension("zac", "sigma", 1, 16, 2,"us")
 
-    bopt_trap = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"])
-    bopt_zac.lambda_param=1
+    bopt_trap = om.BayesianOptimizer(acq_func=opt_dict["acq_func"],batch_size=opt_dict["batch_size"], kernel=kernel)
+    bopt_trap.lambda_param=1
     bopt_trap.add_dimension("etrap", "rise", 1, 12, 2,"us")
 
-    bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp)
-    bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac)
-    bopt_trap.add_initial_values(x_init=sample_x, y_init=sample_y_trap)
+    bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp)
+    bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac , yerr_init=err_y_zac)
+    bopt_trap.add_initial_values(x_init=sample_x, y_init=sample_y_trap, yerr_init=err_y_trap)
 
     best_idx = np.nanargmin(sample_y_cusp)
     bopt_cusp.optimal_results = results_cusp[best_idx]
