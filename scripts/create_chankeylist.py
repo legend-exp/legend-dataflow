@@ -20,7 +20,7 @@ status_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
 channel_map = LegendMetadata(path = args.channelmap)
 chmap = channel_map.channelmaps.on(args.timestamp)
 
-channels = [f"ch{chmap[chan].daq.fcid:03}" for chan in status_map if status_map[chan]["processable"] is True ]
+channels = [f"ch{chmap[chan].daq.rawid:03}" for chan in status_map if status_map[chan]["processable"] is True ]
 
 with open(args.output_file, 'w') as f:
     for chan in channels:
