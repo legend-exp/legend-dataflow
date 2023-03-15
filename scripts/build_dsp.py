@@ -44,7 +44,6 @@ rand_num = f'{np.random.randint(0,99999):05d}'
 temp_output = f'{args.output}.{rand_num}'
 
 
-
 build_dsp(args.input, temp_output, {}, database = database_dic, chan_config=channel_dict, write_mode='r')
 
 os.rename(temp_output, args.output)

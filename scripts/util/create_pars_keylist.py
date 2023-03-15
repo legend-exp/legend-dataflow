@@ -75,15 +75,14 @@ class pars_key_resolve():
         return out_list
     
     @staticmethod
-    def get_keys(keypart, setup):
+    def get_keys(keypart, setup, search_pattern):
         d = FileKey.parse_keypart(keypart)
-        tier0_pattern = get_pattern_tier_daq(setup)
-        tier0_pattern_rx = re.compile(smk.io.regex(tier0_pattern))
-        fn_glob_pattern = smk.io.expand(tier0_pattern, **d._asdict())[0]
+        tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
+        fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]
         files = glob.glob(fn_glob_pattern)
         keys = []
         for f in files:
-            m  = tier0_pattern_rx.match(f)
+            m  = tier_pattern_rx.match(f)
             if m is not None:
                 d = m.groupdict()
                 key = FileKey(**d)
@@ -91,12 +90,13 @@ class pars_key_resolve():
         return keys
     
     @staticmethod
-    def write_par_catalog(setup, keypart, filename):
+    def write_par_catalog(setup, keypart, filename, search_pattern):
         if isinstance(keypart, str):
             keypart = [keypart]
         keylist = []
         for keypar in keypart:
-            keylist += pars_key_resolve.get_keys(keypar, setup)
+            keylist += pars_key_resolve.get_keys(keypar, setup, search_pattern)
+        print(keylist)
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
         entrylist = pars_key_resolve.match_all_entries(keylist)
