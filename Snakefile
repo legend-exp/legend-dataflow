@@ -196,18 +196,18 @@ def read_filelist_pars_dsp_cal_channel_results(wildcards):
         return files 
 
 
-# rule build_pars_dsp:
-#     input:
-#         read_filelist_pars_dsp_cal_channel,
-#         read_filelist_pars_dsp_cal_channel_results,
-#         read_filelist_plts_dsp_cal_channel
-#     output:
-#         get_pattern_par_dsp(setup),
-#         get_pattern_par_dsp(setup, name="energy_grid"),
-#         get_pattern_plts(setup, "dsp")
-#     group: "merge-dsp"
-#     shell:
-#         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
+rule build_pars_dsp:
+    input:
+        read_filelist_pars_dsp_cal_channel,
+        read_filelist_pars_dsp_cal_channel_results,
+        read_filelist_plts_dsp_cal_channel
+    output:
+        get_pattern_par_dsp(setup),
+        get_pattern_par_dsp(setup, name="energy_grid"),
+        get_pattern_plts(setup, "dsp")
+    group: "merge-dsp"
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
 
 def get_pars_dsp_file(wildcards):
     """
