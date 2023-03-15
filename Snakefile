@@ -23,7 +23,7 @@ rule do_nothing:
 onstart:
     print("Starting workflow")
     shell(f'rm {pars_path(setup)}/validity.jsonl || true')
-    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'validity.jsonl'), get_pattern_tier_daq(setup))
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'validity.jsonl'), get_pattern_tier_raw(setup))
 
 onsuccess:
     print("Workflow finished, no error")
@@ -45,7 +45,7 @@ rule autogen_keylist:
         temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
     params:
         setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern_tier_daq(setup)
+        search_pattern = lambda wildcards: get_pattern_tier_raw(setup)
     script:
         "scripts/create_keylist.py"
 
@@ -100,22 +100,6 @@ rule autogen_output:
     shell:
         "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
 
-rule build_raw:
-    input:
-        get_pattern_tier_daq(setup)
-    params:
-        timestamp = "{timestamp}",
-        datatype = "{datatype}"
-    output:
-        get_pattern_tier_raw(setup)
-    log:
-        get_pattern_log(setup, "tier_raw")
-    group: "tier-raw"
-    resources:
-        mem_swap=110,
-        runtime=300
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} --chan_maps {chan_maps} --datatype {params.datatype} --timestamp {params.timestamp} {input} {output}"
 
 #This rule builds the tcm files each raw file
 rule build_tier_tcm:
