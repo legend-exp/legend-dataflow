@@ -34,4 +34,4 @@ for fcid in fcid_channels.keys():
     ch_list = fcid_channels[fcid]
     build_tcm([(args.input, ch_list)], 'eventnumber', out_file=temp_output, out_name=out_name, wo_mode='o')
 
-#os.rename(temp_output, args.output)
+os.rename(temp_output, args.output)
