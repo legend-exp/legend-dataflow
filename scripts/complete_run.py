@@ -5,7 +5,7 @@ import pathlib, os, json
 from pathlib import Path
 
 
-def check_log_files(log_path, output_file, gen_output warning_file=None):
+def check_log_files(log_path, output_file, gen_output, warning_file=None):
     os.makedirs(os.path.dirname(output_file),exist_ok=True)
     if warning_file is not None:
         os.makedirs(os.path.dirname(warning_file),exist_ok=True)
