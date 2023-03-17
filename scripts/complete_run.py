@@ -11,24 +11,24 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
         os.makedirs(os.path.dirname(warning_file),exist_ok=True)
         with open(warning_file, "w") as w:
             with open(output_file, "w") as f:
-            n_errors=0
-            for file in Path(log_path).rglob("*.log"):
-                with open(file) as r:
-                    text = r.read()
-                    if "ERROR" in text or "WARNING" in text:
-                        for line in text.splitlines():
-                            if "ERROR" in line:
-                                if n_errors ==0:
-                                    f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
-                                f.write(f"{os.path.basename(file)} : {line}\n")
-                            elif "WARNING" in line:
-                                w.write(f"{os.path.basename(file)} : {line}\n")
-                    else:
-                        pass
-                os.remove(file)
-                text=None
-            if n_errors ==0:
-                f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
+                n_errors=0
+                for file in Path(log_path).rglob("*.log"):
+                    with open(file) as r:
+                        text = r.read()
+                        if "ERROR" in text or "WARNING" in text:
+                            for line in text.splitlines():
+                                if "ERROR" in line:
+                                    if n_errors ==0:
+                                        f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
+                                    f.write(f"{os.path.basename(file)} : {line}\n")
+                                elif "WARNING" in line:
+                                    w.write(f"{os.path.basename(file)} : {line}\n")
+                        else:
+                            pass
+                    os.remove(file)
+                    text=None
+                if n_errors ==0:
+                    f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
     else:
         with open(output_file, "w") as f:
             n_errors=0
