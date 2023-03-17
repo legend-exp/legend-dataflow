@@ -26,29 +26,7 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    #shell(f'rm {filelist_path(setup)}/* || true')
-
-# # Auto-generate "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]].keylist"
-# # based on available tier0 files.
-# rule autogen_keylist:
-#     input:
-#         configs
-#     output:
-#         temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
-#     params:
-#         setup = lambda wildcards: setup,
-#         search_pattern = lambda wildcards: get_pattern_tier_daq(setup)
-#     script:
-#         "scripts/create_keylist.py"
-
-# rule autogen_daqkeylist:
-#     output:
-#         temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
-#     params:
-#         setup = lambda wildcards: setup,
-#         search_pattern = lambda wildcards: get_pattern_unsorted_data(setup)
-#     script:
-#         "scripts/create_keylist.py"
+    shell(f'rm {filelist_path(setup)}/* || true')
 
 def get_pattern(tier):
     if tier =="daq":
