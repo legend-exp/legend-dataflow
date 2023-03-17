@@ -92,13 +92,12 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
         return cls.get_path_from_filekey(cls.get_filekey_from_pattern(filename, pattern) , path_pattern)
 
     @staticmethod
-    def tier_files(setup, dataset_file, tier):
+    def tier_files(setup, keys, tier):
         fn_pattern = get_pattern_tier(setup, tier)
         files = []
-        with open(dataset_file) as f:
-            for line in f:
-                tier_filename = FileKey.get_full_path_from_filename(line, FileKey.key_pattern, fn_pattern)
-                files += tier_filename
+        for line in keys:
+            tier_filename = FileKey.get_full_path_from_filename(line, FileKey.key_pattern, fn_pattern)
+            files += tier_filename
         return files
     
 class ProcessingFileKey(FileKey):
@@ -172,7 +171,7 @@ class ChannelProcKey(FileKey):
     
     @property
     def name(self):
-        return f'{super(Filekey).name}-{self.channel}-{super().processing_step}'
+        return f'{super().name}-{self.channel}'
     
     def _asdict(self):
         dic = super()._asdict()
@@ -180,15 +179,13 @@ class ChannelProcKey(FileKey):
         return dic
 
     @staticmethod
-    def get_channel_files(setup, keypart, tier, dataset_file, name=None):
+    def get_channel_files(setup, keypart, tier, chan_list, name=None):
         d = ChannelProcKey.parse_keypart(keypart)
         par_pattern = get_pattern_pars_tmp_channel(setup,tier, name)
         filenames = []
-        with open(dataset_file) as f:
-            chan_list = f.read().splitlines()
-            for chan in chan_list:
-                wildcards_dict = d._asdict()
-                wildcards_dict.pop("channel")
-                file = smk.io.expand(par_pattern, **wildcards_dict , channel = chan)[0]
-                filenames.append(file)
+        for chan in chan_list:
+            wildcards_dict = d._asdict()
+            wildcards_dict.pop("channel")
+            file = smk.io.expand(par_pattern, **wildcards_dict , channel = chan)[0]
+            filenames.append(file)
         return filenames

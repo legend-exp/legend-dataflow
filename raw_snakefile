@@ -15,7 +15,7 @@ swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
-localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output
+localrules: do_nothing, gen_filelist, autogen_output
 
 rule do_nothing:
     input:
@@ -26,45 +26,46 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f'rm {filelist_path(setup)}/* || true')
+    #shell(f'rm {filelist_path(setup)}/* || true')
 
-# Auto-generate "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]].keylist"
-# based on available tier0 files.
-rule autogen_keylist:
-    input:
-        configs
-    output:
-        temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
-    params:
-        setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern_tier_daq(setup)
-    script:
-        "scripts/create_keylist.py"
+# # Auto-generate "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]].keylist"
+# # based on available tier0 files.
+# rule autogen_keylist:
+#     input:
+#         configs
+#     output:
+#         temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
+#     params:
+#         setup = lambda wildcards: setup,
+#         search_pattern = lambda wildcards: get_pattern_tier_daq(setup)
+#     script:
+#         "scripts/create_keylist.py"
 
-rule autogen_daqkeylist:
-    output:
-        temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
-    params:
-        setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern_unsorted_data(setup)
-    script:
-        "scripts/create_keylist.py"
+# rule autogen_daqkeylist:
+#     output:
+#         temp(os.path.join(filelist_path(setup),"all{keypart}.daqkeylist"))
+#     params:
+#         setup = lambda wildcards: setup,
+#         search_pattern = lambda wildcards: get_pattern_unsorted_data(setup)
+#     script:
+#         "scripts/create_keylist.py"
 
-def get_keylist_file(wildcards):
-    if wildcards.tier =="daq" and wildcards.extension=="file":
-        return os.path.join(filelist_path(setup),"{label}.daqkeylist")
+def get_pattern(tier):
+    if tier =="daq":
+        return get_pattern_unsorted_data(setup)
+    elif tier =="daq":
+        return get_pattern_tier_daq(setup)
     else:
-        return os.path.join(filelist_path(setup),"{label}.{extension}keylist")
+        return get_pattern_tier_raw(setup)
 
 checkpoint gen_filelist:
-    input:
-        get_keylist_file
     output:
         os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
     params:
-        setup = lambda wildcards: setup
+        setup = lambda wildcards: setup,
+        search_pattern = lambda wildcards: get_pattern(wildcards.tier)
     script:
-        "scripts/create_{wildcards.extension}list.py"
+        "scripts/create_filelist.py"
 
 def read_filelist(wildcards):
     with checkpoints.gen_filelist.get(label=wildcards.label, tier=wildcards.tier, extension="file").output[0].open() as f:

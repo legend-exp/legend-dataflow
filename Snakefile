@@ -15,7 +15,7 @@ swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
-localrules: do_nothing, autogen_keylist, gen_filelist, autogen_output
+localrules: do_nothing, gen_filelist, autogen_output
 
 rule do_nothing:
     input:
@@ -28,44 +28,22 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f'rm {filelist_path(setup)}/* || true')
+    #shell(f'rm {filelist_path(setup)}/* || true')
     
 
 #Placeholder, can email or maybe put message in slack
 onerror:
     print("An error occurred :( ")
 
-
-# Auto-generate "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]].keylist"
-# based on available tier0 files.
-rule autogen_keylist:
-    input:
-        configs
-    output:
-        temp(os.path.join(filelist_path(setup),"all{keypart}.filekeylist"))
-    params:
-        setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern_tier_raw(setup)
-    script:
-        "scripts/create_keylist.py"
-
-rule build_channel_keylist:
-    params:
-        timestamp = "{timestamp}",
-        datatype = "cal"
-    output:
-        temp(os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-{timestamp}-channels.chankeylist"))
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs} --channelmap {chan_maps} --timestamp {params.timestamp} --datatype {params.datatype} --output_file {output} "
-
-
 checkpoint gen_filelist:
-    input:
-        os.path.join(filelist_path(setup),"{label}.{extension}keylist")
     output:
         os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
     params:
-        setup = lambda wildcards: setup
+        setup = lambda wildcards: setup,
+        search_pattern = lambda wildcards: get_pattern_tier_raw(setup),
+        basedir = basedir,
+        configs = configs,
+        chan_maps = chan_maps
     script:
         "scripts/create_{wildcards.extension}list.py"
 
