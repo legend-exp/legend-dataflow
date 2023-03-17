@@ -31,7 +31,7 @@ onsuccess:
 def get_pattern(tier):
     if tier =="daq":
         return get_pattern_unsorted_data(setup)
-    elif tier =="daq":
+    elif tier =="raw":
         return get_pattern_tier_daq(setup)
     else:
         return get_pattern_tier_raw(setup)
