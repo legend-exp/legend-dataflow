@@ -112,6 +112,12 @@ def get_pattern_pars_overwrite(setup, tier, name = None):
     else:
         return os.path.join(f"{par_overwrite_path(setup)}", tier,  "{datatype}", "{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+"-overwrite.json")
 
+def get_pattern_pars_tmp(setup, tier, name=None):
+    if name is None:
+        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+".json")
+    else:
+        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+"_"+name+".json")
+
 def get_pattern_pars_tmp_channel(setup, tier, name=None):
     if name is None:
         return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+".json")
