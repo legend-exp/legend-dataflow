@@ -36,7 +36,7 @@ class FileKey(namedtuple('FileKey', ['experiment', 'period', 'run', 'datatype', 
     
     @classmethod
     def get_filekey_from_filename(cls, filename):
-        return cls.get_filekey_from_pattern(cls.key_pattern, processing_pattern())
+        return cls.get_filekey_from_pattern(filename, processing_pattern())
     
     @classmethod
     def get_filekey_from_pattern(cls, filename, pattern=None):
@@ -139,7 +139,6 @@ class ProcessingFileKey(FileKey):
     
     @property
     def name(self):
-        print(self.identifier)
         return f"{super().name}-{self.processing_step}"
     
     def get_path_from_filekey(self, pattern, **kwargs):
