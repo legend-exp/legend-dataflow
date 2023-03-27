@@ -22,6 +22,7 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--output", help="output file", type=str)
+argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
@@ -58,3 +59,35 @@ pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 build_hit(args.input, lh5_tables_config=hit_dict, outfile =args.output)
 t_elap = time.time() - t_start
 log.info(f'Done!  Time elapsed: {t_elap:.2f} sec.')
+
+hit_outputs = {}
+hit_channels=[]
+for channel,file in channel_dict.items():
+    output = Props.read_from(file)["outputs"]
+    in_dict = False
+    for entry in hit_outputs:
+        if hit_outputs[entry]["fields"]==output:
+            hit_outputs[entry]["channels"].append(channel)
+            in_dict=True
+    if in_dict == False:
+        hit_outputs[f"group{len(list(hit_outputs))+1}"]={"channels":[channel],
+                                            "fields":output}
+    hit_channels.append(channel)
+
+key = os.path.basename(args.output).replace("-tier_hit.lh5","")
+
+full_dict = {"valid_fields":{
+    "hit":hit_outputs
+},
+             
+    "valid_keys":{
+        key:{
+            "valid_channels":{
+                "hit":hit_channels
+            }
+        }
+    }
+}
+
+with open(args.db_file ,"w") as w:
+    json.dump(full_dict, w, indent=4)
