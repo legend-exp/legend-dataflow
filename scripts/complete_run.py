@@ -12,6 +12,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
         with open(warning_file, "w") as w:
             with open(output_file, "w") as f:
                 n_errors=0
+                n_warnings = 0
                 for file in Path(log_path).rglob("*.log"):
                     with open(file) as r:
                         text = r.read()
@@ -20,15 +21,21 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                                 if "ERROR" in line:
                                     if n_errors ==0:
                                         f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
+                                    if n_warnings ==0:
+                                        w.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n")
                                     f.write(f"{os.path.basename(file)} : {line}\n")
+                                    n_errors +=1
                                 elif "WARNING" in line:
                                     w.write(f"{os.path.basename(file)} : {line}\n")
+                                    n_warnings +=1
                         else:
                             pass
                     os.remove(file)
                     text=None
                 if n_errors ==0:
                     f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
+                if n_warnings ==0:
+                    w.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n")
     else:
         with open(output_file, "w") as f:
             n_errors=0
@@ -41,6 +48,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                                 if n_errors ==0:
                                     f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
                                 f.write(f"{os.path.basename(file)} : {line}\n")
+                                 n_errors +=1
                     else:
                         pass
                 os.remove(file)
