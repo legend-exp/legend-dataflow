@@ -26,6 +26,7 @@ argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
 
+pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
@@ -90,6 +91,6 @@ full_dict = {"valid_fields":{
         }
     }
 }
-
+pathlib.Path(os.path.dirname(args.db_file)).mkdir(parents=True, exist_ok=True)
 with open(args.db_file ,"w") as w:
     json.dump(full_dict, w, indent=4)
