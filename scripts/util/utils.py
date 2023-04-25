@@ -27,9 +27,6 @@ def tier_path(setup):
 def tier_tcm_path(setup):
     return setup["paths"]["tier_tcm"]
 
-def tier_tcm_path(setup):
-    return setup["paths"]["tier_tcm"]
-
 def tier_raw_path(setup):
     return setup["paths"]["tier_raw"]
 

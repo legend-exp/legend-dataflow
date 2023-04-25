@@ -5,6 +5,7 @@ import glob
 from util.FileKey import *
 from util.CalibCatalog import Props
 
+
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
     os.makedirs(os.path.dirname(output_file),exist_ok=True)
     if warning_file is not None:
@@ -48,7 +49,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                                 if n_errors ==0:
                                     f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
                                 f.write(f"{os.path.basename(file)} : {line}\n")
-                                 n_errors +=1
+                                n_errors +=1
                     else:
                         pass
                 os.remove(file)
@@ -91,7 +92,7 @@ def readable_json(dic, ncol=6, indent=4):
     
     return out_string
 
-def build_valid_keys(input_files, output_dir):
+def get_keys(input_files):
     def get_run(Filekey):
         return f"{Filekey.experiment}-{Filekey.period}-{Filekey.run}-{Filekey.datatype}"
 
@@ -103,6 +104,11 @@ def build_valid_keys(input_files, output_dir):
             key_dict[get_run(key)].append(file)
         else:
             key_dict[get_run(key)] = [file]
+    return key_dict
+
+
+def build_valid_keys(input_files, output_dir):
+    key_dict = get_keys(input_files)
     
     for key in list(key_dict):
         dtype = key.split("-")[-1]
@@ -115,9 +121,54 @@ def build_valid_keys(input_files, output_dir):
 
     os.system(f"rm {input_files}")
 
+def build_file_dbs(input_files, output_dir):
+    key_dict = get_keys(input_files)
+    for key in list(key_dict):
+        experiment, period, run , dtype = key.split("-")
+        out_file = os.path.join(output_dir, f'{key}-filedb.h5')
+        pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
+        file_path = f"{dtype}/{period}/{run}"
+        cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/build_fdb.py  --file_path {file_path} --output_file {out_file} --config {os.path.join(output_dir, f'file_db_config.json')}"
+        os.system(cmd)
+
+setup = snakemake.params.setup
+basedir = snakemake.params.basedir
+
+file_db_config = {
+    "data_dir": "/",
+    "tier_dirs": {
+        "raw": tier_raw_path(setup),
+        "dsp": tier_dsp_path(setup),
+        "hit": tier_hit_path(setup),
+        "tcm": tier_tcm_path(setup),
+        "evt": tier_evt_path(setup)
+    },
+    "file_format": {
+        "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
+        "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
+        "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
+        "evt": get_pattern_tier(setup,"evt").replace(tier_tcm_path(setup) ,""),
+        "tcm": get_pattern_tier(setup,"tcm").replace(tier_evt_path(setup) ,"")
+    },
+    "table_format": {
+        "raw": "ch{ch:07d}/raw",
+        "dsp": "ch{ch:07d}/dsp",
+        "hit": "ch{ch:07d}/hit",
+        "evt": "{grp}/evt",
+        "tcm": "hardware_tcm_1"
+    }
+}
+
 
 check_log_files(snakemake.params.log_path, snakemake.output.summary_log, snakemake.output.gen_output, 
                 warning_file=snakemake.output.warning_log)
+
+os.makedirs(snakemake.params.filedb_path,exist_ok=True)
+with open(os.path.join(snakemake.params.filedb_path, f'file_db_config.json'), "w") as w:
+    json.dump(file_db_config, w, indent=2)
+
+build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
+os.system(f"rm {os.path.join(snakemake.params.filedb_path, f'file_db_config.json')}")
 
 build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
 
