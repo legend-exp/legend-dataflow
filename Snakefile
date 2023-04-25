@@ -68,16 +68,19 @@ rule gen_fileDB_config:
 rule autogen_output:
     input:
         filelist = read_filelist,
-        #fileDBconfig = 
     output:
         gen_output = "{label}-{tier}.gen",
         summary_log = f"{log_path(setup)}/summary-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
         warning_log = f"{log_path(setup)}/warning-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-        #fileDB = "fdb.h5" #where should this sit?
     params:
         log_path = tmp_log_path(setup), 
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --warning_log {output.warning_log} --filelist {input.filelist}" # --fileDB {output.fileDB}  --fileDBconfig {inputs.fileDBconfig}
+        tmp_par_path = os.path.join(tmp_par_path(setup), "*_db.json"),
+        valid_keys_path = os.path.join(pars_path(setup), "valid_keys"),
+        filedb_path = os.path.join(pars_path(setup), "filedb"),
+        setup = lambda wildcards: setup,
+        basedir = basedir
+    script:
+        "scripts/complete_run.py" 
 
 
 #This rule builds the tcm files each raw file
@@ -203,14 +206,15 @@ rule build_dsp:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
     output:
-        get_pattern_tier_dsp(setup)
+        tier_file = get_pattern_tier_dsp(setup),
+        db_file = get_pattern_pars_tmp(setup, "dsp_db")
     log:
         get_pattern_log(setup, "tier_dsp")
     group: "tier-dsp"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs} --pars_file {input.pars_file} --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output.tier_file} --db_file {output.db_file} --pars_file {input.pars_file} " 
 
 
 
@@ -322,7 +326,8 @@ rule build_hit:
         dsp_file = get_pattern_tier_dsp(setup),
         pars_file = get_pars_hit_file
     output:
-        get_pattern_tier_hit(setup)
+        tier_file = get_pattern_tier_hit(setup),
+        db_file = get_pattern_pars_tmp(setup, "hit_db")
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -332,4 +337,4 @@ rule build_hit:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output} --input {input.dsp_file} "
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"

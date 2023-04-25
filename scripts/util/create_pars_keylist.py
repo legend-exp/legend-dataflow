@@ -46,6 +46,7 @@ class pars_key_resolve():
     @staticmethod
     def generate_par_keylist(keys):
         keylist = []
+        keys = sorted(keys, key=FileKey.get_unix_timestamp)
         keylist.append(keys[0])
         for key in keys[1:]:
             matched_key = pars_key_resolve.match_keys(keylist[-1], key)
