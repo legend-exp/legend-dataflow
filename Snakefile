@@ -75,7 +75,10 @@ rule autogen_output:
     params:
         log_path = tmp_log_path(setup), 
         tmp_par_path = os.path.join(tmp_par_path(setup), "*_db.json"),
-        valid_keys_path = os.path.join(pars_path(setup), "valid_keys")
+        valid_keys_path = os.path.join(pars_path(setup), "valid_keys"),
+        filedb_path = os.path.join(pars_path(setup), "filedb"),
+        setup = lambda wildcards: setup,
+        basedir = basedir
     script:
         "scripts/complete_run.py" 
 
