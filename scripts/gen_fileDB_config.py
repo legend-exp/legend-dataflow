@@ -19,12 +19,12 @@ def gen_file_db_config(setup):
             "evt": get_pattern_tier(setup,"evt"),
             "tcm": get_pattern_tier(setup,"tcm")
             },
-        "table_format":{
-            "raw": "ch{ch:03d}/raw",                # this should be checked from raw config and then applied to higher tiers
-            "dsp": "ch{ch:03d}/dsp",
-            "hit": "ch{ch:03d}/hit",
+        "table_format": {
+            "raw": "ch{ch:07d}/raw", # this should be checked from raw config and then applied to higher tiers
+            "dsp": "ch{ch:07d}/dsp",
+            "hit": "ch{ch:07d}/hit",
             "evt": "{grp}/evt",
-            "tcm": "hardware_tcm"
+            "tcm": "hardware_tcm_1"
         }
     }
 
