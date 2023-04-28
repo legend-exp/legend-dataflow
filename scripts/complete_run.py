@@ -135,7 +135,7 @@ setup = snakemake.params.setup
 basedir = snakemake.params.basedir
 
 file_db_config = {
-    "data_dir": "/",
+    "data_dir": "",
     "tier_dirs": {
         "raw": tier_raw_path(setup),
         "dsp": tier_dsp_path(setup),
@@ -147,8 +147,8 @@ file_db_config = {
         "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
         "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
         "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
-        "evt": get_pattern_tier(setup,"evt").replace(tier_tcm_path(setup) ,""),
-        "tcm": get_pattern_tier(setup,"tcm").replace(tier_evt_path(setup) ,"")
+        "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
+        "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
     },
     "table_format": {
         "raw": "ch{ch:07d}/raw",
