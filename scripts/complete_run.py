@@ -135,7 +135,7 @@ setup = snakemake.params.setup
 basedir = snakemake.params.basedir
 
 file_db_config = {
-    "data_dir": "",
+    "data_dir": "/",
     "tier_dirs": {
         "raw": tier_raw_path(setup),
         "dsp": tier_dsp_path(setup),
