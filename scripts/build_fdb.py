@@ -13,4 +13,4 @@ with open(args.config, "r") as r:
 fdb = FileDB(config, scan=False)
 fdb.scan_files([args.file_path])
 fdb.scan_tables_columns(dir_files_conform=True)
-fdb.to_disk(args.output_file)
+fdb.to_disk(args.output_file, wo_mode="of")
