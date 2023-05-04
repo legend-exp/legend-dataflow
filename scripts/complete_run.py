@@ -134,31 +134,56 @@ def build_file_dbs(input_files, output_dir):
 setup = snakemake.params.setup
 basedir = snakemake.params.basedir
 
-file_db_config = {
-    "data_dir": "/",
-    "tier_dirs": {
-        "raw": tier_raw_path(setup),
-        "dsp": tier_dsp_path(setup),
-        "hit": tier_hit_path(setup),
-        "tcm": tier_tcm_path(setup),
-        "evt": tier_evt_path(setup)
-    },
-    "file_format": {
-        "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
-        "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
-        "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
-        "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
-        "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
-    },
-    "table_format": {
-        "raw": "ch{ch:07d}/raw",
-        "dsp": "ch{ch:07d}/dsp",
-        "hit": "ch{ch:07d}/hit",
-        "evt": "{grp}/evt",
-        "tcm": "hardware_tcm_1"
+if os.getenv('PRODENV') in snakemake.params.filedb_path:
+    file_db_config = {
+        "data_dir": "$PRODENV",
+        "tier_dirs": {
+            "raw": tier_raw_path(setup).replace(os.getenv('PRODENV') ,""),
+            "dsp": tier_dsp_path(setup).replace(os.getenv('PRODENV') ,""),
+            "hit": tier_hit_path(setup).replace(os.getenv('PRODENV') ,""),
+            "tcm": tier_tcm_path(setup).replace(os.getenv('PRODENV') ,""),
+            "evt": tier_evt_path(setup).replace(os.getenv('PRODENV') ,"")
+        },
+        "file_format": {
+            "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
+            "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
+            "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
+            "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
+            "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
+        },
+        "table_format": {
+            "raw": "ch{ch:07d}/raw",
+            "dsp": "ch{ch:07d}/dsp",
+            "hit": "ch{ch:07d}/hit",
+            "evt": "{grp}/evt",
+            "tcm": "hardware_tcm_1"
+        }
     }
-}
-
+else:
+    file_db_config = {
+        "data_dir": "/",
+        "tier_dirs": {
+            "raw": tier_raw_path(setup),
+            "dsp": tier_dsp_path(setup),
+            "hit": tier_hit_path(setup),
+            "tcm": tier_tcm_path(setup),
+            "evt": tier_evt_path(setup)
+        },
+        "file_format": {
+            "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
+            "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
+            "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
+            "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
+            "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
+        },
+        "table_format": {
+            "raw": "ch{ch:07d}/raw",
+            "dsp": "ch{ch:07d}/dsp",
+            "hit": "ch{ch:07d}/hit",
+            "evt": "{grp}/evt",
+            "tcm": "hardware_tcm_1"
+        }
+    }
 
 check_log_files(snakemake.params.log_path, snakemake.output.summary_log, snakemake.output.gen_output, 
                 warning_file=snakemake.output.warning_log)
