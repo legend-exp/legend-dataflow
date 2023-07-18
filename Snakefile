@@ -40,7 +40,7 @@ checkpoint gen_filelist:
         os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
     params:
         setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern_tier_raw(setup),
+        search_pattern = lambda wildcards: get_pattern_tier_dsp(setup),
         basedir = basedir,
         configs = configs,
         chan_maps = chan_maps
