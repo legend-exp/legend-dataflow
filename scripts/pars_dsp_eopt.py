@@ -19,7 +19,7 @@ import time
 
 from pygama.pargen.dsp_optimize import run_one_dsp
 import pygama.pargen.energy_optimisation as om
-import pygama.lgdo.lh5_store as lh5
+import lgdo.lh5_store as lh5
 import pygama.math.peak_fitting as pgf
 
 argparser = argparse.ArgumentParser()

@@ -14,7 +14,7 @@ from legendmeta.catalog import Props
 
 import pygama.pargen.ecal_th as ect
 import pygama.pargen.cuts as cts
-import pygama.lgdo.lh5_store as lh5
+import lgdo.lh5_store as lh5
 import pygama.math.histogram as pgh
 
 log = logging.getLogger(__name__)

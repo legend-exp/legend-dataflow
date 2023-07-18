@@ -6,7 +6,7 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
 from pygama.hit.build_hit import build_hit
-import pygama.lgdo.lh5_store as lh5
+import lgdo.lh5_store as lh5
 
 import time
 import logging

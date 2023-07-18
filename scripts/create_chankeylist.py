@@ -1,6 +1,6 @@
 import snakemake as smk
 import os, re, glob
-import pygama.lgdo.lh5_store as lh5
+import lgdo.lh5_store as lh5
 import argparse
 from legendmeta import LegendMetadata
 
