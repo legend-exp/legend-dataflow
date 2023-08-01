@@ -1,4 +1,4 @@
-from pygama.dsp.utils import numba_defaults
+from dspeed.utils import numba_defaults
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True

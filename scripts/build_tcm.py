@@ -1,8 +1,8 @@
 import  os, logging
 import argparse, pathlib
 from pygama.evt.build_tcm import *
-from pygama import lgdo
-from pygama.raw.orca import orca_flashcam
+import lgdo
+from daq2lh5.orca import orca_flashcam
 import numpy as np
 
 argparser = argparse.ArgumentParser()

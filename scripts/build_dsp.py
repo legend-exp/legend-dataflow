@@ -1,9 +1,9 @@
-from pygama.dsp.utils import numba_defaults
+from dspeed.utils import numba_defaults
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
 
-from pygama.dsp.build_dsp import build_dsp
+from dspeed.build_dsp import build_dsp
 import lgdo.lh5_store as lh5
 
 from legendmeta import LegendMetadata

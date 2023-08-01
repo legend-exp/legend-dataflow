@@ -5,7 +5,7 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
 import pygama
-from pygama.raw.build_raw import * 
+from daq2lh5.build_raw import * 
 import numpy as np
 
 
