@@ -66,6 +66,20 @@ def par_evt_path(setup):
 def pars_path(setup):
     return setup["paths"]["par"]
 
+def get_pars_path(setup,tier):
+    if tier == "raw":
+        return par_raw_path(setup)
+    elif tier == "tcm":
+        return par_tcm_path(setup)
+    elif tier == "dsp":
+        return par_dsp_path(setup)
+    elif tier == "hit":
+        return par_hit_path(setup)
+    elif tier == "evt":
+        return par_evt_path(setup)
+    else:
+        raise ValueError(f"no tier matching:{tier}")
+
 def tmp_par_path(setup):
     return setup["paths"]["tmp_par"]
 

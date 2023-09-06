@@ -23,7 +23,10 @@ rule do_nothing:
 onstart:
     print("Starting workflow")
     shell(f'rm {pars_path(setup)}/validity.jsonl || true')
-    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'],os.path.join(pars_path(setup),'validity.jsonl'), get_pattern_tier_raw(setup))
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"dsp",'validity.jsonl'), 
+                                        get_pattern_tier_raw(setup), {"cal":["par_dsp"], 'lar':['par_dsp']})
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"hit",'validity.jsonl'), 
+                                        get_pattern_tier_raw(setup), {"cal":["par_hit"], 'lar':['par_hit']})
 
 onsuccess:
     print("Workflow finished, no error")

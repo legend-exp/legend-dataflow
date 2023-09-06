@@ -24,8 +24,8 @@ class pars_key_resolve():
         return json.dumps(self.__dict__)
     
     @classmethod
-    def from_filekey(cls, filekey):
-        return cls(filekey.timestamp, "all", filekey.get_path_from_filekey(processing_pattern(), processing_step=pars_key_resolve.name_dict, ext="json"))
+    def from_filekey(cls, filekey, name_dict):
+        return cls(filekey.timestamp, "all", filekey.get_path_from_filekey(par_validity_pattern(), processing_step=name_dict, ext="json"))
     
     @staticmethod
     def write_to_jsonl(file_names, path):
@@ -66,11 +66,11 @@ class pars_key_resolve():
                 entry2.apply.append(entry)
     
     @staticmethod
-    def match_all_entries(entrylist):
+    def match_all_entries(entrylist, name_dict):
         out_list = []
-        out_list.append(pars_key_resolve.from_filekey(entrylist[0]))
+        out_list.append(pars_key_resolve.from_filekey(entrylist[0], name_dict))
         for entry in entrylist[1:]:
-            new_entry = pars_key_resolve.from_filekey(entry)
+            new_entry = pars_key_resolve.from_filekey(entry, name_dict)
             pars_key_resolve.match_entries(out_list[-1],new_entry)
             out_list.append(new_entry)
         return out_list
@@ -91,7 +91,7 @@ class pars_key_resolve():
         return keys
     
     @staticmethod
-    def write_par_catalog(setup, keypart, filename, search_pattern):
+    def write_par_catalog(setup, keypart, filename, search_pattern, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
         keylist = []
@@ -99,6 +99,7 @@ class pars_key_resolve():
             keylist += pars_key_resolve.get_keys(keypar, setup, search_pattern)
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
-        entrylist = pars_key_resolve.match_all_entries(keylist)
+
+        entrylist = pars_key_resolve.match_all_entries(keylist, name_dict)
         pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
         pars_key_resolve.write_to_jsonl(entrylist, filename)

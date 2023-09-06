@@ -8,8 +8,6 @@ from .FileKey import *
 
 class pars_catalog(CalibCatalog):
     
-    pars_overwrite_pattern = processing_overwrite_pattern()
-    
     @staticmethod
     def match_pars_files(filelist1, filelist2):
         for file2 in filelist2:
@@ -23,38 +21,17 @@ class pars_catalog(CalibCatalog):
                     else:
                         filelist2 =[]
         return filelist1, filelist2
-    
+
     @staticmethod
-    def select_pars_files(filelist, processing_step):
-        out_list = []
-        for file in filelist:
-            fk = ProcessingFileKey.get_filekey_from_pattern(file)
-            if processing_step in fk.processing_step:
-                out_list.append(file)
-        return out_list
-    
-    @staticmethod
-    def select_pars_overwrite_files(filelist, processing_step):
-        out_list = []
-        for file in filelist:
-            fk = ProcessingFileKey.get_filekey_from_pattern(file, pars_catalog.pars_overwrite_pattern)
-            if processing_step in fk.processing_step:
-                out_list.append(file)
-        return out_list
-        
-    @staticmethod
-    def get_par_file(setup, timestamp, name):
-        par_file = os.path.join(pars_path(setup),'validity.jsonl')
+    def get_par_file(setup, timestamp, tier):
+        par_file = os.path.join(get_pars_path(setup,tier),'validity.jsonl')
         pars_files = pars_catalog.get_calib_files(par_file, timestamp)
-        par_overwrite_file = os.path.join(par_overwrite_path(setup),'validity.jsonl')
+        par_overwrite_file = os.path.join(par_overwrite_path(setup), tier,'validity.jsonl')
         pars_files_overwrite = pars_catalog.get_calib_files(par_overwrite_file, timestamp)
         if len(pars_files_overwrite)>0:
-            pars_files, pars_files_overwrite = pars_catalog.match_pars_files(pars_files, pars_files_overwrite)
-        pars_files = pars_catalog.select_pars_files(pars_files, f'par_{name}')
-        pars_overwrite_files = pars_catalog.select_pars_overwrite_files(pars_files_overwrite, f'par_{name}')
-        pars_files = [ProcessingFileKey.get_full_path_from_filename(par_file, processing_pattern(), get_pattern_pars(setup, name))[0] for par_file in pars_files]
+            pars_files, pars_overwrite_files = pars_catalog.match_pars_files(pars_files, pars_files_overwrite)
+        pars_files = [os.path.join(get_pars_path(setup,tier),file) for file in pars_files]
         if len(pars_overwrite_files)>0:
-            par_overwrite_lambda = lambda x,y : get_pattern_pars_overwrite(setup, x, y)
-            pars_overwrite_files = [ProcessingFileKey.get_full_path_from_filename(par_overwrite_file, processing_overwrite_pattern(), par_overwrite_lambda)[0] for par_overwrite_file in pars_overwrite_files]
-            pars_files +=pars_overwrite_files
+            pars_overwrite_files = [os.path.join(par_overwrite_path(setup), tier,file) for file in pars_overwrite_files]
+            pars_files += pars_overwrite_files
         return pars_files
