@@ -2,6 +2,7 @@ import pathlib, os, json, sys
 import scripts as ds
 from scripts.util.patterns import *
 from datetime import datetime
+from collections import OrderedDict
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
@@ -12,6 +13,7 @@ setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
+part = ds.dataset_file(setup, "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/config/partitions.json")
 
 basedir = workflow.basedir
 
@@ -22,11 +24,15 @@ rule do_nothing:
 
 onstart:
     print("Starting workflow")
-    shell(f'rm {pars_path(setup)}/validity.jsonl || true')
+    shell(f'rm {pars_path(setup)}/dsp/validity.jsonl || true')
+    shell(f'rm {pars_path(setup)}/hit/validity.jsonl || true')
+    shell(f'rm {pars_path(setup)}/pht/validity.jsonl || true')
     ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"dsp",'validity.jsonl'), 
                                         get_pattern_tier_raw(setup), {"cal":["par_dsp"], 'lar':['par_dsp']})
     ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"hit",'validity.jsonl'), 
                                         get_pattern_tier_raw(setup), {"cal":["par_hit"], 'lar':['par_hit']})
+    ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"pht",'validity.jsonl'), 
+                                        get_pattern_tier_raw(setup), {"cal":["par_pht"], 'lar':['par_pht']})
 
 onsuccess:
     print("Workflow finished, no error")
@@ -187,7 +193,7 @@ rule build_pars_dsp:
         read_filelist_plts_dsp_cal_channel
     output:
         get_pattern_par_dsp(setup),
-        get_pattern_par_dsp(setup, name="energy_grid"),
+        get_pattern_par_dsp(setup, name="energy_grid", extension="pkl"),
         get_pattern_plts(setup, "dsp")
     group: "merge-dsp"
     shell:
@@ -204,7 +210,7 @@ rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
         tcm_file = get_pattern_tier_tcm(setup),
-        pars_file = ancient(get_pars_dsp_file)
+        pars_file = "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/overrides/dsp/cal/p03/r000/L200-p03-r000-cal-T%-par_dsp-overwrite.json"#ancient(get_pars_dsp_file)
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -238,7 +244,7 @@ rule build_energy_calibration:
         channel = "{channel}"
     output:
         ecal_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
-        results_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results")),
+        results_file = temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results", extension="pkl")),
         plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit","energy_cal"))
     log:
         get_pattern_log_channel(setup, "pars_hit_energy_cal")
@@ -246,7 +252,7 @@ rule build_energy_calibration:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --results_path {output.results_file} --files {input.files}" # 
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --results_path {output.results_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --files {input.files}" #
 
 
 #This rule builds the a/e calibration using the calibration dsp files 
@@ -254,7 +260,7 @@ rule build_aoe_calibration:
     input:
         files = os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-dsp.filelist"),
         ecal_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
-        eres_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results"),
+        eres_file = get_pattern_pars_tmp_channel(setup, "hit", "energy_cal_results", extension="pkl"),
         inplots = get_pattern_plts_tmp_channel(setup, "hit","energy_cal")
     params:
         timestamp = "{timestamp}",
@@ -262,7 +268,7 @@ rule build_aoe_calibration:
         channel = "{channel}"
     output:
         hit_pars = temp(get_pattern_pars_tmp_channel(setup, "hit")),
-        aoe_results = temp(get_pattern_pars_tmp_channel(setup, "hit", "results")),
+        aoe_results = temp(get_pattern_pars_tmp_channel(setup, "hit", "results", extension="pkl")),
         plot_file = temp(get_pattern_plts_tmp_channel(setup, "hit"))
     log:
         get_pattern_log_channel(setup, "pars_hit_aoe_cal")
@@ -270,7 +276,7 @@ rule build_aoe_calibration:
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --eres_file {input.eres_file} --ecal_file {input.ecal_file} {input.files}"     
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} {input.files}" #
 
 
 def read_filelist_pars_hit_cal_channel(wildcards):
@@ -300,10 +306,8 @@ def read_filelist_pars_hit_cal_channel_results(wildcards):
     label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
     with checkpoints.gen_filelist.get(label=label, tier="hit_results", extension="chan").output[0].open() as f:
         files = f.read().splitlines()
+        files = [file.replace("json", "pkl") for file in files]
         return files 
-
-
-
 
 checkpoint build_pars_hit:
     input:
@@ -312,7 +316,7 @@ checkpoint build_pars_hit:
         read_filelist_plts_hit_cal_channel
     output:
         get_pattern_par_hit(setup),
-        get_pattern_par_hit(setup, name="results"),
+        get_pattern_par_hit(setup, name="results", extension="pkl"),
         get_pattern_plts(setup, "hit")
     group: "merge-hit"
     shell:
@@ -341,3 +345,171 @@ rule build_hit:
         runtime=300
     shell:
         "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+
+
+#This rule builds the energy calibration using the calibration dsp files 
+rule build_per_energy_calibration:
+    input:
+        files = read_filelist_dsp_cal,
+        ctc_dict = ["/data2/public/prodenv/prod-blind/tmp/auto/generated/par/dsp/cal/p07/r001/l200-p07-r001-cal-20230807T121150Z-par_dsp.json",
+                    "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/overrides/dsp/cal/p03/r000/L200-p03-r000-cal-T%-par_dsp-overwrite.json"]#ancient(get_pars_dsp_file)
+    params:
+        timestamp = "{timestamp}",
+        datatype = "cal",
+        channel = "{channel}"
+    output:
+        ecal_file = temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
+        results_file = temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal_results", extension="pkl")),
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "pht","energy_cal"))
+    log:
+        get_pattern_log_channel(setup, "pars_pht_energy_cal")
+    group: "par-pht"
+    resources:
+        runtime=300
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --results_path {output.results_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --files {input.files}" #
+
+def read_filelist_pars_pht_cal_channel(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(label=label, tier="pht", extension="chan").output[0].open() as f:
+        files = f.read().splitlines()
+        return files 
+
+def read_filelist_plts_pht_cal_channel(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(label=label, tier="pht", extension="chan").output[0].open() as f:
+        files = f.read().splitlines()
+        files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
+        return files 
+
+def read_filelist_pars_pht_cal_channel_results(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+    label=f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(label=label, tier="pht_results", extension="chan").output[0].open() as f:
+        files = f.read().splitlines()
+        files = [file.replace("json", "pkl") for file in files]
+        return files
+
+
+checkpoint build_pars_pht:
+    input:
+        read_filelist_pars_pht_cal_channel,
+        read_filelist_pars_pht_cal_channel_results,
+        read_filelist_plts_pht_cal_channel
+    output:
+        get_pattern_par_pht(setup),
+        get_pattern_par_pht(setup, name="results", extension="pkl"),
+        get_pattern_plts(setup, "hit")
+    group: "merge-hit"
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
+
+def get_pars_pht_file(wildcards):
+    """
+    This function will get the pars file for the run checking the pars_overwrite 
+    """
+    return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "pht")
+
+
+rule build_pht:
+    input:
+        dsp_file = get_pattern_tier_dsp(setup),
+        pars_file = get_pars_pht_file
+    output:
+        tier_file = get_pattern_tier_pht(setup),
+        db_file = get_pattern_pars_tmp(setup, "pht_db")
+    params:
+        timestamp = "{timestamp}",
+        datatype = "{datatype}"
+    log:
+        get_pattern_log(setup, "tier_pht")
+    group: "tier-pht"
+    resources:
+        runtime=300
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+
+# def fix_name(new_name):
+#     """ sets the name of the most recently created rule to be new_name
+#     """
+#     list(workflow.rules)[-1].name = new_name
+#     temp_rules = list(rules.__dict__.items())
+#     temp_rules[-1] = (new_name, temp_rules[-1][1]) 
+#     rules.__dict__ = dict(temp_rules)
+
+part_pht_rules={}
+for key, dataset in part.datasets.items():
+    for partition in dataset.keys():
+        rule:
+            input:
+                files = part.get_filelists(partition, key, "dsp"),
+                ecal_file = part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="energy_cal"),
+                eres_file = part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="energy_cal_results", extension="pkl"),
+                inplots = part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key,tier="pht", name="energy_cal")
+            params:
+                datatype = "cal",
+                channel = "{channel}",
+                timestamp = part.get_timestamp(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")
+            output:
+                hit_pars = temp(part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")),
+                aoe_results = temp(part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="results", extension="pkl")),
+                plot_file = temp(part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"))
+            log:
+                part.get_log_file(f"{par_pht_path(setup)}/validity.jsonl", partition, key, "pht",name="par_pht")
+            group: "par-pht"
+            resources:
+                mem_swap=60,
+                runtime=300
+            shell:
+                "{swenv} python3 -B {basedir}/scripts/pars_pht.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} --input_files {input.files}" 
+        
+        #fix_name(f"{key}-{partition}")
+
+        if key in part_pht_rules:
+            part_pht_rules[key].append(list(workflow.rules)[-1])
+        else:
+            part_pht_rules[key] = [list(workflow.rules)[-1]]
+
+# Merged energy and a/e supercalibrations to reduce number fo rules as they have same inputs/outputs
+# This rule builds the a/e calibration using the calibration dsp files for the whole partition 
+rule build_pht_super_calibrations:
+    input:
+        files = read_filelist_dsp_cal,
+        ecal_file = get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
+        eres_file = get_pattern_pars_tmp_channel(setup, "pht", "energy_cal_results", extension="pkl"),
+        inplots = get_pattern_plts_tmp_channel(setup, "pht","energy_cal")
+    params:
+        datatype = "cal",
+        channel = "{channel}",
+        timestamp = "{timestamp}"
+    output:
+        hit_pars = temp(get_pattern_pars_tmp_channel(setup, "pht")),
+        aoe_results = temp(get_pattern_pars_tmp_channel(setup, "pht", "results", extension="pkl")),
+        plot_file = temp(get_pattern_plts_tmp_channel(setup, "pht"))
+    log:
+        get_pattern_log_channel(setup, "pars_pht_aoe_cal")
+    group: "par-pht"
+    resources:
+        mem_swap=60,
+        runtime=300
+    shell:
+        "{swenv} python3 -B {basedir}/scripts/pars_pht.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} --input_files {input.files}" #
+
+fallback_pht_rule =  list(workflow.rules)[-1]
+
+rule_order_list = []
+ordered = OrderedDict(part_pht_rules)
+ordered.move_to_end("default")
+for key, items in ordered.items():
+    rule_order_list += [item.name for item in items]
+rule_order_list.append(fallback_pht_rule.name)
+workflow._ruleorder.add(*rule_order_list)#[::-1]

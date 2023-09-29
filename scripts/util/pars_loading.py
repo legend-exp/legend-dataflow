@@ -29,9 +29,9 @@ class pars_catalog(CalibCatalog):
         par_overwrite_file = os.path.join(par_overwrite_path(setup), tier,'validity.jsonl')
         pars_files_overwrite = pars_catalog.get_calib_files(par_overwrite_file, timestamp)
         if len(pars_files_overwrite)>0:
-            pars_files, pars_overwrite_files = pars_catalog.match_pars_files(pars_files, pars_files_overwrite)
+            pars_files, pars_files_overwrite = pars_catalog.match_pars_files(pars_files, pars_files_overwrite)
         pars_files = [os.path.join(get_pars_path(setup,tier),file) for file in pars_files]
-        if len(pars_overwrite_files)>0:
-            pars_overwrite_files = [os.path.join(par_overwrite_path(setup), tier,file) for file in pars_overwrite_files]
+        if len(pars_files_overwrite)>0:
+            pars_overwrite_files = [os.path.join(par_overwrite_path(setup), tier,file) for file in pars_files_overwrite]
             pars_files += pars_overwrite_files
         return pars_files

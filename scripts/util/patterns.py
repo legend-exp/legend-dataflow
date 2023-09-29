@@ -24,6 +24,9 @@ def processing_overwrite_pattern():
 def full_channel_pattern():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
 
+def full_channel_pattern_with_extension():
+    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}.{ext}"
+
 def get_pattern_unsorted_data(setup):
     if sandbox_path(setup) is not None:
         return os.path.join(f"{sandbox_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}.orca")
@@ -44,6 +47,9 @@ def get_pattern_tier_dsp(setup):
 def get_pattern_tier_hit(setup):
     return os.path.join(f"{tier_hit_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_hit.lh5")
 
+def get_pattern_tier_pht(setup):
+    return os.path.join(f"{tier_pht_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_pht.lh5")
+
 def get_pattern_tier_evt(setup):
     return os.path.join(f"{tier_evt_path(setup)}", "{datatype}","{period}", "{run}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_evt.lh5")
 
@@ -58,42 +64,48 @@ def get_pattern_tier(setup,tier):
         return get_pattern_tier_dsp(setup)
     elif tier =="hit":
         return get_pattern_tier_hit(setup)
+    elif tier =="pht":
+        return get_pattern_tier_pht(setup)
     elif tier =="evt":
         return get_pattern_tier_evt(setup)
     else:
         raise Exception("invalid tier")
 
-def get_pattern_par_raw(setup, name=None):
+def get_pattern_par_raw(setup, name=None, extension ="json"):
     if name is not None:
-        return os.path.join(f"{par_raw_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw_"+name+".json")
+        return os.path.join(f"{par_raw_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw_"+f"{name}.{extension}")
     else:
-        return os.path.join(f"{par_raw_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw.json")
+        return os.path.join(f"{par_raw_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_raw"+f".{extension}")
 
-def get_pattern_par_tcm(setup, name=None):
+def get_pattern_par_tcm(setup, name=None, extension ="json"):
     if name is not None:
-        return os.path.join(f"{par_tcm_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm_"+name+".json")
+        return os.path.join(f"{par_tcm_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm_"+f"{name}.{extension}")
     else:
-        return os.path.join(f"{par_tcm_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm.json")
+        return os.path.join(f"{par_tcm_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm"+f".{extension}")
 
-def get_pattern_par_dsp(setup, name=None):
-    if name is None:
-        return os.path.join(f"{par_dsp_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp.json")
-    elif name == "energy_grid":
-        return os.path.join(f"{par_dsp_path(setup)}", "cal",  "{period}",  "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp_energy_grid.pkl")
-    else:
-        return os.path.join(f"{par_dsp_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp_"+name+".json")
-
-def get_pattern_par_hit(setup, name=None):
+def get_pattern_par_dsp(setup, name=None, extension ="json"):
     if name is not None:
-        return os.path.join(f"{par_hit_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_hit_"+name+".json")
+        return os.path.join(f"{par_dsp_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp_"+f"{name}.{extension}")
     else:
-        return os.path.join(f"{par_hit_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_hit.json")
+        return os.path.join(f"{par_dsp_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp"+f".{extension}")
 
-def get_pattern_par_evt(setup, name=None):
+def get_pattern_par_hit(setup, name=None, extension ="json"):
     if name is not None:
-        return os.path.join(f"{par_evt_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_evt_"+name+".json")
+        return os.path.join(f"{par_hit_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_hit_"+f"{name}.{extension}")
     else:
-        return os.path.join(f"{par_evt_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_evt.json")
+        return os.path.join(f"{par_hit_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_hit"+f".{extension}")
+
+def get_pattern_par_pht(setup, name=None, extension ="json"):
+    if name is not None:
+        return os.path.join(f"{par_pht_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_pht_"+f"{name}.{extension}")
+    else:
+        return os.path.join(f"{par_pht_path(setup)}",  "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_pht"+f".{extension}")
+
+def get_pattern_par_evt(setup, name=None, extension ="json"):
+    if name is not None:
+        return os.path.join(f"{par_evt_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_evt_"+f"{name}.{extension}")
+    else:
+        return os.path.join(f"{par_evt_path(setup)}", "cal", "{period}", "{run}", "{experiment}-{period}-{run}-cal-{timestamp}-par_evt"+f".{extension}")
 
 
 def get_pattern_pars(setup, tier, name = None):
@@ -105,6 +117,8 @@ def get_pattern_pars(setup, tier, name = None):
         return get_pattern_par_dsp(setup, name=name)
     elif tier =="hit":
         return get_pattern_par_hit(setup, name=name)
+    elif tier =="pht":
+        return get_pattern_par_pht(setup, name=name)
     elif tier =="evt":
         return get_pattern_par_evt(setup, name=name)
     else:
@@ -122,13 +136,11 @@ def get_pattern_pars_tmp(setup, tier, name=None):
     else:
         return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"+tier+"_"+name+".json")
 
-def get_pattern_pars_tmp_channel(setup, tier, name=None):
+def get_pattern_pars_tmp_channel(setup, tier, name=None, extension = "json"):
     if name is None:
-        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+".json")
-    elif name == "energy_grid":
-        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_dsp_energy_grid.pkl")
+        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+f"{tier}.{extension}")
     else:
-        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+tier+"_"+name+".json")
+        return os.path.join(f"{tmp_par_path(setup)}", "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"+f"{tier}_{name}.{extension}")
 
 def get_pattern_plts_tmp_channel(setup, tier, name=None):
     if name is None:

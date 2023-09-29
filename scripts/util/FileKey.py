@@ -160,7 +160,7 @@ class ProcessingFileKey(FileKey):
 class ChannelProcKey(FileKey):
 
     re_pattern = 'all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$'
-    
+    key_pattern = full_channel_pattern_with_extension()
     _fields = FileKey._fields+("channel",)
     
     def __new__(cls, experiment, period, run, datatype,timestamp, channel):

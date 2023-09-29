@@ -36,6 +36,9 @@ def tier_dsp_path(setup):
 def tier_hit_path(setup):
     return setup["paths"]["tier_hit"]
 
+def tier_pht_path(setup):
+    return setup["paths"]["tier_pht"]
+
 def tier_evt_path(setup):
     return setup["paths"]["tier_evt"]
 
@@ -60,6 +63,9 @@ def par_dsp_path(setup):
 def par_hit_path(setup):
     return setup["paths"]["par_hit"]
 
+def par_pht_path(setup):
+    return setup["paths"]["par_pht"]
+
 def par_evt_path(setup):
     return setup["paths"]["par_evt"]
 
@@ -75,6 +81,8 @@ def get_pars_path(setup,tier):
         return par_dsp_path(setup)
     elif tier == "hit":
         return par_hit_path(setup)
+    elif tier == "pht":
+        return par_pht_path(setup)
     elif tier == "evt":
         return par_evt_path(setup)
     else:
