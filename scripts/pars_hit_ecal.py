@@ -12,8 +12,7 @@ from matplotlib.colors import LogNorm
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
-import pygama.pargen.ecal_th as ect
-import pygama.pargen.cuts as cts
+from pygama.pargen.ecal_th import *
 import lgdo.lh5_store as lh5
 import pygama.math.histogram as pgh
 
@@ -117,8 +116,9 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
     logging.getLogger('numba').setLevel(logging.INFO)
     logging.getLogger('parse').setLevel(logging.INFO)
+    logging.getLogger('lgdo').setLevel(logging.INFO)
+    logging.getLogger('h5py').setLevel(logging.INFO)
     logging.getLogger('matplotlib').setLevel(logging.INFO)
-    logging.getLogger('lgdo.lh5_store').setLevel(logging.INFO)
 
     if isinstance(args.ctc_dict, list):
         database_dic = Props.read_from(args.ctc_dict)
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     common_plots = kwarg_dict.pop("common_plots")
 
     if args.plot_path:
-        out_dict, result_dict,plot_dict = ect.energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', 
+        out_dict, result_dict, plot_dict, ecal_object = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', 
                                         hit_dict=hit_dict, **kwarg_dict)  
 
         common_dict = baseline_tracking_plots(sorted(args.files), f'{args.channel}/dsp', plot_options=bl_plots)
@@ -170,18 +170,19 @@ if __name__ == '__main__':
         with open(args.plot_path,"wb") as f:
             pkl.dump(plot_dict,f, protocol= pkl.HIGHEST_PROTOCOL)
     else:
-        out_dict, result_dict,_ = ect.energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
+        out_dict, result_dict,_ = energy_cal_th(sorted(args.files), lh5_path=f'{args.channel}/dsp', hit_dict=hit_dict, 
                                             **kwarg_dict)
     
-    out_dict.update({"cuspEmax_cal": {
-                      "expression": "a*cuspEmax+b",
-                      "parameters": out_dict["cuspEmax_ctc_cal"]["parameters"]
-                    }})
+    output_dict = {
+        "pars": out_dict,
+        "results": result_dict
+    }
+
 
     with open(args.save_path,'w') as fp:
         pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
-        json.dump(out_dict,fp, indent=4)
+        json.dump(output_dict, fp, indent=4)
 
-    with open(args.results_path,'w') as fp:
+    with open(args.results_path,'wb') as fp:
         pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
-        json.dump(result_dict,fp, indent=4)
+        pkl.dump(ecal_object,fp, protocol= pkl.HIGHEST_PROTOCOL)

@@ -31,6 +31,9 @@ args = argparser.parse_args()
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
+logging.getLogger('lgdo').setLevel(logging.INFO)
+logging.getLogger('h5py').setLevel(logging.INFO)
+logging.getLogger('matplotlib').setLevel(logging.INFO)
 
 configs = LegendMetadata(path = args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
@@ -39,10 +42,12 @@ with open(channel_dict, "r") as r:
     kwarg_dict = json.load(r)
 
 with open(args.ecal_file, 'r') as o:
-    cal_dict = json.load(o)
+    ecal_dict = json.load(o)
+cal_dict = ecal_dict["pars"]
+eres_dict = ecal_dict["results"]
 
-with open(args.eres_file, 'r') as o:
-    eres_dict = json.load(o)
+with open(args.eres_file, 'rb') as o:
+    object_dict = pkl.load(o)
 
 if kwarg_dict["run_aoe"] ==True:
     kwarg_dict.pop("run_aoe")
@@ -57,21 +62,38 @@ if kwarg_dict["run_aoe"] ==True:
     else:
         sigma_func = sigma_fit
 
+    if "mean_func" in kwarg_dict:
+        mean_func =eval(kwarg_dict.pop("mean_func"))
+    else:
+        mean_func = pol1
+
+    if "plot_options" in kwarg_dict:
+        for field,item in kwarg_dict["plot_options"].items():
+            kwarg_dict["plot_options"][field]["function"]=eval(item["function"])
+
     with open(args.files[0]) as f:
         files = f.read().splitlines()
     files = sorted(files)
 
-    eres_pars = eres_dict[kwarg_dict["cal_energy_param"]]['eres_pars']
+    try:
+        eres = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
+        eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
+    except: 
+        eres_func = lambda x : np.nan
+
+    cal_dict, out_dict, plot_dict, obj = aoe_calibration(files, lh5_path=f'{args.channel}/dsp', cal_dicts=cal_dict, 
+                            eres_func=eres_func, pdf=pdf, 
+                            mean_func=mean_func, sigma_func=sigma_func, **kwarg_dict) 
     
-    if args.plot_file:
-        cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
-                                eres_pars=eres_pars, display=1, pdf=pdf, sigma_func=sigma_func, **kwarg_dict) 
-    else:
-        cal_dict, out_dict,plot_dict = cal_aoe(files, lh5_path=f'{args.channel}/dsp', cal_dict=cal_dict, 
-                                eres_pars=eres_pars, pdf=pdf, sigma_func=sigma_func,  **kwarg_dict) 
+    # need to change eres func as can't pickle lambdas
+    try:
+        obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
+    except:
+        obj.eres_func = {}
 else:
     out_dict = {}
     plot_dict = {}
+    obj =None
 
 if args.plot_file:
     if "common" in list(plot_dict):
@@ -92,12 +114,12 @@ if args.plot_file:
     with open(args.plot_file, "wb") as w:
         pkl.dump(out_plot_dict, w, protocol= pkl.HIGHEST_PROTOCOL)
 
-final_hit_dict = { "operations":cal_dict}
-
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.hit_pars, 'w') as w:
+    final_hit_dict = {"pars":{ "operations":cal_dict} , 
+                    "results": {"ecal":eres_dict , "aoe": out_dict}}
     json.dump(final_hit_dict, w, indent=4)
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
-with open(args.aoe_results, 'w') as w:
-    json.dump({"ecal": eres_dict,"aoe":out_dict},w, indent=4)
+with open(args.aoe_results, 'wb') as w:
+    pkl.dump({"ecal":object_dict, "aoe":obj}, w, protocol= pkl.HIGHEST_PROTOCOL)

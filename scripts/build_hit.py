@@ -45,6 +45,8 @@ else:
     with open(args.pars_file) as f:
         pars_dict = json.load(f)
 
+pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
+
 hit_dict ={}
 channels_present = lh5.ls(args.input)
 for channel in pars_dict:
