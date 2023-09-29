@@ -32,6 +32,6 @@ for ch in ch_list:
 for fcid in fcid_channels.keys():
     out_name = f'hardware_tcm_{fcid}'
     ch_list = fcid_channels[fcid]
-    build_tcm([(args.input, ch_list)], 'eventnumber', out_file=temp_output, out_name=out_name, wo_mode='o')
+    build_tcm([(args.input, ch_list)], 'timestamp', out_file=temp_output, out_name=out_name, wo_mode='o')
 
 os.rename(temp_output, args.output)
