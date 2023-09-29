@@ -45,8 +45,9 @@ args = argparser.parse_args()
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
 logging.getLogger('numba').setLevel(logging.INFO)
 logging.getLogger('parse').setLevel(logging.INFO)
-logging.getLogger('pygama.lgdo.lh5_store').setLevel(logging.INFO)
-logging.getLogger('h5py._conv').setLevel(logging.INFO)
+logging.getLogger('lgdo').setLevel(logging.INFO)
+logging.getLogger('h5py').setLevel(logging.INFO)
+logging.getLogger('matplotlib').setLevel(logging.INFO)
 logging.getLogger('pygama.dsp.processing_chain').setLevel(logging.INFO)
 
 
@@ -124,8 +125,8 @@ if opt_dict["run_eopt"]==True:
     flat_val = np.ceil(1.1*np.nanpercentile(full_dt, 99)/100)/10
     if flat_val<1.:
         flat_val=1.
-    elif flat_val>2.5:
-        flat_val=2.5
+    elif flat_val>4:
+        flat_val=4
     flat_val = f'{flat_val}*us'
 
     db_dict["cusp"] = {"flat":flat_val}
