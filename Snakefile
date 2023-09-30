@@ -33,6 +33,8 @@ onstart:
                                         get_pattern_tier_raw(setup), {"cal":["par_hit"], 'lar':['par_hit']})
     ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"pht",'validity.jsonl'), 
                                         get_pattern_tier_raw(setup), {"cal":["par_pht"], 'lar':['par_pht']})
+    
+    
 
 onsuccess:
     print("Workflow finished, no error")
@@ -210,7 +212,7 @@ rule build_dsp:
     input:
         raw_file = get_pattern_tier_raw(setup),
         tcm_file = get_pattern_tier_tcm(setup),
-        pars_file = "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/overrides/dsp/cal/p03/r000/L200-p03-r000-cal-T%-par_dsp-overwrite.json"#ancient(get_pars_dsp_file)
+        pars_file = ancient(get_pars_dsp_file)
     params:
         timestamp = "{timestamp}",
         datatype = "{datatype}"
@@ -316,7 +318,7 @@ checkpoint build_pars_hit:
         read_filelist_plts_hit_cal_channel
     output:
         get_pattern_par_hit(setup),
-        get_pattern_par_hit(setup, name="results", extension="pkl"),
+        get_pattern_par_hit(setup, name="results", extension="dir"),
         get_pattern_plts(setup, "hit")
     group: "merge-hit"
     shell:
@@ -351,8 +353,7 @@ rule build_hit:
 rule build_per_energy_calibration:
     input:
         files = read_filelist_dsp_cal,
-        ctc_dict = ["/data2/public/prodenv/prod-blind/tmp/auto/generated/par/dsp/cal/p07/r001/l200-p07-r001-cal-20230807T121150Z-par_dsp.json",
-                    "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/overrides/dsp/cal/p03/r000/L200-p03-r000-cal-T%-par_dsp-overwrite.json"]#ancient(get_pars_dsp_file)
+        ctc_dict = ancient(get_pars_dsp_file)
     params:
         timestamp = "{timestamp}",
         datatype = "cal",
@@ -407,7 +408,7 @@ checkpoint build_pars_pht:
         read_filelist_plts_pht_cal_channel
     output:
         get_pattern_par_pht(setup),
-        get_pattern_par_pht(setup, name="results", extension="pkl"),
+        get_pattern_par_pht(setup, name="results", extension="dir"),
         get_pattern_plts(setup, "hit")
     group: "merge-hit"
     shell:
@@ -454,20 +455,20 @@ for key, dataset in part.datasets.items():
                 files = part.get_filelists(partition, key, "dsp"),
                 ecal_file = part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="energy_cal"),
                 eres_file = part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="energy_cal_results", extension="pkl"),
-                inplots = part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key,tier="pht", name="energy_cal")
+                inplots = part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="energy_cal")
             params:
                 datatype = "cal",
                 channel = "{channel}",
                 timestamp = part.get_timestamp(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")
             output:
-                hit_pars = temp(part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")),
-                aoe_results = temp(part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="results", extension="pkl")),
-                plot_file = temp(part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"))
+                hit_pars = [temp(file) for file in part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")],
+                aoe_results = [temp(file) for file in part.get_par_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht", name="results", extension="pkl")],
+                plot_file = [temp(file) for file in part.get_plt_files(f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht")]
             log:
                 part.get_log_file(f"{par_pht_path(setup)}/validity.jsonl", partition, key, "pht",name="par_pht")
             group: "par-pht"
             resources:
-                mem_swap=60,
+                mem_swap=75,
                 runtime=300
             shell:
                 "{swenv} python3 -B {basedir}/scripts/pars_pht.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} --input_files {input.files}" 
