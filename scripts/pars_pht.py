@@ -104,7 +104,7 @@ if args.inplots:
     else:
         with open(args.inplots, 'rb') as o:
             cal = pkl.load(o)
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.eres_file))
+        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.inplots))
         inplots_dict[fk.timestamp] = cal
 
 ecal_options = kwarg_dict.pop("ecal")
@@ -119,6 +119,7 @@ if "plot_options" in aoe_options:
     for field,item in aoe_options["plot_options"].items():
         aoe_options["plot_options"][field]["function"]=eval(item["function"])
 
+
 # sort files in dictionary where keys are first timestamp from run
 if isinstance(args.input_files, list):
     files = []
@@ -129,7 +130,7 @@ else:
     with open(args.input_files) as f:
         files = f.read().splitlines()
 
-files = sorted(files)
+files = sorted(list(np.unique(files))) # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
 
 final_dict = {}
 all_file = run_splitter(sorted(files))
@@ -137,7 +138,6 @@ for filelist in all_file:
     fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(sorted(filelist)[0]))
     timestamp = fk.timestamp
     final_dict[timestamp] = sorted(filelist)
-
 
 # run energy supercal
 ecal_results, ecal_plots, ecal_obj  = partition_energy_cal_th(final_dict, 
@@ -167,8 +167,13 @@ if aoe_options.pop("run_aoe") ==True:
     try:
         eres = ecal_results[aoe_options["cal_energy_param"]]["eres_linear"].copy()
         eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
+        if np.isnan(eres_func(2000)): raise RuntimeError
     except: 
-        eres_func = lambda x : np.nan
+        try:
+            eres = results_dicts[list(results_dicts)[0]][aoe_options["cal_energy_param"]]["eres_linear"].copy()
+            eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
+        except:
+            eres_func = lambda x : np.nan
     
     cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(final_dict, lh5_path=f'{args.channel}/dsp', cal_dicts=cal_dict, 
                             eres_func=eres_func, pdf=pdf, 
