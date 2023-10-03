@@ -19,6 +19,9 @@ basedir = workflow.basedir
 
 localrules: do_nothing, gen_filelist, autogen_output
 
+ds.pars_key_resolve.write_par_catalog(setup,['-*-*-*-cal'], os.path.join(pars_path(setup),"pht",'validity.jsonl'), 
+                                        get_pattern_tier_raw(setup), {"cal":["par_pht"], 'lar':['par_pht']})
+
 rule do_nothing:
     input:
 
@@ -424,6 +427,7 @@ def get_pars_pht_file(wildcards):
 rule build_pht:
     input:
         dsp_file = get_pattern_tier_dsp(setup),
+        #hit_file = get_pattern_tier_hit(setup),
         pars_file = get_pars_pht_file
     output:
         tier_file = get_pattern_tier_pht(setup),
@@ -484,7 +488,7 @@ for key, dataset in part.datasets.items():
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition 
 rule build_pht_super_calibrations:
     input:
-        files = read_filelist_dsp_cal,
+        files = os.path.join(filelist_path(setup),"all-{experiment}-{period}-{run}-cal-dsp.filelist"),
         ecal_file = get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
         eres_file = get_pattern_pars_tmp_channel(setup, "pht", "energy_cal_results", extension="pkl"),
         inplots = get_pattern_plts_tmp_channel(setup, "pht","energy_cal")
