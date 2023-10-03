@@ -166,12 +166,12 @@ if aoe_options.pop("run_aoe") ==True:
 
     try:
         eres = ecal_results[aoe_options["cal_energy_param"]]["eres_linear"].copy()
-        eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
+        eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["parameters"])
         if np.isnan(eres_func(2000)): raise RuntimeError
     except: 
         try:
             eres = results_dicts[list(results_dicts)[0]][aoe_options["cal_energy_param"]]["eres_linear"].copy()
-            eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
+            eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["parameters"])
         except:
             eres_func = lambda x : np.nan
     
