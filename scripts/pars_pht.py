@@ -201,10 +201,10 @@ if args.plot_file:
             fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(plot_file))
             if args.inplots:
                 out_plot_dict = inplots_dict[fk.timestamp]
-                out_plot_dict.update(plot_dict)
+                out_plot_dict.update({"aoe":plot_dict})
                 out_plot_dict.update({"partition_ecal":ecal_plots})
             else:
-                out_plot_dict = plot_dict
+                out_plot_dict = {"aoe":plot_dict}
                 out_plot_dict.update({"partition_ecal":ecal_plots})
 
             if "common" in list(plot_dict) and common_dict is not None:

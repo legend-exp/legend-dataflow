@@ -226,7 +226,8 @@ rule build_dsp:
         get_pattern_log(setup, "tier_dsp")
     group: "tier-dsp"
     resources:
-        runtime=300
+        runtime=300,
+        mem_swap = 30
     shell:
         "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output.tier_file} --db_file {output.db_file} --pars_file {input.pars_file} " 
 
@@ -412,7 +413,7 @@ checkpoint build_pars_pht:
     output:
         get_pattern_par_pht(setup),
         get_pattern_par_pht(setup, name="results", extension="dir"),
-        get_pattern_plts(setup, "hit")
+        get_pattern_plts(setup, "pht")
     group: "merge-hit"
     shell:
         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
