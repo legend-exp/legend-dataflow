@@ -343,14 +343,15 @@ rule build_hit:
         db_file = get_pattern_pars_tmp(setup, "hit_db")
     params:
         timestamp = "{timestamp}",
-        datatype = "{datatype}"
+        datatype = "{datatype}",
+        tier = "hit"
     log:
         get_pattern_log(setup, "tier_hit")
     group: "tier-hit"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --tier {params.tier} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
 
 
 #This rule builds the energy calibration using the calibration dsp files 
@@ -435,14 +436,15 @@ rule build_pht:
         db_file = get_pattern_pars_tmp(setup, "pht_db")
     params:
         timestamp = "{timestamp}",
-        datatype = "{datatype}"
+        datatype = "{datatype}",
+        tier = "pht"
     log:
         get_pattern_log(setup, "tier_pht")
     group: "tier-pht"
     resources:
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --tier {params.tier} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
 
 # def fix_name(new_name):
 #     """ sets the name of the most recently created rule to be new_name

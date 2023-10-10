@@ -18,6 +18,7 @@ argparser.add_argument("--pars_file", help="hit pars file", nargs="*")
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+argparser.add_argument("--tier", help="Tier", type=str, required=True)
 
 argparser.add_argument("--log", help="log_file", type=str)
 
@@ -37,7 +38,12 @@ log = logging.getLogger(__name__)
 
 
 configs = LegendMetadata(path = args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+if args.tier == "hit":  
+    channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+if args.tier == "pht": 
+    channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['tier_hit']["inputs"]['hit_config']
+else:
+    raise ValueError("unknown tier")
 
 if isinstance(args.pars_file, list):
     pars_dict = Props.read_from(args.pars_file)
@@ -77,16 +83,16 @@ for channel,file in channel_dict.items():
                                             "fields":output}
     hit_channels.append(channel)
 
-key = os.path.basename(args.output).replace("-tier_hit.lh5","")
+key = os.path.basename(args.output).replace(f"-tier_{args.tier}.lh5","")
 
 full_dict = {"valid_fields":{
-    "hit":hit_outputs
+    args.tier:hit_outputs
 },
              
     "valid_keys":{
         key:{
             "valid_channels":{
-                "hit":hit_channels
+                args.tier:hit_channels
             }
         }
     }

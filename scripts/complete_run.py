@@ -141,6 +141,7 @@ if os.getenv('PRODENV') in snakemake.params.filedb_path:
             "raw": tier_raw_path(setup).replace(os.getenv('PRODENV') ,""),
             "dsp": tier_dsp_path(setup).replace(os.getenv('PRODENV') ,""),
             "hit": tier_hit_path(setup).replace(os.getenv('PRODENV') ,""),
+            "pht": tier_pht_path(setup).replace(os.getenv('PRODENV') ,""),
             "tcm": tier_tcm_path(setup).replace(os.getenv('PRODENV') ,""),
             "evt": tier_evt_path(setup).replace(os.getenv('PRODENV') ,"")
         },
@@ -148,6 +149,7 @@ if os.getenv('PRODENV') in snakemake.params.filedb_path:
             "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
             "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
             "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
+            "pht": get_pattern_tier(setup,"pht").replace(tier_hit_path(setup) ,""),
             "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
             "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
         },
@@ -155,6 +157,7 @@ if os.getenv('PRODENV') in snakemake.params.filedb_path:
             "raw": "ch{ch:07d}/raw",
             "dsp": "ch{ch:07d}/dsp",
             "hit": "ch{ch:07d}/hit",
+            "pht": "ch{ch:07d}/hit",
             "evt": "{grp}/evt",
             "tcm": "hardware_tcm_1"
         }
@@ -167,12 +170,14 @@ else:
             "dsp": tier_dsp_path(setup),
             "hit": tier_hit_path(setup),
             "tcm": tier_tcm_path(setup),
+            "pht": tier_pht_path(setup),
             "evt": tier_evt_path(setup)
         },
         "file_format": {
             "raw": get_pattern_tier(setup,"raw").replace(tier_raw_path(setup) ,""),
             "dsp": get_pattern_tier(setup,"dsp").replace(tier_dsp_path(setup) ,""),
             "hit": get_pattern_tier(setup,"hit").replace(tier_hit_path(setup) ,""),
+            "pht": get_pattern_tier(setup,"pht").replace(tier_hit_path(setup) ,""),
             "evt": get_pattern_tier(setup,"evt").replace(tier_evt_path(setup) ,""),
             "tcm": get_pattern_tier(setup,"tcm").replace(tier_tcm_path(setup) ,"")
         },
@@ -180,6 +185,7 @@ else:
             "raw": "ch{ch:07d}/raw",
             "dsp": "ch{ch:07d}/dsp",
             "hit": "ch{ch:07d}/hit",
+            "pht": "ch{ch:07d}/hit",
             "evt": "{grp}/evt",
             "tcm": "hardware_tcm_1"
         }
