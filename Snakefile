@@ -13,7 +13,7 @@ setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
-part = ds.dataset_file(setup, "/data1/users/marshall/prod-ref/higher_tiers/inputs/dataprod/config/partitions.json")
+part = ds.dataset_file(setup, os.path.join(configs,"partitions.json"))
 
 basedir = workflow.basedir
 
