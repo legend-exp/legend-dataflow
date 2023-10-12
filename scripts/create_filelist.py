@@ -17,6 +17,7 @@ if snakemake.params.configs:
     if os.path.isfile(ignored_keyslist):
         with open(ignored_keyslist, 'r') as f:
             ignore_keys = f.read().splitlines()
+        ignore_keys = [key.split("#")[0].strip() if "#" in key else key.strip() for key in ignore_keys]
     else:
         print("no ignore_keys.keylist file found")
 
