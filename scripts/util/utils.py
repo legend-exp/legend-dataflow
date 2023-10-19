@@ -1,16 +1,15 @@
-import snakemake as smk
-import re
-import os
-import shutil
 import copy
+import os
 import string
 from datetime import datetime
-#from dateutil import parser
+
+# from dateutil import parser
 
 # For testing/debugging, use
 # from scripts.utils import *
 # import snakemake as smk
 # setup = smk.load_configfile("config.json")["setups"]["l200"]
+
 
 def sandbox_path(setup):
     if "sandbox_path" in setup["paths"]:
@@ -18,61 +17,80 @@ def sandbox_path(setup):
     else:
         return None
 
+
 def tier_daq_path(setup):
     return setup["paths"]["tier_daq"]
+
 
 def tier_path(setup):
     return setup["paths"]["tier"]
 
+
 def tier_tcm_path(setup):
     return setup["paths"]["tier_tcm"]
+
 
 def tier_raw_path(setup):
     return setup["paths"]["tier_raw"]
 
+
 def tier_dsp_path(setup):
     return setup["paths"]["tier_dsp"]
+
 
 def tier_hit_path(setup):
     return setup["paths"]["tier_hit"]
 
+
 def tier_pht_path(setup):
     return setup["paths"]["tier_pht"]
+
 
 def tier_evt_path(setup):
     return setup["paths"]["tier_evt"]
 
+
 def config_path(setup):
     return setup["paths"]["config"]
+
 
 def chan_map_path(setup):
     return setup["paths"]["chan_map"]
 
+
 def detector_db_path(setup):
     return setup["paths"]["detector_db"]
+
 
 def par_raw_path(setup):
     return setup["paths"]["par_raw"]
 
+
 def par_tcm_path(setup):
     return setup["paths"]["par_tcm"]
+
 
 def par_dsp_path(setup):
     return setup["paths"]["par_dsp"]
 
+
 def par_hit_path(setup):
     return setup["paths"]["par_hit"]
+
 
 def par_pht_path(setup):
     return setup["paths"]["par_pht"]
 
+
 def par_evt_path(setup):
     return setup["paths"]["par_evt"]
+
 
 def pars_path(setup):
     return setup["paths"]["par"]
 
-def get_pars_path(setup,tier):
+
+def get_pars_path(setup, tier):
     if tier == "raw":
         return par_raw_path(setup)
     elif tier == "tcm":
@@ -86,34 +104,44 @@ def get_pars_path(setup,tier):
     elif tier == "evt":
         return par_evt_path(setup)
     else:
-        raise ValueError(f"no tier matching:{tier}")
+        msg = f"no tier matching:{tier}"
+        raise ValueError(msg)
+
 
 def tmp_par_path(setup):
     return setup["paths"]["tmp_par"]
 
+
 def tmp_plts_path(setup):
     return setup["paths"]["tmp_plt"]
+
 
 def plts_path(setup):
     return setup["paths"]["plt"]
 
+
 def par_overwrite_path(setup):
     return setup["paths"]["par_overwrite"]
+
 
 def log_path(setup):
     return setup["paths"]["log"]
 
+
 def tmp_log_path(setup):
     return setup["paths"]["tmp_log"]
+
 
 def filelist_path(setup):
     return setup["paths"]["tmp_filelists"]
 
+
 def runcmd(setup):
-    exec_cmd = setup['execenv']['cmd']
-    exec_arg = setup['execenv']['arg']
-    path_install  = setup['paths']['install']
-    return f'PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}'
+    exec_cmd = setup["execenv"]["cmd"]
+    exec_arg = setup["execenv"]["arg"]
+    path_install = setup["paths"]["install"]
+    return f"PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}"
+
 
 """
 def parse_keypart(keypart):
@@ -145,9 +173,10 @@ def tier_files(setup, dataset_file, tier):
     return files
 """
 
-def subst_vars_impl(x, var_values, ignore_missing = False):
+
+def subst_vars_impl(x, var_values, ignore_missing=False):
     if isinstance(x, str):
-        if '$' in x:
+        if "$" in x:
             if ignore_missing:
                 return string.Template(x).safe_substitute(var_values)
             else:
@@ -171,45 +200,51 @@ def subst_vars_impl(x, var_values, ignore_missing = False):
     else:
         return x
 
-def subst_vars(props, var_values = {}, use_env = False, ignore_missing = False):
+
+def subst_vars(props, var_values={}, use_env=False, ignore_missing=False):
     combined_var_values = var_values
     if use_env:
-        combined_var_values = {k: v for k, v in iter(os.environ.items())}
+        combined_var_values = dict(iter(os.environ.items()))
         combined_var_values.update(copy.copy(var_values))
     subst_vars_impl(props, combined_var_values, ignore_missing)
 
 
 def subst_vars_in_snakemake_config(workflow, config):
-    config_filename = workflow.overwrite_configfiles[0] # ToDo: Better way of handling this?
+    config_filename = workflow.overwrite_configfiles[
+        0
+    ]  # ToDo: Better way of handling this?
     subst_vars(
         config,
-        var_values = {'_': os.path.dirname(config_filename)},
-        use_env = True, ignore_missing = False
+        var_values={"_": os.path.dirname(config_filename)},
+        use_env=True,
+        ignore_missing=False,
     )
+
 
 def run_splitter(files):
     """
     Returns list containing lists of each run
     """
-    
+
     runs = []
     run_files = []
     for file in files:
-        base=os.path.basename(file)
+        base = os.path.basename(file)
         file_name = os.path.splitext(base)[0]
-        parts = file_name.split('-')
+        parts = file_name.split("-")
         run_no = parts[3]
         if run_no not in runs:
             runs.append(run_no)
             run_files.append([])
-        for i,run in enumerate(runs):
+        for i, run in enumerate(runs):
             if run == run_no:
-                run_files[i].append(file) 
+                run_files[i].append(file)
     return run_files
+
 
 def unix_time(value):
     if isinstance(value, str):
-        return datetime.timestamp(datetime.strptime(value, '%Y%m%dT%H%M%SZ'))
+        return datetime.timestamp(datetime.strptime(value, "%Y%m%dT%H%M%SZ"))
     else:
-        raise ValueError("Can't convert type {t} to unix time".format(t = type(value)))
-
+        msg = f"Can't convert type {type(value)} to unix time"
+        raise ValueError(msg)
