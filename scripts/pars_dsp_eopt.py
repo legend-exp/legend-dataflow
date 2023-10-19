@@ -1,8 +1,3 @@
-from dspeed.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 import argparse
 import json
 import logging
@@ -14,10 +9,15 @@ import time
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
+from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dsp_optimize import run_one_dsp
 from sklearn.gaussian_process.kernels import *
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)

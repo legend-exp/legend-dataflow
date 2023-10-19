@@ -1,8 +1,3 @@
-from dspeed.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 import argparse
 import json
 import logging
@@ -13,8 +8,13 @@ import re
 import lgdo.lh5_store as lh5
 import numpy as np
 from dspeed.build_dsp import build_dsp
+from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)

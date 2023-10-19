@@ -1,8 +1,3 @@
-from dspeed.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 import argparse
 import json
 import logging
@@ -11,7 +6,12 @@ import pathlib
 import pickle as pkl
 
 import pygama.pargen.extract_tau as dpp
+from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
