@@ -1,3 +1,5 @@
+# ruff: noqa: F821, T201
+
 import os
 import random
 
