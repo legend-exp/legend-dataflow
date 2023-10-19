@@ -48,7 +48,7 @@ checkpoint gen_filelist:
 def read_filelist(wildcards):
     with checkpoints.gen_filelist.get(label=wildcards.label, tier=wildcards.tier, extension="file").output[0].open() as f:
         files = f.read().splitlines()
-        return files 
+        return files
 
 rule autogen_output:
     input:
@@ -58,7 +58,7 @@ rule autogen_output:
         summary_log = f"{log_path(setup)}/summary-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
         warning_log = f"{log_path(setup)}/warning-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
     params:
-        log_path = tmp_log_path(setup), 
+        log_path = tmp_log_path(setup),
     shell:
         "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --warning_log {output.warning_log} --filelist {input.filelist}"
 
