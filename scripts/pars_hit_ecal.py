@@ -93,14 +93,18 @@ def bin_bl_stability(data, time_slice=180, parameter="bl_mean", dx=1):
     return {"time": times_average, "baseline": par_average, "spread": par_error}
 
 
-def bin_baseline(data, parameter="bl_mean-baseline", dx=1, bl_range=[-500, 500]):
+def bin_baseline(data, parameter="bl_mean-baseline", dx=1, bl_range=None):
+    if bl_range is None:
+        bl_range = [-500, 500]
     par_array = data.eval(parameter)
     bins = np.arange(bl_range[0], bl_range[1], dx)
     bl_array, bins, _ = pgh.get_hist(par_array, bins=bins)
     return {"bl_array": bl_array, "bins": (bins[1:] + bins[:-1]) / 2}
 
 
-def baseline_tracking_plots(files, lh5_path, plot_options={}):
+def baseline_tracking_plots(files, lh5_path, plot_options=None):
+    if plot_options is None:
+        plot_options = {}
     plot_dict = {}
     data = lh5.load_dfs(files, ["bl_mean", "baseline", "timestamp"], lh5_path)
     for key, item in plot_options.items():
