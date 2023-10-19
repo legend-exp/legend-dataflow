@@ -143,37 +143,6 @@ def runcmd(setup):
     return f"PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}"
 
 
-"""
-def parse_keypart(keypart):
-    keypart_rx = re.compile('(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+))?)?)?)?)?$')
-    d = keypart_rx.match(keypart).groupdict()
-    for key in d:
-        if d[key] is None:
-            d[key] = "*"
-    return d
-
-def parse_channel_keypart(keypart):
-    keypart_rx = re.compile('all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?$')
-    d = keypart_rx.match(keypart).groupdict()
-    for key in d:
-        if d[key] is None:
-            d[key] = "*"
-    return d
-
-
-def tier_files(setup, dataset_file, tier):
-    key_pattern_rx = re.compile(smk.io.regex(key_pattern()))
-    fn_pattern = get_pattern_evts(setup, tier)
-    files = []
-    with open(dataset_file) as f:
-        for line in f:
-            d = key_pattern_rx.match(line.strip()).groupdict()
-            tier_filename = smk.io.expand(fn_pattern, experiment = d["experiment"], period = d["period"], run = d["run"], datatype  = d["datatype"], timestamp = d["timestamp"])[0]
-            files.append(tier_filename)
-    return files
-"""
-
-
 def subst_vars_impl(x, var_values, ignore_missing=False):
     if isinstance(x, str):
         if "$" in x:
