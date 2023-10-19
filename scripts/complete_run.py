@@ -21,9 +21,9 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                             for line in text.splitlines():
                                 if "ERROR" in line:
                                     if n_errors ==0:
-                                        f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
+                                        f.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
                                     if n_warnings ==0:
-                                        w.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n")
+                                        w.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n")
                                     f.write(f"{os.path.basename(file)} : {line}\n")
                                     n_errors +=1
                                 elif "WARNING" in line:
@@ -34,9 +34,9 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                     os.remove(file)
                     text=None
                 if n_errors ==0:
-                    f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
+                    f.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
                 if n_warnings ==0:
-                    w.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n")
+                    w.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n")
     else:
         with open(output_file, "w") as f:
             n_errors=0
@@ -47,7 +47,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                         for line in text.splitlines():
                             if "ERROR" in line:
                                 if n_errors ==0:
-                                    f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
+                                    f.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n")
                                 f.write(f"{os.path.basename(file)} : {line}\n")
                                 n_errors +=1
                     else:
@@ -55,7 +55,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 os.remove(file)
                 text=None
             if n_errors ==0:
-                f.write(f"{gen_output} succesfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
+                f.write(f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n")
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
         if len(os.listdir(path)) == 0:
