@@ -1,19 +1,18 @@
-import numpy as np
-import os,json
-import pathlib
 import argparse
+import json
 import logging
+import os
+import pathlib
 import pickle as pkl
 
+import numpy as np
 from legendmeta import LegendMetadata
-
 from pygama.pargen.AoE_cal import *
 
-
 argparser = argparse.ArgumentParser()
-argparser.add_argument("files", help="files", nargs='*',type=str)
-argparser.add_argument("--ecal_file", help="ecal_file",type=str, required=True)
-argparser.add_argument("--eres_file", help="eres_file",type=str, required=True)
+argparser.add_argument("files", help="files", nargs="*", type=str)
+argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
+argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -23,53 +22,49 @@ argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
 argparser.add_argument("--log", help="log_file", type=str)
 
-argparser.add_argument("--plot_file", help="plot_file",type=str, required=False)
-argparser.add_argument("--hit_pars", help="hit_pars",type=str)
-argparser.add_argument("--aoe_results", help="aoe_results",type=str)
+argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
+argparser.add_argument("--hit_pars", help="hit_pars", type=str)
+argparser.add_argument("--aoe_results", help="aoe_results", type=str)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
-logging.getLogger('numba').setLevel(logging.INFO)
-logging.getLogger('parse').setLevel(logging.INFO)
-logging.getLogger('lgdo').setLevel(logging.INFO)
-logging.getLogger('h5py').setLevel(logging.INFO)
-logging.getLogger('matplotlib').setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+logging.getLogger("numba").setLevel(logging.INFO)
+logging.getLogger("parse").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
+logging.getLogger("h5py").setLevel(logging.INFO)
+logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-configs = LegendMetadata(path = args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)['snakemake_rules']['pars_hit_aoecal']["inputs"]['aoecal_config'][args.channel]
+configs = LegendMetadata(path=args.configs)
+channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
+    "pars_hit_aoecal"
+]["inputs"]["aoecal_config"][args.channel]
 
-with open(channel_dict, "r") as r:
+with open(channel_dict) as r:
     kwarg_dict = json.load(r)
 
-with open(args.ecal_file, 'r') as o:
+with open(args.ecal_file) as o:
     ecal_dict = json.load(o)
 cal_dict = ecal_dict["pars"]
 eres_dict = ecal_dict["results"]
 
-with open(args.eres_file, 'rb') as o:
+with open(args.eres_file, "rb") as o:
     object_dict = pkl.load(o)
 
-if kwarg_dict["run_aoe"] ==True:
+if kwarg_dict["run_aoe"] is True:
     kwarg_dict.pop("run_aoe")
 
-    if "pdf" in kwarg_dict:
-        pdf =eval(kwarg_dict.pop("pdf"))
-    else:
-        pdf = standard_aoe
-    
+    pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
+
     if "sigma_func" in kwarg_dict:
-        sigma_func =eval(kwarg_dict.pop("sigma_func"))
+        sigma_func = eval(kwarg_dict.pop("sigma_func"))
     else:
         sigma_func = sigma_fit
 
-    if "mean_func" in kwarg_dict:
-        mean_func =eval(kwarg_dict.pop("mean_func"))
-    else:
-        mean_func = pol1
+    mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else pol1
 
     if "plot_options" in kwarg_dict:
-        for field,item in kwarg_dict["plot_options"].items():
-            kwarg_dict["plot_options"][field]["function"]=eval(item["function"])
+        for field, item in kwarg_dict["plot_options"].items():
+            kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
 
     with open(args.files[0]) as f:
         files = f.read().splitlines()
@@ -77,14 +72,26 @@ if kwarg_dict["run_aoe"] ==True:
 
     try:
         eres = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
-        eres_func = lambda x : eval(eres["expression"], {"x":x}, eres["pars"])
-    except: 
-        eres_func = lambda x : np.nan
 
-    cal_dict, out_dict, plot_dict, obj = aoe_calibration(files, lh5_path=f'{args.channel}/dsp', cal_dicts=cal_dict, 
-                            eres_func=eres_func, pdf=pdf, 
-                            mean_func=mean_func, sigma_func=sigma_func, **kwarg_dict) 
-    
+        def eres_func(x):
+            return eval(eres["expression"], {"x": x}, eres["pars"])
+
+    except:
+
+        def eres_func(x):
+            return np.nan
+
+    cal_dict, out_dict, plot_dict, obj = aoe_calibration(
+        files,
+        lh5_path=f"{args.channel}/dsp",
+        cal_dicts=cal_dict,
+        eres_func=eres_func,
+        pdf=pdf,
+        mean_func=mean_func,
+        sigma_func=sigma_func,
+        **kwarg_dict,
+    )
+
     # need to change eres func as can't pickle lambdas
     try:
         obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
@@ -93,13 +100,10 @@ if kwarg_dict["run_aoe"] ==True:
 else:
     out_dict = {}
     plot_dict = {}
-    obj =None
+    obj = None
 
 if args.plot_file:
-    if "common" in list(plot_dict):
-        common_dict = plot_dict.pop("common")
-    else:
-        common_dict = None
+    common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
     if args.inplots:
         with open(args.inplots, "rb") as r:
             out_plot_dict = pkl.load(r)
@@ -107,19 +111,21 @@ if args.plot_file:
     else:
         out_plot_dict = plot_dict
 
-    if "common"in list(plot_dict) and common_dict is not None:
+    if "common" in list(plot_dict) and common_dict is not None:
         plot_dict("common").update(common_dict)
 
     pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_file, "wb") as w:
-        pkl.dump(out_plot_dict, w, protocol= pkl.HIGHEST_PROTOCOL)
+        pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
-with open(args.hit_pars, 'w') as w:
-    final_hit_dict = {"pars":{ "operations":cal_dict} , 
-                    "results": {"ecal":eres_dict , "aoe": out_dict}}
+with open(args.hit_pars, "w") as w:
+    final_hit_dict = {
+        "pars": {"operations": cal_dict},
+        "results": {"ecal": eres_dict, "aoe": out_dict},
+    }
     json.dump(final_hit_dict, w, indent=4)
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
-with open(args.aoe_results, 'wb') as w:
-    pkl.dump({"ecal":object_dict, "aoe":obj}, w, protocol= pkl.HIGHEST_PROTOCOL)
+with open(args.aoe_results, "wb") as w:
+    pkl.dump({"ecal": object_dict, "aoe": obj}, w, protocol=pkl.HIGHEST_PROTOCOL)

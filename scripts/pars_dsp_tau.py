@@ -1,17 +1,17 @@
+import argparse
+import json
+import logging
+import os
+import pathlib
+import pickle as pkl
+
+import pygama.pargen.extract_tau as dpp
 from dspeed.utils import numba_defaults
+from legendmeta import LegendMetadata
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
 
-import argparse, os, pathlib
-import pygama
-import pygama.pargen.extract_tau as dpp
-from legendmeta import LegendMetadata
-import logging
-import pickle as pkl
-
-import json
-from collections import OrderedDict 
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -21,44 +21,50 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 argparser.add_argument("--plot_path", help="plot path", type=str, required=False)
 argparser.add_argument("--output_file", help="output file", type=str, required=True)
-argparser.add_argument("input", help="input files", nargs='*',type=str)
+argparser.add_argument("input", help="input files", nargs="*", type=str)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode='w')
-logging.getLogger('numba').setLevel(logging.INFO)
-logging.getLogger('parse').setLevel(logging.INFO)
-logging.getLogger('lgdo').setLevel(logging.INFO)
-logging.getLogger('h5py').setLevel(logging.INFO)
-logging.getLogger('matplotlib').setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+logging.getLogger("numba").setLevel(logging.INFO)
+logging.getLogger("parse").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
+logging.getLogger("h5py").setLevel(logging.INFO)
+logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-configs = LegendMetadata(path = args.configs)
+configs = LegendMetadata(path=args.configs)
 config_dict = configs.on(args.timestamp, system=args.datatype)
-channel_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['processing_chain'][args.channel]
-kwarg_dict = config_dict['snakemake_rules']['pars_dsp_tau']["inputs"]['tau_config'][args.channel] 
+channel_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"][
+    "processing_chain"
+][args.channel]
+kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_config"][
+    args.channel
+]
 
-with open(kwarg_dict,"r") as r:
+with open(kwarg_dict) as r:
     kwarg_dict = json.load(r)
 
-if kwarg_dict["run_tau"]==True:
+if kwarg_dict["run_tau"] is True:
     kwarg_dict.pop("run_tau")
     input_file = args.input
-    if isinstance(input_file, list):
-        if input_file[0].split('.')[-1] == 'filelist':
-            input_file = args.input[0]
-            with open(input_file) as f:
-                input_file = f.read().splitlines()
+    if isinstance(input_file, list) and input_file[0].split(".")[-1] == "filelist":
+        input_file = args.input[0]
+        with open(input_file) as f:
+            input_file = f.read().splitlines()
 
-    
     if args.plot_path:
-        out_dict,plot_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict, display=1) 
+        out_dict, plot_dict = dpp.dsp_preprocess_decay_const(
+            input_file, channel_dict, f"{args.channel}/raw", **kwarg_dict, display=1
+        )
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path,"wb") as f:
-            pkl.dump(plot_dict,f, protocol= pkl.HIGHEST_PROTOCOL)
+        with open(args.plot_path, "wb") as f:
+            pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
     else:
-        out_dict = dpp.dsp_preprocess_decay_const(input_file, channel_dict, f'{args.channel}/raw', **kwarg_dict) 
+        out_dict = dpp.dsp_preprocess_decay_const(
+            input_file, channel_dict, f"{args.channel}/raw", **kwarg_dict
+        )
 else:
     out_dict = {}
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
-with open(args.output_file,"w") as f:
-    json.dump(out_dict,f, indent=4)
+with open(args.output_file, "w") as f:
+    json.dump(out_dict, f, indent=4)

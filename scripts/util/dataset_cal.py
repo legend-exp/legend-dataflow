@@ -1,16 +1,15 @@
-from .CalibCatalog import CalibCatalog, PropsStream
-from .FileKey import * 
 import json
 
+from .CalibCatalog import PropsStream
+from .FileKey import *
 
-class dataset_file():
-    
-    def __init__(self,setup,  input_file):
-        with open(input_file, "r") as r:
-            self.datasets =  json.load(r)
+
+class dataset_file:
+    def __init__(self, setup, input_file):
+        with open(input_file) as r:
+            self.datasets = json.load(r)
         self.setup = setup
-        
-        
+
     def get_dataset(self, dataset, channel):
         partition_dict = self.datasets["default"]
         if channel in self.datasets:
@@ -22,13 +21,33 @@ class dataset_file():
         files = []
         for per in dataset:
             if dataset[per] == "all":
-                files += [os.path.join(filelist_path(self.setup),f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist")]
+                files += [
+                    os.path.join(
+                        filelist_path(self.setup),
+                        f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist",
+                    )
+                ]
             else:
-                files += [os.path.join(filelist_path(self.setup),f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist") for run in dataset[per]]
+                files += [
+                    os.path.join(
+                        filelist_path(self.setup),
+                        f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist",
+                    )
+                    for run in dataset[per]
+                ]
         return files
-    
-    def get_par_files(self, catalog_file, dataset, channel, tier, 
-                      experiment="l200", datatype="cal", name=None, extension ="json"):
+
+    def get_par_files(
+        self,
+        catalog_file,
+        dataset,
+        channel,
+        tier,
+        experiment="l200",
+        datatype="cal",
+        name=None,
+        extension="json",
+    ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
         for item in PropsStream.read_from(catalog_file):
@@ -36,56 +55,117 @@ class dataset_file():
             for par_file in par_files:
                 if par_file.split("-")[-1] == f"par_{tier}.json":
                     all_par_files.append(par_file)
-        if channel =="default": channel = "{channel}"
-        selected_par_files=[]
+        if channel == "default":
+            channel = "{channel}"
+        selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
             if fk.datatype == datatype and fk.experiment == experiment:
                 if fk.period in list(dataset):
-                    if (dataset[fk.period] == "all" 
-                    or fk.run in dataset[fk.period]):
+                    if dataset[fk.period] == "all" or fk.run in dataset[fk.period]:
                         if name is not None:
-                            selected_par_files.append(fk.get_path_from_filekey(get_pattern_pars_tmp_channel(self.setup, tier, name=name, extension=extension), channel = channel)[0])
+                            selected_par_files.append(
+                                fk.get_path_from_filekey(
+                                    get_pattern_pars_tmp_channel(
+                                        self.setup, tier, name=name, extension=extension
+                                    ),
+                                    channel=channel,
+                                )[0]
+                            )
                         else:
-                            selected_par_files.append(fk.get_path_from_filekey(get_pattern_pars_tmp_channel(self.setup, tier, name=name, extension=extension), channel = channel)[0])
-        return selected_par_files
-    
-    
-    def get_plt_files(self, catalog_file, dataset, channel, tier, 
-                      experiment="l200", datatype="cal", name=None, extension ="json"):
-        dataset = self.get_dataset(dataset, channel)
-        all_par_files = []
-        for item in PropsStream.read_from(catalog_file):
-            par_files = item["apply"]
-            for par_file in par_files:
-                if par_file.split("-")[-1] == f"par_{tier}.json":
-                    all_par_files.append(par_file)
-        if channel =="default": channel = "{channel}"
-        selected_par_files=[]
-        for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
-            if fk.datatype == datatype and fk.experiment == experiment:
-                if fk.period in list(dataset):
-                    if (dataset[fk.period] == "all" 
-                    or fk.run in dataset[fk.period]):
-                        if name is not None:
-                            selected_par_files.append(fk.get_path_from_filekey(get_pattern_plts_tmp_channel(self.setup, tier, name=name),channel = channel)[0])
-                        else:
-                            selected_par_files.append(fk.get_path_from_filekey(get_pattern_plts_tmp_channel(self.setup, tier, name=name),channel = channel)[0])
+                            selected_par_files.append(
+                                fk.get_path_from_filekey(
+                                    get_pattern_pars_tmp_channel(
+                                        self.setup, tier, name=name, extension=extension
+                                    ),
+                                    channel=channel,
+                                )[0]
+                            )
         return selected_par_files
 
-    def get_log_file(self, catalog_file, dataset, channel, tier, 
-                      experiment="l200", datatype="cal", name=None):
-        par_files = self.get_par_files(catalog_file, dataset, channel, tier, 
-                      experiment=experiment, datatype=datatype, name=name)
+    def get_plt_files(
+        self,
+        catalog_file,
+        dataset,
+        channel,
+        tier,
+        experiment="l200",
+        datatype="cal",
+        name=None,
+        extension="json",
+    ):
+        dataset = self.get_dataset(dataset, channel)
+        all_par_files = []
+        for item in PropsStream.read_from(catalog_file):
+            par_files = item["apply"]
+            for par_file in par_files:
+                if par_file.split("-")[-1] == f"par_{tier}.json":
+                    all_par_files.append(par_file)
+        if channel == "default":
+            channel = "{channel}"
+        selected_par_files = []
+        for par_file in all_par_files:
+            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
+            if fk.datatype == datatype and fk.experiment == experiment:
+                if fk.period in list(dataset):
+                    if dataset[fk.period] == "all" or fk.run in dataset[fk.period]:
+                        if name is not None:
+                            selected_par_files.append(
+                                fk.get_path_from_filekey(
+                                    get_pattern_plts_tmp_channel(
+                                        self.setup, tier, name=name
+                                    ),
+                                    channel=channel,
+                                )[0]
+                            )
+                        else:
+                            selected_par_files.append(
+                                fk.get_path_from_filekey(
+                                    get_pattern_plts_tmp_channel(
+                                        self.setup, tier, name=name
+                                    ),
+                                    channel=channel,
+                                )[0]
+                            )
+        return selected_par_files
+
+    def get_log_file(
+        self,
+        catalog_file,
+        dataset,
+        channel,
+        tier,
+        experiment="l200",
+        datatype="cal",
+        name=None,
+    ):
+        par_files = self.get_par_files(
+            catalog_file,
+            dataset,
+            channel,
+            tier,
+            experiment=experiment,
+            datatype=datatype,
+            name=name,
+        )
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
-        if channel =="default": fk.channel = "{channel}"
-        else: fk.channel = channel
+        if channel == "default":
+            fk.channel = "{channel}"
+        else:
+            fk.channel = channel
         return fk.get_path_from_filekey(get_pattern_log_channel(self.setup, name))[0]
 
-    def get_timestamp(self, catalog_file, dataset, channel, tier,
-                      experiment="l200", datatype="cal"):
-        par_files = self.get_par_files(catalog_file, dataset, channel, tier, 
-                      experiment=experiment, datatype=datatype, name=None)
+    def get_timestamp(
+        self, catalog_file, dataset, channel, tier, experiment="l200", datatype="cal"
+    ):
+        par_files = self.get_par_files(
+            catalog_file,
+            dataset,
+            channel,
+            tier,
+            experiment=experiment,
+            datatype=datatype,
+            name=None,
+        )
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
         return fk.timestamp
