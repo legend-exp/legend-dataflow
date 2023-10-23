@@ -61,10 +61,10 @@ for _i, out_file in enumerate(args.output):
             pkl.dump(out_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
     elif file_extension == ".dat" or file_extension == ".dir":
-        out_file = os.path.splitext(out_file)[0]
-        pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
+        _out_file = os.path.splitext(out_file)[0]
+        pathlib.Path(os.path.dirname(_out_file)).mkdir(parents=True, exist_ok=True)
         common_dict = {}
-        with shelve.open(out_file, "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
+        with shelve.open(_out_file, "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
             for channel in channel_files:
                 if os.path.splitext(channel)[0].split("-")[-1] == processing_step:
                     with open(channel, "rb") as r:

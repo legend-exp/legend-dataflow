@@ -94,10 +94,10 @@ def readable_json(dic, ncol=6, indent=4):
                     + ": [\n"
                     + f"{add_spaces(2*indent+indent_level)}"
                 )
-                for i, item in enumerate(item):
+                for i, _item in enumerate(item):
                     if i > 0 and (i) % ncol == 0:
                         out_string += f"\n{add_spaces(2*indent+indent_level)}"
-                    out_string += f'"{item}", '
+                    out_string += f'"{_item}", '
                 out_string = out_string[:-2]
                 out_string += "\n" + f"{add_spaces(indent+indent_level)}" + "],\n"
 
