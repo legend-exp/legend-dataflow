@@ -1,0 +1,4 @@
+cores: all
+configfile: config.json
+keep-going: true
+rerun-incomplete: true
