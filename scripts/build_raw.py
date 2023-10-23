@@ -47,8 +47,8 @@ if "ged_config" in list(channel_dict) or "spm_config" in list(channel_dict):
     Props.add_to(all_config, ged_config)
     Props.add_to(all_config, spm_config)
 
-
-rand_num = f"{np.random.randint(0,99999):05d}"
+rng = np.random.default_rng()
+rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 build_raw(
