@@ -15,50 +15,67 @@ swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
-localrules: do_nothing, gen_filelist, autogen_output
 
-rule do_nothing:
-    input:
+localrules:
+    do_nothing,
+    gen_filelist,
+    autogen_output,
+
+
+# rule do_nothing:
+#     input:
+
 
 onstart:
     print("Starting workflow")
 
+
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f'rm {filelist_path(setup)}/* || true')
+    shell(f"rm {filelist_path(setup)}/* || true")
+
 
 def get_pattern(tier):
-    if tier =="daq":
+    if tier == "daq":
         return get_pattern_unsorted_data(setup)
-    elif tier =="raw":
+    elif tier == "raw":
         return get_pattern_tier_daq(setup)
     else:
         return get_pattern_tier_raw(setup)
 
+
 checkpoint gen_filelist:
     output:
-        os.path.join(filelist_path(setup),"{label}-{tier}.{extension}list")
+        os.path.join(filelist_path(setup), "{label}-{tier}.{extension}list"),
     params:
-        setup = lambda wildcards: setup,
-        search_pattern = lambda wildcards: get_pattern(wildcards.tier)
+        setup=lambda wildcards: setup,
+        search_pattern=lambda wildcards: get_pattern(wildcards.tier),
     script:
         "scripts/create_filelist.py"
 
+
 def read_filelist(wildcards):
-    with checkpoints.gen_filelist.get(label=wildcards.label, tier=wildcards.tier, extension="file").output[0].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=wildcards.label, tier=wildcards.tier, extension="file"
+    ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
+
 rule autogen_output:
     input:
-        filelist = read_filelist
+        filelist=read_filelist,
     output:
-        gen_output = "{label}-{tier}.gen",
-        summary_log = f"{log_path(setup)}/summary-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-        warning_log = f"{log_path(setup)}/warning-"+"{label}-{tier}"+f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
+        gen_output="{label}-{tier}.gen",
+        summary_log=f"{log_path(setup)}/summary-"
+        + "{label}-{tier}"
+        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
+        warning_log=f"{log_path(setup)}/warning-"
+        + "{label}-{tier}"
+        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
     params:
-        log_path = tmp_log_path(setup),
+        log_path=tmp_log_path(setup),
     shell:
         "{swenv} python3 -B {basedir}/scripts/complete_run.py "
         "--log_path {params.log_path} "
@@ -67,28 +84,31 @@ rule autogen_output:
         "--warning_log {output.warning_log} "
         "--filelist {input.filelist}"
 
+
 rule sort_data:
     input:
-        get_pattern_unsorted_data(setup)
+        get_pattern_unsorted_data(setup),
     output:
-        get_pattern_tier_daq(setup)
+        get_pattern_tier_daq(setup),
     shell:
         "mv {input} {output}"
 
+
 rule build_raw:
     input:
-        get_pattern_tier_daq(setup)
+        get_pattern_tier_daq(setup),
     params:
-        timestamp = "{timestamp}",
-        datatype = "{datatype}"
+        timestamp="{timestamp}",
+        datatype="{datatype}",
     output:
-        get_pattern_tier_raw(setup)
+        get_pattern_tier_raw(setup),
     log:
-        get_pattern_log(setup, "tier_raw")
-    group: "tier-raw"
+        get_pattern_log(setup, "tier_raw"),
+    group:
+        "tier-raw"
     resources:
         mem_swap=110,
-        runtime=300
+        runtime=300,
     shell:
         "{swenv} python3 -B {basedir}/scripts/build_raw.py "
         "--log {log} "
