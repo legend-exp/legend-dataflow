@@ -169,7 +169,7 @@ if aoe_options.pop("run_aoe") is True:
 
         if np.isnan(eres_func(2000)):
             raise RuntimeError
-    except:
+    except (KeyError, RuntimeError):
         try:
             eres = results_dicts[list(results_dicts)[0]][aoe_options["cal_energy_param"]][
                 "eres_linear"
@@ -178,10 +178,10 @@ if aoe_options.pop("run_aoe") is True:
             def eres_func(x):
                 return eval(eres["expression"], {"x": x}, eres["parameters"])
 
-        except:
+        except KeyError:
 
             def eres_func(x):
-                return x*np.nan
+                return x * np.nan
 
     cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(
         final_dict,
@@ -197,7 +197,7 @@ if aoe_options.pop("run_aoe") is True:
     # need to change eres func as can't pickle lambdas
     try:
         aoe_obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
-    except:
+    except KeyError:
         aoe_obj.eres_func = {}
 else:
     out_dict = {}

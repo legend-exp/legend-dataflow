@@ -76,10 +76,10 @@ if kwarg_dict["run_aoe"] is True:
         def eres_func(x):
             return eval(eres["expression"], {"x": x}, eres["pars"])
 
-    except:
+    except KeyError:
 
         def eres_func(x):
-            return x*np.nan
+            return x * np.nan
 
     cal_dict, out_dict, plot_dict, obj = aoe_calibration(
         files,
@@ -95,7 +95,7 @@ if kwarg_dict["run_aoe"] is True:
     # need to change eres func as can't pickle lambdas
     try:
         obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
-    except:
+    except KeyError:
         obj.eres_func = {}
 else:
     out_dict = {}
