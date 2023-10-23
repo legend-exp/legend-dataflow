@@ -10,9 +10,7 @@ from .utils import *
 #
 
 
-class FileKey(
-    namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])
-):
+class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])):
     __slots__ = ()
 
     re_pattern = "(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+))?)?)?)?)?$"
@@ -84,9 +82,7 @@ class FileKey(
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
                     if len(list(set(value).intersection(self._list()))[0]) > 0:
-                        kwargs[entry] = value[
-                            list(set(value).intersection(self._list()))[0]
-                        ]
+                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
                     else:
                         kwargs.pop(entry)
             return smk.io.expand(pattern, **self._asdict(), **kwargs)
@@ -159,9 +155,7 @@ class ProcessingFileKey(FileKey):
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
                     if len(list(set(value).intersection(self._list()))[0]) > 0:
-                        kwargs[entry] = value[
-                            list(set(value).intersection(self._list()))[0]
-                        ]
+                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
                     else:
                         kwargs.pop(entry)
             return smk.io.expand(pattern, **self._asdict(), **kwargs)

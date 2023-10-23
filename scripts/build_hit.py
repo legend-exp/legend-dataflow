@@ -38,13 +38,13 @@ log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
 if args.tier == "hit":
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_hit"
-    ]["inputs"]["hit_config"]
+    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"][
+        "inputs"
+    ]["hit_config"]
 if args.tier == "pht":
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_hit"
-    ]["inputs"]["hit_config"]
+    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"][
+        "inputs"
+    ]["hit_config"]
 else:
     msg = "unknown tier"
     raise ValueError(msg)

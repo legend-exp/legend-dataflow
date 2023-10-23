@@ -71,9 +71,7 @@ class pars_key_resolve:
 
     @staticmethod
     def match_entries(entry1, entry2):
-        datatype2 = ProcessingFileKey.get_filekey_from_filename(
-            entry2.apply[0]
-        ).datatype
+        datatype2 = ProcessingFileKey.get_filekey_from_filename(entry2.apply[0]).datatype
         for entry in entry1.apply:
             if ProcessingFileKey.get_filekey_from_filename(entry).datatype == datatype2:
                 pass

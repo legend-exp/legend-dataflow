@@ -29,9 +29,7 @@ def processing_overwrite_pattern():
 
 
 def full_channel_pattern():
-    return (
-        "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
-    )
+    return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}"
 
 
 def full_channel_pattern_with_extension():
@@ -145,8 +143,7 @@ def get_pattern_par_raw(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_raw_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_raw_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -165,8 +162,7 @@ def get_pattern_par_tcm(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_tcm_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -185,8 +181,7 @@ def get_pattern_par_dsp(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_dsp_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -205,8 +200,7 @@ def get_pattern_par_hit(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_hit_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_hit_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -225,8 +219,7 @@ def get_pattern_par_pht(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_pht_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_pht_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -245,8 +238,7 @@ def get_pattern_par_evt(setup, name=None, extension="json"):
             "cal",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-par_evt_"
-            + f"{name}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-par_evt_" + f"{name}.{extension}",
         )
     else:
         return os.path.join(
@@ -297,9 +289,7 @@ def get_pattern_pars_overwrite(setup, tier, name=None):
             "{datatype}",
             "{period}",
             "{run}",
-            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
-            + tier
-            + "-overwrite.json",
+            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_" + tier + "-overwrite.json",
         )
 
 
@@ -324,8 +314,7 @@ def get_pattern_pars_tmp_channel(setup, tier, name=None, extension="json"):
     if name is None:
         return os.path.join(
             f"{tmp_par_path(setup)}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
-            + f"{tier}.{extension}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_" + f"{tier}.{extension}",
         )
     else:
         return os.path.join(
@@ -339,9 +328,7 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None):
     if name is None:
         return os.path.join(
             f"{tmp_plts_path(setup)}",
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
-            + tier
-            + ".pkl",
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_" + tier + ".pkl",
         )
     else:
         return os.path.join(
@@ -382,9 +369,7 @@ def get_pattern_log(setup, processing_step):
     return os.path.join(
         f"{tmp_log_path(setup)}",
         processing_step,
-        "{experiment}-{period}-{run}-{datatype}-{timestamp}-"
-        + processing_step
-        + ".log",
+        "{experiment}-{period}-{run}-{datatype}-{timestamp}-" + processing_step + ".log",
     )
 
 
@@ -392,7 +377,5 @@ def get_pattern_log_channel(setup, processing_step):
     return os.path.join(
         f"{tmp_log_path(setup)}",
         processing_step,
-        "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"
-        + processing_step
-        + ".log",
+        "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-" + processing_step + ".log",
     )

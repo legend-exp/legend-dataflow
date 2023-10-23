@@ -33,12 +33,10 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 
 configs = LegendMetadata(path=args.configs)
 config_dict = configs.on(args.timestamp, system=args.datatype)
-channel_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"][
-    "processing_chain"
-][args.channel]
-kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_config"][
+channel_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["processing_chain"][
     args.channel
 ]
+kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_config"][args.channel]
 
 with open(kwarg_dict) as r:
     kwarg_dict = json.load(r)

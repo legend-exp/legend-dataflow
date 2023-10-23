@@ -181,9 +181,7 @@ def subst_vars(props, var_values=None, use_env=False, ignore_missing=False):
 
 
 def subst_vars_in_snakemake_config(workflow, config):
-    config_filename = workflow.overwrite_configfiles[
-        0
-    ]  # ToDo: Better way of handling this?
+    config_filename = workflow.overwrite_configfiles[0]  # ToDo: Better way of handling this?
     subst_vars(
         config,
         var_values={"_": os.path.dirname(config_filename)},

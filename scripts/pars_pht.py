@@ -12,18 +12,10 @@ from pygama.pargen.ecal_th import *
 from util.FileKey import *
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument(
-    "--input_files", help="files", type=str, nargs="*", required=True
-)
-argparser.add_argument(
-    "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
-)
-argparser.add_argument(
-    "--eres_file", help="eres_file", type=str, nargs="*", required=True
-)
-argparser.add_argument(
-    "--inplots", help="eres_file", type=str, nargs="*", required=True
-)
+argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
+argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
+argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
@@ -32,9 +24,7 @@ argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
 argparser.add_argument("--log", help="log_file", type=str)
 
-argparser.add_argument(
-    "--plot_file", help="plot_file", type=str, nargs="*", required=False
-)
+argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
 argparser.add_argument("--aoe_results", help="aoe_results", nargs="*", type=str)
 args = argparser.parse_args()
@@ -66,9 +56,9 @@ def run_splitter(files):
 
 
 configs = LegendMetadata(path=args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-    "pars_pht"
-]["inputs"]["par_pht_config"][args.channel]
+channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["pars_pht"][
+    "inputs"
+]["par_pht_config"][args.channel]
 
 with open(channel_dict) as r:
     kwarg_dict = json.load(r)
@@ -148,9 +138,7 @@ files = sorted(
 final_dict = {}
 all_file = run_splitter(sorted(files))
 for filelist in all_file:
-    fk = ProcessingFileKey.get_filekey_from_pattern(
-        os.path.basename(sorted(filelist)[0])
-    )
+    fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(sorted(filelist)[0]))
     timestamp = fk.timestamp
     final_dict[timestamp] = sorted(filelist)
 
@@ -183,9 +171,9 @@ if aoe_options.pop("run_aoe") is True:
             raise RuntimeError
     except:
         try:
-            eres = results_dicts[list(results_dicts)[0]][
-                aoe_options["cal_energy_param"]
-            ]["eres_linear"].copy()
+            eres = results_dicts[list(results_dicts)[0]][aoe_options["cal_energy_param"]][
+                "eres_linear"
+            ].copy()
 
             def eres_func(x):
                 return eval(eres["expression"], {"x": x}, eres["parameters"])
@@ -208,9 +196,7 @@ if aoe_options.pop("run_aoe") is True:
 
     # need to change eres func as can't pickle lambdas
     try:
-        aoe_obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]][
-            "eres_linear"
-        ].copy()
+        aoe_obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
     except:
         aoe_obj.eres_func = {}
 else:
@@ -241,9 +227,7 @@ if args.plot_file:
                 pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
     else:
         if args.inplots:
-            fk = ChannelProcKey.get_filekey_from_pattern(
-                os.path.basename(args.plot_file)
-            )
+            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.plot_file))
             out_plot_dict = inplots_dict[fk.timestamp]
             out_plot_dict.update(plot_dict)
             out_plot_dict.update({"partition_ecal": ecal_plots})

@@ -26,9 +26,7 @@ def test_filekey():
     assert key.name == "l200-p00-r000-cal-*"
     key = FileKey.from_string("l200-p00-r000-cal-20230101T123456Z")
     assert key.name == "l200-p00-r000-cal-20230101T123456Z"
-    key = FileKey.get_filekey_from_filename(
-        "l200-p00-r000-cal-20230101T123456Z-tier_dsp.lh5"
-    )
+    key = FileKey.get_filekey_from_filename("l200-p00-r000-cal-20230101T123456Z-tier_dsp.lh5")
     assert key.name == "l200-p00-r000-cal-20230101T123456Z"
     assert (
         key.get_path_from_filekey(get_pattern_tier_dsp(setup))[0]
@@ -76,9 +74,7 @@ def test_create_pars_keylist():
         FileKey("l200", "p00", "r001", "cal", "20230202T004321Z"),
     ]
 
-    keylist += pars_key_resolve.get_keys(
-        "-*-*-*-lar", setup, get_pattern_tier_daq(setup)
-    )
+    keylist += pars_key_resolve.get_keys("-*-*-*-lar", setup, get_pattern_tier_daq(setup))
     keylist = sorted(keylist, key=FileKey.get_unix_timestamp)
     assert keylist == [
         FileKey("l200", "p00", "r000", "cal", "20230101T123456Z"),
@@ -121,9 +117,9 @@ def test_pars_loading():
     assert pars_catalog.select_pars_files(pars_files, "par_dsp") == [
         "l200-p00-r000-cal-20230101T123456Z-par_dsp.json"
     ]
-    assert pars_catalog.select_pars_overwrite_files(
-        pars_files_overwrite, "par_dsp"
-    ) == ["l200-p00-r000-cal-T%-par_dsp_energy-overwrite.json"]
+    assert pars_catalog.select_pars_overwrite_files(pars_files_overwrite, "par_dsp") == [
+        "l200-p00-r000-cal-T%-par_dsp_energy-overwrite.json"
+    ]
     assert set(pars_catalog.get_par_file(setup, "20230101T123456Z", "dsp")) == {
         os.path.join(
             par_dsp_path(setup),

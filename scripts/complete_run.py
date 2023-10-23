@@ -137,9 +137,7 @@ def build_valid_keys(input_files, output_dir):
 
     for key in list(key_dict):
         dtype = key.split("-")[-1]
-        out_file = os.path.join(
-            output_dir, f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json'
-        )
+        out_file = os.path.join(output_dir, f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json')
         pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
         out_dict = Props.read_from(key_dict[key])
         out_string = readable_json(out_dict)

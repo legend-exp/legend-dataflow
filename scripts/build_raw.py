@@ -24,9 +24,9 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 configs = LegendMetadata(path=args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-    "tier_raw"
-]["inputs"]
+channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
+    "inputs"
+]
 all_config = Props.read_from(channel_dict["gen_config"])
 
 
@@ -36,9 +36,7 @@ if "ged_config" in list(channel_dict) or "spm_config" in list(channel_dict):
 
     chmap = LegendMetadata(path=args.chan_maps)
     spm_channels = list(
-        chmap.channelmaps.on(args.timestamp)
-        .map("system", unique=False)["spms"]
-        .map("daq.fcid")
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["spms"].map("daq.fcid")
     )
     ged_channels = list(chmap.channelmaps.on(args.timestamp).map("daq.fcid"))
     for spm_channel in spm_channels:

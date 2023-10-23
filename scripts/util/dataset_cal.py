@@ -112,18 +112,14 @@ class dataset_file:
                         if name is not None:
                             selected_par_files.append(
                                 fk.get_path_from_filekey(
-                                    get_pattern_plts_tmp_channel(
-                                        self.setup, tier, name=name
-                                    ),
+                                    get_pattern_plts_tmp_channel(self.setup, tier, name=name),
                                     channel=channel,
                                 )[0]
                             )
                         else:
                             selected_par_files.append(
                                 fk.get_path_from_filekey(
-                                    get_pattern_plts_tmp_channel(
-                                        self.setup, tier, name=name
-                                    ),
+                                    get_pattern_plts_tmp_channel(self.setup, tier, name=name),
                                     channel=channel,
                                 )[0]
                             )

@@ -21,8 +21,7 @@ if snakemake.params.configs:
         with open(ignored_keyslist) as f:
             ignore_keys = f.read().splitlines()
         ignore_keys = [
-            key.split("#")[0].strip() if "#" in key else key.strip()
-            for key in ignore_keys
+            key.split("#")[0].strip() if "#" in key else key.strip() for key in ignore_keys
         ]
     else:
         print("no ignore_keys.keylist file found")
@@ -69,8 +68,7 @@ for key in filekeys:
                     keys.append(key.name)
                 else:
                     if key.period in analysis_runs and (
-                        key.run in analysis_runs[key.period]
-                        or analysis_runs[key.period] == "all"
+                        key.run in analysis_runs[key.period] or analysis_runs[key.period] == "all"
                     ):
                         keys.append(key.name)
             else:

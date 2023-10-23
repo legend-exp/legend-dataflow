@@ -20,9 +20,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
-argparser.add_argument(
-    "--pars_file", help="database file for detector", nargs="*", default=[]
-)
+argparser.add_argument("--pars_file", help="database file for detector", nargs="*", default=[])
 argparser.add_argument("--log", help="log file", type=str)
 argparser.add_argument("--input", help="input file", type=str)
 argparser.add_argument("--output", help="output file", type=str)
@@ -35,9 +33,9 @@ logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 
 configs = LegendMetadata(path=args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-    "tier_dsp"
-]["inputs"]["processing_chain"]
+channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_dsp"][
+    "inputs"
+]["processing_chain"]
 
 if isinstance(args.pars_file, list):
     database_dic = Props.read_from(args.pars_file)
@@ -65,13 +63,9 @@ os.rename(temp_output, args.output)
 
 key = os.path.basename(args.output).replace("-tier_dsp.lh5", "")
 
-raw_channels = [
-    channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)
-]
+raw_channels = [channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)]
 
-raw_fields = [
-    field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channels[0]}/raw/")
-]
+raw_fields = [field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channels[0]}/raw/")]
 
 outputs = {}
 channels = []

@@ -2,51 +2,51 @@
   "setups": {
     "l200": {
       "paths": {
-        "sandbox_path":   "",
-        "tier_daq":       "$_/generated/tier/daq",
+        "sandbox_path": "",
+        "tier_daq": "$_/generated/tier/daq",
 
-        "workflow":       "$_/workflow",
-        
-        "metadata":       "$_/inputs",
-        "config":         "$_/inputs/dataprod/config",
-        "par_overwrite":  "$_/inputs/dataprod/overrides",
-        "chan_map":       "$_/inputs/hardware/configuration",
-        "detector_db":    "$_/inputs/hardware/detectors",
+        "workflow": "$_/workflow",
 
-        "tier":           "$_/generated/tier",
-        "tier_raw":       "$_/generated/tier/raw",
-        "tier_tcm":       "$_/generated/tier/tcm",
-        "tier_dsp":       "$_/generated/tier/dsp",
-        "tier_hit":       "$_/generated/tier/hit",
-        "tier_evt":       "$_/generated/tier/evt",
-        "tier_pht":       "$_/generated/tier/pht",
+        "metadata": "$_/inputs",
+        "config": "$_/inputs/dataprod/config",
+        "par_overwrite": "$_/inputs/dataprod/overrides",
+        "chan_map": "$_/inputs/hardware/configuration",
+        "detector_db": "$_/inputs/hardware/detectors",
 
-        "par":            "$_/generated/par",
-        "par_raw":        "$_/generated/par/raw",
-        "par_tcm":        "$_/generated/par/tcm",
-        "par_dsp":        "$_/generated/par/dsp",
-        "par_hit":        "$_/generated/par/hit",
-        "par_evt":        "$_/generated/par/evt",
-        "par_pht":        "$_/generated/par/pht",
-        "par_ecal":        "$_/generated/par/ecal",
+        "tier": "$_/generated/tier",
+        "tier_raw": "$_/generated/tier/raw",
+        "tier_tcm": "$_/generated/tier/tcm",
+        "tier_dsp": "$_/generated/tier/dsp",
+        "tier_hit": "$_/generated/tier/hit",
+        "tier_evt": "$_/generated/tier/evt",
+        "tier_pht": "$_/generated/tier/pht",
 
-        "plt":            "$_/generated/plt",
-        "log":            "$_/generated/log",
+        "par": "$_/generated/par",
+        "par_raw": "$_/generated/par/raw",
+        "par_tcm": "$_/generated/par/tcm",
+        "par_dsp": "$_/generated/par/dsp",
+        "par_hit": "$_/generated/par/hit",
+        "par_evt": "$_/generated/par/evt",
+        "par_pht": "$_/generated/par/pht",
+        "par_ecal": "$_/generated/par/ecal",
 
-        "tmp_plt":        "$_/generated/tmp/plt",
-        "tmp_log":        "$_/generated/tmp/log",
-        "tmp_filelists":  "$_/generated/tmp/filelists",
-        "tmp_par":        "$_/generated/tmp/par",
+        "plt": "$_/generated/plt",
+        "log": "$_/generated/log",
 
-        "src":            "$_/software/python/src",
-        "install":        "$_/software/python/install",
-        "cache":          "$_/software/python/cache"
-       },
-       
-       "execenv": {
-         "cmd": "apptainer run",
-         "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif"
-       }
-     }
-   }
- }
+        "tmp_plt": "$_/generated/tmp/plt",
+        "tmp_log": "$_/generated/tmp/log",
+        "tmp_filelists": "$_/generated/tmp/filelists",
+        "tmp_par": "$_/generated/tmp/par",
+
+        "src": "$_/software/python/src",
+        "install": "$_/software/python/install",
+        "cache": "$_/software/python/cache"
+      },
+
+      "execenv": {
+        "cmd": "apptainer run",
+        "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif"
+      }
+    }
+  }
+}

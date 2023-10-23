@@ -31,16 +31,12 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-argparser.add_argument(
-    "--final_dsp_pars", help="final_dsp_pars", type=str, required=True
-)
+argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
 
 
-argparser.add_argument(
-    "--plot_save_path", help="plot_save_path", type=str, required=False
-)
+argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -62,9 +58,7 @@ configs = conf.on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["processing_chain"][
     args.channel
 ]
-opt_json = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["optimiser_config"][
-    args.channel
-]
+opt_json = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["optimiser_config"][args.channel]
 
 with open(opt_json) as r:
     opt_dict = json.load(r)
@@ -298,15 +292,9 @@ if opt_dict["run_eopt"] is True:
     bopt_trap.lambda_param = 1
     bopt_trap.add_dimension("etrap", "rise", 1, 12, 2, "us")
 
-    bopt_cusp.add_initial_values(
-        x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp
-    )
-    bopt_zac.add_initial_values(
-        x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac
-    )
-    bopt_trap.add_initial_values(
-        x_init=sample_x, y_init=sample_y_trap, yerr_init=err_y_trap
-    )
+    bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp)
+    bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac)
+    bopt_trap.add_initial_values(x_init=sample_x, y_init=sample_y_trap, yerr_init=err_y_trap)
 
     best_idx = np.nanargmin(sample_y_cusp)
     bopt_cusp.optimal_results = results_cusp[best_idx]

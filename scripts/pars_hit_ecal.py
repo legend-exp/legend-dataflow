@@ -51,9 +51,7 @@ def plot_baseline_timemap(
     )
 
     ticks, labels = plt.xticks()
-    plt.xlabel(
-        f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}"
-    )
+    plt.xlabel(f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}")
     plt.ylabel("Baseline Value")
     plt.ylim([mean - n_spread * spread, mean + n_spread * spread])
 
@@ -210,7 +208,5 @@ if __name__ == "__main__":
         json.dump(output_dict, fp, indent=4)
 
     with open(args.results_path, "wb") as fp:
-        pathlib.Path(os.path.dirname(args.results_path)).mkdir(
-            parents=True, exist_ok=True
-        )
+        pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
         pkl.dump(ecal_object, fp, protocol=pkl.HIGHEST_PROTOCOL)
