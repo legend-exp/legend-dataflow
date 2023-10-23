@@ -60,7 +60,12 @@ rule autogen_output:
     params:
         log_path = tmp_log_path(setup),
     shell:
-        "{swenv} python3 -B {basedir}/scripts/complete_run.py --log_path {params.log_path} --gen_output {output.gen_output} --summary_log {output.summary_log} --warning_log {output.warning_log} --filelist {input.filelist}"
+        "{swenv} python3 -B {basedir}/scripts/complete_run.py "
+        "--log_path {params.log_path} "
+        "--gen_output {output.gen_output} "
+        "--summary_log {output.summary_log} "
+        "--warning_log {output.warning_log} "
+        "--filelist {input.filelist}"
 
 rule sort_data:
     input:
@@ -85,4 +90,10 @@ rule build_raw:
         mem_swap=110,
         runtime=300
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py --log {log} --configs {configs} --chan_maps {chan_maps} --datatype {params.datatype} --timestamp {params.timestamp} {input} {output}"
+        "{swenv} python3 -B {basedir}/scripts/build_raw.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--chan_maps {chan_maps} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "{input} {output}"
