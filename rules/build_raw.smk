@@ -22,10 +22,6 @@ localrules:
     autogen_output,
 
 
-# rule do_nothing:
-#     input:
-
-
 onstart:
     print("Starting workflow")
 

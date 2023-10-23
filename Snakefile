@@ -31,9 +31,6 @@ ds.pars_key_resolve.write_par_catalog(
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
-# rule do_nothing:
-#     input:
-
 
 onstart:
     print("Starting workflow")
