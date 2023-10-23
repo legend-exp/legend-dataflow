@@ -63,7 +63,7 @@ def plot_baseline_timemap(
     return fig
 
 
-def bin_bl_stability(data, time_slice=180, parameter="bl_mean", dx=1):
+def bin_bl_stability(data, time_slice=180, parameter="bl_mean"):
     utime_array = data["timestamp"]
     select_bls = data[parameter].to_numpy()
 

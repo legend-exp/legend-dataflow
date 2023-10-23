@@ -38,39 +38,40 @@ key = FileKey.parse_keypart(keypart)
 item_list = []
 for item in key:
     if "_" in item:
-        item = item.split("_")
-    if isinstance(item, list):
-        item_list.append(item)
+        _item = item.split("_")
+    if isinstance(_item, list):
+        item_list.append(_item)
     else:
-        item_list.append([item])
+        item_list.append([_item])
 
 filekeys = []
 for i in item_list[0]:
     for j in item_list[1]:
         for k in item_list[2]:
-            for l in item_list[3]:
-                for m in item_list[4]:
-                    filekeys.append(FileKey(i, j, k, l, m))
+            for i2 in item_list[3]:
+                for j2 in item_list[4]:
+                    filekeys.append(FileKey(i, j, k, i2, j2))
 
 keys = []
 for key in filekeys:
     fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
     for f in files:
-        key = FileKey.get_filekey_from_pattern(f, search_pattern)
-        if key.name in ignore_keys:
+        _key = FileKey.get_filekey_from_pattern(f, search_pattern)
+        if _key.name in ignore_keys:
             pass
         else:
             if file_selection == "all":
-                keys.append(key.name)
+                keys.append(_key.name)
             elif file_selection == "sel":
-                if analysis_runs == "all":
-                    keys.append(key.name)
-                else:
-                    if key.period in analysis_runs and (
-                        key.run in analysis_runs[key.period] or analysis_runs[key.period] == "all"
-                    ):
-                        keys.append(key.name)
+                if analysis_runs == "all" or (
+                    _key.period in analysis_runs
+                    and (
+                        _key.run in analysis_runs[_key.period]
+                        or analysis_runs[_key.period] == "all"
+                    )
+                ):
+                    keys.append(_key.name)
             else:
                 msg = "unknown file selection"
                 raise ValueError(msg)

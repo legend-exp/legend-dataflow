@@ -171,7 +171,15 @@ rule build_pars_dsp_tau:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py --configs {configs} --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --plot_path {output.plots} --output_file {output.decay_const} {input.files} "
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_tau.py "
+        "--configs {configs} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--plot_path {output.plots} "
+        "--output_file {output.decay_const} "
+        "{input.files}"
 
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
@@ -197,7 +205,18 @@ rule build_pars_dsp_eopt:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp}  --channel {params.channel} --raw_filelist {input.files} --inplots {input.inplots} --decay_const {input.decay_const} --plot_path {output.plots} --qbb_grid_path {output.qbb_grid} --final_dsp_pars {output.dsp_pars}"  # {input.peak_files}
+        "{swenv} python3 -B {basedir}/scripts/pars_dsp_eopt.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--raw_filelist {input.files} "
+        "--inplots {input.inplots} "
+        "--decay_const {input.decay_const} "
+        "--plot_path {output.plots} "
+        "--qbb_grid_path {output.qbb_grid} "
+        "--final_dsp_pars {output.dsp_pars}"
 
 
 def read_filelist_pars_dsp_cal_channel(wildcards):
@@ -281,7 +300,15 @@ rule build_dsp:
         runtime=300,
         mem_swap=30,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_dsp.py --log {log} --configs {configs}  --datatype {params.datatype} --timestamp {params.timestamp} --input {input.raw_file} --output {output.tier_file} --db_file {output.db_file} --pars_file {input.pars_file} "
+        "{swenv} python3 -B {basedir}/scripts/build_dsp.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--input {input.raw_file} "
+        "--output {output.tier_file} "
+        "--db_file {output.db_file} "
+        "--pars_file {input.pars_file}"
 
 
 def read_filelist_dsp_cal(wildcards):
@@ -317,7 +344,17 @@ rule build_energy_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --results_path {output.results_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --files {input.files}"  #
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--configs {configs} "
+        "--plot_path {output.plot_file} "
+        "--results_path {output.results_file} "
+        "--save_path {output.ecal_file} "
+        "--ctc_dict {input.ctc_dict} "
+        "--files {input.files}"
 
 
 # This rule builds the a/e calibration using the calibration dsp files
@@ -348,7 +385,18 @@ rule build_aoe_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} {input.files}"  #
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_aoe.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--inplots {input.inplots} "
+        "--channel {params.channel} "
+        "--aoe_results {output.aoe_results} "
+        "--eres_file {input.eres_file} "
+        "--hit_pars {output.hit_pars} "
+        "--plot_file {output.plot_file} "
+        "--ecal_file {input.ecal_file} {input.files}"
 
 
 def read_filelist_pars_hit_cal_channel(wildcards):
@@ -430,7 +478,16 @@ rule build_hit:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --tier {params.tier} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py "
+        "--configs {configs} "
+        "--log {log} "
+        "--tier {params.tier} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--pars_file {input.pars_file} "
+        "--output {output.tier_file} "
+        "--input {input.dsp_file} "
+        "--db_file {output.db_file}"
 
 
 # This rule builds the energy calibration using the calibration dsp files
@@ -457,7 +514,17 @@ rule build_per_energy_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py --log {log} --datatype {params.datatype} --timestamp {params.timestamp} --channel {params.channel} --configs {configs} --plot_path {output.plot_file} --results_path {output.results_file} --save_path {output.ecal_file} --ctc_dict {input.ctc_dict} --files {input.files}"  #
+        "{swenv} python3 -B {basedir}/scripts/pars_hit_ecal.py "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--configs {configs} "
+        "--plot_path {output.plot_file} "
+        "--results_path {output.results_file} "
+        "--save_path {output.ecal_file} "
+        "--ctc_dict {input.ctc_dict} "
+        "--files {input.files}"
 
 
 def read_filelist_pars_pht_cal_channel(wildcards):
@@ -540,7 +607,16 @@ rule build_pht:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/build_hit.py  --configs {configs} --log {log} --tier {params.tier} --datatype {params.datatype} --timestamp {params.timestamp} --pars_file {input.pars_file} --output {output.tier_file} --input {input.dsp_file} --db_file {output.db_file}"
+        "{swenv} python3 -B {basedir}/scripts/build_hit.py "
+        "--configs {configs} "
+        "--log {log} "
+        "--tier {params.tier} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--pars_file {input.pars_file} "
+        "--output {output.tier_file} "
+        "--input {input.dsp_file} "
+        "--db_file {output.db_file}"
 
 
 # def fix_name(new_name):
@@ -630,7 +706,19 @@ for key, dataset in part.datasets.items():
                 mem_swap=75,
                 runtime=300,
             shell:
-                "{swenv} python3 -B {basedir}/scripts/pars_pht.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} --input_files {input.files}"
+                "{swenv} python3 -B {basedir}/scripts/pars_pht.py "
+                "--log {log} "
+                "--configs {configs} "
+                "--datatype {params.datatype} "
+                "--timestamp {params.timestamp} "
+                "--inplots {input.inplots} "
+                "--channel {params.channel} "
+                "--aoe_results {output.aoe_results} "
+                "--eres_file {input.eres_file} "
+                "--hit_pars {output.hit_pars} "
+                "--plot_file {output.plot_file} "
+                "--ecal_file {input.ecal_file} "
+                "--input_files {input.files}"
 
         # fix_name(f"{key}-{partition}")
 
@@ -670,7 +758,19 @@ rule build_pht_super_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B {basedir}/scripts/pars_pht.py  --log {log} --configs {configs} --datatype {params.datatype} --timestamp {params.timestamp} --inplots {input.inplots} --channel {params.channel} --aoe_results {output.aoe_results} --eres_file {input.eres_file} --hit_pars {output.hit_pars} --plot_file {output.plot_file} --ecal_file {input.ecal_file} --input_files {input.files}"  #
+        "{swenv} python3 -B {basedir}/scripts/pars_pht.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--inplots {input.inplots} "
+        "--channel {params.channel} "
+        "--aoe_results {output.aoe_results} "
+        "--eres_file {input.eres_file} "
+        "--hit_pars {output.hit_pars} "
+        "--plot_file {output.plot_file} "
+        "--ecal_file {input.ecal_file} "
+        "--input_files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]

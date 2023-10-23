@@ -25,19 +25,19 @@ key = FileKey.parse_keypart(keypart)
 item_list = []
 for item in key:
     if "_" in item:
-        item = item.split("_")
-    if isinstance(item, list):
-        item_list.append(item)
+        _item = item.split("_")
+    if isinstance(_item, list):
+        item_list.append(_item)
     else:
-        item_list.append([item])
+        item_list.append([_item])
 
 filekeys = []
 for i in item_list[0]:
     for j in item_list[1]:
         for k in item_list[2]:
-            for l in item_list[3]:
-                for m in item_list[4]:
-                    filekeys.append(FileKey(i, j, k, l, m))
+            for i2 in item_list[3]:
+                for j2 in item_list[4]:
+                    filekeys.append(FileKey(i, j, k, i2, j2))
 
 keys = []
 for key in filekeys:
@@ -45,11 +45,11 @@ for key in filekeys:
     files = glob.glob(fn_glob_pattern)
 
     for f in files:
-        key = FileKey.get_filekey_from_pattern(f, search_pattern)
-        if key.name in ignore_keys:
+        _key = FileKey.get_filekey_from_pattern(f, search_pattern)
+        if _key.name in ignore_keys:
             pass
         else:
-            keys.append(key.name)
+            keys.append(_key.name)
 
 with open(snakemake.output[0], "w") as f:
     for key in keys:

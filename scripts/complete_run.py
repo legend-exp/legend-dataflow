@@ -15,41 +15,40 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     if warning_file is not None:
         os.makedirs(os.path.dirname(warning_file), exist_ok=True)
-        with open(warning_file, "w") as w:
-            with open(output_file, "w") as f:
-                n_errors = 0
-                n_warnings = 0
-                for file in Path(log_path).rglob("*.log"):
-                    with open(file) as r:
-                        text = r.read()
-                        if "ERROR" in text or "WARNING" in text:
-                            for line in text.splitlines():
-                                if "ERROR" in line:
-                                    if n_errors == 0:
-                                        f.write(
-                                            f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n"
-                                        )
-                                    if n_warnings == 0:
-                                        w.write(
-                                            f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n"
-                                        )
-                                    f.write(f"{os.path.basename(file)} : {line}\n")
-                                    n_errors += 1
-                                elif "WARNING" in line:
-                                    w.write(f"{os.path.basename(file)} : {line}\n")
-                                    n_warnings += 1
-                        else:
-                            pass
-                    os.remove(file)
-                    text = None
-                if n_errors == 0:
-                    f.write(
-                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n"
-                    )
-                if n_warnings == 0:
-                    w.write(
-                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n"
-                    )
+        with open(warning_file, "w") as w, open(output_file, "w") as f:
+            n_errors = 0
+            n_warnings = 0
+            for file in Path(log_path).rglob("*.log"):
+                with open(file) as r:
+                    text = r.read()
+                    if "ERROR" in text or "WARNING" in text:
+                        for line in text.splitlines():
+                            if "ERROR" in line:
+                                if n_errors == 0:
+                                    f.write(
+                                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n"
+                                    )
+                                if n_warnings == 0:
+                                    w.write(
+                                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n"
+                                    )
+                                f.write(f"{os.path.basename(file)} : {line}\n")
+                                n_errors += 1
+                            elif "WARNING" in line:
+                                w.write(f"{os.path.basename(file)} : {line}\n")
+                                n_warnings += 1
+                    else:
+                        pass
+                os.remove(file)
+                text = None
+            if n_errors == 0:
+                f.write(
+                    f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n"
+                )
+            if n_warnings == 0:
+                w.write(
+                    f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n"
+                )
     else:
         with open(output_file, "w") as f:
             n_errors = 0
@@ -95,10 +94,10 @@ def readable_json(dic, ncol=6, indent=4):
                     + ": [\n"
                     + f"{add_spaces(2*indent+indent_level)}"
                 )
-                for i, item in enumerate(item):
+                for i, _item in enumerate(item):
                     if i > 0 and (i) % ncol == 0:
                         out_string += f"\n{add_spaces(2*indent+indent_level)}"
-                    out_string += f'"{item}", '
+                    out_string += f'"{_item}", '
                 out_string = out_string[:-2]
                 out_string += "\n" + f"{add_spaces(indent+indent_level)}" + "],\n"
 

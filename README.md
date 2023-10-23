@@ -1,7 +1,5 @@
 # LEGEND L200 dataflow
 
-*Note: Still work in progress.*
-
 Implementation of an automatic data processing flow for L200
 data, based on
 [Snakemake](https://snakemake.readthedocs.io/).
@@ -10,23 +8,12 @@ data, based on
 ## Configuration
 
 Data processing resources are configured via a single site-dependent (and
-possibly user-dependent) configuration file, named "config.json" in the
+possibly user-dependent) configuration file, named `config.json` in the
 following. You may choose an arbitrary name, though.
 
 Use the included [templates/config.json](templates/config.json) as a template
-and adjust the data base paths as necessary.
-
-When running Snakemake, the path to the config file *must* be provided via
-`--configfile=path/to/configfile.json`. For example, run
-
-```shell
-snakemake -j`nproc` --configfile=config.json file_to_generate
-```
-
-## Snakefile
-
-Snakemake is controlled using the Snakefile which specifies the rules to generate each file.
-The path to the Snakefile *must* be provided via `--snakefile path/to/Snakefile`.
+and adjust the data base paths as necessary. Note that, when running Snakemake,
+the default path to the config file is `./config.json`.
 
 
 ## Key-Lists
@@ -47,11 +34,9 @@ which will generate the list of available file keys for all l200 files, resp.
 a specific period, or a specific period and run, etc.
 
 For example:
-
 ```shell
-snakemake -j4 --configfile=config.json all-l200-myper.keylist
+$ snakemake all-l200-myper.keylist
 ```
-
 will generate a key-list with all files regarding period `myper`.
 
 
@@ -68,9 +53,8 @@ For file lists based on auto-generated key-lists like
 automatically, if it doesn't exist.
 
 Example:
-
 ```shell
-snakemake -j4 --configfile=config.json all-mydet-mymeas-tier2.filelist
+$ snakemake all-mydet-mymeas-tier2.filelist
 ```
 
 File-lists may of course also be derived from custom keylists, generated
@@ -92,11 +76,9 @@ and produce all possible output for the given data tier, based on available
 tier0 files which match the target.
 
 Example:
-
 ```shell
-snakemake -j`nproc` --configfile=config.json all-mydet-mymeas-tier2.gen
+$ snakemake all-mydet-mymeas-tier2.gen
 ```
-
 Targets like `my-dataset-raw.gen` (derived from a key-list
 `my-dataset.keylist`) are of course allowed as well.
 
@@ -107,18 +89,14 @@ Snakemake supports monitoring by connecting to a
 [panoptes](https://github.com/panoptes-organization/panoptes) server.
 
 Run (e.g.)
-
 ```shell
-panoptes --port 5000
-
+$ panoptes --port 5000
 ```
-
 in the background to run a panoptes server instance, which comes with a
 GUI that can be accessed with a web-brower on the specified port.
 
 Then use the Snakemake option `--wms-monitor` to instruct Snakemake to push
 progress information to the panoptes server:
-
 ```shell
 snakemake --wms-monitor http://127.0.0.1:5000 [...]
 ```
@@ -131,24 +109,9 @@ instead supports Singularity containers via
 for greater control.
 
 To use this, the path to `venv` and the name of the environment must be set
-in "config.json".
+in `config.json`.
 
 This is only relevant then running Snakemake *outside* of the software
 container, e.g. then using a batch system (see below). If Snakemake
 and the whole workflow is run inside of a container instance, no
-container-related settings in "config.json" are required.
-
-
-## Running on a batch system
-
-A template configuration to run the dataflow on an SGE batch system is
-included in [templates/snakemake-config](templates/snakemake-config).
-Copy the configuration into `"$HOME/.config/snakemake"` and adjust as
-necessary (especially batch-queue selection, number of jobs, etc.).
-
-You should then be able to run data production on the batch system via
-(e.g.):
-
-```shell
-snakemake --profile cluster-sge --jobs 20 --configfile=config.json all-l200-myper-dsp.gen
-```
+container-related settings in `config.json` are required.

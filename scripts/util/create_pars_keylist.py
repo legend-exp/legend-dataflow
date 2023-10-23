@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import re
+from typing import ClassVar
 
 import snakemake as smk
 
@@ -12,7 +13,7 @@ from .utils import *
 
 
 class pars_key_resolve:
-    name_dict = {"cal": ["par_dsp", "par_hit"], "lar": ["par_dsp", "par_hit"]}
+    name_dict: ClassVar[dict] = {"cal": ["par_dsp", "par_hit"], "lar": ["par_dsp", "par_hit"]}
 
     def __init__(self, valid_from, category, apply):
         self.valid_from = valid_from
@@ -89,7 +90,7 @@ class pars_key_resolve:
         return out_list
 
     @staticmethod
-    def get_keys(keypart, setup, search_pattern):
+    def get_keys(keypart, search_pattern):
         d = FileKey.parse_keypart(keypart)
         tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
         fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]

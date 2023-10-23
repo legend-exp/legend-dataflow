@@ -26,6 +26,9 @@ select = [
 extend-ignore = [
   "F403",   # REMOVEME
   "F405",   # REMOVEME
+  "ISC003", # Explicitly concatenated string should be implicitly concatenated
+  "PGH001", # Usage of eval()
+  "G004",   # Logging statement uses f-string
   "PLR",    # Design related pylint codes
   "E501",   # Line too long
   "PT004",  # Use underscore for non-returning fixture (use usefixture instead)

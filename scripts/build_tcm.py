@@ -19,7 +19,8 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-rand_num = f"{np.random.randint(0,99999):05d}"
+rng = np.random.default_rng()
+rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 # get the list of channels by fcid
