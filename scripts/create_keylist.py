@@ -35,9 +35,9 @@ filekeys = []
 for i in item_list[0]:
     for j in item_list[1]:
         for k in item_list[2]:
-            for l in item_list[3]:
-                for m in item_list[4]:
-                    filekeys.append(FileKey(i, j, k, l, m))
+            for i2 in item_list[3]:
+                for j2 in item_list[4]:
+                    filekeys.append(FileKey(i, j, k, i2, j2))
 
 keys = []
 for key in filekeys:
