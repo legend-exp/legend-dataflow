@@ -180,7 +180,7 @@ if aoe_options.pop("run_aoe") is True:
 
         except:
 
-            def eres_func(x):
+            def eres_func():
                 return np.nan
 
     cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(

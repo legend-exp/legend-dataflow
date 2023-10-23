@@ -95,7 +95,6 @@ class dataset_file:
         experiment="l200",
         datatype="cal",
         name=None,
-        extension="json",
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []

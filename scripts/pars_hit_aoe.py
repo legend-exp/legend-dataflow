@@ -78,7 +78,7 @@ if kwarg_dict["run_aoe"] is True:
 
     except:
 
-        def eres_func(x):
+        def eres_func():
             return np.nan
 
     cal_dict, out_dict, plot_dict, obj = aoe_calibration(
