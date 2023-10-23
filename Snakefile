@@ -25,7 +25,6 @@ localrules:
 
 
 ds.pars_key_resolve.write_par_catalog(
-    setup,
     ["-*-*-*-cal"],
     os.path.join(pars_path(setup), "pht", "validity.jsonl"),
     get_pattern_tier_raw(setup),

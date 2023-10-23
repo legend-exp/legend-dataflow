@@ -105,12 +105,12 @@ class pars_key_resolve:
         return keys
 
     @staticmethod
-    def write_par_catalog(setup, keypart, filename, search_pattern, name_dict):
+    def write_par_catalog(keypart, filename, search_pattern, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
         keylist = []
         for keypar in keypart:
-            keylist += pars_key_resolve.get_keys(keypar, setup, search_pattern)
+            keylist += pars_key_resolve.get_keys(keypar, search_pattern)
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
 
