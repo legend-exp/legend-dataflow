@@ -64,14 +64,14 @@ for key in filekeys:
             if file_selection == "all":
                 keys.append(_key.name)
             elif file_selection == "sel":
-                if analysis_runs == "all":
-                    keys.append(_key.name)
-                else:
-                    if _key.period in analysis_runs and (
+                if analysis_runs == "all" or (
+                    _key.period in analysis_runs
+                    and (
                         _key.run in analysis_runs[_key.period]
                         or analysis_runs[_key.period] == "all"
-                    ):
-                        keys.append(_key.name)
+                    )
+                ):
+                    keys.append(_key.name)
             else:
                 msg = "unknown file selection"
                 raise ValueError(msg)

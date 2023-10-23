@@ -60,27 +60,30 @@ class dataset_file:
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
-            if fk.datatype == datatype and fk.experiment == experiment:
-                if fk.period in list(dataset):
-                    if dataset[fk.period] == "all" or fk.run in dataset[fk.period]:
-                        if name is not None:
-                            selected_par_files.append(
-                                fk.get_path_from_filekey(
-                                    get_pattern_pars_tmp_channel(
-                                        self.setup, tier, name=name, extension=extension
-                                    ),
-                                    channel=channel,
-                                )[0]
-                            )
-                        else:
-                            selected_par_files.append(
-                                fk.get_path_from_filekey(
-                                    get_pattern_pars_tmp_channel(
-                                        self.setup, tier, name=name, extension=extension
-                                    ),
-                                    channel=channel,
-                                )[0]
-                            )
+            if (
+                fk.datatype == datatype
+                and fk.experiment == experiment
+                and fk.period in list(dataset)
+                and (dataset[fk.period] == "all" or fk.run in dataset[fk.period])
+            ):
+                if name is not None:
+                    selected_par_files.append(
+                        fk.get_path_from_filekey(
+                            get_pattern_pars_tmp_channel(
+                                self.setup, tier, name=name, extension=extension
+                            ),
+                            channel=channel,
+                        )[0]
+                    )
+                else:
+                    selected_par_files.append(
+                        fk.get_path_from_filekey(
+                            get_pattern_pars_tmp_channel(
+                                self.setup, tier, name=name, extension=extension
+                            ),
+                            channel=channel,
+                        )[0]
+                    )
         return selected_par_files
 
     def get_plt_files(
@@ -106,23 +109,26 @@ class dataset_file:
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
-            if fk.datatype == datatype and fk.experiment == experiment:
-                if fk.period in list(dataset):
-                    if dataset[fk.period] == "all" or fk.run in dataset[fk.period]:
-                        if name is not None:
-                            selected_par_files.append(
-                                fk.get_path_from_filekey(
-                                    get_pattern_plts_tmp_channel(self.setup, tier, name=name),
-                                    channel=channel,
-                                )[0]
-                            )
-                        else:
-                            selected_par_files.append(
-                                fk.get_path_from_filekey(
-                                    get_pattern_plts_tmp_channel(self.setup, tier, name=name),
-                                    channel=channel,
-                                )[0]
-                            )
+            if (
+                fk.datatype == datatype
+                and fk.experiment == experiment
+                and fk.period in list(dataset)
+                and (dataset[fk.period] == "all" or fk.run in dataset[fk.period])
+            ):
+                if name is not None:
+                    selected_par_files.append(
+                        fk.get_path_from_filekey(
+                            get_pattern_plts_tmp_channel(self.setup, tier, name=name),
+                            channel=channel,
+                        )[0]
+                    )
+                else:
+                    selected_par_files.append(
+                        fk.get_path_from_filekey(
+                            get_pattern_plts_tmp_channel(self.setup, tier, name=name),
+                            channel=channel,
+                        )[0]
+                    )
         return selected_par_files
 
     def get_log_file(
