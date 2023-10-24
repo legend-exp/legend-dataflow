@@ -17,7 +17,6 @@ basedir = workflow.basedir
 
 
 localrules:
-    do_nothing,
     gen_filelist,
     autogen_output,
 
