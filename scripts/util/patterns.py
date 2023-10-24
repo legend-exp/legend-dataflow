@@ -65,6 +65,14 @@ def get_pattern_tier_raw(setup):
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_raw.lh5",
     )
 
+def get_pattern_tier_raw_blind(setup):
+    return os.path.join(
+        f"{tier_raw_blind_path(setup)}",
+        "phy",
+        "{period}",
+        "{run}",
+        "{experiment}-{period}-{run}-phy-{timestamp}-tier_raw.lh5",
+    )
 
 def get_pattern_tier_tcm(setup):
     return os.path.join(

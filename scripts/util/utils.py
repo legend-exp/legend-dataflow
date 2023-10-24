@@ -21,6 +21,9 @@ def sandbox_path(setup):
 def tier_daq_path(setup):
     return setup["paths"]["tier_daq"]
 
+def tier_raw_blind_path(setup):
+    return setup["paths"]["tier_raw_blind"]
+
 
 def tier_path(setup):
     return setup["paths"]["tier"]
@@ -48,6 +51,23 @@ def tier_pht_path(setup):
 
 def tier_evt_path(setup):
     return setup["paths"]["tier_evt"]
+
+def get_tier_path(setup, tier):
+    if tier == "raw":
+        return tier_raw_path(setup)
+    elif tier == "tcm":
+        return tier_tcm_path(setup)
+    elif tier == "dsp":
+        return tier_dsp_path(setup)
+    elif tier == "hit":
+        return tier_hit_path(setup)
+    elif tier == "pht":
+        return tier_pht_path(setup)
+    elif tier == "evt":
+        return tier_evt_path(setup)
+    else:
+        msg = f"no tier matching:{tier}"
+        raise ValueError(msg)
 
 
 def config_path(setup):
