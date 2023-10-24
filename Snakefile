@@ -32,8 +32,9 @@ ds.pars_key_resolve.write_par_catalog(
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
-# rule do_nothing:
-#     input:
+rule do_nothing:
+    input:
+        setup["paths"]["workflow"]
 
 
 onstart:
@@ -41,6 +42,14 @@ onstart:
     shell(f"rm {pars_path(setup)}/dsp/validity.jsonl || true")
     shell(f"rm {pars_path(setup)}/hit/validity.jsonl || true")
     shell(f"rm {pars_path(setup)}/pht/validity.jsonl || true")
+    shell(f"rm {pars_path(setup)}/raw/validity.jsonl || true")
+    ds.pars_key_resolve.write_par_catalog(
+        setup,
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "raw", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_raw"]},
+    )
     ds.pars_key_resolve.write_par_catalog(
         setup,
         ["-*-*-*-cal"],
@@ -147,9 +156,9 @@ rule build_tier_tcm:
 
 def read_filelist_raw_cal_channel(wildcards):
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-    with checkpoints.gen_filelist.get(label=label, tier="raw", extension="file").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="raw", extension="file"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
@@ -225,9 +234,9 @@ def read_filelist_pars_dsp_cal_channel(wildcards):
     """
 
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="dsp", extension="chan"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
@@ -238,9 +247,9 @@ def read_filelist_plts_dsp_cal_channel(wildcards):
     """
 
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="dsp", extension="chan"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
         return files
@@ -313,12 +322,57 @@ rule build_dsp:
 
 def read_filelist_dsp_cal(wildcards):
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-    with checkpoints.gen_filelist.get(label=label, tier="dsp", extension="file").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="dsp", extension="file"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
+def read_filelist_raw_cal(wildcards):
+    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
+    with checkpoints.gen_filelist.get(
+        label=label, tier="raw", extension="file"
+        ).output[0].open() as f:
+        files = f.read().splitlines()
+        return files
+
+def get_blinding_curve(wildcards):
+    # func to load in blinding curves
+    return pars_catalog.get_calib_files(Path(par_overwrite_path(setup)) / "raw" /"validity.jsonl", wildcards.timestamp)
+    
+
+rule build_blinding_check:
+    """
+    Runs a check on the daqenergy of the calibration run that the blinding curve given still applies, 
+    if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data"""
+    input:
+        files = read_filelist_raw_cal,
+        par_file = get_blinding_curve,
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        get_pattern_pars_tmp(setup, "raw")
+    log:
+        get_pattern_log_channel(setup, "pars_hit_blind_check"),
+    group:
+        "par-hit"
+    resources:
+        runtime=300,
+    shell:
+        """
+        {swenv} python3 -B {basedir}/scripts/check_blinding.py \
+        --log {log} \
+        --datatype {params.datatype} \
+        --timestamp {params.timestamp} \
+        --channel {params.channel} \
+        --configs {configs} \
+        --plot_path {output.plot_file} \
+        --par_file {input.par_file} \
+        --files {input.files} \
+        --output_file {output}
+        """
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:
@@ -404,9 +458,9 @@ def read_filelist_pars_hit_cal_channel(wildcards):
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier="hit", extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="hit", extension="chan"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
@@ -417,9 +471,9 @@ def read_filelist_plts_hit_cal_channel(wildcards):
     """
 
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier="hit", extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier="hit", extension="chan"
+        ).output[0].open() as f:
         files = f.read().splitlines()
         files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
         return files
@@ -452,6 +506,30 @@ checkpoint build_pars_hit:
     shell:
         "{swenv} python3 -B {basedir}/scripts/merge_channels.py --input {input} --output {output}"
 
+def read_filelist_pars_raw_cal_channel(wildcards):
+    """
+    This function will read the filelist of the channels and return a list of dsp files one for each channel
+    """
+    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
+    with checkpoints.gen_filelist.get(
+        label=label, tier="raw", extension="chan"
+        ).output[0].open() as f:
+        files = f.read().splitlines()
+        return files
+
+checkpoint build_pars_raw:
+    input:
+        read_filelist_pars_raw_cal_channel,
+    output:
+        get_pattern_par_raw(setup),
+    group:
+        "merge-blinding"
+    shell:
+        """
+        {swenv} python3 -B {basedir}/scripts/merge_channels.py \
+        --input {input} \
+        --output {output}
+        """
 
 def get_pars_hit_file(wildcards):
     """
@@ -459,11 +537,18 @@ def get_pars_hit_file(wildcards):
     """
     return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit")
 
+def get_pars_raw_file(wildcards):
+    """
+    This function will get the pars file for the run checking the pars_overwrite
+    """
+    return ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "raw")
+
 
 rule build_hit:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
         pars_file=get_pars_hit_file,
+        blind_check_file=get_pars_raw_file,
     output:
         tier_file=get_pattern_tier_hit(setup),
         db_file=get_pattern_pars_tmp(setup, "hit_db"),
