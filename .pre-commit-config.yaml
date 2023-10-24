@@ -89,3 +89,4 @@ repos:
   rev: v0.8.4
   hooks:
     - id: snakefmt
+      files: Snakefile*|\.smk
