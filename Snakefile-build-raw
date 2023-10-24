@@ -112,3 +112,5 @@ rule build_raw:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "{input} {output}"
+
+# vim: ft=snakemake
