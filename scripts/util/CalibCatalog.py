@@ -20,6 +20,7 @@ import copy
 import json
 import types
 from collections import namedtuple
+from pathlib import Path
 
 from .utils import *
 
@@ -28,7 +29,7 @@ class Props:
     @staticmethod
     def read_from(sources):
         def read_impl(sources):
-            if isinstance(sources, str):
+            if isinstance(sources, (str, Path)):
                 file_name = sources
                 with open(file_name) as file:
                     return json.load(file)
@@ -61,12 +62,12 @@ class Props:
 class PropsStream:
     @staticmethod
     def get(value):
-        if isinstance(value, str):
+        if isinstance(value, (str, Path)):
             return PropsStream.read_from(value)
-        elif isinstance(value, (collections.Sequence, types.GeneratorType)):
+        elif isinstance(value, (collections.abc.Sequence, types.GeneratorType)):
             return value
         else:
-            msg = f"Can't get PropsStream from value of type {type(source)}"
+            msg = f"Can't get PropsStream from value of type {type(value)}"
             raise ValueError(msg)
 
     @staticmethod
