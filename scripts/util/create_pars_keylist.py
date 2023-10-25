@@ -105,7 +105,7 @@ class pars_key_resolve:
         return keys
 
     @staticmethod
-    def write_par_catalog(setup, keypart, filename, search_pattern, name_dict):
+    def write_par_catalog(keypart, filename, search_pattern, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
         keylist = []

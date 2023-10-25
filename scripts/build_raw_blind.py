@@ -1,3 +1,8 @@
+"""
+This script takes in raw data, applies the calibration to the daqenergy 
+and uses this to blind the data in a window of Qbb +- 25 keV.
+"""
+
 import argparse
 import logging
 import os
@@ -10,7 +15,7 @@ from legendmeta.catalog import Props
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
 argparser.add_argument("output", help="output file", type=str)
-argparser.add_argument("blind_curve", help="blinding curves file", type=str)
+argparser.add_argument("--blind_curve", help="blinding curves file", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--configs", help="config file", type=str)

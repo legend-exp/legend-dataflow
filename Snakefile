@@ -32,22 +32,16 @@ basedir = workflow.basedir
 
 
 localrules:
-    do_nothing,
     gen_filelist,
     autogen_output,
 
 
 ds.pars_key_resolve.write_par_catalog(
-    setup,
     ["-*-*-*-cal"],
     os.path.join(pars_path(setup), "pht", "validity.jsonl"),
     get_pattern_tier_raw(setup),
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
-
-rule do_nothing:
-    input:
-        setup["paths"]["workflow"]
 
 
 onstart:
