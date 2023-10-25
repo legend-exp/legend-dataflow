@@ -6,9 +6,11 @@ import pathlib
 import pickle as pkl
 
 import numpy as np
-import pygama.pargen.AoE_cal as aoe
-import pygama.pargen.ecal_th as ect
 from legendmeta import LegendMetadata
+from pygama.pargen.AoE_cal import *  # noqa: F403
+from pygama.pargen.AoE_cal import aoe_calibration, pol1, sigma_fit, standard_aoe
+from pygama.pargen.ecal_th import *  # noqa: F403
+from pygama.pargen.ecal_th import partition_energy_cal_th
 from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 argparser = argparse.ArgumentParser()
@@ -143,23 +145,23 @@ for filelist in all_file:
     final_dict[timestamp] = sorted(filelist)
 
 # run energy supercal
-ecal_results, ecal_plots, ecal_obj = ect.partition_energy_cal_th(
+ecal_results, ecal_plots, ecal_obj = partition_energy_cal_th(
     final_dict, lh5_path=f"{args.channel}/dsp", hit_dict=cal_dict, **ecal_options
 )
 
 # run aoe cal
 if aoe_options.pop("run_aoe") is True:
-    pdf = eval(aoe_options.pop("pdf")) if "pdf" in aoe_options else aoe.standard_aoe
+    pdf = eval(aoe_options.pop("pdf")) if "pdf" in aoe_options else standard_aoe
 
     if "mean_func" in aoe_options:
         mean_func = eval(aoe_options.pop("mean_func"))
     else:
-        mean_func = aoe.pol1
+        mean_func = pol1
 
     if "sigma_func" in aoe_options:
         sigma_func = eval(aoe_options.pop("sigma_func"))
     else:
-        sigma_func = aoe.sigma_fit
+        sigma_func = sigma_fit
 
     try:
         eres = ecal_results[aoe_options["cal_energy_param"]]["eres_linear"].copy()
@@ -183,7 +185,7 @@ if aoe_options.pop("run_aoe") is True:
             def eres_func(x):
                 return x * np.nan
 
-    cal_dict, out_dict, plot_dict, aoe_obj = aoe.aoe_calibration(
+    cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(
         final_dict,
         lh5_path=f"{args.channel}/dsp",
         cal_dicts=cal_dict,

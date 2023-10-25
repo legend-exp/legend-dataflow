@@ -6,8 +6,9 @@ import pathlib
 import pickle as pkl
 
 import numpy as np
-import pygama.pargen.AoE_cal as aoe
 from legendmeta import LegendMetadata
+from pygama.pargen.AoE_cal import *  # noqa: F403
+from pygama.pargen.AoE_cal import aoe_calibration, pol1, sigma_fit, standard_aoe
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs="*", type=str)
@@ -53,13 +54,11 @@ with open(args.eres_file, "rb") as o:
 if kwarg_dict["run_aoe"] is True:
     kwarg_dict.pop("run_aoe")
 
-    pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else aoe.standard_aoe
+    pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
 
-    sigma_func = (
-        eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else aoe.sigma_fit
-    )
+    sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else sigma_fit
 
-    mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else aoe.pol1
+    mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else pol1
 
     if "plot_options" in kwarg_dict:
         for field, item in kwarg_dict["plot_options"].items():
@@ -80,7 +79,7 @@ if kwarg_dict["run_aoe"] is True:
         def eres_func(x):
             return x * np.nan
 
-    cal_dict, out_dict, plot_dict, obj = aoe.aoe_calibration(
+    cal_dict, out_dict, plot_dict, obj = aoe_calibration(
         files,
         lh5_path=f"{args.channel}/dsp",
         cal_dicts=cal_dict,

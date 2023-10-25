@@ -12,12 +12,10 @@ from scripts.util import (
 )
 from scripts.util.patterns import get_pattern_tier_daq, get_pattern_tier_dsp
 from scripts.util.utils import (
-    tier_path,
     par_dsp_path,
-    par_hit_path,
     par_overwrite_path,
-    pars_path,
     tier_dsp_path,
+    tier_path,
 )
 
 testprod = Path(__file__).parent / "dummy_cycle"
@@ -59,7 +57,9 @@ def test_filekey():
 
 def test_create_pars_keylist():
     key1 = FileKey("l200", "p00", "r000", "cal", "20230101T123456Z")
-    assert pars_key_resolve.from_filekey(key1, {"cal": ["par_dsp"]}).valid_from == "20230101T123456Z"
+    assert (
+        pars_key_resolve.from_filekey(key1, {"cal": ["par_dsp"]}).valid_from == "20230101T123456Z"
+    )
     key2 = FileKey("l200", "p00", "r000", "cal", "20230102T123456Z")
     assert pars_key_resolve.match_keys(key1, key2) == key1
     key3 = FileKey("l200", "p00", "r000", "cal", "20230101T000000Z")
@@ -69,9 +69,7 @@ def test_create_pars_keylist():
     pkey2 = pars_key_resolve.from_filekey(
         FileKey("l200", "p00", "r000", "lar", "20230102T123456Z"), {"lar": ["par_dsp"]}
     )
-    assert pkey2.apply == [
-        "lar/p00/r000/l200-p00-r000-lar-20230102T123456Z-par_dsp.json"
-    ]
+    assert pkey2.apply == ["lar/p00/r000/l200-p00-r000-lar-20230102T123456Z-par_dsp.json"]
     pars_key_resolve.match_entries(pkey1, pkey2)
     assert set(pkey2.apply) == {
         "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json",
@@ -97,7 +95,11 @@ def test_create_pars_keylist():
 
     pkeylist = pars_key_resolve.generate_par_keylist(keylist)
     assert pkeylist == keylist
-    assert set(pars_key_resolve.match_all_entries(pkeylist, {"cal": ["par_dsp"], "lar": ["par_dsp"]})[1].apply) == {
+    assert set(
+        pars_key_resolve.match_all_entries(pkeylist, {"cal": ["par_dsp"], "lar": ["par_dsp"]})[
+            1
+        ].apply
+    ) == {
         "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json",
         "lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.json",
     }
@@ -107,9 +109,7 @@ def test_pars_loading():
     pars_files = CalibCatalog.get_calib_files(
         os.path.join(par_dsp_path(setup), "validity.jsonl"), "20230101T123456Z"
     )
-    assert pars_files == [
-        "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"
-    ]
+    assert pars_files == ["cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]
 
     par_override_files = CalibCatalog.get_calib_files(
         os.path.join(par_overwrite_path(setup), "dsp", "validity.jsonl"), "20230101T123456Z"
@@ -119,10 +119,8 @@ def test_pars_loading():
         pars_files, par_override_files
     )
 
-    assert pars_files == [
-        "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"
-    ]
-    
+    assert pars_files == ["cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]
+
     assert set(pars_catalog.get_par_file(setup, "20230101T123456Z", "dsp")) == {
         os.path.join(
             par_dsp_path(setup),

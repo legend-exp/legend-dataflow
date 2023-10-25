@@ -10,10 +10,11 @@ import lgdo.lh5_store as lh5
 import matplotlib.pyplot as plt
 import numpy as np
 import pygama.math.histogram as pgh
-import pygama.pargen.ecal_th as ect
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from matplotlib.colors import LogNorm
+from pygama.pargen.ecal_th import *  # noqa: F403
+from pygama.pargen.ecal_th import energy_cal_th
 from scipy.stats import binned_statistic
 
 log = logging.getLogger(__name__)
@@ -164,7 +165,7 @@ if __name__ == "__main__":
     common_plots = kwarg_dict.pop("common_plots")
 
     if args.plot_path:
-        out_dict, result_dict, plot_dict, ecal_object = ect.energy_cal_th(
+        out_dict, result_dict, plot_dict, ecal_object = energy_cal_th(
             sorted(args.files),
             lh5_path=f"{args.channel}/dsp",
             hit_dict=hit_dict,
@@ -194,7 +195,7 @@ if __name__ == "__main__":
         with open(args.plot_path, "wb") as f:
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
     else:
-        out_dict, result_dict, _ = ect.energy_cal_th(
+        out_dict, result_dict, _ = energy_cal_th(
             sorted(args.files),
             lh5_path=f"{args.channel}/dsp",
             hit_dict=hit_dict,
