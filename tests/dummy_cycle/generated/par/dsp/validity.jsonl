@@ -1,0 +1,3 @@
+{"valid_from": "20230101T123456Z", "category": "all", "apply": ["cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]}
+{"valid_from": "20230110T123456Z", "category": "all", "apply": ["lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.json", "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]}
+{"valid_from": "20230202T004321Z", "category": "all", "apply": ["cal/p00/r001/l200-p00-r001-cal-20230202T004321Z-par_dsp.json","lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.json"]}

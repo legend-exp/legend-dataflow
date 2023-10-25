@@ -10,7 +10,7 @@ from .patterns import (
     key_pattern,
     processing_pattern,
 )
-from .util import unix_time
+from .utils import unix_time
 
 # key_pattern -> key
 #
