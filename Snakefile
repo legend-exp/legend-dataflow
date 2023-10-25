@@ -1,5 +1,18 @@
+"""
+Snakefile for doing the higher stages of data processing (everything beyond build_raw)
+This includes:
+- building the tcm
+- dsp parameter generation
+- building dsp
+- hit pars generation
+- building hit
+- building evt
+- the same for partition level tiers
+"""
+
 import pathlib, os, json, sys
 import scripts as ds
+from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import *
 from datetime import datetime
 from collections import OrderedDict
@@ -93,6 +106,7 @@ checkpoint gen_filelist:
         basedir=basedir,
         configs=configs,
         chan_maps=chan_maps,
+        blinding=False
     script:
         "scripts/create_{wildcards.extension}list.py"
 
@@ -338,8 +352,11 @@ def read_filelist_raw_cal(wildcards):
 
 def get_blinding_curve(wildcards):
     # func to load in blinding curves
-    return pars_catalog.get_calib_files(Path(par_overwrite_path(setup)) / "raw" /"validity.jsonl", wildcards.timestamp)
-    
+    par_files = ds.pars_catalog.get_calib_files(Path(par_overwrite_path(setup)) / "raw" /"validity.jsonl", wildcards.timestamp)
+    if isinstance(par_files, str):
+        return str(Path(par_overwrite_path(setup)) / "raw"/ par_files)
+    else:
+        return [str(Path(par_overwrite_path(setup)) / "raw"/ par_file) for par_file in par_files]
 
 rule build_blinding_check:
     """
@@ -353,7 +370,7 @@ rule build_blinding_check:
         datatype="cal",
         channel="{channel}",
     output:
-        get_pattern_pars_tmp(setup, "raw")
+        get_pattern_pars_tmp_channel(setup, "raw")
     log:
         get_pattern_log_channel(setup, "pars_hit_blind_check"),
     group:
@@ -361,18 +378,15 @@ rule build_blinding_check:
     resources:
         runtime=300,
     shell:
-        """
-        {swenv} python3 -B {basedir}/scripts/check_blinding.py \
-        --log {log} \
-        --datatype {params.datatype} \
-        --timestamp {params.timestamp} \
-        --channel {params.channel} \
-        --configs {configs} \
-        --plot_path {output.plot_file} \
-        --par_file {input.par_file} \
-        --files {input.files} \
-        --output_file {output}
-        """
+        "{swenv} python3 -B {basedir}/scripts/check_blinding.py "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--configs {configs} "
+        "--output {output} "
+        "--blind_curve {input.par_file} "
+        "--files {input.files} "
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:
