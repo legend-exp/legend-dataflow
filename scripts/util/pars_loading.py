@@ -1,9 +1,10 @@
 import os
 
-from .CalibCatalog import *
-from .FileKey import *
-from .patterns import *
-from .utils import *
+from .CalibCatalog import CalibCatalog
+from .FileKey import ProcessingFileKey
+
+# from .patterns import
+from .utils import get_pars_path, par_overwrite_path
 
 
 class pars_catalog(CalibCatalog):

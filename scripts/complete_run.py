@@ -7,8 +7,10 @@ import pathlib
 from datetime import datetime
 from pathlib import Path
 
+import util.patterns as pat
+import util.utils as ut
 from util.CalibCatalog import Props
-from util.FileKey import *
+from util.FileKey import FileKey
 
 
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
@@ -164,20 +166,20 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
     file_db_config = {
         "data_dir": "$PRODENV",
         "tier_dirs": {
-            "raw": tier_raw_path(setup).replace(os.getenv("PRODENV"), ""),
-            "dsp": tier_dsp_path(setup).replace(os.getenv("PRODENV"), ""),
-            "hit": tier_hit_path(setup).replace(os.getenv("PRODENV"), ""),
-            "pht": tier_pht_path(setup).replace(os.getenv("PRODENV"), ""),
-            "tcm": tier_tcm_path(setup).replace(os.getenv("PRODENV"), ""),
-            "evt": tier_evt_path(setup).replace(os.getenv("PRODENV"), ""),
+            "raw": ut.tier_raw_path(setup).replace(os.getenv("PRODENV"), ""),
+            "dsp": ut.tier_dsp_path(setup).replace(os.getenv("PRODENV"), ""),
+            "hit": ut.tier_hit_path(setup).replace(os.getenv("PRODENV"), ""),
+            "pht": ut.tier_pht_path(setup).replace(os.getenv("PRODENV"), ""),
+            "tcm": ut.tier_tcm_path(setup).replace(os.getenv("PRODENV"), ""),
+            "evt": ut.tier_evt_path(setup).replace(os.getenv("PRODENV"), ""),
         },
         "file_format": {
-            "raw": get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
-            "dsp": get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
-            "hit": get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
-            "pht": get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
-            "evt": get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
-            "tcm": get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
+            "dsp": pat.get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
+            "hit": pat.get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
+            "pht": pat.get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
+            "evt": pat.get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
+            "tcm": pat.get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",
@@ -192,20 +194,20 @@ else:
     file_db_config = {
         "data_dir": "/",
         "tier_dirs": {
-            "raw": tier_raw_path(setup),
-            "dsp": tier_dsp_path(setup),
-            "hit": tier_hit_path(setup),
-            "tcm": tier_tcm_path(setup),
-            "pht": tier_pht_path(setup),
-            "evt": tier_evt_path(setup),
+            "raw": ut.tier_raw_path(setup),
+            "dsp": ut.tier_dsp_path(setup),
+            "hit": ut.tier_hit_path(setup),
+            "tcm": ut.tier_tcm_path(setup),
+            "pht": ut.tier_pht_path(setup),
+            "evt": ut.tier_evt_path(setup),
         },
         "file_format": {
-            "raw": get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
-            "dsp": get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
-            "hit": get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
-            "pht": get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
-            "evt": get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
-            "tcm": get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
+            "dsp": pat.get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
+            "hit": pat.get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
+            "pht": pat.get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
+            "evt": pat.get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
+            "tcm": pat.get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",

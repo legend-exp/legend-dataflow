@@ -2,7 +2,23 @@ import json
 import os
 from pathlib import Path
 
-from scripts import *
+from scripts import (
+    CalibCatalog,
+    FileKey,
+    pars_catalog,
+    pars_key_resolve,
+    subst_vars,
+    tier_path,
+    unix_time,
+)
+from scripts.util.patterns import get_pattern_tier_daq, get_pattern_tier_dsp
+from scripts.util.utils import (
+    par_dsp_path,
+    par_hit_path,
+    par_overwrite_path,
+    pars_path,
+    tier_dsp_path,
+)
 
 testprod = Path(__file__).parent / "dummy_cycle"
 

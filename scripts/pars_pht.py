@@ -6,10 +6,10 @@ import pathlib
 import pickle as pkl
 
 import numpy as np
+import pygama.pargen.AoE_cal as aoe
+import pygama.pargen.ecal_th as ect
 from legendmeta import LegendMetadata
-from pygama.pargen.AoE_cal import *
-from pygama.pargen.ecal_th import *
-from util.FileKey import *
+from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
@@ -143,29 +143,29 @@ for filelist in all_file:
     final_dict[timestamp] = sorted(filelist)
 
 # run energy supercal
-ecal_results, ecal_plots, ecal_obj = partition_energy_cal_th(
+ecal_results, ecal_plots, ecal_obj = ect.partition_energy_cal_th(
     final_dict, lh5_path=f"{args.channel}/dsp", hit_dict=cal_dict, **ecal_options
 )
 
 # run aoe cal
 if aoe_options.pop("run_aoe") is True:
-    pdf = eval(aoe_options.pop("pdf")) if "pdf" in aoe_options else standard_aoe
+    pdf = eval(aoe_options.pop("pdf")) if "pdf" in aoe_options else aoe.standard_aoe
 
     if "mean_func" in aoe_options:
         mean_func = eval(aoe_options.pop("mean_func"))
     else:
-        mean_func = pol1
+        mean_func = aoe.pol1
 
     if "sigma_func" in aoe_options:
         sigma_func = eval(aoe_options.pop("sigma_func"))
     else:
-        sigma_func = sigma_fit
+        sigma_func = aoe.sigma_fit
 
     try:
         eres = ecal_results[aoe_options["cal_energy_param"]]["eres_linear"].copy()
 
         def eres_func(x):
-            return eval(eres["expression"], {"x": x}, eres["parameters"])
+            return eval(eres["expression"], local_dict=dict(x=x, **eres["parameters"]))
 
         if np.isnan(eres_func(2000)):
             raise RuntimeError
@@ -176,14 +176,14 @@ if aoe_options.pop("run_aoe") is True:
             ].copy()
 
             def eres_func(x):
-                return eval(eres["expression"], {"x": x}, eres["parameters"])
+                return eval(eres["expression"], local_dict=dict(x=x, **eres["parameters"]))
 
         except KeyError:
 
             def eres_func(x):
                 return x * np.nan
 
-    cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(
+    cal_dict, out_dict, plot_dict, aoe_obj = aoe.aoe_calibration(
         final_dict,
         lh5_path=f"{args.channel}/dsp",
         cal_dicts=cal_dict,
@@ -196,7 +196,9 @@ if aoe_options.pop("run_aoe") is True:
 
     # need to change eres func as can't pickle lambdas
     try:
-        aoe_obj.eres_func = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
+        aoe_obj.eres_func = results_dicts[list(results_dicts)[0]][aoe_options["cal_energy_param"]][
+            "eres_linear"
+        ].copy()
     except KeyError:
         aoe_obj.eres_func = {}
 else:
@@ -234,7 +236,7 @@ if args.plot_file:
         else:
             out_plot_dict = plot_dict
         pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
-        with open(out, "wb") as w:
+        with open(args.plot_file, "wb") as w:
             pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 

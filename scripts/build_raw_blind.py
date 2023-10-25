@@ -1,5 +1,5 @@
 """
-This script takes in raw data, applies the calibration to the daqenergy 
+This script takes in raw data, applies the calibration to the daqenergy
 and uses this to blind the data in a window of Qbb +- 25 keV.
 """
 
@@ -8,8 +8,6 @@ import logging
 import os
 import pathlib
 
-import numpy as np
-from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()

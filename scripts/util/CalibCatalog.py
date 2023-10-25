@@ -22,7 +22,7 @@ import types
 from collections import namedtuple
 from pathlib import Path
 
-from .utils import *
+from .utils import unix_time
 
 
 class Props:

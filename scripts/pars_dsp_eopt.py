@@ -9,11 +9,11 @@ import time
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
+import sklearn.gaussian_process.kernels as ker
 from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dsp_optimize import run_one_dsp
-from sklearn.gaussian_process.kernels import *
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
@@ -269,9 +269,9 @@ if opt_dict["run_eopt"] is True:
             sample_y_trap[i] = max_trap
 
     kernel = (
-        ConstantKernel(2.0, constant_value_bounds="fixed")
-        + 1.0 * RBF(1.0, length_scale_bounds=[0.5, 2.5])
-        + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
+        ker.ConstantKernel(2.0, constant_value_bounds="fixed")
+        + 1.0 * ker.RBF(1.0, length_scale_bounds=[0.5, 2.5])
+        + ker.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
     )
 
     bopt_cusp = om.BayesianOptimizer(

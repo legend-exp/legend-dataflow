@@ -4,7 +4,7 @@ import glob
 import json
 import os
 
-from util.FileKey import *
+from util.FileKey import FileKey
 
 setup = snakemake.params.setup
 
@@ -37,10 +37,7 @@ key = FileKey.parse_keypart(keypart)
 
 item_list = []
 for item in key:
-    if "_" in item:
-        _item = item.split("_")
-    else:
-        _item = item
+    _item = item.split("_") if "_" in item else item
     if isinstance(_item, list):
         item_list.append(_item)
     else:
@@ -62,9 +59,11 @@ for key in filekeys:
     for f in files:
         _key = FileKey.get_filekey_from_pattern(f, search_pattern)
         if tier == "raw":
-            if snakemake.params.blinding == True:
+            if snakemake.params.blinding is True:
                 if _key.datatype == "phy":
-                    filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
+                    filename = FileKey.get_path_from_filekey(
+                        _key, get_pattern_tier_raw_blind(setup)
+                    )
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
             else:

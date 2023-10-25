@@ -21,6 +21,7 @@ def sandbox_path(setup):
 def tier_daq_path(setup):
     return setup["paths"]["tier_daq"]
 
+
 def tier_raw_blind_path(setup):
     return setup["paths"]["tier_raw_blind"]
 
@@ -51,6 +52,7 @@ def tier_pht_path(setup):
 
 def tier_evt_path(setup):
     return setup["paths"]["tier_evt"]
+
 
 def get_tier_path(setup, tier):
     if tier == "raw":

@@ -4,7 +4,7 @@ import os
 import pathlib
 
 import numpy as np
-from daq2lh5.build_raw import *
+from daq2lh5.build_raw import build_raw
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 

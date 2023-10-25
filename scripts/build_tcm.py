@@ -6,7 +6,7 @@ import pathlib
 import lgdo
 import numpy as np
 from daq2lh5.orca import orca_flashcam
-from pygama.evt.build_tcm import *
+from pygama.evt.build_tcm import build_tcm
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)

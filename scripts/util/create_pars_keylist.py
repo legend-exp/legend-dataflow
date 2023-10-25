@@ -7,9 +7,8 @@ from typing import ClassVar
 
 import snakemake as smk
 
-from .FileKey import *
-from .patterns import *
-from .utils import *
+from .FileKey import FileKey, ProcessingFileKey
+from .patterns import par_validity_pattern
 
 
 class pars_key_resolve:

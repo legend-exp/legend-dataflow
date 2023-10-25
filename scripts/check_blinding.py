@@ -1,24 +1,27 @@
 """
-This script checks that the blinding for a particular channel is still valid, 
-it does this by taking the calibration curve stored in the overrides, applying it 
+This script checks that the blinding for a particular channel is still valid,
+it does this by taking the calibration curve stored in the overrides, applying it
 to the daqenergy, running a peak search over the calibrated energy and checking that
 there are peaks within 5keV of the 583 and 2614 peaks. If the detector is in ac mode
 then it will skip the check.
 """
 
 import argparse
+import json
 import logging
-import os, json
+import os
 import pathlib
-from legendmeta.catalog import Props
-from legendmeta import LegendMetadata
-import numpy as np
-import numexpr as ne
+
 import lgdo.lh5_store as lh5
-from pygama.pargen.energy_cal import get_i_local_maxima
-from pygama.math.histogram import get_hist
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib as mpl 
+import numexpr as ne
+import numpy as np
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
+from pygama.math.histogram import get_hist
+from pygama.pargen.energy_cal import get_i_local_maxima
+
 mpl.use("Agg")
 
 argparser = argparse.ArgumentParser()
@@ -45,34 +48,35 @@ log = logging.getLogger(__name__)
 chmap = LegendMetadata(args.timestamp).channelmap(args.timestamp).map("daq.rawid")
 det_status = chmap[int(args.channel[2:])]["analysis"]["usability"]
 
-#read in calibration curve for this channel
+# read in calibration curve for this channel
 blind_curve = Props.read_from(args.blind_curve)[args.channel]
 
 # load in the data
-daqenergy = lh5.load_nda(sorted(args.files), ["daqenergy"],f"{args.channel}/raw")["daqenergy"]
+daqenergy = lh5.load_nda(sorted(args.files), ["daqenergy"], f"{args.channel}/raw")["daqenergy"]
 
 # calibrate daq energy using pre existing curve
 daqenergy_cal = ne.evaluate(
-                blind_curve["daqenergy_cal"]["expression"],
-                local_dict=dict(daqenergy=daqenergy, **blind_curve["daqenergy_cal"]["parameters"])
-            )
+    blind_curve["daqenergy_cal"]["expression"],
+    local_dict=dict(daqenergy=daqenergy, **blind_curve["daqenergy_cal"]["parameters"]),
+)
 
 # bin with 1 keV bins and get maxs
-hist, bins, var = get_hist(daqenergy_cal, np.arange(0,3000,1))
-maxs = get_i_local_maxima(hist, delta =5)
+hist, bins, var = get_hist(daqenergy_cal, np.arange(0, 3000, 1))
+maxs = get_i_local_maxima(hist, delta=5)
 log.info(f"peaks found at : {maxs}")
 
 # plot the energy spectrum to check calibration
 plt.figure()
-plt.step((bins[1:]+bins[:-1])/2, hist, where="mid")
+plt.step((bins[1:] + bins[:-1]) / 2, hist, where="mid")
 plt.close()
 
 
 # check for peaks within +- 5keV of  2614 and 583 to ensure blinding still valid and if so create file else raise error
 # if detector is in ac mode it will always pass this check
-if np.any(np.abs(maxs-2614)<5) and np.any(np.abs(maxs-583)<5) or det_status=="ac":
+if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status == "ac":
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-    with open(args.output,"w") as f:
+    with open(args.output, "w") as f:
         json.dump({}, f)
 else:
-    raise RuntimeError("peaks not found in daqenergy")
+    msg = "peaks not found in daqenergy"
+    raise RuntimeError(msg)

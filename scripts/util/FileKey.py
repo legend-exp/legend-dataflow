@@ -3,8 +3,14 @@ from collections import namedtuple
 
 import snakemake as smk
 
-from .patterns import *
-from .utils import *
+from .patterns import (
+    full_channel_pattern_with_extension,
+    get_pattern_pars_tmp_channel,
+    get_pattern_tier,
+    key_pattern,
+    processing_pattern,
+)
+from .util import unix_time
 
 # key_pattern -> key
 #
