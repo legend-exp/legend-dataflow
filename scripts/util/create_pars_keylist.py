@@ -110,7 +110,7 @@ class pars_key_resolve:
             keypart = [keypart]
         keylist = []
         for keypar in keypart:
-            keylist += pars_key_resolve.get_keys(keypar, setup, search_pattern)
+            keylist += pars_key_resolve.get_keys(keypar, search_pattern)
         keys = sorted(keylist, key=FileKey.get_unix_timestamp)
         keylist = pars_key_resolve.generate_par_keylist(keys)
 
