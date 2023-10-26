@@ -1,3 +1,7 @@
+"""
+This module contains all the patterns needed for the data production
+"""
+
 import os
 
 from .utils import (
@@ -372,15 +376,25 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None):
         )
 
 
-def get_pattern_plts(setup, tier):
-    return os.path.join(
-        f"{plts_path(setup)}",
-        tier,
-        "cal",
-        "{period}",
-        "{run}",
-        "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir",
-    )
+def get_pattern_plts(setup, tier, name=None):
+    if name is None:
+        return os.path.join(
+            f"{plts_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir",
+        )
+    else:
+        return os.path.join(
+            f"{plts_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + "_" + name + ".dir",
+        )
 
 
 def get_energy_grids_pattern_combine(setup):

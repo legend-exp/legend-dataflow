@@ -1,3 +1,10 @@
+"""
+This module contains all the utility needed for the data production.
+These are mainly resolvers for the config.json dictionary,
+and for substituting the pathvar within, also the conversion
+from timestamp to unix time
+"""
+
 import copy
 import os
 import string
@@ -78,6 +85,10 @@ def config_path(setup):
 
 def chan_map_path(setup):
     return setup["paths"]["chan_map"]
+
+
+def metadata_path(setup):
+    return setup["paths"]["metadata"]
 
 
 def detector_db_path(setup):

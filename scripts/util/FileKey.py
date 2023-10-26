@@ -1,3 +1,7 @@
+"""
+This module contains classes to convert between keys and files using the patterns defined in patterns.py
+"""
+
 import re
 from collections import namedtuple
 

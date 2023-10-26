@@ -1,3 +1,7 @@
+"""
+This module creates the validity files used for determining the time validity of data
+"""
+
 import glob
 import json
 import os

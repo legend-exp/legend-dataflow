@@ -1,3 +1,8 @@
+"""
+This module uses the time validity resolving in calibcatalog
+to determine the par and par overwrite for a particular timestamp
+"""
+
 import os
 
 from .CalibCatalog import CalibCatalog

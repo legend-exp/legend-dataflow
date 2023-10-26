@@ -1,3 +1,7 @@
+"""
+This module uses the partition database files to the necessary inputs for partition calibrations
+"""
+
 import json
 import os
 
