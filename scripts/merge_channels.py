@@ -78,7 +78,7 @@ for _i, out_file in enumerate(args.output):
                         channel_name,
                         name,
                     ) = os.path.basename(channel).split("-")
-                    if "common" in list(channel_dict):
+                    if isinstance(channel_dict, dict) and "common" in list(channel_dict):
                         chan_common_dict = channel_dict.pop("common")
                         common_dict[channel_name] = chan_common_dict
                     shelf[channel_name] = channel_dict
