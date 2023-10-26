@@ -4,6 +4,7 @@ import os
 import random
 
 from util.FileKey import ChannelProcKey
+from util.utils import filelist_path, runcmd
 
 setup = snakemake.params.setup
 basedir = snakemake.params.basedir
@@ -25,7 +26,7 @@ output_file = os.path.join(
 )
 
 cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
-cmd += " --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
+cmd += f" --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
 os.system(cmd)
 
 with open(output_file) as r:

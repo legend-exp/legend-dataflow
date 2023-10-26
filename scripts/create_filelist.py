@@ -5,6 +5,7 @@ import json
 import os
 
 from util.FileKey import FileKey
+from util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
 
 setup = snakemake.params.setup
 
