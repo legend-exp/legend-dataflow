@@ -7,6 +7,7 @@ import pickle as pkl
 from datetime import datetime
 
 import lgdo.lh5_store as lh5
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pygama.math.histogram as pgh
@@ -18,6 +19,7 @@ from pygama.pargen.ecal_th import energy_cal_th
 from scipy.stats import binned_statistic
 
 log = logging.getLogger(__name__)
+mpl.use("agg")
 
 
 def plot_baseline_timemap(
