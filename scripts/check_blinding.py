@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import pathlib
+import pickle as pkl
 
 import lgdo.lh5_store as lh5
 import matplotlib as mpl
@@ -27,6 +28,7 @@ mpl.use("Agg")
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--files", help="files", nargs="*", type=str)
 argparser.add_argument("--output", help="output file", type=str)
+argparser.add_argument("--plot_file", help="plot file", type=str)
 argparser.add_argument("--blind_curve", help="blinding curves file", type=str)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
@@ -66,9 +68,23 @@ maxs = get_i_local_maxima(hist, delta=5)
 log.info(f"peaks found at : {maxs}")
 
 # plot the energy spectrum to check calibration
-plt.figure()
-plt.step((bins[1:] + bins[:-1]) / 2, hist, where="mid")
-plt.close()
+fig = plt.figure(figsize=(8, 10))
+ax = plt.subplot(211)
+ax.hist(daqenergy_cal, bins=np.arange(0, 3000, 1), histtype="step")
+ax.set_ylabel("counts")
+ax.set_yscale("log")
+ax2 = plt.subplot(212)
+ax2.hist(
+    daqenergy_cal,
+    bins=np.arange(2600, 2630, 1 * blind_curve["daqenergy_cal"]["parameters"]["a"]),
+    histtype="step",
+)
+ax2.set_xlabel("energy (keV)")
+ax2.set_ylabel("counts")
+plt.suptitle(args.channel)
+with open(args.plot_file, "wb") as w:
+    pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
+fig.close()
 
 
 # check for peaks within +- 5keV of  2614 and 583 to ensure blinding still valid and if so create file else raise error
