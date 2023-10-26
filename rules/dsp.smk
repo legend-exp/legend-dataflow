@@ -76,9 +76,9 @@ rule build_pars_dsp_eopt:
 
 rule build_pars_dsp:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'dsp'),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, 'dsp'),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'dsp_results'),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_results"),
     output:
         get_pattern_par_dsp(setup),
         get_pattern_par_dsp(setup, name="results", extension="pkl"),
@@ -91,11 +91,16 @@ rule build_pars_dsp:
         "--input {input} "
         "--output {output} "
 
+
 rule build_dsp:
     input:
         raw_file=get_pattern_tier_raw(setup),
         tcm_file=get_pattern_tier_tcm(setup),
-        pars_file=ancient(lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "dsp")),
+        pars_file=ancient(
+            lambda wildcards: ds.pars_catalog.get_par_file(
+                setup, wildcards.timestamp, "dsp"
+            )
+        ),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",

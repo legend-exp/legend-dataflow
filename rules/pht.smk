@@ -1,16 +1,21 @@
 """
 Snakemake rules for processing pht (partition hit) tier data. This is done in 4 steps:
 - extraction of calibration curves(s) for each run for each channel from cal data
-- extraction of psd calibration parameters and partiton level energy fitting for each channel over whole partition from cal data 
+- extraction of psd calibration parameters and partition level energy fitting for each channel over whole partition from cal data
 - combining of all channels into single pars files with associated plot and results files
 - running build hit over all channels using par file
 """
+
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_per_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
-        ctc_dict=ancient(lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "dsp")),
+        ctc_dict=ancient(
+            lambda wildcards: ds.pars_catalog.get_par_file(
+                setup, wildcards.timestamp, "dsp"
+            )
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -46,9 +51,9 @@ rule build_per_energy_calibration:
 
 checkpoint build_pars_pht:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'pht'),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, 'pht'),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'pht_results'),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_results"),
     output:
         get_pattern_par_pht(setup),
         get_pattern_par_pht(setup, name="results", extension="dir"),
@@ -61,11 +66,14 @@ checkpoint build_pars_pht:
         "--input {input} "
         "--output {output} "
 
+
 rule build_pht:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
         #hit_file = get_pattern_tier_hit(setup),
-        pars_file=lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "pht"),
+        pars_file=lambda wildcards: ds.pars_catalog.get_par_file(
+            setup, wildcards.timestamp, "pht"
+        ),
     output:
         tier_file=get_pattern_tier_pht(setup),
         db_file=get_pattern_pars_tmp(setup, "pht_db"),
@@ -215,7 +223,7 @@ rule build_pht_super_calibrations:
             setup, "pht", "energy_cal_results", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "energy_cal"),
-    params: 
+    params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
@@ -258,4 +266,3 @@ for key, items in ordered.items():
     rule_order_list += [item.name for item in items]
 rule_order_list.append(fallback_pht_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
-

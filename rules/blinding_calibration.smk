@@ -4,6 +4,7 @@ Snakemake rules for calibrating daq energy for blinding. Two steps:
 - combining all channels into single par file
 """
 
+
 rule build_blinding_calibration:
     """
     Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
@@ -15,10 +16,10 @@ rule build_blinding_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
-        meta = meta
+        meta=meta,
     output:
-        par_file = temp(get_pattern_pars_tmp_channel(setup, "raw_blinding_cal")),
-        plot_file = temp(get_pattern_plts_tmp_channel(setup, "raw_blinding_cal")),
+        par_file=temp(get_pattern_pars_tmp_channel(setup, "raw_blinding_cal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw_blinding_cal")),
     log:
         get_pattern_log_channel(setup, "pars_hit_blind_cal"),
     group:
@@ -38,10 +39,11 @@ rule build_blinding_calibration:
         "--blind_curve {output.par_file} "
         "--files {input.files} "
 
+
 checkpoint build_pars_blinding:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'raw_blinding_cal'),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, 'raw_blinding_cal'),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw_blinding_cal"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw_blinding_cal"),
     output:
         get_pattern_par_raw(setup, name="blinding_cal"),
         get_pattern_plts(setup, "raw", name="blinding_cal"),
