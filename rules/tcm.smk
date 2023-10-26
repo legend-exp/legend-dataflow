@@ -2,6 +2,7 @@
 Snakemake file containing the rules for generating the tcm
 """
 
+
 # This rule builds the tcm files each raw file
 rule build_tier_tcm:
     input:

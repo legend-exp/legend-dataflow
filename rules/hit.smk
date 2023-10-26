@@ -11,7 +11,11 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 rule build_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
-        ctc_dict=ancient(lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "dsp")),
+        ctc_dict=ancient(
+            lambda wildcards: ds.pars_catalog.get_par_file(
+                setup, wildcards.timestamp, "dsp"
+            )
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -90,9 +94,9 @@ rule build_aoe_calibration:
 
 checkpoint build_pars_hit:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'hit'),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, 'hit'),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'hit_results'),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_results"),
     output:
         get_pattern_par_hit(setup),
         get_pattern_par_hit(setup, name="results", extension="dir"),
@@ -105,11 +109,16 @@ checkpoint build_pars_hit:
         "--input {input} "
         "--output {output} "
 
+
 rule build_hit:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
-        pars_file= lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "hit"),
-        blind_check_file= lambda wildcards : ds.pars_catalog.get_par_file(setup, wildcards.timestamp, "raw")
+        pars_file=lambda wildcards: ds.pars_catalog.get_par_file(
+            setup, wildcards.timestamp, "hit"
+        ),
+        blind_check_file=lambda wildcards: ds.pars_catalog.get_par_file(
+            setup, wildcards.timestamp, "raw"
+        ),
     output:
         tier_file=get_pattern_tier_hit(setup),
         db_file=get_pattern_pars_tmp(setup, "hit_db"),

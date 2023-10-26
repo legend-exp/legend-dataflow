@@ -32,8 +32,8 @@ rule build_blinding_check:
         datatype="cal",
         channel="{channel}",
     output:
-        check_file = temp(get_pattern_pars_tmp_channel(setup, "raw")),
-        plot_file = temp(get_pattern_plts_tmp_channel(setup, "raw")),
+        check_file=temp(get_pattern_pars_tmp_channel(setup, "raw")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw")),
     log:
         get_pattern_log_channel(setup, "pars_hit_blind_check"),
     group:
@@ -56,8 +56,8 @@ rule build_blinding_check:
 
 checkpoint build_pars_raw:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, 'raw'),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, 'raw'),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw"),
     output:
         get_pattern_par_raw(setup),
         get_pattern_plts(setup, "raw"),
