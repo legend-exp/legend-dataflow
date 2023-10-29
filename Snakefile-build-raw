@@ -7,28 +7,42 @@ to the blinded raw data. It handles:
 """
 
 import pathlib, os, json, sys
-import scripts.util.patterns as pat
+from scripts.util.patterns import *
 from datetime import datetime
-import scripts.util.utils as ut
+from scripts.util.utils import  (
+    filelist_path, 
+    tmp_par_path, 
+    pars_path, 
+    tmp_log_path, 
+    subst_vars_in_snakemake_config,
+    config_path,
+    chan_map_path,
+    log_path,
+    runcmd
+    )
 from scripts.util.pars_loading import pars_catalog
+
+
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
 
-ut.subst_vars_in_snakemake_config(workflow, config)
+subst_vars_in_snakemake_config(workflow, config)
 
 setup = config["setups"]["l200"]
-configs = ut.config_path(setup)
-chan_maps = ut.chan_map_path(setup)
-swenv = ut.runcmd(setup)
+configs = config_path(setup)
+chan_maps = chan_map_path(setup)
+swenv = runcmd(setup)
 
 basedir = workflow.basedir
 
+include: "rules/common.smk"
+include: "rules/main.smk"
+include: "rules/raw.smk"
 
 localrules:
     gen_filelist,
     autogen_output,
-
 
 onstart:
     print("Starting workflow")
@@ -40,175 +54,14 @@ onsuccess:
     shell(f"rm {ut.filelist_path(setup)}/* || true")
 
 
-def get_pattern(tier):
-    """
-    This func gets the search pattern for the relevant tier passed.
-    """
-    if tier == "daq":
-        return pat.get_pattern_unsorted_data(setup)
-    elif tier == "raw":
-        return pat.get_pattern_tier_daq(setup)
-    else:
-        return pat.get_pattern_tier_raw(setup)
-
-
-checkpoint gen_filelist:
-    """
-    This rule generates the filelist. It is a checkpoint so when it is run it will update
-    the dag passed on the files it finds as an output. It does this by taking in the search
-    pattern, using this to find all the files that match this pattern, deriving the keys from
-    the files found and generating the list of new files needed.
-    """
-    output:
-        os.path.join(ut.filelist_path(setup), "{label}-{tier}.{extension}list"),
-    params:
-        setup=lambda wildcards: setup,
-        search_pattern=lambda wildcards: get_pattern(wildcards.tier),
-        basedir=basedir,
-        configs=configs,
-        chan_maps=chan_maps,
-        blinding=True,
-    script:
-        "scripts/create_filelist.py"
-
-
-def read_filelist(wildcards):
-    """
-    This func calls gen_filelist to get a filelist and returns the files in the filelist as a list
-    """
-    with checkpoints.gen_filelist.get(
-        label=wildcards.label, tier=wildcards.tier, extension="file"
-    ).output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-rule autogen_output:
-    """
-    This is the main rule for running the data production,
-    it is specified with:
-    all-(experiment)-(period)-(run)-(dataype)-(timestamp)-'tier'.gen
-    It will run the complete run script which collects all warnings
-    and errors in log files into a final summary file. Also runs the file_db
-    generation on new files as well as generating the json file with channels
-    and fields in each file.
-    """
-    input:
-        filelist=read_filelist,
-    output:
-        gen_output="{label}-{tier}.gen",
-        summary_log=f"{pat.log_path(setup)}/summary-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-        warning_log=f"{pat.log_path(setup)}/warning-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-    params:
-        log_path=pat.tmp_log_path(setup),
-        tmp_par_path=os.path.join(ut.tmp_par_path(setup), "*_db.json"),
-        valid_keys_path=os.path.join(ut.pars_path(setup), "valid_keys"),
-        filedb_path=os.path.join(ut.pars_path(setup), "filedb"),
-        setup=lambda wildcards: setup,
-        basedir=basedir,
-    script:
-        "scripts/complete_run.py"
-
-
 rule sort_data:
     """
     This rules moves the daq data from the unsorted sandbox dir
     to the sorted dirs under generated
     """
     input:
-        pat.get_pattern_unsorted_data(setup),
+        get_pattern_unsorted_data(setup),
     output:
-        pat.get_pattern_tier_daq(setup),
+        get_pattern_tier_daq(setup),
     shell:
         "mv {input} {output}"
-
-
-rule build_raw:
-    """
-    This rule runs build raw, it takes in a daq file and outputs a raw file
-    """
-    input:
-        pat.get_pattern_tier_daq(setup),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-    output:
-        pat.get_pattern_tier_raw(setup),
-    log:
-        pat.get_pattern_log(setup, "tier_raw"),
-    group:
-        "tier-raw"
-    resources:
-        mem_swap=110,
-        runtime=300,
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py "
-        "--log {log} "
-        "--configs {configs} "
-        "--chan_maps {chan_maps} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "{input} {output}"
-
-
-def get_blinding_curve_file(wildcards):
-    """func to get the blinding calibration curves from the overrides"""
-    par_files = pars_catalog.get_calib_files(
-        Path(pat.par_overwrite_path(setup)) / "raw" / "validity.jsonl",
-        wildcards.timestamp,
-    )
-    if isinstance(par_files, str):
-        return str(Path(pat.par_overwrite_path(setup)) / "raw" / par_files)
-    else:
-        return [
-            str(Path(pat.par_overwrite_path(setup)) / "raw" / par_file)
-            for par_file in par_files
-        ]
-
-
-def get_blinding_check_file(wildcards):
-    """func to get the right blinding check file"""
-    par_files = pars_catalog.get_calib_files(
-        Path(pat.par_raw_path(setup)) / "validity.jsonl", wildcards.timestamp
-    )
-    if isinstance(par_files, str):
-        return str(Path(pat.par_raw_path(setup)) / par_files)
-    else:
-        return [str(Path(pat.par_raw_path(setup)) / par_file) for par_file in par_files]
-
-
-rule build_raw_blind:
-    """
-    This rule runs the data blinding, it takes in the raw file, calibration curve stored in the overrides
-    and runs only if the blinding check file is on disk. Output is just the blinded raw file.
-    """
-    input:
-        tier_file=pat.get_pattern_tier_raw(setup).replace("{datatype}", "phy"),
-        blind_file=get_blinding_curve_file,
-        check_file=get_blinding_check_file,
-    params:
-        timestamp="{timestamp}",
-        datatype="phy",
-    output:
-        pat.get_pattern_tier_raw_blind(setup),
-    log:
-        pat.get_pattern_log(setup, "tier_raw_blind").replace("{datatype}", "phy"),
-    group:
-        "tier-raw"
-    resources:
-        mem_swap=110,
-        runtime=300,
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw_blind.py "
-        "--log {log} "
-        "--configs {configs} "
-        "--chan_maps {chan_maps} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--blind_curve {input.blind_file} "
-        "{input.tier_file} "
-        "{output}"

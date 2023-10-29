@@ -40,6 +40,8 @@ swenv = runcmd(setup)
 part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
+include: "rules/common.smk"
+include: "rules/main.smk"
 
 localrules:
     gen_filelist,
@@ -53,8 +55,6 @@ ds.pars_key_resolve.write_par_catalog(
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
-
-include: "rules/common.smk"
 include: "rules/dsp.smk"
 include: "rules/hit.smk"
 include: "rules/pht.smk"
@@ -103,50 +103,3 @@ onsuccess:
 # Placeholder, can email or maybe put message in slack
 onerror:
     print("An error occurred :( ")
-
-
-checkpoint gen_filelist:
-    output:
-        os.path.join(filelist_path(setup), "{label}-{tier}.{extension}list"),
-    params:
-        setup=lambda wildcards: setup,
-        search_pattern=lambda wildcards: get_pattern_tier_raw(setup),
-        basedir=basedir,
-        configs=configs,
-        chan_maps=chan_maps,
-        blinding=False,
-    script:
-        "scripts/create_{wildcards.extension}list.py"
-
-
-rule gen_fileDB_config:
-    output:
-        "fdb_config.json",
-    script:
-        "scripts/gen_fiileDB_config.py"
-
-
-# Create "{label}-{tier}.gen", based on "{label}.keylist" via
-# "{label}-{tier}.filelist". Will implicitly trigger creation of all files
-# in "{label}-{tier}.filelist".
-# Example: "all[-{detector}[-{measurement}[-{run}[-{timestamp}]]]]-{tier}.gen":
-rule autogen_output:
-    input:
-        filelist=read_filelist,
-    output:
-        gen_output="{label}-{tier}.gen",
-        summary_log=f"{log_path(setup)}/summary-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-        warning_log=f"{log_path(setup)}/warning-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-    params:
-        log_path=tmp_log_path(setup),
-        tmp_par_path=os.path.join(tmp_par_path(setup), "*_db.json"),
-        valid_keys_path=os.path.join(pars_path(setup), "valid_keys"),
-        filedb_path=os.path.join(pars_path(setup), "filedb"),
-        setup=lambda wildcards: setup,
-        basedir=basedir,
-    script:
-        "scripts/complete_run.py"

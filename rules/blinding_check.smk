@@ -5,20 +5,6 @@ Snakemake rules for checking blinding. Two steps:
 """
 
 
-def get_blinding_curve(wildcards):
-    # func to load in blinding curves
-    par_files = ds.pars_catalog.get_calib_files(
-        Path(par_overwrite_path(setup)) / "raw" / "validity.jsonl", wildcards.timestamp
-    )
-    if isinstance(par_files, str):
-        return str(Path(par_overwrite_path(setup)) / "raw" / par_files)
-    else:
-        return [
-            str(Path(par_overwrite_path(setup)) / "raw" / par_file)
-            for par_file in par_files
-        ]
-
-
 rule build_blinding_check:
     """
     Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
@@ -26,7 +12,7 @@ rule build_blinding_check:
     """
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
-        par_file=get_blinding_curve,
+        par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
