@@ -1,3 +1,11 @@
+from scripts.util.patterns import (
+    get_pattern_tier_daq,
+    get_pattern_tier_raw,
+    get_pattern_log,
+    get_pattern_tier_raw_blind
+    )
+
+
 rule build_raw:
     """
     This rule runs build raw, it takes in a daq file and outputs a raw file
@@ -49,7 +57,7 @@ rule build_raw_blind:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-       f"{workflow.source_path('../scripts/raw_blind.py')} "
+        f"{workflow.source_path('../scripts/build_raw_blind.py')} "
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "

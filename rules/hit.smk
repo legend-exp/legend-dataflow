@@ -6,13 +6,25 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
+from scripts.util.pars_loading import pars_catalog
+from scripts.util.patterns import (
+    get_pattern_pars_tmp_channel,
+    get_pattern_plts_tmp_channel,
+    get_pattern_log_channel, 
+    get_pattern_par_hit,
+    get_pattern_plts,
+    get_pattern_tier_dsp,
+    get_pattern_tier_hit,
+    get_pattern_pars_tmp,
+    get_pattern_log
+    )
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
         ctc_dict=ancient(
-            lambda wildcards: ds.pars_catalog.get_par_file(
+            lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),
@@ -113,10 +125,10 @@ checkpoint build_pars_hit:
 rule build_hit:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
-        pars_file=lambda wildcards: ds.pars_catalog.get_par_file(
+        pars_file=lambda wildcards: pars_catalog.get_par_file(
             setup, wildcards.timestamp, "hit"
         ),
-        blind_check_file=lambda wildcards: ds.pars_catalog.get_par_file(
+        blind_check_file=lambda wildcards: pars_catalog.get_par_file(
             setup, wildcards.timestamp, "raw"
         ),
     output:

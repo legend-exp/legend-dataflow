@@ -7,18 +7,16 @@ to the blinded raw data. It handles:
 """
 
 import pathlib, os, json, sys
-from scripts.util.patterns import *
-from datetime import datetime
+from scripts.util.patterns import (
+    get_pattern_unsorted_data,
+    get_pattern_tier_daq,
+    )
 from scripts.util.utils import  (
-    filelist_path, 
-    tmp_par_path, 
-    pars_path, 
-    tmp_log_path, 
     subst_vars_in_snakemake_config,
+    runcmd,
     config_path,
     chan_map_path,
-    log_path,
-    runcmd
+    filelist_path,
     )
 from scripts.util.pars_loading import pars_catalog
 
@@ -51,8 +49,7 @@ onstart:
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
-    shell(f"rm {ut.filelist_path(setup)}/* || true")
-
+    shell(f"rm {filelist_path(setup)}/* || true")
 
 rule sort_data:
     """

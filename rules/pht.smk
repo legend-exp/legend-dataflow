@@ -6,13 +6,29 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 - running build hit over all channels using par file
 """
 
+from scripts.util.pars_loading import pars_catalog
+from scripts.util.utils import (
+    filelist_path,
+    par_pht_path
+    )
+from scripts.util.patterns import (
+    get_pattern_pars_tmp_channel,
+    get_pattern_plts_tmp_channel,
+    get_pattern_log_channel, 
+    get_pattern_par_pht,
+    get_pattern_plts,
+    get_pattern_tier_dsp,
+    get_pattern_tier_pht,
+    get_pattern_pars_tmp,
+    get_pattern_log,
+    )
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_per_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
         ctc_dict=ancient(
-            lambda wildcards: ds.pars_catalog.get_par_file(
+            lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),
@@ -71,7 +87,7 @@ rule build_pht:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
         #hit_file = get_pattern_tier_hit(setup),
-        pars_file=lambda wildcards: ds.pars_catalog.get_par_file(
+        pars_file=lambda wildcards: pars_catalog.get_par_file(
             setup, wildcards.timestamp, "pht"
         ),
     output:

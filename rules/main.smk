@@ -1,3 +1,13 @@
+import os
+from datetime import datetime
+from scripts.util.utils import (
+    filelist_path,
+    log_path,
+    tmp_par_path,
+    pars_path,
+    tmp_log_path
+)
+
 checkpoint gen_filelist:
     """
     This rule generates the filelist. It is a checkpoint so when it is run it will update
@@ -13,17 +23,9 @@ checkpoint gen_filelist:
         basedir=basedir,
         configs=configs,
         chan_maps=chan_maps,
-        blinding=lambda wildcards: True if wildcards.tier == "raw" else false, 
+        blinding=lambda wildcards: True if wildcards.tier == "raw" else False, 
     script:
-        f"{workflow.source_path('../scripts/create_{wildcards.extension}list.py')}"
-
-
-rule gen_fileDB_config:
-    output:
-        "fdb_config.json",
-    script:
-        f"{workflow.source_path('../scripts/gen_fiileDB_config.py')}"
-
+        "../scripts/create_{wildcards.extension}list.py"
 
 # Create "{label}-{tier}.gen", based on "{label}.keylist" via
 # "{label}-{tier}.filelist". Will implicitly trigger creation of all files
@@ -57,4 +59,4 @@ rule autogen_output:
         setup=lambda wildcards: setup,
         basedir=basedir,
     script:
-        f"{workflow.source_path('../scripts/complete_run.py')} "
+        '../scripts/complete_run.py'

@@ -13,17 +13,15 @@ This includes:
 import pathlib, os, json, sys
 import scripts.util as ds
 from scripts.util.pars_loading import pars_catalog
-from scripts.util.patterns import *
-from scripts.util.utils import (
+from scripts.util.patterns import get_pattern_tier_raw
+from scripts.util.utils import  (
     subst_vars_in_snakemake_config,
+    runcmd,
     config_path,
     chan_map_path,
-    pars_path,
     filelist_path,
-    log_path,
     metadata_path,
-    runcmd,
-)
+    )
 from datetime import datetime
 from collections import OrderedDict
 
