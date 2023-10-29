@@ -14,14 +14,14 @@ import pathlib, os, json, sys
 import scripts.util as ds
 from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import get_pattern_tier_raw
-from scripts.util.utils import  (
+from scripts.util.utils import (
     subst_vars_in_snakemake_config,
     runcmd,
     config_path,
     chan_map_path,
     filelist_path,
     metadata_path,
-    )
+)
 from datetime import datetime
 from collections import OrderedDict
 
@@ -38,8 +38,10 @@ swenv = runcmd(setup)
 part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
+
 include: "rules/common.smk"
 include: "rules/main.smk"
+
 
 localrules:
     gen_filelist,
@@ -52,6 +54,7 @@ ds.pars_key_resolve.write_par_catalog(
     get_pattern_tier_raw(setup),
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
+
 
 include: "rules/dsp.smk"
 include: "rules/hit.smk"

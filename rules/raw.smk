@@ -2,8 +2,8 @@ from scripts.util.patterns import (
     get_pattern_tier_daq,
     get_pattern_tier_raw,
     get_pattern_log,
-    get_pattern_tier_raw_blind
-    )
+    get_pattern_tier_raw_blind,
+)
 
 
 rule build_raw:
@@ -33,6 +33,7 @@ rule build_raw:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "{input} {output}"
+
 
 rule build_raw_blind:
     """

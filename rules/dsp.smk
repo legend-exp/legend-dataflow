@@ -9,15 +9,16 @@ from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
-    get_pattern_log_channel, 
+    get_pattern_log_channel,
     get_pattern_par_dsp,
     get_pattern_plts,
     get_pattern_tier_raw,
     get_pattern_tier_tcm,
     get_pattern_tier_dsp,
     get_pattern_pars_tmp,
-    get_pattern_log
-    )
+    get_pattern_log,
+)
+
 
 rule build_pars_dsp_tau:
     input:

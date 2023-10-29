@@ -10,14 +10,15 @@ from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
-    get_pattern_log_channel, 
+    get_pattern_log_channel,
     get_pattern_par_hit,
     get_pattern_plts,
     get_pattern_tier_dsp,
     get_pattern_tier_hit,
     get_pattern_pars_tmp,
-    get_pattern_log
-    )
+    get_pattern_log,
+)
+
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:

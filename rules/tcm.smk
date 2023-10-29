@@ -5,8 +5,9 @@ Snakemake file containing the rules for generating the tcm
 from scripts.util.patterns import (
     get_pattern_tier_raw,
     get_pattern_tier_tcm,
-    get_pattern_log
-    )
+    get_pattern_log,
+)
+
 
 # This rule builds the tcm files each raw file
 rule build_tier_tcm:
