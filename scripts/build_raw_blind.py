@@ -45,8 +45,12 @@ all_channels = lh5.ls(args.input)
 
 # list of Ge channels and SiPM channels with associated metadata
 legendmetadata = LegendMetadata()
-ged_channels = legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
-spms_channels = legendmetadata.channelmap(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
+ged_channels = (
+    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
+)
+spms_channels = (
+    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
+)
 
 store = lh5.LH5Store()
 
@@ -55,9 +59,8 @@ toblind = np.array([])
 
 # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
 for chnum in list(ged_channels):
-
     # skip Ge detectors that are anti-coincidence only
-    if ged_channels[chnum]["analysis"]["usability"] == 'ac':
+    if ged_channels[chnum]["analysis"]["usability"] == "ac":
         continue
 
     # load in just the daqenergy for now
@@ -73,7 +76,7 @@ for chnum in list(ged_channels):
     )
 
     # figure out which event indices should be blinded
-    toblind = np.append(toblind, np.nonzero(np.abs(np.asarray(daqenergy_cal) - Qbb) <= ROI)[0])  
+    toblind = np.append(toblind, np.nonzero(np.abs(np.asarray(daqenergy_cal) - Qbb) <= ROI)[0])
 
 # remove duplicates
 toblind = np.unique(toblind)
@@ -90,19 +93,23 @@ for channel in all_channels:
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
         chobj, _ = store.read_object(channel, args.input)
-        store.write_object(chobj, channel, lh5_file=args.output, wo_mode='overwrite')
+        store.write_object(chobj, channel, lh5_file=args.output, wo_mode="overwrite")
         continue
-    
+
     if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
         # if this is a PMT or not included for some reason, just copy it to the output file
-        chobj, _ = store.read_object(channel+'/raw', args.input)
-        store.write_object(chobj, group=channel, name='raw', lh5_file=args.output, wo_mode='overwrite')
+        chobj, _ = store.read_object(channel + "/raw", args.input)
+        store.write_object(
+            chobj, group=channel, name="raw", lh5_file=args.output, wo_mode="overwrite"
+        )
         continue
 
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _  = store.read_object(channel+'/raw', args.input, idx=tokeep)
+    blinded_chobj, _ = store.read_object(channel + "/raw", args.input, idx=tokeep)
 
     # now write the blinded data for this channel
-    store.write_object(blinded_chobj, group=channel, name='raw', lh5_file=args.output, wo_mode='overwrite')
+    store.write_object(
+        blinded_chobj, group=channel, name="raw", lh5_file=args.output, wo_mode="overwrite"
+    )
