@@ -1,20 +1,112 @@
+from __future__ import annotations
+
 import argparse
 import json
 import logging
 import os
 import pathlib
 import pickle as pkl
+from typing import Callable
 
 import numpy as np
+import pandas as pd
 from legendmeta import LegendMetadata
 from pygama.pargen.AoE_cal import *  # noqa: F403
-from pygama.pargen.AoE_cal import aoe_calibration, pol1, sigma_fit, standard_aoe
+from pygama.pargen.AoE_cal import cal_aoe, pol1, sigma_fit, standard_aoe
 from pygama.pargen.ecal_th import *  # noqa: F403
-from pygama.pargen.ecal_th import partition_energy_cal_th
+from pygama.pargen.ecal_th import high_stats_fitting
+from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
+
+log = logging.getLogger(__name__)
+
+
+def partition_energy_cal_th(
+    data: pd.Datframe,
+    energy_params: list[str],
+    selection_string: str = "",
+    threshold: int = 0,
+    p_val: float = 0,
+    plot_options: dict | None = None,
+    simplex: bool = True,
+    tail_weight: int = 20,
+) -> tuple(dict, dict, dict, dict):
+    results_dict = {}
+    plot_dict = {}
+    full_object_dict = {}
+    for energy_param in energy_params:
+        full_object_dict[energy_param] = high_stats_fitting(
+            energy_param,
+            selection_string,
+            threshold,
+            p_val,
+            plot_options,
+            simplex,
+            tail_weight,
+        )
+        full_object_dict[energy_param].fit_peaks(data)
+        results_dict[energy_param] = full_object_dict[energy_param].get_results_dict(data)
+        if full_object_dict[energy_param].results:
+            plot_dict[energy_param] = full_object_dict[energy_param].fill_plot_dict(data).copy()
+
+    log.info("Finished all calibrations")
+    return results_dict, plot_dict, full_object_dict
+
+
+def aoe_calibration(
+    data: pd.Dataframe,
+    cal_dicts: dict,
+    current_param: str,
+    energy_param: str,
+    cal_energy_param: str,
+    eres_func: Callable,
+    pdf: Callable = standard_aoe,
+    selection_string: str = "",
+    dt_corr: bool = False,
+    dep_correct: bool = False,
+    dt_cut: dict | None = None,
+    high_cut_val: int = 3,
+    mean_func: Callable = pol1,
+    sigma_func: Callable = sigma_fit,
+    dep_acc: float = 0.9,
+    dt_param: str = "dt_eff",
+    comptBands_width: int = 20,
+    plot_options: dict | None = None,
+):
+    data["AoE_Uncorr"] = data[current_param] / data[energy_param]
+    aoe = cal_aoe(
+        cal_dicts,
+        cal_energy_param,
+        eres_func,
+        pdf,
+        selection_string,
+        dt_corr,
+        dep_acc,
+        dep_correct,
+        dt_cut,
+        dt_param,
+        high_cut_val,
+        mean_func,
+        sigma_func,
+        comptBands_width,
+        plot_options if plot_options is not None else {},
+    )
+    aoe.update_cal_dicts(
+        {
+            "AoE_Uncorr": {
+                "expression": f"{current_param}/{energy_param}",
+                "parameters": {},
+            }
+        }
+    )
+    aoe.calibrate(data, "AoE_Uncorr")
+    log.info("Calibrated A/E")
+    return cal_dicts, aoe.get_results_dict(), aoe.fill_plot_dict(data), aoe
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=True)
 argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
 argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
 argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
@@ -144,9 +236,48 @@ for filelist in all_file:
     timestamp = fk.timestamp
     final_dict[timestamp] = sorted(filelist)
 
+params = [
+    kwarg_dict["final_cut_field"],
+    aoe_options["current_param"],
+    "tp_0_est",
+    "tp_99",
+    aoe_options["energy_param"],
+    aoe_options["cal_energy_param"],
+    "timestamp",
+]
+if "dt_param" in aoe_options:
+    params += [aoe_options["dt_param"]]
+params += ecal_options["energy_params"]
+
+# load data in
+data, threshold_mask = load_data(
+    final_dict,
+    f"{args.channel}/dsp",
+    cal_dict,
+    params=params,
+    threshold=kwarg_dict["threshold"],
+    return_selection_mask=True,
+)
+
+# get pulser mask from tcm files
+if isinstance(args.tcm_filelist, list):
+    tcm_files = []
+    for file in args.tcm_filelist:
+        with open(file) as f:
+            tcm_files += f.read().splitlines()
+else:
+    with open(args.tcm_filelist) as f:
+        tcm_files = f.read().splitlines()
+
+tcm_files = sorted(np.unique(tcm_files))
+ids, mask = get_tcm_pulser_ids(
+    tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+)
+data["is_pulser"] = mask[threshold_mask]
+
 # run energy supercal
 ecal_results, ecal_plots, ecal_obj = partition_energy_cal_th(
-    final_dict, lh5_path=f"{args.channel}/dsp", hit_dict=cal_dict, **ecal_options
+    data, selection_string=f"{kwarg_dict['final_cut_field']}&(~is_pulser)", **ecal_options
 )
 
 # run aoe cal
@@ -167,7 +298,7 @@ if aoe_options.pop("run_aoe") is True:
         eres = ecal_results[aoe_options["cal_energy_param"]]["eres_linear"].copy()
 
         def eres_func(x):
-            return eval(eres["expression"], local_dict=dict(x=x, **eres["parameters"]))
+            return eval(eres["expression"], dict(x=x, **eres["parameters"]))
 
         if np.isnan(eres_func(2000)):
             raise RuntimeError
@@ -178,7 +309,7 @@ if aoe_options.pop("run_aoe") is True:
             ].copy()
 
             def eres_func(x):
-                return eval(eres["expression"], local_dict=dict(x=x, **eres["parameters"]))
+                return eval(eres["expression"], dict(x=x, **eres["parameters"]))
 
         except KeyError:
 
@@ -186,8 +317,8 @@ if aoe_options.pop("run_aoe") is True:
                 return x * np.nan
 
     cal_dict, out_dict, plot_dict, aoe_obj = aoe_calibration(
-        final_dict,
-        lh5_path=f"{args.channel}/dsp",
+        data,
+        selection_string=f"{kwarg_dict['final_cut_field']}&(~is_pulser)",
         cal_dicts=cal_dict,
         eres_func=eres_func,
         pdf=pdf,
@@ -233,10 +364,10 @@ if args.plot_file:
         if args.inplots:
             fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.plot_file))
             out_plot_dict = inplots_dict[fk.timestamp]
-            out_plot_dict.update(plot_dict)
+            out_plot_dict.update({"aoe": plot_dict})
             out_plot_dict.update({"partition_ecal": ecal_plots})
         else:
-            out_plot_dict = plot_dict
+            out_plot_dict = {"aoe": plot_dict}
         pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_file, "wb") as w:
             pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
