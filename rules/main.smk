@@ -5,27 +5,9 @@ from scripts.util.utils import (
     log_path,
     tmp_par_path,
     pars_path,
-    tmp_log_path
+    tmp_log_path,
 )
 
-checkpoint gen_filelist:
-    """
-    This rule generates the filelist. It is a checkpoint so when it is run it will update
-    the dag passed on the files it finds as an output. It does this by taking in the search
-    pattern, using this to find all the files that match this pattern, deriving the keys from
-    the files found and generating the list of new files needed.
-    """
-    output:
-        os.path.join(filelist_path(setup), "{label}-{tier}.{extension}list"),
-    params:
-        setup=lambda wildcards: setup,
-        search_pattern=lambda wildcards: get_pattern(wildcards.tier),
-        basedir=basedir,
-        configs=configs,
-        chan_maps=chan_maps,
-        blinding=lambda wildcards: True if wildcards.tier == "raw" else False, 
-    script:
-        "../scripts/create_{wildcards.extension}list.py"
 
 # Create "{label}-{tier}.gen", based on "{label}.keylist" via
 # "{label}-{tier}.filelist". Will implicitly trigger creation of all files
@@ -59,4 +41,4 @@ rule autogen_output:
         setup=lambda wildcards: setup,
         basedir=basedir,
     script:
-        '../scripts/complete_run.py'
+        "../scripts/complete_run.py"

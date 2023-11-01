@@ -7,26 +7,27 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 """
 
 from scripts.util.pars_loading import pars_catalog
-from scripts.util.utils import (
-    filelist_path,
-    par_pht_path
-    )
+from scripts.util.utils import filelist_path, par_pht_path
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
-    get_pattern_log_channel, 
+    get_pattern_log_channel,
     get_pattern_par_pht,
     get_pattern_plts,
     get_pattern_tier_dsp,
     get_pattern_tier_pht,
     get_pattern_pars_tmp,
     get_pattern_log,
-    )
+)
+
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_per_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        ),
         ctc_dict=ancient(
             lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
@@ -62,6 +63,7 @@ rule build_per_energy_calibration:
         "--results_path {output.results_file} "
         "--save_path {output.ecal_file} "
         "--ctc_dict {input.ctc_dict} "
+        "--tcm_filelist {input.tcm_filelist} "
         "--files {input.files}"
 
 
@@ -132,6 +134,7 @@ for key, dataset in part.datasets.items():
         rule:
             input:
                 files=part.get_filelists(partition, key, "dsp"),
+                tcm_files=part.get_filelists(partition, key, "tcm"),
                 ecal_file=part.get_par_files(
                     f"{par_pht_path(setup)}/validity.jsonl",
                     partition,
@@ -205,7 +208,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{workflow.source_path('../scripts/pars_pht.py')} "
+                f"{basedir}/../scripts/pars_pht.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -217,6 +220,7 @@ for key, dataset in part.datasets.items():
                 "--hit_pars {output.hit_pars} "
                 "--plot_file {output.plot_file} "
                 "--ecal_file {input.ecal_file} "
+                "--tcm_filelist {input.tcm_files} "
                 "--input_files {input.files}"
 
         # fix_name(f"{key}-{partition}")
@@ -233,6 +237,9 @@ rule build_pht_super_calibrations:
     input:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+        ),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
@@ -258,7 +265,7 @@ rule build_pht_super_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_pht.py')} "
+        f"{basedir}/./scripts/pars_pht.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -270,6 +277,7 @@ rule build_pht_super_calibrations:
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
         "--ecal_file {input.ecal_file} "
+        "--tcm_filelist {input.tcm_filelist} "
         "--input_files {input.files}"
 
 

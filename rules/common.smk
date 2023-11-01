@@ -3,12 +3,13 @@ Helper functions for running data production
 """
 import pathlib, os
 from scripts.util.patterns import (
-    par_overwrite_path, 
+    par_overwrite_path,
     par_raw_path,
     get_pattern_unsorted_data,
     get_pattern_tier_daq,
-    get_pattern_tier_raw
+    get_pattern_tier_raw,
 )
+
 
 def read_filelist(wildcards):
     with checkpoints.gen_filelist.get(
@@ -51,6 +52,7 @@ def read_filelist_plts_cal_channel(wildcards, tier):
         files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
         return files
 
+
 def get_blinding_curve_file(wildcards):
     """func to get the blinding calibration curves from the overrides"""
     par_files = pars_catalog.get_calib_files(
@@ -65,6 +67,7 @@ def get_blinding_curve_file(wildcards):
             for par_file in par_files
         ]
 
+
 def get_blinding_check_file(wildcards):
     """func to get the right blinding check file"""
     par_files = pars_catalog.get_calib_files(
@@ -74,6 +77,7 @@ def get_blinding_check_file(wildcards):
         return str(Path(par_raw_path(setup)) / par_files)
     else:
         return [str(Path(par_raw_path(setup)) / par_file) for par_file in par_files]
+
 
 def get_pattern(tier):
     """

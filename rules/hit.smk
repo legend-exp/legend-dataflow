@@ -10,19 +10,23 @@ from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
-    get_pattern_log_channel, 
+    get_pattern_log_channel,
     get_pattern_par_hit,
     get_pattern_plts,
     get_pattern_tier_dsp,
     get_pattern_tier_hit,
     get_pattern_pars_tmp,
-    get_pattern_log
-    )
+    get_pattern_log,
+)
+
 
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        ),
         ctc_dict=ancient(
             lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
@@ -58,6 +62,7 @@ rule build_energy_calibration:
         "--results_path {output.results_file} "
         "--save_path {output.ecal_file} "
         "--ctc_dict {input.ctc_dict} "
+        "--tcm_filelist {input.tcm_filelist} "
         "--files {input.files}"
 
 
@@ -66,6 +71,9 @@ rule build_aoe_calibration:
     input:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+        ),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
@@ -101,7 +109,9 @@ rule build_aoe_calibration:
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} {input.files}"
+        "--tcm_filelist {input.tcm_filelist} "
+        "--ecal_file {input.ecal_file} "
+        "{input.files}"
 
 
 checkpoint build_pars_hit:
