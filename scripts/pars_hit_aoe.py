@@ -11,6 +11,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import cal_aoe, pol1, sigma_fit, standard_aoe
 from pygama.pargen.utils import get_tcm_pulser_ids, load_data
@@ -102,8 +103,7 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
     "pars_hit_aoecal"
 ]["inputs"]["aoecal_config"][args.channel]
 
-with open(channel_dict) as r:
-    kwarg_dict = json.load(r)
+kwarg_dict = Props.read_from(channel_dict)
 
 with open(args.ecal_file) as o:
     ecal_dict = json.load(o)
@@ -208,8 +208,10 @@ if args.plot_file:
     else:
         out_plot_dict = {"aoe": plot_dict}
 
-    if "common" in list(plot_dict) and common_dict is not None:
-        plot_dict("common").update(common_dict)
+    if "common" in list(out_plot_dict) and common_dict is not None:
+        out_plot_dict["common"].update(common_dict)
+    elif common_dict is not None:
+        out_plot_dict["common"] = common_dict
 
     pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
     with open(args.plot_file, "wb") as w:

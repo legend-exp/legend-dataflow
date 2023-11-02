@@ -9,6 +9,7 @@ import lgdo.lh5_store as lh5
 import numpy as np
 from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 from pygama.pargen.extract_tau import dsp_preprocess_decay_const
 from pygama.pargen.utils import get_tcm_pulser_ids
 
@@ -44,8 +45,7 @@ channel_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["process
 ]
 kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_config"][args.channel]
 
-with open(kwarg_dict) as r:
-    kwarg_dict = json.load(r)
+kwarg_dict = Props.read_from(kwarg_dict)
 
 if kwarg_dict["run_tau"] is True:
     kwarg_dict.pop("run_tau")

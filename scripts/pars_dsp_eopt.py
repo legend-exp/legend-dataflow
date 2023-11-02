@@ -62,11 +62,8 @@ dsp_config = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["processing_c
 ]
 opt_json = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["optimiser_config"][args.channel]
 
-with open(opt_json) as r:
-    opt_dict = json.load(r)
-
-with open(args.decay_const) as t:
-    db_dict = json.load(t)
+opt_dict = Props.read_from(opt_json)
+db_dict = Props.read_from(args.decay_const)
 
 if opt_dict["run_eopt"] is True:
     with open(args.raw_filelist) as f:

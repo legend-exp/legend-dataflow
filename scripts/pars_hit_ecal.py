@@ -198,11 +198,7 @@ if __name__ == "__main__":
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-    if isinstance(args.ctc_dict, list):
-        database_dic = Props.read_from(args.ctc_dict)
-    else:
-        with open(args.ctc_dict) as f:
-            database_dic = json.load(f)
+    database_dic = Props.read_from(args.ctc_dict)
 
     hit_dict = database_dic[args.channel]["ctc_params"]
 
@@ -212,8 +208,7 @@ if __name__ == "__main__":
         "pars_hit_ecal"
     ]["inputs"]["ecal_config"][args.channel]
 
-    with open(channel_dict) as r:
-        kwarg_dict = json.load(r)
+    kwarg_dict = Props.read_from(channel_dict)
 
     # convert plot functions from strings to functions and split off baseline and common plots
     for field, item in kwarg_dict["plot_options"].items():
@@ -235,7 +230,7 @@ if __name__ == "__main__":
     # get pulser mask from tcm files
     with open(args.tcm_filelist) as f:
         tcm_files = f.read().splitlines()
-    tcm_files = sorted(tcm_files)
+    tcm_files = sorted(np.unique(tcm_files))
     ids, mask = get_tcm_pulser_ids(
         tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
