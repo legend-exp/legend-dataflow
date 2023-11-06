@@ -59,8 +59,8 @@ toblind = np.array([])
 
 # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
 for chnum in list(ged_channels):
-    # skip Ge detectors that are anti-coincidence only
-    if ged_channels[chnum]["analysis"]["usability"] == "ac":
+    # skip Ge detectors that are anti-coincidence only or not able to be blinded for some other reason
+    if ged_channels[chnum]["analysis"]["is_blinded"]:
         continue
 
     # load in just the daqenergy for now
@@ -87,20 +87,25 @@ allind = np.arange(len(daqenergy))
 # gets events that should not be blinded
 tokeep = allind[np.logical_not(np.isin(allind, toblind))]
 
+# make some temp file to write the output to before renaming it
+rng = np.random.default_rng()
+rand_num = f"{rng.integers(0,99999):05d}"
+temp_output = f"{args.output}.{rand_num}"
+
 for channel in all_channels:
     try:
         chnum = int(channel[2::])
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
         chobj, _ = store.read_object(channel, args.input)
-        store.write_object(chobj, channel, lh5_file=args.output, wo_mode="overwrite")
+        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="overwrite")
         continue
 
     if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
         # if this is a PMT or not included for some reason, just copy it to the output file
         chobj, _ = store.read_object(channel + "/raw", args.input)
         store.write_object(
-            chobj, group=channel, name="raw", lh5_file=args.output, wo_mode="overwrite"
+            chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="overwrite"
         )
         continue
 
@@ -111,5 +116,8 @@ for channel in all_channels:
 
     # now write the blinded data for this channel
     store.write_object(
-        blinded_chobj, group=channel, name="raw", lh5_file=args.output, wo_mode="overwrite"
+        blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="overwrite"
     )
+
+# rename the temp file
+os.rename(temp_output, args.output)
