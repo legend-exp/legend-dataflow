@@ -19,7 +19,7 @@ rule build_blinding_check:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
+        files=lambda wildcards: read_filelist_cal(wildcards, "raw"),
         par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",

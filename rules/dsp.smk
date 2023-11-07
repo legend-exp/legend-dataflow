@@ -113,36 +113,36 @@ rule build_pars_dsp:
         "--output {output} "
 
 
-# rule build_dsp:
-#     input:
-#         raw_file=get_pattern_tier_raw(setup),
-#         tcm_file=get_pattern_tier_tcm(setup),
-#         pars_file=ancient(
-#             lambda wildcards: pars_catalog.get_par_file(
-#                 setup, wildcards.timestamp, "dsp"
-#             )
-#         ),
-#     params:
-#         timestamp="{timestamp}",
-#         datatype="{datatype}",
-#     output:
-#         tier_file=get_pattern_tier_dsp(setup),
-#         db_file=get_pattern_pars_tmp(setup, "dsp_db"),
-#     log:
-#         get_pattern_log(setup, "tier_dsp"),
-#     group:
-#         "tier-dsp"
-#     resources:
-#         runtime=300,
-#         mem_swap=30,
-#     shell:
-#         "{swenv} python3 -B "
-#         f"{workflow.source_path('../scripts/build_dsp.py')} "
-#         "--log {log} "
-#         "--configs {configs} "
-#         "--datatype {params.datatype} "
-#         "--timestamp {params.timestamp} "
-#         "--input {input.raw_file} "
-#         "--output {output.tier_file} "
-#         "--db_file {output.db_file} "
-#         "--pars_file {input.pars_file}"
+rule build_dsp:
+    input:
+        raw_file=get_pattern_tier_raw(setup),
+        tcm_file=get_pattern_tier_tcm(setup),
+        pars_file=ancient(
+            lambda wildcards: pars_catalog.get_par_file(
+                setup, wildcards.timestamp, "dsp"
+            )
+        ),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+    output:
+        tier_file=get_pattern_tier_dsp(setup),
+        db_file=get_pattern_pars_tmp(setup, "dsp_db"),
+    log:
+        get_pattern_log(setup, "tier_dsp"),
+    group:
+        "tier-dsp"
+    resources:
+        runtime=300,
+        mem_swap=30,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/build_dsp.py')} "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--input {input.raw_file} "
+        "--output {output.tier_file} "
+        "--db_file {output.db_file} "
+        "--pars_file {input.pars_file}"

@@ -138,9 +138,6 @@ rule build_hit:
         pars_file=lambda wildcards: pars_catalog.get_par_file(
             setup, wildcards.timestamp, "hit"
         ),
-        blind_check_file=lambda wildcards: pars_catalog.get_par_file(
-            setup, wildcards.timestamp, "raw"
-        ),
     output:
         tier_file=get_pattern_tier_hit(setup),
         db_file=get_pattern_pars_tmp(setup, "hit_db"),

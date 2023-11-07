@@ -62,6 +62,7 @@ rule build_raw_blind:
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--blind_curve {input.blind_file} "
