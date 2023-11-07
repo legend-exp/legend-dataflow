@@ -29,6 +29,7 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--configs", help="config file", type=str)
 argparser.add_argument("--chan_maps", help="chan map", type=str)
+argparser.add_argument("--metadata", help="metadata", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
@@ -44,7 +45,7 @@ ROI = 25.0  # keV
 all_channels = lh5.ls(args.input)
 
 # list of Ge channels and SiPM channels with associated metadata
-legendmetadata = LegendMetadata()
+legendmetadata = LegendMetadata(args.metadata)
 ged_channels = (
     legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
 )
@@ -60,7 +61,7 @@ toblind = np.array([])
 # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
 for chnum in list(ged_channels):
     # skip Ge detectors that are anti-coincidence only or not able to be blinded for some other reason
-    if ged_channels[chnum]["analysis"]["is_blinded"]:
+    if ged_channels[chnum]["analysis"]["is_blinded"] == False:
         continue
 
     # load in just the daqenergy for now
