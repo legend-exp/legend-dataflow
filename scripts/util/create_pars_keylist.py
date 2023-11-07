@@ -125,4 +125,5 @@ class pars_key_resolve:
             pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
             pars_key_resolve.write_to_jsonl(entrylist, filename)
         else:
-            raise RuntimeError("No Keys found")
+            msg = "No Keys found"
+            raise RuntimeError(msg)
