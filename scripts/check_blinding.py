@@ -34,6 +34,7 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--configs", help="config file", type=str)
 argparser.add_argument("--channel", help="channel", type=str)
+argparser.add_argument("--metadata", help="channel", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
@@ -47,8 +48,8 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # get the usability status for this channel
-chmap = LegendMetadata(args.timestamp).channelmap(args.timestamp).map("daq.rawid")
-det_status = chmap[int(args.channel[2:])]["analysis"]["usability"]
+chmap = LegendMetadata(args.metadata).channelmap(args.timestamp).map("daq.rawid")
+det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 
 # read in calibration curve for this channel
 blind_curve = Props.read_from(args.blind_curve)[args.channel]
@@ -84,12 +85,12 @@ ax2.set_ylabel("counts")
 plt.suptitle(args.channel)
 with open(args.plot_file, "wb") as w:
     pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
-fig.close()
+plt.close()
 
 
 # check for peaks within +- 5keV of  2614 and 583 to ensure blinding still valid and if so create file else raise error
 # if detector is in ac mode it will always pass this check
-if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status == "ac":
+if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status is False:
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
         json.dump({}, f)

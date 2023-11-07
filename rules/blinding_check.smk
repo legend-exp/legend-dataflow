@@ -12,7 +12,6 @@ from scripts.util.patterns import (
     get_pattern_plts,
 )
 
-
 rule build_blinding_check:
     """
     Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
@@ -42,6 +41,7 @@ rule build_blinding_check:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--output {output.check_file} "
         "--blind_curve {input.par_file} "
         "--plot_file {output.plot_file} "
