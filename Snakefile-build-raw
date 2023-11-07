@@ -10,6 +10,7 @@ import pathlib, os, json, sys
 from scripts.util.patterns import (
     get_pattern_unsorted_data,
     get_pattern_tier_daq,
+    get_pattern_tier_raw,
 )
 from scripts.util.utils import (
     subst_vars_in_snakemake_config,
@@ -17,8 +18,11 @@ from scripts.util.utils import (
     config_path,
     chan_map_path,
     filelist_path,
+    pars_path,
+    metadata_path,
 )
 from scripts.util.pars_loading import pars_catalog
+import scripts.util as ds
 
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
@@ -30,18 +34,26 @@ setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
+meta = metadata_path(setup)
 
 basedir = workflow.basedir
-
-
-include: "rules/common.smk"
-include: "rules/main.smk"
-include: "rules/raw.smk"
 
 
 localrules:
     gen_filelist,
     autogen_output,
+
+
+ds.pars_key_resolve.write_par_catalog(
+    ["-*-*-*-cal"],
+    os.path.join(pars_path(setup), "raw", "validity.jsonl"),
+    [
+        get_pattern_unsorted_data(setup),
+        get_pattern_tier_daq(setup),
+        get_pattern_tier_raw(setup),
+    ],
+    {"cal": ["par_raw"]},
+)
 
 
 onstart:
@@ -52,6 +64,12 @@ onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
     shell(f"rm {filelist_path(setup)}/* || true")
+
+
+include: "rules/common.smk"
+include: "rules/main.smk"
+include: "rules/raw.smk"
+include: "rules/blinding_check.smk"
 
 
 checkpoint gen_filelist:
