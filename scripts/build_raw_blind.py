@@ -61,7 +61,7 @@ toblind = np.array([])
 # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
 for chnum in list(ged_channels):
     # skip Ge detectors that are anti-coincidence only or not able to be blinded for some other reason
-    if ged_channels[chnum]["analysis"]["is_blinded"] == False:
+    if ged_channels[chnum]["analysis"]["is_blinded"] is False:
         continue
 
     # load in just the daqenergy for now
