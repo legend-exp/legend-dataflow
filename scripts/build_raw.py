@@ -29,23 +29,44 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
 ]
 all_config = Props.read_from(channel_dict["gen_config"])
 
+chmap = LegendMetadata(path=args.chan_maps)
 
-if "ged_config" in list(channel_dict) or "spm_config" in list(channel_dict):
-    ged_config = Props.read_from(channel_dict["ged_config"])
-    spm_config = Props.read_from(channel_dict["spm_config"])
+if "geds_config" in list(channel_dict):
+    ged_config = Props.read_from(channel_dict["geds_config"])
 
-    chmap = LegendMetadata(path=args.chan_maps)
-    spm_channels = list(
-        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["spms"].map("daq.fcid")
+    ged_channels = list(
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
     )
-    ged_channels = list(chmap.channelmaps.on(args.timestamp).map("daq.fcid"))
-    for spm_channel in spm_channels:
-        ged_channels.remove(spm_channel)
 
     ged_config[list(ged_config)[0]]["geds"]["key_list"] = sorted(ged_channels)
-    spm_config[list(spm_config)[0]]["spms"]["key_list"] = sorted(spm_channels)
     Props.add_to(all_config, ged_config)
+
+if "spms_config" in list(channel_dict):
+    
+    spm_config = Props.read_from(channel_dict["spms_config"])
+
+    spm_channels = list(
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
+    )
+    
+    spm_config[list(spm_config)[0]]["spms"]["key_list"] = sorted(spm_channels)
     Props.add_to(all_config, spm_config)
+
+if "auxs_config" in list(channel_dict):
+
+    aux_config = Props.read_from(channel_dict["auxs_config"])
+    aux_channels = list(
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["auxs"].map("daq.rawid")
+    )
+    aux_channels += list(
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["puls"].map("daq.rawid")
+    )
+    aux_channels += list(
+        chmap.channelmaps.on(args.timestamp).map("system", unique=False)["bsln"].map("daq.rawid")
+    )
+    top_key = list(aux_config)[0]
+    aux_config[top_key][list(aux_config[top_key])[0]]["key_list"] = sorted(aux_channels)
+    Props.add_to(all_config, aux_config)
 
 rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"

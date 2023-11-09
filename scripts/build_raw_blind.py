@@ -20,6 +20,7 @@ import numexpr as ne
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo.lh5_store import DEFAULT_HDF5_COMPRESSION
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -98,26 +99,29 @@ for channel in all_channels:
         chnum = int(channel[2::])
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
-        chobj, _ = store.read_object(channel, args.input)
-        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="overwrite")
+        chobj, _ = store.read_object(channel, args.input, decompress=False)
+        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="w",
+        hdf5_compression=DEFAULT_HDF5_COMPRESSION)
         continue
 
     if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
         # if this is a PMT or not included for some reason, just copy it to the output file
-        chobj, _ = store.read_object(channel + "/raw", args.input)
+        chobj, _ = store.read_object(channel + "/raw", args.input, decompress=False)
         store.write_object(
-            chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="overwrite"
+            chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
+            hdf5_compression=DEFAULT_HDF5_COMPRESSION
         )
         continue
 
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _ = store.read_object(channel + "/raw", args.input, idx=tokeep)
+    blinded_chobj, _ = store.read_object(channel + "/raw", args.input, idx=tokeep, decompress=False)
 
     # now write the blinded data for this channel
     store.write_object(
-        blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="overwrite"
+        blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
+        hdf5_compression=DEFAULT_HDF5_COMPRESSION
     )
 
 # rename the temp file
