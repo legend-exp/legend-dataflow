@@ -28,6 +28,8 @@ from collections import OrderedDict
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
 
+check_in_cycle = True
+
 subst_vars_in_snakemake_config(workflow, config)
 
 setup = config["setups"]["l200"]

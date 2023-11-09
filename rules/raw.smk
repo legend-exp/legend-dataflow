@@ -1,6 +1,7 @@
 from scripts.util.patterns import (
     get_pattern_tier_daq,
     get_pattern_tier_raw,
+    get_pattern_tier,
     get_pattern_log,
     get_pattern_tier_raw_blind,
 )
@@ -16,7 +17,7 @@ rule build_raw:
         timestamp="{timestamp}",
         datatype="{datatype}",
     output:
-        get_pattern_tier_raw(setup),
+        get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
     log:
         get_pattern_log(setup, "tier_raw"),
     group:

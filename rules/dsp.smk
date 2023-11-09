@@ -14,9 +14,10 @@ from scripts.util.patterns import (
     get_pattern_plts,
     get_pattern_tier_raw,
     get_pattern_tier_tcm,
-    get_pattern_tier_dsp,
+    get_pattern_tier,
     get_pattern_pars_tmp,
     get_pattern_log,
+    get_pattern_pars,
 )
 
 
@@ -101,8 +102,14 @@ rule build_pars_dsp:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_results"),
     output:
-        get_pattern_par_dsp(setup),
-        get_pattern_par_dsp(setup, name="results", extension="pkl"),
+        get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
+        get_pattern_pars(
+            setup,
+            "dsp",
+            name="results",
+            extension="pkl",
+            check_in_cycle=check_in_cycle,
+        ),
         get_pattern_plts(setup, "dsp"),
     group:
         "merge-dsp"
@@ -126,7 +133,7 @@ rule build_dsp:
         timestamp="{timestamp}",
         datatype="{datatype}",
     output:
-        tier_file=get_pattern_tier_dsp(setup),
+        tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "dsp_db"),
     log:
         get_pattern_log(setup, "tier_dsp"),

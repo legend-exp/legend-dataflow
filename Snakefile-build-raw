@@ -24,6 +24,7 @@ from scripts.util.utils import (
 from scripts.util.pars_loading import pars_catalog
 import scripts.util as ds
 
+check_in_cycle = True
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"

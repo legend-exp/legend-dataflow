@@ -15,9 +15,10 @@ from scripts.util.patterns import (
     get_pattern_par_pht,
     get_pattern_plts,
     get_pattern_tier_dsp,
-    get_pattern_tier_pht,
+    get_pattern_tier,
     get_pattern_pars_tmp,
     get_pattern_log,
+    get_pattern_pars,
 )
 
 
@@ -73,8 +74,14 @@ checkpoint build_pars_pht:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_results"),
     output:
-        get_pattern_par_pht(setup),
-        get_pattern_par_pht(setup, name="results", extension="dir"),
+        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+        get_pattern_pars(
+            setup,
+            "pht",
+            name="results",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
         get_pattern_plts(setup, "pht"),
     group:
         "merge-hit"
@@ -93,7 +100,7 @@ rule build_pht:
             setup, wildcards.timestamp, "pht"
         ),
     output:
-        tier_file=get_pattern_tier_pht(setup),
+        tier_file=get_pattern_tier(setup, "pht", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "pht_db"),
     params:
         timestamp="{timestamp}",
