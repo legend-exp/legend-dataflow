@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -7,16 +9,21 @@ import pickle as pkl
 from datetime import datetime
 
 import lgdo.lh5_store as lh5
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pygama.math.histogram as pgh
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from matplotlib.colors import LogNorm
-from pygama.pargen.ecal_th import *
+from pygama.pargen.ecal_th import *  # noqa: F403
+from pygama.pargen.ecal_th import apply_cuts, calibrate_parameter
+from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 from scipy.stats import binned_statistic
 
 log = logging.getLogger(__name__)
+mpl.use("agg")
 
 
 def plot_baseline_timemap(
@@ -113,9 +120,63 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
     return plot_dict
 
 
+def energy_cal_th(
+    data: pd.Dataframe,
+    energy_params: list[str],
+    selection_string: str = "",
+    hit_dict: dict | None = None,
+    cut_parameters: dict[str, int] | None = None,
+    plot_options: dict | None = None,
+    threshold: int = 0,
+    p_val: float = 0,
+    n_events: int | None = None,
+    final_cut_field: str = "is_valid_cal",
+    simplex: bool = True,
+    guess_keV: float | None = None,
+    tail_weight=100,
+    deg: int = 1,
+) -> tuple(dict, dict, dict, dict):
+    data, hit_dict = apply_cuts(
+        data,
+        hit_dict if hit_dict is not None else {},
+        cut_parameters if cut_parameters is not None else {},
+        final_cut_field,
+    )
+
+    results_dict = {}
+    plot_dict = {}
+    full_object_dict = {}
+    for energy_param in energy_params:
+        full_object_dict[energy_param] = calibrate_parameter(
+            energy_param,
+            selection_string,
+            plot_options,
+            guess_keV,
+            threshold,
+            p_val,
+            n_events,
+            simplex,
+            deg,
+            tail_weight=tail_weight,
+        )
+        full_object_dict[energy_param].calibrate_parameter(data)
+        results_dict[full_object_dict[energy_param].cal_energy_param] = full_object_dict[
+            energy_param
+        ].get_results_dict(data)
+        hit_dict.update(full_object_dict[energy_param].hit_dict)
+        if ~np.isnan(full_object_dict[energy_param].pars).all():
+            plot_dict[full_object_dict[energy_param].cal_energy_param] = (
+                full_object_dict[energy_param].fill_plot_dict(data).copy()
+            )
+
+    log.info("Finished all calibrations")
+    return hit_dict, results_dict, plot_dict, full_object_dict
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--files", help="files", nargs="*", type=str)
+    argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
     argparser.add_argument("--ctc_dict", help="ctc_dict", nargs="*")
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
@@ -137,40 +198,59 @@ if __name__ == "__main__":
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-    if isinstance(args.ctc_dict, list):
-        database_dic = Props.read_from(args.ctc_dict)
-    else:
-        with open(args.ctc_dict) as f:
-            database_dic = json.load(f)
+    database_dic = Props.read_from(args.ctc_dict)
 
     hit_dict = database_dic[args.channel]["ctc_params"]
 
+    # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
         "pars_hit_ecal"
     ]["inputs"]["ecal_config"][args.channel]
 
-    with open(channel_dict) as r:
-        kwarg_dict = json.load(r)
+    kwarg_dict = Props.read_from(channel_dict)
 
-    plot_dict = kwarg_dict["plot_options"]
-    for field, item in plot_dict.items():
-        plot_dict[field]["function"] = eval(item["function"])
+    # convert plot functions from strings to functions and split off baseline and common plots
+    for field, item in kwarg_dict["plot_options"].items():
+        kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
 
-    kwarg_dict["plot_options"] = plot_dict
     bl_plots = kwarg_dict.pop("bl_plot_options")
     for field, item in bl_plots.items():
         bl_plots[field]["function"] = eval(item["function"])
     common_plots = kwarg_dict.pop("common_plots")
 
-    if args.plot_path:
-        out_dict, result_dict, plot_dict, ecal_object = energy_cal_th(
-            sorted(args.files),
-            lh5_path=f"{args.channel}/dsp",
-            hit_dict=hit_dict,
-            **kwarg_dict,
-        )
+    # load data in
+    data, threshold_mask = load_data(
+        args.files,
+        f"{args.channel}/dsp",
+        hit_dict,
+        params=kwarg_dict["energy_params"]
+        + list(kwarg_dict["cut_parameters"])
+        + ["timestamp", "trapTmax"],
+        threshold=kwarg_dict["threshold"],
+        return_selection_mask=True,
+        cal_energy_param="trapTmax",
+    )
 
+    # get pulser mask from tcm files
+    with open(args.tcm_filelist) as f:
+        tcm_files = f.read().splitlines()
+    tcm_files = sorted(np.unique(tcm_files))
+    ids, mask = get_tcm_pulser_ids(
+        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+    )
+    data["is_pulser"] = mask[threshold_mask]
+
+    # run energy calibration
+    out_dict, result_dict, plot_dict, ecal_object = energy_cal_th(
+        data,
+        hit_dict=hit_dict,
+        selection_string=f"({kwarg_dict['final_cut_field']})&(~is_pulser)",
+        **kwarg_dict,
+    )
+
+    # get baseline plots and save all plots to file
+    if args.plot_path:
         common_dict = baseline_tracking_plots(
             sorted(args.files), f"{args.channel}/dsp", plot_options=bl_plots
         )
@@ -193,20 +273,14 @@ if __name__ == "__main__":
 
         with open(args.plot_path, "wb") as f:
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
-    else:
-        out_dict, result_dict, _ = energy_cal_th(
-            sorted(args.files),
-            lh5_path=f"{args.channel}/dsp",
-            hit_dict=hit_dict,
-            **kwarg_dict,
-        )
 
+    # save output dictionary
     output_dict = {"pars": out_dict, "results": result_dict}
-
     with open(args.save_path, "w") as fp:
         pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
         json.dump(output_dict, fp, indent=4)
 
+    # save calibration objects
     with open(args.results_path, "wb") as fp:
         pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
         pkl.dump(ecal_object, fp, protocol=pkl.HIGHEST_PROTOCOL)

@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from pygama.flow.file_db import *
+from pygama.flow.file_db import FileDB
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--config", help="config", type=str, required=True)

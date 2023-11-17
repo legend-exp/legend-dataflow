@@ -1,6 +1,33 @@
+"""
+This module contains all the patterns needed for the data production
+"""
+
 import os
 
-from .utils import *
+from .utils import (
+    par_dsp_path,
+    par_evt_path,
+    par_hit_path,
+    par_overwrite_path,
+    par_pht_path,
+    par_raw_path,
+    par_tcm_path,
+    pars_path,
+    plts_path,
+    sandbox_path,
+    tier_daq_path,
+    tier_dsp_path,
+    tier_evt_path,
+    tier_hit_path,
+    tier_path,
+    tier_pht_path,
+    tier_raw_blind_path,
+    tier_raw_path,
+    tier_tcm_path,
+    tmp_log_path,
+    tmp_par_path,
+    tmp_plts_path,
+)
 
 
 # key_mask
@@ -66,6 +93,16 @@ def get_pattern_tier_raw(setup):
     )
 
 
+def get_pattern_tier_raw_blind(setup):
+    return os.path.join(
+        f"{tier_raw_blind_path(setup)}",
+        "phy",
+        "{period}",
+        "{run}",
+        "{experiment}-{period}-{run}-phy-{timestamp}-tier_raw.lh5",
+    )
+
+
 def get_pattern_tier_tcm(setup):
     return os.path.join(
         f"{tier_tcm_path(setup)}",
@@ -116,24 +153,28 @@ def get_pattern_tier_evt(setup):
     )
 
 
-def get_pattern_tier(setup, tier):
+def get_pattern_tier(setup, tier, check_in_cycle=True):
     if tier == "daq":
-        return get_pattern_tier_daq(setup)
+        file_pattern = get_pattern_tier_daq(setup)
     elif tier == "raw":
-        return get_pattern_tier_raw(setup)
+        file_pattern = get_pattern_tier_raw(setup)
     elif tier == "tcm":
-        return get_pattern_tier_tcm(setup)
+        file_pattern = get_pattern_tier_tcm(setup)
     elif tier == "dsp":
-        return get_pattern_tier_dsp(setup)
+        file_pattern = get_pattern_tier_dsp(setup)
     elif tier == "hit":
-        return get_pattern_tier_hit(setup)
+        file_pattern = get_pattern_tier_hit(setup)
     elif tier == "pht":
-        return get_pattern_tier_pht(setup)
+        file_pattern = get_pattern_tier_pht(setup)
     elif tier == "evt":
-        return get_pattern_tier_evt(setup)
+        file_pattern = get_pattern_tier_evt(setup)
     else:
         msg = "invalid tier"
         raise Exception(msg)
+    if tier_path(setup) not in file_pattern and check_in_cycle is True:
+        return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}" + f"tier_{tier}.lh5"
+    else:
+        return file_pattern
 
 
 def get_pattern_par_raw(setup, name=None, extension="json"):
@@ -250,22 +291,32 @@ def get_pattern_par_evt(setup, name=None, extension="json"):
         )
 
 
-def get_pattern_pars(setup, tier, name=None):
+def get_pattern_pars(setup, tier, name=None, extension="json", check_in_cycle=True):
     if tier == "raw":
-        return get_pattern_par_raw(setup, name=name)
+        file_pattern = get_pattern_par_raw(setup, name, extension)
     elif tier == "tcm":
-        return get_pattern_par_tcm(setup, name=name)
+        file_pattern = get_pattern_par_tcm(setup, name, extension)
     elif tier == "dsp":
-        return get_pattern_par_dsp(setup, name=name)
+        file_pattern = get_pattern_par_dsp(setup, name, extension)
     elif tier == "hit":
-        return get_pattern_par_hit(setup, name=name)
+        file_pattern = get_pattern_par_hit(setup, name, extension)
     elif tier == "pht":
-        return get_pattern_par_pht(setup, name=name)
+        file_pattern = get_pattern_par_pht(setup, name, extension)
     elif tier == "evt":
-        return get_pattern_par_evt(setup, name=name)
+        file_pattern = get_pattern_par_evt(setup, name, extension)
     else:
         msg = "invalid tier"
         raise Exception(msg)
+    if pars_path(setup) not in file_pattern and check_in_cycle is True:
+        if name is None:
+            return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}" + f"par_{tier}.{extension}"
+        else:
+            return (
+                "/tmp/{experiment}-{period}-{run}-cal-{timestamp}"
+                + f"par_{tier}_{name}.{extension}"
+            )
+    else:
+        return file_pattern
 
 
 def get_pattern_pars_overwrite(setup, tier, name=None):
@@ -341,15 +392,25 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None):
         )
 
 
-def get_pattern_plts(setup, tier):
-    return os.path.join(
-        f"{plts_path(setup)}",
-        tier,
-        "cal",
-        "{period}",
-        "{run}",
-        "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir",
-    )
+def get_pattern_plts(setup, tier, name=None):
+    if name is None:
+        return os.path.join(
+            f"{plts_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir",
+        )
+    else:
+        return os.path.join(
+            f"{plts_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + "_" + name + ".dir",
+        )
 
 
 def get_energy_grids_pattern_combine(setup):

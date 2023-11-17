@@ -1,3 +1,10 @@
+"""
+This module contains all the utility needed for the data production.
+These are mainly resolvers for the config.json dictionary,
+and for substituting the pathvar within, also the conversion
+from timestamp to unix time
+"""
+
 import copy
 import os
 import string
@@ -20,6 +27,10 @@ def sandbox_path(setup):
 
 def tier_daq_path(setup):
     return setup["paths"]["tier_daq"]
+
+
+def tier_raw_blind_path(setup):
+    return setup["paths"]["tier_raw_blind"]
 
 
 def tier_path(setup):
@@ -50,12 +61,34 @@ def tier_evt_path(setup):
     return setup["paths"]["tier_evt"]
 
 
+def get_tier_path(setup, tier):
+    if tier == "raw":
+        return tier_raw_path(setup)
+    elif tier == "tcm":
+        return tier_tcm_path(setup)
+    elif tier == "dsp":
+        return tier_dsp_path(setup)
+    elif tier == "hit":
+        return tier_hit_path(setup)
+    elif tier == "pht":
+        return tier_pht_path(setup)
+    elif tier == "evt":
+        return tier_evt_path(setup)
+    else:
+        msg = f"no tier matching:{tier}"
+        raise ValueError(msg)
+
+
 def config_path(setup):
     return setup["paths"]["config"]
 
 
 def chan_map_path(setup):
     return setup["paths"]["chan_map"]
+
+
+def metadata_path(setup):
+    return setup["paths"]["metadata"]
 
 
 def detector_db_path(setup):

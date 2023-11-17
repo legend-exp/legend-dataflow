@@ -24,8 +24,6 @@ select = [
   "PD",          # pandas-vet
 ]
 extend-ignore = [
-  "F403",   # REMOVEME
-  "F405",   # REMOVEME
   "ISC003", # Explicitly concatenated string should be implicitly concatenated
   "PGH001", # Usage of eval()
   "G004",   # Logging statement uses f-string

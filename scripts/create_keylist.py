@@ -3,7 +3,7 @@
 import glob
 import os
 
-from util.FileKey import *
+from util.FileKey import FileKey
 
 ignore_keys = []
 if snakemake.input:

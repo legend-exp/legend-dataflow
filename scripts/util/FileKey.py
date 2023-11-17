@@ -1,10 +1,19 @@
+"""
+This module contains classes to convert between keys and files using the patterns defined in patterns.py
+"""
+
 import re
 from collections import namedtuple
 
 import snakemake as smk
 
-from .patterns import *
-from .utils import *
+from .patterns import (
+    full_channel_pattern_with_extension,
+    get_pattern_tier,
+    key_pattern,
+    processing_pattern,
+)
+from .utils import unix_time
 
 # key_pattern -> key
 #
@@ -181,9 +190,8 @@ class ChannelProcKey(FileKey):
         return dic
 
     @staticmethod
-    def get_channel_files(setup, keypart, tier, chan_list, name=None):
+    def get_channel_files(keypart, par_pattern, chan_list):
         d = ChannelProcKey.parse_keypart(keypart)
-        par_pattern = get_pattern_pars_tmp_channel(setup, tier, name)
         filenames = []
         for chan in chan_list:
             wildcards_dict = d._asdict()
