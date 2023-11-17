@@ -140,7 +140,7 @@ def build_valid_keys(input_files, output_dir):
         dtype = key.split("-")[-1]
         out_file = os.path.join(output_dir, f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json')
         pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
-        if os.isfile(out_file):
+        if os.path.isfile(out_file):
             out_dict = Props.read_from([out_file] + key_dict[key])
         else:
             out_dict = Props.read_from(key_dict[key])
@@ -158,7 +158,7 @@ def build_file_dbs(input_files, output_dir):
         out_file = os.path.join(output_dir, f"{key}-filedb.h5")
         pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
         file_path = f"{dtype}/{period}/{run}"
-        cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/build_fdb.py  --file_path {file_path} --output_file {out_file} --config {os.path.join(output_dir, 'file_db_config.json')}"
+        cmd = f"{ut.runcmd(setup)} python3 -B {basedir}/scripts/build_fdb.py  --file_path {file_path} --output_file {out_file} --config {os.path.join(output_dir, 'file_db_config.json')}"
         os.system(cmd)
 
 
@@ -177,12 +177,12 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
             "evt": ut.tier_evt_path(setup).replace(os.getenv("PRODENV"), ""),
         },
         "file_format": {
-            "raw": pat.get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
-            "dsp": pat.get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
-            "hit": pat.get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
-            "pht": pat.get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
-            "evt": pat.get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
-            "tcm": pat.get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw").replace(ut.tier_raw_path(setup), ""),
+            "dsp": pat.get_pattern_tier(setup, "dsp").replace(ut.tier_dsp_path(setup), ""),
+            "hit": pat.get_pattern_tier(setup, "hit").replace(ut.tier_hit_path(setup), ""),
+            "pht": pat.get_pattern_tier(setup, "pht").replace(ut.tier_hit_path(setup), ""),
+            "evt": pat.get_pattern_tier(setup, "evt").replace(ut.tier_evt_path(setup), ""),
+            "tcm": pat.get_pattern_tier(setup, "tcm").replace(ut.tier_tcm_path(setup), ""),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",
@@ -205,12 +205,12 @@ else:
             "evt": ut.tier_evt_path(setup),
         },
         "file_format": {
-            "raw": pat.get_pattern_tier(setup, "raw").replace(tier_raw_path(setup), ""),
-            "dsp": pat.get_pattern_tier(setup, "dsp").replace(tier_dsp_path(setup), ""),
-            "hit": pat.get_pattern_tier(setup, "hit").replace(tier_hit_path(setup), ""),
-            "pht": pat.get_pattern_tier(setup, "pht").replace(tier_hit_path(setup), ""),
-            "evt": pat.get_pattern_tier(setup, "evt").replace(tier_evt_path(setup), ""),
-            "tcm": pat.get_pattern_tier(setup, "tcm").replace(tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw").replace(ut.tier_raw_path(setup), ""),
+            "dsp": pat.get_pattern_tier(setup, "dsp").replace(ut.tier_dsp_path(setup), ""),
+            "hit": pat.get_pattern_tier(setup, "hit").replace(ut.tier_hit_path(setup), ""),
+            "pht": pat.get_pattern_tier(setup, "pht").replace(ut.tier_hit_path(setup), ""),
+            "evt": pat.get_pattern_tier(setup, "evt").replace(ut.tier_evt_path(setup), ""),
+            "tcm": pat.get_pattern_tier(setup, "tcm").replace(ut.tier_tcm_path(setup), ""),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",
