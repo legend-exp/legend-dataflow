@@ -53,7 +53,7 @@ for i in item_list[0]:
                     filekeys.append(FileKey(i, j, k, i2, j2))
 
 filenames = []
-fn_pattern = get_pattern_tier(setup, tier)
+fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
 for key in filekeys:
     fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
