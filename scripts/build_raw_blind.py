@@ -20,7 +20,6 @@ import numexpr as ne
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from lgdo.lh5_store import DEFAULT_HDF5_COMPRESSION
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -69,7 +68,7 @@ for chnum in list(ged_channels):
     daqenergy, _ = store.read_object(f"ch{chnum}/raw/daqenergy", args.input)
 
     # read in calibration curve for this channel
-    blind_curve = Props.read_from(args.blind_curve)[f"ch{chnum}"]
+    blind_curve = Props.read_from(args.blind_curve)[f"ch{chnum}"]["pars"]["operations"]
 
     # calibrate daq energy using pre existing curve
     daqenergy_cal = ne.evaluate(
@@ -100,29 +99,24 @@ for channel in all_channels:
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
         chobj, _ = store.read_object(channel, args.input, decompress=False)
-        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="w",
-        hdf5_compression=DEFAULT_HDF5_COMPRESSION)
+        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="w")
         continue
 
     if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
         # if this is a PMT or not included for some reason, just copy it to the output file
         chobj, _ = store.read_object(channel + "/raw", args.input, decompress=False)
-        store.write_object(
-            chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
-            hdf5_compression=DEFAULT_HDF5_COMPRESSION
-        )
+        store.write_object(chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w")
         continue
 
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _ = store.read_object(channel + "/raw", args.input, idx=tokeep, decompress=False)
+    blinded_chobj, _ = store.read_object(
+        channel + "/raw", args.input, idx=tokeep, decompress=False
+    )
 
     # now write the blinded data for this channel
-    store.write_object(
-        blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
-        hdf5_compression=DEFAULT_HDF5_COMPRESSION
-    )
+    store.write_object(blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w")
 
 # rename the temp file
 os.rename(temp_output, args.output)
