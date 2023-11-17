@@ -2,8 +2,10 @@
 
 import os
 import random
+import re
 
 from util.FileKey import ChannelProcKey
+from util.patterns import get_pattern_pars_tmp_channel, get_pattern_plts_tmp_channel
 from util.utils import filelist_path, runcmd
 
 setup = snakemake.params.setup
@@ -13,10 +15,12 @@ chan_maps = snakemake.params.chan_maps
 
 tier = snakemake.wildcards.tier
 keypart = snakemake.wildcards.label
-name = None
-if "_" in tier:
-    name = tier.split("_", 1)[1]
-    tier = tier.split("_", 1)[0]
+
+tier_pattern = (
+    "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)(\\_(?P<extension>[^_]+)?)?)?)?)?"
+)
+keypart_rx = re.compile(tier_pattern)
+d = keypart_rx.match(tier).groupdict()
 
 key = ChannelProcKey.parse_keypart(keypart)
 
@@ -32,7 +36,18 @@ os.system(cmd)
 with open(output_file) as r:
     chan_list = r.read().splitlines()
 
-filenames = ChannelProcKey.get_channel_files(setup, keypart, tier, chan_list, name=name)
+if d["file_type"] == "par":
+    if d["extension"] is None:
+        par_pattern = get_pattern_pars_tmp_channel(setup, d["tier"], d["name"])
+    else:
+        par_pattern = get_pattern_pars_tmp_channel(setup, d["tier"], d["name"], d["extension"])
+elif d["file_type"] == "plt":
+    par_pattern = get_pattern_plts_tmp_channel(setup, d["tier"], d["name"])
+else:
+    msg = "unknown file type: known are par and plt"
+    raise ValueError(msg)
+
+filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
 
 with open(snakemake.output[0], "w") as f:
     for fn in filenames:

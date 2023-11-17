@@ -8,6 +8,7 @@ from scripts.util.patterns import (
     get_pattern_unsorted_data,
     get_pattern_tier_daq,
     get_pattern_tier_raw,
+    get_pattern_plts_tmp_channel,
 )
 
 
@@ -33,9 +34,9 @@ def read_filelist_pars_cal_channel(wildcards, tier):
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier=f"par_{tier}", extension="chan"
+    ).output[0].open() as f:
         files = f.read().splitlines()
         return files
 
@@ -45,11 +46,10 @@ def read_filelist_plts_cal_channel(wildcards, tier):
     This function will read the filelist of the channels and return a list of dsp files one for each channel
     """
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="chan").output[
-        0
-    ].open() as f:
+    with checkpoints.gen_filelist.get(
+        label=label, tier=f"plt_{tier}", extension="chan"
+    ).output[0].open() as f:
         files = f.read().splitlines()
-        files = [file.replace("par", "plt").replace("json", "pkl") for file in files]
         return files
 
 
