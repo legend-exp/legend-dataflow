@@ -220,11 +220,16 @@ if __name__ == "__main__":
     common_plots = kwarg_dict.pop("common_plots")
 
     # load data in
-    data = load_data(
+    data, threshold_mask = load_data(
         args.files,
         f"{args.channel}/dsp",
         hit_dict,
-        params=kwarg_dict["energy_params"] + list(kwarg_dict["cut_parameters"]) + ["timestamp"],
+        params=kwarg_dict["energy_params"]
+        + list(kwarg_dict["cut_parameters"])
+        + ["timestamp", "trapTmax"],
+        threshold=kwarg_dict["threshold"],
+        return_selection_mask=True,
+        cal_energy_param="trapTmax",
     )
 
     # get pulser mask from tcm files
@@ -234,7 +239,8 @@ if __name__ == "__main__":
     ids, mask = get_tcm_pulser_ids(
         tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
-    data["is_pulser"] = mask
+    data["is_pulser"] = mask[threshold_mask]
+
     # run energy calibration
     out_dict, result_dict, plot_dict, ecal_object = energy_cal_th(
         data,
