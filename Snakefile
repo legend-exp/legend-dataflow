@@ -58,9 +58,10 @@ ds.pars_key_resolve.write_par_catalog(
 )
 
 
+include: "rules/tcm.smk"
 include: "rules/dsp.smk"
 include: "rules/hit.smk"
-include: "rules/pht.smk"
+# include: "rules/pht.smk"
 include: "rules/blinding_calibration.smk"
 
 
