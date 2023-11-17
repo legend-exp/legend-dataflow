@@ -88,7 +88,7 @@ rule build_aoe_calibration:
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "hit", "results", extension="pkl")
+            get_pattern_pars_tmp_channel(setup, "hit", "objects", extension="pkl")
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit")),
     log:
@@ -115,17 +115,17 @@ rule build_aoe_calibration:
         "{input.files}"
 
 
-checkpoint build_pars_hit:
+rule build_pars_hit:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_results"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
     output:
         get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "hit",
-            name="results",
+            name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),

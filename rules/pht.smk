@@ -68,11 +68,17 @@ rule build_per_energy_calibration:
         "--files {input.files}"
 
 
-checkpoint build_pars_pht:
+rule build_pars_pht:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_results"),
+        lambda wildcards: read_filelist_pars_cal_channel(
+            wildcards,
+            "pht_objects",
+            out_pattern=get_pattern_pars_tmp_channel(
+            setup, "pht", "objects", extension="pkl"
+            ),
+        ),
     output:
         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
         get_pattern_pars(
@@ -355,7 +361,7 @@ for key, dataset in part.datasets.items():
                         partition,
                         key,
                         tier="pht",
-                        name="results",
+                        name="objects",
                         extension="pkl",
                     )
                 ],
@@ -428,7 +434,7 @@ rule build_pht_super_calibrations:
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "pht", "results", extension="pkl")
+            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
     log:

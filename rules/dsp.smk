@@ -71,7 +71,9 @@ rule build_pars_dsp_eopt:
         channel="{channel}",
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
-        qbb_grid=temp(get_pattern_pars_tmp_channel(setup, "dsp", "energy_grid")),
+        qbb_grid=temp(
+            get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl")
+        ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp")),
     log:
         get_pattern_log_channel(setup, "pars_dsp_eopt"),
@@ -100,14 +102,14 @@ rule build_pars_dsp:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_results"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_objects_pkl"),
     output:
         get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "dsp",
-            name="results",
-            extension="pkl",
+            name="objects",
+            extension="dir",
             check_in_cycle=check_in_cycle,
         ),
         get_pattern_plts(setup, "dsp"),
