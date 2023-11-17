@@ -71,18 +71,13 @@ if kwarg_dict["run_tau"] is True:
     threshold = kwarg_dict.pop("threshold")
     cuts = np.where((data.daqenergy.to_numpy() > threshold) & (~mask))[0]
 
-    waveforms = sto.read_object(
-        f"{args.channel}/raw/{kwarg_dict['wf_field']}",
+    tb_data = sto.read_object(
+        f"{args.channel}/raw",
         input_file,
         idx=cuts,
-        n_rows=kwarg_dict["n_events"],
+        n_rows=kwarg_dict.pop("n_events"),
     )[0]
-    baseline = sto.read_object(
-        f"{args.channel}/raw/baseline", input_file, idx=cuts, n_rows=kwarg_dict["n_events"]
-    )[0]
-    tb_data = lh5.Table(col_dict={kwarg_dict["wf_field"]: waveforms, "baseline": baseline})
-    kwarg_dict.pop("n_events")
-    kwarg_dict.pop("wf_field")
+
     out_dict, plot_dict = dsp_preprocess_decay_const(
         tb_data, channel_dict, **kwarg_dict, display=1
     )

@@ -6,6 +6,7 @@ import pathlib
 import pickle as pkl
 import time
 
+import lgdo.lh5_store as lh5
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
@@ -144,8 +145,8 @@ if opt_dict["run_eopt"] is True:
                     "kev_width": kev_width,
                 }
             )
-
-    tb_data, idx_list = om.event_selection(
+    sto = lh5.LH5Store()
+    idx_events, idx_list = om.event_selection(
         raw_files,
         f"{args.channel}/raw",
         dsp_config,
@@ -159,6 +160,14 @@ if opt_dict["run_eopt"] is True:
         threshold=opt_dict["threshold"],
         wf_field=opt_dict["wf_field"],
     )
+
+    tb_data = sto.read_object(
+        f"{args.channel}/raw",
+        raw_files,
+        idx=idx_events,
+        n_rows=opt_dict["n_events"],
+    )[0]
+
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
 
