@@ -52,7 +52,7 @@ chmap = LegendMetadata(args.metadata).channelmap(args.timestamp).map("daq.rawid"
 det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 
 # read in calibration curve for this channel
-blind_curve = Props.read_from(args.blind_curve)[args.channel]
+blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
 # load in the data
 daqenergy = lh5.load_nda(sorted(args.files), ["daqenergy"], f"{args.channel}/raw")["daqenergy"]
