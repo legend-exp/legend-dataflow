@@ -52,7 +52,8 @@ rule build_pars_dsp_tau:
         "--output_file {output.decay_const} "
         "--tcm_files {input.tcm_files} "
         "--raw_files {input.files}"
-        
+
+
 # This rule builds the optimal energy filter parameters for the dsp using fft files
 rule build_pars_dsp_nopt:
     input:
@@ -65,7 +66,9 @@ rule build_pars_dsp_nopt:
         datatype="cal",
         channel="{channel}",
     output:
-        dsp_pars_nopt=temp(get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization")),
+        dsp_pars_nopt=temp(
+            get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization")
+        ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization")),
     log:
         get_pattern_log_channel(setup, "par_dsp_noise_optimization"),
