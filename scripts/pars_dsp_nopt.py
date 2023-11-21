@@ -25,7 +25,7 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
+argparser.add_argument("--dsp_pars", help="dsp_pars", type=str, required=True)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
 
 args = argparser.parse_args()
@@ -80,6 +80,6 @@ if opt_dict["run_nopt"] is True:
 else:
     out_dict = {}
 
-pathlib.Path(os.path.dirname(args.final_dsp_pars)).mkdir(parents=True, exist_ok=True)
-with open(args.final_dsp_pars, "w") as w:
+pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
+with open(args.dsp_pars, "w") as w:
     json.dump(db_dict, w, indent=4)

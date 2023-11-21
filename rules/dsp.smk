@@ -52,6 +52,39 @@ rule build_pars_dsp_tau:
         "--output_file {output.decay_const} "
         "--tcm_files {input.tcm_files} "
         "--raw_files {input.files}"
+        
+# This rule builds the optimal energy filter parameters for the dsp using fft files
+rule build_pars_dsp_nopt:
+    input:
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+        ),
+        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        dsp_pars_nopt=temp(get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization")),
+        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization")),
+    log:
+        get_pattern_log_channel(setup, "par_dsp_noise_optimization"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_nopt.py')} "
+        "--raw_files {input.files}"
+        "--database {input.database} "
+        "--configs {configs} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--plot_path {output.plots} "
+        "--dsp_pars {output.dsp_pars_nopt}"
 
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
