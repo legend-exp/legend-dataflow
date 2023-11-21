@@ -1,7 +1,30 @@
+"""
+Snakefile for doing the first stages of data processing from the daq sandbox files
+to the blinded raw data. It handles:
+- moving the daq files from the sandbox to the sorted file system
+- running build raw on this data (with trimming)
+- blinding the physics data
+"""
+
 import pathlib, os, json, sys
-import scripts as ds
-from scripts.util.patterns import *
-from datetime import datetime
+from scripts.util.patterns import (
+    get_pattern_unsorted_data,
+    get_pattern_tier_daq,
+    get_pattern_tier_raw,
+)
+from scripts.util.utils import (
+    subst_vars_in_snakemake_config,
+    runcmd,
+    config_path,
+    chan_map_path,
+    filelist_path,
+    pars_path,
+    metadata_path,
+)
+from scripts.util.pars_loading import pars_catalog
+import scripts.util as ds
+
+check_in_cycle = True
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
@@ -12,6 +35,7 @@ setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
+meta = metadata_path(setup)
 
 basedir = workflow.basedir
 
@@ -19,6 +43,18 @@ basedir = workflow.basedir
 localrules:
     gen_filelist,
     autogen_output,
+
+
+ds.pars_key_resolve.write_par_catalog(
+    ["-*-*-*-cal"],
+    os.path.join(pars_path(setup), "raw", "validity.jsonl"),
+    [
+        get_pattern_unsorted_data(setup),
+        get_pattern_tier_daq(setup),
+        get_pattern_tier_raw(setup),
+    ],
+    {"cal": ["par_raw"]},
+)
 
 
 onstart:
@@ -31,87 +67,40 @@ onsuccess:
     shell(f"rm {filelist_path(setup)}/* || true")
 
 
-def get_pattern(tier):
-    if tier == "daq":
-        return get_pattern_unsorted_data(setup)
-    elif tier == "raw":
-        return get_pattern_tier_daq(setup)
-    else:
-        return get_pattern_tier_raw(setup)
+include: "rules/common.smk"
+include: "rules/main.smk"
+include: "rules/raw.smk"
+include: "rules/blinding_check.smk"
 
 
 checkpoint gen_filelist:
+    """
+    This rule generates the filelist. It is a checkpoint so when it is run it will update
+    the dag passed on the files it finds as an output. It does this by taking in the search
+    pattern, using this to find all the files that match this pattern, deriving the keys from
+    the files found and generating the list of new files needed.
+    """
     output:
         os.path.join(filelist_path(setup), "{label}-{tier}.{extension}list"),
     params:
         setup=lambda wildcards: setup,
         search_pattern=lambda wildcards: get_pattern(wildcards.tier),
+        basedir=basedir,
+        configs=configs,
+        chan_maps=chan_maps,
+        blinding=lambda wildcards: True if wildcards.tier == "raw" else False,
     script:
-        "scripts/create_filelist.py"
-
-
-def read_filelist(wildcards):
-    with checkpoints.gen_filelist.get(
-        label=wildcards.label, tier=wildcards.tier, extension="file"
-    ).output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-rule autogen_output:
-    input:
-        filelist=read_filelist,
-    output:
-        gen_output="{label}-{tier}.gen",
-        summary_log=f"{log_path(setup)}/summary-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-        warning_log=f"{log_path(setup)}/warning-"
-        + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
-    params:
-        log_path=tmp_log_path(setup),
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/complete_run.py "
-        "--log_path {params.log_path} "
-        "--gen_output {output.gen_output} "
-        "--summary_log {output.summary_log} "
-        "--warning_log {output.warning_log} "
-        "--filelist {input.filelist}"
+        "scripts/create_{wildcards.extension}list.py"
 
 
 rule sort_data:
+    """
+    This rules moves the daq data from the unsorted sandbox dir
+    to the sorted dirs under generated
+    """
     input:
         get_pattern_unsorted_data(setup),
     output:
         get_pattern_tier_daq(setup),
     shell:
         "mv {input} {output}"
-
-
-rule build_raw:
-    input:
-        get_pattern_tier_daq(setup),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-    output:
-        get_pattern_tier_raw(setup),
-    log:
-        get_pattern_log(setup, "tier_raw"),
-    group:
-        "tier-raw"
-    resources:
-        mem_swap=110,
-        runtime=300,
-    shell:
-        "{swenv} python3 -B {basedir}/scripts/build_raw.py "
-        "--log {log} "
-        "--configs {configs} "
-        "--chan_maps {chan_maps} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "{input} {output}"
-
-
-# vim: ft=snakemake

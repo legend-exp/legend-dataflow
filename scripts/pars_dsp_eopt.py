@@ -6,14 +6,16 @@ import pathlib
 import pickle as pkl
 import time
 
+import lgdo.lh5_store as lh5
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
+import sklearn.gaussian_process.kernels as ker
 from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dsp_optimize import run_one_dsp
-from sklearn.gaussian_process.kernels import *
+from pygama.pargen.utils import get_tcm_pulser_ids
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
@@ -21,6 +23,7 @@ numba_defaults.boundscheck = True
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
+argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
 argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
@@ -60,17 +63,22 @@ dsp_config = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["processing_c
 ]
 opt_json = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["optimiser_config"][args.channel]
 
-with open(opt_json) as r:
-    opt_dict = json.load(r)
-
-with open(args.decay_const) as t:
-    db_dict = json.load(t)
+opt_dict = Props.read_from(opt_json)
+db_dict = Props.read_from(args.decay_const)
 
 if opt_dict["run_eopt"] is True:
     with open(args.raw_filelist) as f:
         files = f.read().splitlines()
 
     raw_files = sorted(files)
+
+    # get pulser mask from tcm files
+    with open(args.tcm_filelist) as f:
+        tcm_files = f.read().splitlines()
+    tcm_files = sorted(np.unique(tcm_files))
+    ids, mask = get_tcm_pulser_ids(
+        tcm_files, args.channel, opt_dict.pop("pulser_multiplicity_threshold")
+    )
 
     peaks_keV = np.array(opt_dict["peaks"])
     kev_widths = [tuple(kev_width) for kev_width in opt_dict["kev_widths"]]
@@ -137,8 +145,8 @@ if opt_dict["run_eopt"] is True:
                     "kev_width": kev_width,
                 }
             )
-
-    tb_data, idx_list = om.event_selection(
+    sto = lh5.LH5Store()
+    idx_events, idx_list = om.event_selection(
         raw_files,
         f"{args.channel}/raw",
         dsp_config,
@@ -146,11 +154,20 @@ if opt_dict["run_eopt"] is True:
         peaks_keV,
         np.arange(0, len(peaks_keV), 1).tolist(),
         kev_widths,
+        pulser_mask=mask,
         cut_parameters=opt_dict["cut_parameters"],
         n_events=opt_dict["n_events"],
         threshold=opt_dict["threshold"],
         wf_field=opt_dict["wf_field"],
     )
+
+    tb_data = sto.read_object(
+        f"{args.channel}/raw",
+        raw_files,
+        idx=idx_events,
+        n_rows=opt_dict["n_events"],
+    )[0]
+
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
 
@@ -269,9 +286,9 @@ if opt_dict["run_eopt"] is True:
             sample_y_trap[i] = max_trap
 
     kernel = (
-        ConstantKernel(2.0, constant_value_bounds="fixed")
-        + 1.0 * RBF(1.0, length_scale_bounds=[0.5, 2.5])
-        + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
+        ker.ConstantKernel(2.0, constant_value_bounds="fixed")
+        + 1.0 * ker.RBF(1.0, length_scale_bounds=[0.5, 2.5])
+        + ker.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
     )
 
     bopt_cusp = om.BayesianOptimizer(

@@ -4,7 +4,8 @@ import glob
 import json
 import os
 
-from util.FileKey import *
+from util.FileKey import FileKey
+from util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
 
 setup = snakemake.params.setup
 
@@ -37,8 +38,7 @@ key = FileKey.parse_keypart(keypart)
 
 item_list = []
 for item in key:
-    if "_" in item:
-        _item = item.split("_")
+    _item = item.split("_") if "_" in item else item
     if isinstance(_item, list):
         item_list.append(_item)
     else:
@@ -52,17 +52,30 @@ for i in item_list[0]:
                 for j2 in item_list[4]:
                     filekeys.append(FileKey(i, j, k, i2, j2))
 
-keys = []
+filenames = []
+fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
 for key in filekeys:
     fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
     for f in files:
         _key = FileKey.get_filekey_from_pattern(f, search_pattern)
+        if tier == "raw":
+            if snakemake.params.blinding is True:
+                if _key.datatype == "phy":
+                    filename = FileKey.get_path_from_filekey(
+                        _key, get_pattern_tier_raw_blind(setup)
+                    )
+                else:
+                    filename = FileKey.get_path_from_filekey(_key, fn_pattern)
+            else:
+                filename = FileKey.get_path_from_filekey(_key, fn_pattern)
+        else:
+            filename = FileKey.get_path_from_filekey(_key, fn_pattern)
         if _key.name in ignore_keys:
             pass
         else:
             if file_selection == "all":
-                keys.append(_key.name)
+                filenames += filename
             elif file_selection == "sel":
                 if analysis_runs == "all" or (
                     _key.period in analysis_runs
@@ -71,14 +84,13 @@ for key in filekeys:
                         or analysis_runs[_key.period] == "all"
                     )
                 ):
-                    keys.append(_key.name)
+                    filenames += filename
             else:
                 msg = "unknown file selection"
                 raise ValueError(msg)
-keys = sorted(keys)
 
+filenames = sorted(filenames)
 
-filenames = FileKey.tier_files(setup, keys, tier)
 with open(snakemake.output[0], "w") as f:
     for fn in filenames:
         f.write(f"{fn}\n")

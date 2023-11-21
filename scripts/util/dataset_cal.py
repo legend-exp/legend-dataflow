@@ -1,7 +1,18 @@
+"""
+This module uses the partition database files to the necessary inputs for partition calibrations
+"""
+
 import json
+import os
 
 from .CalibCatalog import PropsStream
-from .FileKey import *
+from .FileKey import ChannelProcKey, ProcessingFileKey
+from .patterns import (
+    get_pattern_log_channel,
+    get_pattern_pars_tmp_channel,
+    get_pattern_plts_tmp_channel,
+)
+from .utils import filelist_path
 
 
 class dataset_file:

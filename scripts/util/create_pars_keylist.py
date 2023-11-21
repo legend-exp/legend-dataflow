@@ -1,3 +1,7 @@
+"""
+This module creates the validity files used for determining the time validity of data
+"""
+
 import glob
 import json
 import os
@@ -7,9 +11,8 @@ from typing import ClassVar
 
 import snakemake as smk
 
-from .FileKey import *
-from .patterns import *
-from .utils import *
+from .FileKey import FileKey, ProcessingFileKey
+from .patterns import par_validity_pattern
 
 
 class pars_key_resolve:
@@ -105,15 +108,22 @@ class pars_key_resolve:
         return keys
 
     @staticmethod
-    def write_par_catalog(keypart, filename, search_pattern, name_dict):
+    def write_par_catalog(keypart, filename, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
+        if isinstance(search_patterns, str):
+            search_patterns = [search_patterns]
         keylist = []
-        for keypar in keypart:
-            keylist += pars_key_resolve.get_keys(keypar, search_pattern)
-        keys = sorted(keylist, key=FileKey.get_unix_timestamp)
-        keylist = pars_key_resolve.generate_par_keylist(keys)
+        for search_pattern in search_patterns:
+            for keypar in keypart:
+                keylist += pars_key_resolve.get_keys(keypar, search_pattern)
+        if len(keylist) != 0:
+            keys = sorted(keylist, key=FileKey.get_unix_timestamp)
+            keylist = pars_key_resolve.generate_par_keylist(keys)
 
-        entrylist = pars_key_resolve.match_all_entries(keylist, name_dict)
-        pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-        pars_key_resolve.write_to_jsonl(entrylist, filename)
+            entrylist = pars_key_resolve.match_all_entries(keylist, name_dict)
+            pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
+            pars_key_resolve.write_to_jsonl(entrylist, filename)
+        else:
+            msg = "No Keys found"
+            raise RuntimeError(msg)

@@ -4,6 +4,7 @@
       "paths": {
         "sandbox_path": "",
         "tier_daq": "$_/generated/tier/daq",
+        "tier_raw_blind": "",
 
         "workflow": "$_/workflow",
 
