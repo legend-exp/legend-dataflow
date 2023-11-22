@@ -1,8 +1,3 @@
-from pygama.dsp.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 import argparse
 import json
 import logging
@@ -13,6 +8,10 @@ import time
 
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
+from pygama.dsp.utils import numba_defaults
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
