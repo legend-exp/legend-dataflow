@@ -5,6 +5,10 @@ import pathlib
 import pickle as pkl
 import shelve
 
+import lgdo.lh5_store as lh5
+from lgdo import Array
+sto = lh5.LH5Store()
+
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", nargs="*", type=str)
 argparser.add_argument("--output", help="output file", nargs="*", type=str)
@@ -31,6 +35,14 @@ for _i, out_file in enumerate(args.output):
                     name,
                 ) = os.path.basename(channel).split("-")
                 out_dict[channel_name] = channel_dict
+                
+                for key in channel_dict.keys():
+                    key_dict = channel_dict[key]
+                    for key_pars in key_dict.keys():
+                        if isinstance(key_dict[key_pars], str):
+                            if "loadlh5" in key_dict[key_pars]:
+                                out_lh5 = outfile.replace(".json",".lh5")
+                                out_dict[channel_name][key][key_pars] = f"loadlh5('{out_lh5}', '{channel_name}/{key}')"
             else:
                 pass
 
@@ -86,3 +98,38 @@ for _i, out_file in enumerate(args.output):
                     pass
             if len(common_dict) > 0:
                 shelf["common"] = common_dict
+
+    elif file_extension == ".lh5":
+        for channel in channel_files:
+            if os.path.splitext(channel)[0].split("-")[-1] == processing_step:
+                with open(channel) as r:
+                    channel_dict = json.load(r)
+                (
+                    experiment,
+                    period,
+                    run,
+                    datatype,
+                    timestamp,
+                    channel_name,
+                    name,
+                ) = os.path.basename(channel).split("-")
+                
+                out_dict[channel_name] = channel_dict
+                
+                for key in channel_dict.keys():
+                    key_dict = channel_dict[key]
+                    for key_pars in key_dict.keys():
+                        if isinstance(key_dict[key_pars], str):
+                            if "loadlh5" in key_dict[key_pars]:
+                                path_to_file = key_dict[key_pars].split("'")[1]
+                                path_in_file = key_dict[key_pars].split("'")[3]
+                                data = sto.read_object(path_in_file, path_to_file)[0].nda
+                                sto.write_object(
+                                    Array(data),
+                                    name=key,
+                                    lh5_file=out_file,
+                                    wo_mode="overwrite",
+                                    group=channel_name
+                                )
+            else:
+                pass
