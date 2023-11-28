@@ -39,10 +39,9 @@ for _i, out_file in enumerate(args.output):
                 for key in channel_dict.keys():
                     key_dict = channel_dict[key]
                     for key_pars in key_dict.keys():
-                        if isinstance(key_dict[key_pars], str):
-                            if "loadlh5" in key_dict[key_pars]:
-                                out_lh5 = outfile.replace(".json",".lh5")
-                                out_dict[channel_name][key][key_pars] = f"loadlh5('{out_lh5}', '{channel_name}/{key}')"
+                        if isinstance(key_dict[key_pars], str) and ("loadlh5" in key_dict[key_pars]):
+                            out_lh5 = out_file.replace(".json",".lh5")
+                            out_dict[channel_name][key][key_pars] = f"loadlh5('{out_lh5}', '{channel_name}/{key}')"
             else:
                 pass
 
@@ -119,17 +118,16 @@ for _i, out_file in enumerate(args.output):
                 for key in channel_dict.keys():
                     key_dict = channel_dict[key]
                     for key_pars in key_dict.keys():
-                        if isinstance(key_dict[key_pars], str):
-                            if "loadlh5" in key_dict[key_pars]:
-                                path_to_file = key_dict[key_pars].split("'")[1]
-                                path_in_file = key_dict[key_pars].split("'")[3]
-                                data = sto.read_object(path_in_file, path_to_file)[0].nda
-                                sto.write_object(
-                                    Array(data),
-                                    name=key,
-                                    lh5_file=out_file,
-                                    wo_mode="overwrite",
-                                    group=channel_name
-                                )
+                        if isinstance(key_dict[key_pars], str) and ("loadlh5" in key_dict[key_pars]):
+                            path_to_file = key_dict[key_pars].split("'")[1]
+                            path_in_file = key_dict[key_pars].split("'")[3]
+                            data = sto.read_object(path_in_file, path_to_file)[0].nda
+                            sto.write_object(
+                                Array(data),
+                                name=key,
+                                lh5_file=out_file,
+                                wo_mode="overwrite",
+                                group=channel_name
+                            )
             else:
                 pass

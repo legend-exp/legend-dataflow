@@ -1,8 +1,3 @@
-from pygama.dsp.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 import argparse
 import json
 import logging
@@ -11,8 +6,12 @@ import pathlib
 import pickle as pkl
 import time
 
+from pygama.dsp.utils import numba_defaults
 import pygama.pargen.dplms_ge_dict as pdd
 from legendmeta import LegendMetadata
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
@@ -45,17 +44,17 @@ log = logging.getLogger(__name__)
 t0 = time.time()
 
 conf = LegendMetadata(path=args.configs)
-configs = configs.on(args.timestamp, system=args.datatype)
-dsp_config = config_dict['snakemake_rules']['pars_dsp_dplms']["inputs"]['proc_chain'][args.channel]
+configs = conf.on(args.timestamp, system=args.datatype)
+dsp_config = configs['snakemake_rules']['pars_dsp_dplms']["inputs"]['proc_chain'][args.channel]
 
-dplms_json = config_dict['snakemake_rules']['pars_dsp_dplms']["inputs"]['dplms_pars'][args.channel]
+dplms_json = configs['snakemake_rules']['pars_dsp_dplms']["inputs"]['dplms_pars'][args.channel]
 with open(dplms_json) as r:
     dplms_dict = json.load(r)
 
 with open(args.database) as t:
     db_dict = json.load(t)
 
-if opt_dict["run_dplms"] is True:
+if dplms_dict["run_dplms"] is True:
     with open(args.fft_raw_filelist) as f:
         fft_files = f.read().splitlines()
     with open(args.cal_raw_filelist) as f:
