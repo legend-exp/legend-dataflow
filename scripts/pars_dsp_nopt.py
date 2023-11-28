@@ -43,7 +43,7 @@ t0 = time.time()
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
-dsp_config = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["processing_chain"][
+dsp_config = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["processing_chain"][
     args.channel
 ]
 opt_json = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["optimiser_config"][args.channel]
