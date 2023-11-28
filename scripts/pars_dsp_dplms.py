@@ -6,9 +6,15 @@ import pathlib
 import pickle as pkl
 import time
 
+import lgdo.lh5_store as lh5
+import numpy as np
 import pygama.pargen.dplms_ge_dict as pdd
 from legendmeta import LegendMetadata
 from pygama.dsp.utils import numba_defaults
+from pygama.pargen.energy_optimisation import (
+    event_selection,
+    index_data,
+)
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
@@ -39,9 +45,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
-
-
-t0 = time.time()
+sto = lh5.LH5Store()
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
@@ -63,6 +67,33 @@ if dplms_dict["run_dplms"] is True:
     fft_files = sorted(fft_files)
     cal_files = sorted(cal_files)
 
+    t0 = time.time()
+    log.info("\nLoad fft data")
+    energies = sto.read_object(f"{args.channel}/raw/daqenergy", fft_files)[0]
+    idxs = np.where(energies.nda == 0)[0]
+    raw_fft = sto.read_object(
+        f"{args.channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs
+    )[0]
+    t1 = time.time()
+    log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
+
+    log.info("\nRunning event selection")
+    peaks_keV = np.array(dplms_dict["peaks_keV"])
+    kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
+    raw_cal, idx_list = event_selection(
+        cal_files,
+        f"{args.channel}/raw",
+        dsp_config,
+        db_dict[args.channel],
+        peaks_keV,
+        np.arange(0, len(peaks_keV), 1).tolist(),
+        kev_widths,
+        cut_parameters=dplms_dict["wfs_cut_pars"],
+        n_events=dplms_dict["n_signals"],
+    )
+    raw_cal = index_data(raw_cal, idx_list[-1])
+    log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
+
     if isinstance(dsp_config, str):
         with open(dsp_config) as r:
             dsp_config = json.load(r)
@@ -70,8 +101,8 @@ if dplms_dict["run_dplms"] is True:
     if args.plot_path:
         out_dict, plot_dict = pdd.dplms_ge_dict(
             args.channel,
-            fft_files,
-            cal_files,
+            raw_fft,
+            raw_cal,
             dsp_config,
             db_dict,
             args.lh5_path,
@@ -84,16 +115,15 @@ if dplms_dict["run_dplms"] is True:
     else:
         out_dict, plot_dict = pdd.dplms_ge_dict(
             args.channel,
-            fft_files,
-            cal_files,
+            raw_fft,
+            raw_cal,
             dsp_config,
             db_dict,
             args.lh5_path,
             dplms_dict,
         )
 
-    t1 = time.time()
-    log.info(f"DPLMS creation finished in {(t1-t0)/60} minutes")
+    log.info(f"DPLMS creation finished in {(time.time()-t0)/60} minutes")
 else:
     out_dict = {}
 
