@@ -81,4 +81,4 @@ else:
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.dsp_pars, "w") as w:
-    json.dump(db_dict, w, indent=4)
+    json.dump(out_dict, w, indent=4)
