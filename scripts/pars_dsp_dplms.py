@@ -6,9 +6,9 @@ import pathlib
 import pickle as pkl
 import time
 
-from pygama.dsp.utils import numba_defaults
 import pygama.pargen.dplms_ge_dict as pdd
 from legendmeta import LegendMetadata
+from pygama.dsp.utils import numba_defaults
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
@@ -45,9 +45,9 @@ t0 = time.time()
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
-dsp_config = configs['snakemake_rules']['pars_dsp_dplms']["inputs"]['proc_chain'][args.channel]
+dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
 
-dplms_json = configs['snakemake_rules']['pars_dsp_dplms']["inputs"]['dplms_pars'][args.channel]
+dplms_json = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["dplms_pars"][args.channel]
 with open(dplms_json) as r:
     dplms_dict = json.load(r)
 
@@ -76,7 +76,7 @@ if dplms_dict["run_dplms"] is True:
             db_dict,
             args.lh5_path,
             dplms_dict,
-            display=1
+            display=1,
         )
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path, "wb") as f:

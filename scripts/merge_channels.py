@@ -7,6 +7,7 @@ import shelve
 
 import lgdo.lh5_store as lh5
 from lgdo import Array
+
 sto = lh5.LH5Store()
 
 argparser = argparse.ArgumentParser()
@@ -35,13 +36,17 @@ for _i, out_file in enumerate(args.output):
                     name,
                 ) = os.path.basename(channel).split("-")
                 out_dict[channel_name] = channel_dict
-                
-                for key in channel_dict.keys():
+
+                for key in channel_dict:
                     key_dict = channel_dict[key]
-                    for key_pars in key_dict.keys():
-                        if isinstance(key_dict[key_pars], str) and ("loadlh5" in key_dict[key_pars]):
-                            out_lh5 = out_file.replace(".json",".lh5")
-                            out_dict[channel_name][key][key_pars] = f"loadlh5('{out_lh5}', '{channel_name}/{key}')"
+                    for key_pars in key_dict:
+                        if isinstance(key_dict[key_pars], str) and (
+                            "loadlh5" in key_dict[key_pars]
+                        ):
+                            out_lh5 = out_file.replace(".json", ".lh5")
+                            out_dict[channel_name][key][
+                                key_pars
+                            ] = f"loadlh5('{out_lh5}', '{channel_name}/{key}')"
             else:
                 pass
 
@@ -112,13 +117,15 @@ for _i, out_file in enumerate(args.output):
                     channel_name,
                     name,
                 ) = os.path.basename(channel).split("-")
-                
+
                 out_dict[channel_name] = channel_dict
-                
-                for key in channel_dict.keys():
+
+                for key in channel_dict:
                     key_dict = channel_dict[key]
-                    for key_pars in key_dict.keys():
-                        if isinstance(key_dict[key_pars], str) and ("loadlh5" in key_dict[key_pars]):
+                    for key_pars in key_dict:
+                        if isinstance(key_dict[key_pars], str) and (
+                            "loadlh5" in key_dict[key_pars]
+                        ):
                             path_to_file = key_dict[key_pars].split("'")[1]
                             path_in_file = key_dict[key_pars].split("'")[3]
                             data = sto.read_object(path_in_file, path_to_file)[0].nda
@@ -127,7 +134,7 @@ for _i, out_file in enumerate(args.output):
                                 name=key,
                                 lh5_file=out_file,
                                 wo_mode="overwrite",
-                                group=channel_name
+                                group=channel_name,
                             )
             else:
                 pass
