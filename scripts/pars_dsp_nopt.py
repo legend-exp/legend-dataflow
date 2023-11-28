@@ -6,9 +6,13 @@ import pathlib
 import pickle as pkl
 import time
 
+import lgdo.lh5_store as lh5
+import numpy as np
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
 from pygama.dsp.utils import numba_defaults
+
+sto = lh5.LH5Store()
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
@@ -60,13 +64,21 @@ if opt_dict["run_nopt"] is True:
 
     raw_files = sorted(files)
 
+    energies = sto.read_object(f"{args.channel}/raw/daqenergy", raw_files)[0]
+    idxs = np.where(energies.nda == 0)[0]
+    tb_data = sto.read_object(
+        f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs
+    )[0]
+    t1 = time.time()
+    log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
+
     if isinstance(dsp_config, str):
         with open(dsp_config) as r:
             dsp_config = json.load(r)
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(
-            raw_files, dsp_config, db_dict, opt_dict, args.channel, display=1
+            tb_data, dsp_config, db_dict, opt_dict, args.channel, display=1
         )
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path, "wb") as f:
@@ -74,8 +86,8 @@ if opt_dict["run_nopt"] is True:
     else:
         out_dict = pno.noise_optimization(raw_files, dsp_config, db_dict, opt_dict, args.channel)
 
-    t1 = time.time()
-    log.info(f"Optimiser finished in {(t1-t0)/60} minutes")
+    t2 = time.time()
+    log.info(f"Optimiser finished in {(t2-t0)/60} minutes")
 else:
     out_dict = {}
 
