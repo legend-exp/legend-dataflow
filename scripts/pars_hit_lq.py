@@ -6,7 +6,6 @@ import logging
 import os
 import pathlib
 import pickle as pkl
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -21,23 +20,22 @@ log = logging.getLogger(__name__)
 
 
 def lq_calibration(
-        data: pd.DataFrame,
-        cal_dicts: dict,
-        energy_param: str,
-        cal_energy_param: str,
-        eres_func: callable,
-        cdf: callable = gauss_cdf,
-        selection_string: str = "",
-        plot_options: dict = {},
-        threshold: int = 800,
+    data: pd.DataFrame,
+    cal_dicts: dict,
+    energy_param: str,
+    cal_energy_param: str,
+    eres_func: callable,
+    cdf: callable = gauss_cdf,
+    selection_string: str = "",
+    plot_options: dict = {},
+    threshold: int = 800,
 ):
-    
-    """ Loads in data from the provided files and runs the LQ calibration on said files
-    
+    """Loads in data from the provided files and runs the LQ calibration on said files
+
     Parameters
     ----------
     files: list, dict
-        Can either be a list of files, or a dict of files seperated by 
+        Can either be a list of files, or a dict of files seperated by
         run timestamps
     lh5_path: string
         The path in the LH5 files to load data from
@@ -55,12 +53,12 @@ def lq_calibration(
     cut_field: string
         A string of flags to apply to the data when running the calibration
     plot_options: dict
-        A dict containing the plot functions the user wants to run,and any 
+        A dict containing the plot functions the user wants to run,and any
         user options to provide those plot functions
     threshold: int
         An energy threshold in keV. Will only load in data with energy values
         above the threshold
-        
+
     Returns
     -------
     cal_dicts: dict
@@ -72,7 +70,6 @@ def lq_calibration(
     lq: cal_lq class
         The cal_lq object used for the LQ calibration
     """
-    
 
     lq = cal_lq(
         cal_dicts,
@@ -83,7 +80,7 @@ def lq_calibration(
         plot_options,
     )
 
-    data['LQ_Ecorr'] = np.divide(data['lq80'], data[energy_param])
+    data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
 
     lq.update_cal_dicts(
         {
@@ -174,12 +171,12 @@ if kwarg_dict["run_lq"] is True:
 
     # load data in
     data, threshold_mask = load_data(
-        files, 
-        f"{args.channel}/dsp", 
-        cal_dict, 
-        params = params, 
-        threshold = kwarg_dict.pop("threshold"),
-        return_selection_mask = True,
+        files,
+        f"{args.channel}/dsp",
+        cal_dict,
+        params=params,
+        threshold=kwarg_dict.pop("threshold"),
+        return_selection_mask=True,
     )
 
     # get pulser mask from tcm files
