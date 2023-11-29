@@ -25,6 +25,7 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
 argparser.add_argument("--dsp_pars", help="dsp_pars", type=str, required=True)
+argparser.add_argument("--inplots", help="inplots", type=str)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
 
 args = argparser.parse_args()
@@ -54,7 +55,7 @@ with open(opt_json) as r:
 with open(args.database) as t:
     db_dict = json.load(t)
 
-if opt_dict["run_nopt"] is True:
+if opt_dict.pop("run_nopt") is True:
     with open(args.raw_filelist) as f:
         files = f.read().splitlines()
 
@@ -69,6 +70,12 @@ if opt_dict["run_nopt"] is True:
             raw_files, dsp_config, db_dict, opt_dict, args.channel, display=1
         )
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+        if args.inplots:
+            with open(args.inplots, "rb") as r:
+                old_plot_dict = pkl.load(r)
+            plot_dict = dict(noise_optimisation = plot_dict, **old_plot_dict)
+        else:
+            plot_dict = dict(noise_optimisation = plot_dict)
         with open(args.plot_path, "wb") as f:
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
     else:
