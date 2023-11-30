@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import re
+import time
 
 import lgdo.lh5_store as lh5
 import numpy as np
@@ -31,6 +32,7 @@ pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
+log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_dsp"][
@@ -50,6 +52,7 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
+start = time.time()
 
 build_dsp(
     args.input,
@@ -59,6 +62,8 @@ build_dsp(
     chan_config=channel_dict,
     write_mode="r",
 )
+
+log.info(f"build_dsp finished in {time.time()-start}")
 
 os.rename(temp_output, args.output)
 
