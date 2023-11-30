@@ -27,6 +27,8 @@ configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
     "inputs"
 ]
+settings = Props.read_from(channel_dict["settings"])
+channel_dict = channel_dict["out_spec"]
 all_config = Props.read_from(channel_dict["gen_config"])
 
 chmap = LegendMetadata(path=args.chan_maps)
@@ -81,10 +83,9 @@ temp_output = f"{args.output}.{rand_num}"
 
 build_raw(
     args.input,
-    in_stream_type="ORCA",
     out_spec=all_config,
     filekey=temp_output,
-    buffer_size=1024,
+    **settings
 )
 
 os.rename(temp_output, args.output)

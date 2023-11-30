@@ -38,8 +38,14 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-Qbb = 2039.061  # keV
-ROI = 25.0  # keV
+configs = LegendMetadata(path=args.configs)
+channel_dict = configs.on(args.timestamp, system=args.datatype)
+
+hdf_settings = Props.read_from(channel_dict["snakemake_rules"]["tier_raw"]["inputs"]["settings"])["hdf5_settings"]
+blinding_settings = Props.read_from(channel_dict["snakemake_rules"]["tier_raw_blind"]["inputs"]["config"])
+
+centroid = blinding_settings["centroid_in_keV"]  # keV
+width = blinding_settings["width_in_keV"]  # keV
 
 # list of all channels and objects in the raw file
 all_channels = lh5.ls(args.input)
@@ -77,7 +83,7 @@ for chnum in list(ged_channels):
     )
 
     # figure out which event indices should be blinded
-    toblind = np.append(toblind, np.nonzero(np.abs(np.asarray(daqenergy_cal) - Qbb) <= ROI)[0])
+    toblind = np.append(toblind, np.nonzero(np.abs(np.asarray(daqenergy_cal) - centroid) <= width)[0])
 
 # remove duplicates
 toblind = np.unique(toblind)
@@ -99,13 +105,15 @@ for channel in all_channels:
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
         chobj, _ = store.read_object(channel, args.input, decompress=False)
-        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="w")
+        store.write_object(chobj, channel, lh5_file=temp_output, wo_mode="w",
+        hdf5_settings=hdf_settings)
         continue
 
     if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
         # if this is a PMT or not included for some reason, just copy it to the output file
         chobj, _ = store.read_object(channel + "/raw", args.input, decompress=False)
-        store.write_object(chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w")
+        store.write_object(chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
+        hdf5_settings=hdf_settings)
         continue
 
     # the rest should be the Ge and SiPM channels that need to be blinded
@@ -116,7 +124,8 @@ for channel in all_channels:
     )
 
     # now write the blinded data for this channel
-    store.write_object(blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w")
+    store.write_object(blinded_chobj, group=channel, name="raw", lh5_file=temp_output, wo_mode="w",
+    hdf5_settings=hdf_settings)
 
 # rename the temp file
 os.rename(temp_output, args.output)
