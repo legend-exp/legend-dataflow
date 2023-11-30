@@ -81,11 +81,6 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
-build_raw(
-    args.input,
-    out_spec=all_config,
-    filekey=temp_output,
-    **settings
-)
+build_raw(args.input, out_spec=all_config, filekey=temp_output, **settings)
 
 os.rename(temp_output, args.output)

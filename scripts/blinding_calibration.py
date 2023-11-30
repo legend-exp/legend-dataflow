@@ -74,15 +74,14 @@ if chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["is_blinded"] is Tr
 
     # dictionary to pass to build hit
     out_dict = {
-        "pars":{
-            "operations":{
+        "pars": {
+            "operations": {
                 "daqenergy_cal": {
                     "expression": "daqenergy*a",
                     "parameters": {"a": round(roughpars[0], 5)},
                 }
             }
         }
-        
     }
 
     # plot to check thagt the calibration is correct with zoom on 2.6 peak
