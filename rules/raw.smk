@@ -42,16 +42,16 @@ rule build_raw_blind:
     and runs only if the blinding check file is on disk. Output is just the blinded raw file.
     """
     input:
-        tier_file=get_pattern_tier_raw(setup).replace("{datatype}", "cal"),
+        tier_file=get_pattern_tier_raw(setup).replace("{datatype}", "phy"),
         blind_file=get_blinding_curve_file,
         check_file=get_blinding_check_file,
     params:
         timestamp="{timestamp}",
-        datatype="cal",
+        datatype="phy",
     output:
         get_pattern_tier_raw_blind(setup),
     log:
-        get_pattern_log(setup, "tier_raw_blind").replace("{datatype}", "cal"),
+        get_pattern_log(setup, "tier_raw_blind").replace("{datatype}", "phy"),
     group:
         "tier-raw"
     resources:
