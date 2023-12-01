@@ -4,7 +4,9 @@ import os
 import pathlib
 
 from lgdo.utils import numba_defaults
+
 numba_defaults.cache = False
+numba_defaults.boundscheck = True
 
 import numpy as np
 from daq2lh5.build_raw import build_raw

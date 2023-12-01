@@ -6,19 +6,21 @@ import pathlib
 import pickle as pkl
 
 from lgdo.utils import numba_defaults as lgdo_defaults
-lgdo_defaults.cache = False
 
-import lgdo.lh5_store as lh5
-import numpy as np
+lgdo_defaults.cache = False
+lgdo_defaults.boundscheck = True
+
 from dspeed.utils import numba_defaults
-from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
-from pygama.pargen.extract_tau import dsp_preprocess_decay_const
-from pygama.pargen.utils import get_tcm_pulser_ids
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
 
+import lgdo.lh5_store as lh5
+import numpy as np
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
+from pygama.pargen.extract_tau import dsp_preprocess_decay_const
+from pygama.pargen.utils import get_tcm_pulser_ids
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)

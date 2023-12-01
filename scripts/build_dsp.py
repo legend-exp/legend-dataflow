@@ -7,18 +7,20 @@ import re
 import time
 
 from lgdo.utils import numba_defaults as lgdo_defaults
-lgdo_defaults.cache = False
 
-import lgdo.lh5_store as lh5
-import numpy as np
-from dspeed.build_dsp import build_dsp
+lgdo_defaults.cache = False
+lgdo_defaults.boundscheck = True
+
 from dspeed.utils import numba_defaults
-from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
 
+import lgdo.lh5_store as lh5
+import numpy as np
+from dspeed import build_dsp
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
