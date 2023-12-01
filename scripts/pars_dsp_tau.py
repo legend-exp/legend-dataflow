@@ -8,7 +8,7 @@ import pickle as pkl
 from lgdo.utils import numba_defaults as lgdo_defaults
 
 lgdo_defaults.cache = False
-lgdo_defaults.boundscheck = True
+lgdo_defaults.boundscheck = False
 
 from dspeed.utils import numba_defaults
 
