@@ -5,6 +5,9 @@ import os
 import pathlib
 import pickle as pkl
 
+from lgdo.utils import numba_defaults as lgdo_defaults
+lgdo_defaults.cache = False
+
 import lgdo.lh5_store as lh5
 import numpy as np
 from dspeed.utils import numba_defaults

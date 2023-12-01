@@ -6,6 +6,9 @@ import pathlib
 import re
 import time
 
+from lgdo.utils import numba_defaults as lgdo_defaults
+lgdo_defaults.cache = False
+
 import lgdo.lh5_store as lh5
 import numpy as np
 from dspeed.build_dsp import build_dsp

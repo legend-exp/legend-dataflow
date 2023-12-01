@@ -3,6 +3,9 @@ import logging
 import os
 import pathlib
 
+from lgdo.utils import numba_defaults
+numba_defaults.cache = False
+
 import numpy as np
 from daq2lh5.build_raw import build_raw
 from legendmeta import LegendMetadata
