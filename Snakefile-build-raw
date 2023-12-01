@@ -88,7 +88,6 @@ checkpoint gen_filelist:
         basedir=basedir,
         configs=configs,
         chan_maps=chan_maps,
-        blinding=lambda wildcards: True if wildcards.tier == "raw" else False,
     script:
         "scripts/create_{wildcards.extension}list.py"
 
