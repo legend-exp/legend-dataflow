@@ -85,7 +85,7 @@ if kwarg_dict["run_tau"] is True:
     if args.plot_path:
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path, "wb") as f:
-            pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
+            pkl.dump({"tau":plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
 else:
     out_dict = {}
 
