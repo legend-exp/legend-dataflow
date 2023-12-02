@@ -47,6 +47,13 @@
       "execenv": {
         "cmd": "apptainer run",
         "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif"
+      },
+      "pkg_versions": {
+        "pygama": "pygama==1.4.3",
+        "pylegendmeta": "pylegendmeta==0.8.2",
+        "dspeed": "dspeed==1.2.0",
+        "legend-pydataobj": "legend-pydataobj==1.4.2",
+        "legend-daq2lh5": "legend-daq2lh5==1.1.0"
       }
     }
   }

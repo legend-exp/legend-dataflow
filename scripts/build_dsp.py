@@ -4,17 +4,23 @@ import logging
 import os
 import pathlib
 import re
+import time
 
-import lgdo.lh5_store as lh5
-import numpy as np
-from dspeed.build_dsp import build_dsp
+from lgdo.utils import numba_defaults as lgdo_defaults
+
+lgdo_defaults.cache = False
+lgdo_defaults.boundscheck = False
+
 from dspeed.utils import numba_defaults
-from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = True
 
+import lgdo.lh5_store as lh5
+import numpy as np
+from dspeed import build_dsp
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -31,6 +37,7 @@ pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
+log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_dsp"][
@@ -50,6 +57,7 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
+start = time.time()
 
 build_dsp(
     args.input,
@@ -59,6 +67,8 @@ build_dsp(
     chan_config=channel_dict,
     write_mode="r",
 )
+
+log.info(f"build_dsp finished in {time.time()-start}")
 
 os.rename(temp_output, args.output)
 

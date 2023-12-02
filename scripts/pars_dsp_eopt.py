@@ -6,20 +6,25 @@ import pathlib
 import pickle as pkl
 import time
 
+from lgdo.utils import numba_defaults as lgdo_defaults
+
+lgdo_defaults.cache = False
+lgdo_defaults.boundscheck = False
+
+from dspeed.utils import numba_defaults
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = True
+
 import lgdo.lh5_store as lh5
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
 import sklearn.gaussian_process.kernels as ker
-from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dsp_optimize import run_one_dsp
 from pygama.pargen.utils import get_tcm_pulser_ids
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
-
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
