@@ -7,6 +7,7 @@ import os
 import pathlib
 import pickle as pkl
 from typing import Callable
+import re
 
 import numpy as np
 import pandas as pd
@@ -194,46 +195,53 @@ for filelist in all_file:
     timestamp = fk.timestamp
     final_dict[timestamp] = sorted(filelist)
 
-params = [
-    kwarg_dict["final_cut_field"],
-    kwarg_dict["current_param"],
-    "tp_0_est",
-    "tp_99",
-    kwarg_dict["energy_param"],
-    kwarg_dict["cal_energy_param"],
-    "timestamp",
-]
-if "dt_param" in kwarg_dict:
-    params += [kwarg_dict["dt_param"]]
-
-# load data in
-data, threshold_mask = load_data(
-    final_dict,
-    f"{args.channel}/dsp",
-    cal_dict,
-    params=params,
-    threshold=kwarg_dict.pop("threshold"),
-    return_selection_mask=True,
-)
-
-# get pulser mask from tcm files
-if isinstance(args.tcm_filelist, list):
-    tcm_files = []
-    for file in args.tcm_filelist:
-        with open(file) as f:
-            tcm_files += f.read().splitlines()
-else:
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-
-tcm_files = sorted(np.unique(tcm_files))
-ids, mask = get_tcm_pulser_ids(
-    tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-)
-data["is_pulser"] = mask[threshold_mask]
-
 # run aoe cal
 if kwarg_dict.pop("run_aoe") is True:
+
+    params = [
+        kwarg_dict["final_cut_field"],
+        kwarg_dict["current_param"],
+        "tp_0_est",
+        "tp_99",
+        kwarg_dict["energy_param"],
+        kwarg_dict["cal_energy_param"],
+        "timestamp",
+    ]
+    if "dt_param" in kwarg_dict:
+        params += [kwarg_dict["dt_param"]]
+
+    if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
+        params.append(kwarg_dict["dt_cut"]["out_param"])
+        for tstamp in cal_dict:
+            cal_dict[tstamp].update(kwarg_dict["dt_cut"]["cut"])
+
+    # load data in
+    data, threshold_mask = load_data(
+        final_dict,
+        f"{args.channel}/dsp",
+        cal_dict,
+        params=params,
+        threshold=kwarg_dict.pop("threshold"),
+        return_selection_mask=True,
+    )
+
+    # get pulser mask from tcm files
+    if isinstance(args.tcm_filelist, list):
+        tcm_files = []
+        for file in args.tcm_filelist:
+            with open(file) as f:
+                tcm_files += f.read().splitlines()
+    else:
+        with open(args.tcm_filelist) as f:
+            tcm_files = f.read().splitlines()
+
+    tcm_files = sorted(np.unique(tcm_files))
+    ids, mask = get_tcm_pulser_ids(
+        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+    )
+    data["is_pulser"] = mask[threshold_mask]
+
+
     pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
 
     mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else pol1
