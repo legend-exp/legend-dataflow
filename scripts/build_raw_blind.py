@@ -119,7 +119,11 @@ for channel in all_channels:
         # if this isn't an interesting channel, just copy it to the output file
         chobj, _ = store.read_object(channel, args.input, decompress=False)
         store.write_object(
-            chobj, channel, lh5_file=temp_output, wo_mode="w", hdf5_settings=hdf_settings
+            chobj,
+            channel,
+            lh5_file=temp_output,
+            wo_mode="w",
+            **hdf_settings,
         )
         continue
 
@@ -132,7 +136,7 @@ for channel in all_channels:
             name="raw",
             lh5_file=temp_output,
             wo_mode="w",
-            hdf5_settings=hdf_settings,
+            **hdf_settings,
         )
         continue
 
@@ -150,7 +154,7 @@ for channel in all_channels:
         name="raw",
         lh5_file=temp_output,
         wo_mode="w",
-        hdf5_settings=hdf_settings,
+        **hdf_settings,
     )
 
 # rename the temp file
