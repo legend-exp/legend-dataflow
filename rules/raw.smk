@@ -67,5 +67,5 @@ rule build_raw_blind:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--blind_curve {input.blind_file} "
-        "{input.tier_file} "
-        "{output}"
+        "--input {input.tier_file} "
+        "--output {output}"

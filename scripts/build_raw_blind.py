@@ -27,8 +27,8 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("input", help="input file", type=str)
-argparser.add_argument("output", help="output file", type=str)
+argparser.add_argument("--input", help="input file", type=str)
+argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument(
     "--blind_curve", help="blinding curves file", type=str, required=True, nargs="*"
 )
