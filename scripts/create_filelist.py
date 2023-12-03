@@ -53,20 +53,18 @@ for i in item_list[0]:
                     filekeys.append(FileKey(i, j, k, i2, j2))
 
 filenames = []
-fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
+if tier != "blind":
+    fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
+else:
+    fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
 for key in filekeys:
     fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
     for f in files:
         _key = FileKey.get_filekey_from_pattern(f, search_pattern)
-        if tier == "raw":
-            if snakemake.params.blinding is True:
-                if _key.datatype == "phy":
-                    filename = FileKey.get_path_from_filekey(
-                        _key, get_pattern_tier_raw_blind(setup)
-                    )
-                else:
-                    filename = FileKey.get_path_from_filekey(_key, fn_pattern)
+        if tier == "blind":
+            if _key.datatype == "phy":
+                filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
             else:
                 filename = FileKey.get_path_from_filekey(_key, fn_pattern)
         else:
