@@ -38,6 +38,7 @@ rule build_per_energy_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        tier = "pht",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
         results_file=temp(
@@ -56,6 +57,7 @@ rule build_per_energy_calibration:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/pars_hit_ecal.py')} "
         "--log {log} "
+        "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -72,13 +74,7 @@ rule build_pars_pht:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
-        lambda wildcards: read_filelist_pars_cal_channel(
-            wildcards,
-            "pht_objects",
-            out_pattern=get_pattern_pars_tmp_channel(
-            setup, "pht", "objects", extension="pkl"
-            ),
-        ),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_objects_pkl"),
     output:
         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
         get_pattern_pars(
