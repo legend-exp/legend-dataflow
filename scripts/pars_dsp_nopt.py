@@ -9,8 +9,8 @@ import time
 import lgdo.lh5_store as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
-from legendmeta import LegendMetadata
 from dspeed.utils import numba_defaults
+from legendmeta import LegendMetadata
 from pygama.pargen.cuts import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
@@ -93,7 +93,9 @@ if opt_dict.pop("run_nopt") is True:
             tb_data, dsp_config, db_dict, opt_dict, args.channel, display=1
         )
     else:
-        out_dict = pno.noise_optimization(raw_files, dsp_config, db_dict.copy(), opt_dict, args.channel)
+        out_dict = pno.noise_optimization(
+            raw_files, dsp_config, db_dict.copy(), opt_dict, args.channel
+        )
 
     t2 = time.time()
     log.info(f"Optimiser finished in {(t2-t0)/60} minutes")
@@ -106,11 +108,11 @@ if args.plot_path:
     if args.inplots:
         with open(args.inplots, "rb") as r:
             old_plot_dict = pkl.load(r)
-        plot_dict = dict(noise_optimisation = plot_dict, **old_plot_dict)
+        plot_dict = dict(noise_optimisation=plot_dict, **old_plot_dict)
     else:
-        plot_dict = dict(noise_optimisation = plot_dict)
+        plot_dict = {"noise_optimisation": plot_dict}
     with open(args.plot_path, "wb") as f:
-            pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
+        pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.dsp_pars, "w") as w:
