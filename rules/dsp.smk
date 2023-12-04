@@ -54,6 +54,44 @@ rule build_pars_dsp_tau:
         "--raw_files {input.files}"
 
 
+# This rule builds the optimal energy filter parameters for the dsp using fft files
+rule build_pars_dsp_nopt:
+    input:
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+        ),
+        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        dsp_pars_nopt=temp(
+            get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization")
+        ),
+        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization")),
+    log:
+        get_pattern_log_channel(setup, "par_dsp_noise_optimization"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_nopt.py')} "
+        "--database {input.database} "
+        "--configs {configs} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--inplots {input.inplots} "
+        "--plot_path {output.plots} "
+        "--dsp_pars {output.dsp_pars_nopt} "
+        "--raw_filelist {input.files}"
+
+
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
@@ -63,8 +101,8 @@ rule build_pars_dsp_eopt:
         tcm_filelist=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
-        decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
-        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant"),
+        decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization"),
+        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization"),
     params:
         timestamp="{timestamp}",
         datatype="cal",

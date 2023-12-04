@@ -71,7 +71,7 @@ opt_json = configs["snakemake_rules"]["pars_dsp_eopt"]["inputs"]["optimiser_conf
 opt_dict = Props.read_from(opt_json)
 db_dict = Props.read_from(args.decay_const)
 
-if opt_dict["run_eopt"] is True:
+if opt_dict.pop("run_eopt") is True:
     with open(args.raw_filelist) as f:
         files = f.read().splitlines()
 
