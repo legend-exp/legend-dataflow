@@ -61,6 +61,7 @@ rule build_pars_dsp_nopt:
             filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
         database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -79,15 +80,16 @@ rule build_pars_dsp_nopt:
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/pars_dsp_nopt.py')} "
-        "--raw_files {input.files}"
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--inplots {input.inplots} "
         "--plot_path {output.plots} "
-        "--dsp_pars {output.dsp_pars_nopt}"
+        "--dsp_pars {output.dsp_pars_nopt} "
+        "--raw_filelist {input.files}"
 
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
@@ -99,8 +101,8 @@ rule build_pars_dsp_eopt:
         tcm_filelist=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
-        decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
-        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant"),
+        decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization"),
+        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
