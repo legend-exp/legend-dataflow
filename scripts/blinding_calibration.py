@@ -7,6 +7,7 @@ and deriving a simple scaling relation from adc to keV.
 import argparse
 import json
 import logging
+import os
 import pickle as pkl
 
 os.environ["LGDO_CACHE"] = "false"

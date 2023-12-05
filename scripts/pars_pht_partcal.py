@@ -19,6 +19,7 @@ from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 
+
 def update_cal_dicts(cal_dicts, update_dict):
     if re.match(r"(\d{8})T(\d{6})Z", list(cal_dicts)[0]):
         for tstamp in cal_dicts:
@@ -30,9 +31,10 @@ def update_cal_dicts(cal_dicts, update_dict):
         cal_dicts.update(update_dict)
     return cal_dicts
 
+
 def partition_energy_cal_th(
     data: pd.Datframe,
-    hit_dicts:dict,
+    hit_dicts: dict,
     energy_params: list[str],
     selection_string: str = "",
     threshold: int = 0,
@@ -205,7 +207,7 @@ data, threshold_mask = load_data(
     params=params,
     threshold=kwarg_dict["threshold"],
     return_selection_mask=True,
-    cal_energy_param = kwarg_dict["energy_params"][0]
+    cal_energy_param=kwarg_dict["energy_params"][0],
 )
 
 # get pulser mask from tcm files
@@ -226,7 +228,10 @@ data["is_pulser"] = mask[threshold_mask]
 
 # run energy supercal
 hit_dicts, ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
-    data, cal_dict, election_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)", **kwarg_dict
+    data,
+    cal_dict,
+    election_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
+    **kwarg_dict,
 )
 
 

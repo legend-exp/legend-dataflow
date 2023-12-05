@@ -4,7 +4,6 @@ import argparse
 import json
 import logging
 import os
-import re
 import pathlib
 import pickle as pkl
 from typing import Callable
@@ -197,7 +196,6 @@ for filelist in all_file:
 
 # run aoe cal
 if kwarg_dict.pop("run_aoe") is True:
-
     params = [
         kwarg_dict["final_cut_field"],
         kwarg_dict["current_param"],
@@ -242,7 +240,6 @@ if kwarg_dict.pop("run_aoe") is True:
         tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
     data["is_pulser"] = mask[threshold_mask]
-
 
     pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
 

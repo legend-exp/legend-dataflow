@@ -123,7 +123,7 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
 def energy_cal_th(
     data: pd.Dataframe,
     energy_params: list[str],
-    cal_energy_params: list = None,
+    cal_energy_params: list | None = None,
     selection_string: str = "",
     hit_dict: dict | None = None,
     cut_parameters: dict[str, int] | None = None,
@@ -150,7 +150,7 @@ def energy_cal_th(
     results_dict = {}
     plot_dict = {}
     full_object_dict = {}
-    for energy_param, cal_energy_param in zip(energy_params,cal_energy_params):
+    for energy_param, cal_energy_param in zip(energy_params, cal_energy_params):
         full_object_dict[cal_energy_param] = calibrate_parameter(
             energy_param,
             selection_string,
@@ -164,9 +164,7 @@ def energy_cal_th(
             tail_weight=tail_weight,
         )
         full_object_dict[cal_energy_param].calibrate_parameter(data)
-        results_dict[cal_energy_param] = full_object_dict[
-            energy_param
-        ].get_results_dict(data)
+        results_dict[cal_energy_param] = full_object_dict[energy_param].get_results_dict(data)
         hit_dict.update(full_object_dict[cal_energy_param].hit_dict)
         if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
             plot_dict[cal_energy_param] = (
@@ -211,11 +209,12 @@ if __name__ == "__main__":
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
     if args.tier == "hit":
-        channel_dict =channel_dict["pars_hit_ecal"]["inputs"]["ecal_config"][args.channel]
+        channel_dict = channel_dict["pars_hit_ecal"]["inputs"]["ecal_config"][args.channel]
     elif args.tier == "pht":
-        channel_dict =channel_dict["pars_pht_ecal"]["inputs"]["ecal_config"][args.channel]
+        channel_dict = channel_dict["pars_pht_ecal"]["inputs"]["ecal_config"][args.channel]
     else:
-        raise ValueError("invalid tier")
+        msg = "invalid tier"
+        raise ValueError(msg)
 
     kwarg_dict = Props.read_from(channel_dict)
 
