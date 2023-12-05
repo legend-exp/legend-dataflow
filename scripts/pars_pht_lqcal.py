@@ -137,7 +137,7 @@ def run_splitter(files):
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
     "pars_pht_lqcal"
-]["inputs"]["par_pht_lqcal_config"][args.channel]
+]["inputs"]["lqcal_config"][args.channel]
 
 kwarg_dict = Props.read_from(channel_dict)
 
@@ -149,14 +149,14 @@ if isinstance(args.ecal_file, list):
             cal = json.load(o)
 
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
-        cal_dict[fk.timestamp] = cal["pars"]
+        cal_dict[fk.timestamp] = cal["pars"]["operations"]
         results_dicts[fk.timestamp] = cal["results"]
 else:
     with open(args.ecal_file) as o:
         cal = json.load(o)
 
     fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.ecal_file))
-    cal_dict[fk.timestamp] = cal["pars"]
+    cal_dict[fk.timestamp] = cal["pars"]["operations"]
     results_dicts[fk.timestamp] = cal["results"]
 
 object_dict = {}
@@ -212,42 +212,44 @@ for filelist in all_file:
     timestamp = fk.timestamp
     final_dict[timestamp] = sorted(filelist)
 
-params = [
-    "lq80",
-    "dt_eff",
-    kwarg_dict["energy_param"],
-    kwarg_dict["cal_energy_param"],
-    kwarg_dict["selection_string"],
-]
-
-# load data in
-data, threshold_mask = load_data(
-    final_dict,
-    f"{args.channel}/dsp",
-    cal_dict,
-    params=params,
-    threshold=kwarg_dict.pop("threshold"),
-    return_selection_mask=True,
-)
-
-# get pulser mask from tcm files
-if isinstance(args.tcm_filelist, list):
-    tcm_files = []
-    for file in args.tcm_filelist:
-        with open(file) as f:
-            tcm_files += f.read().splitlines()
-else:
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-
-tcm_files = sorted(np.unique(tcm_files))
-ids, mask = get_tcm_pulser_ids(
-    tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-)
-data["is_pulser"] = mask[threshold_mask]
-
 # run lq cal
 if kwarg_dict.pop("run_lq") is True:
+
+    params = [
+        "lq80",
+        "dt_eff",
+        kwarg_dict["energy_param"],
+        kwarg_dict["cal_energy_param"],
+        kwarg_dict["cut_field"],
+    ]
+
+    # load data in
+    data, threshold_mask = load_data(
+        final_dict,
+        f"{args.channel}/dsp",
+        cal_dict,
+        params=params,
+        threshold=kwarg_dict.pop("threshold"),
+        return_selection_mask=True,
+    )
+
+    # get pulser mask from tcm files
+    if isinstance(args.tcm_filelist, list):
+        tcm_files = []
+        for file in args.tcm_filelist:
+            with open(file) as f:
+                tcm_files += f.read().splitlines()
+    else:
+        with open(args.tcm_filelist) as f:
+            tcm_files = f.read().splitlines()
+
+    tcm_files = sorted(np.unique(tcm_files))
+    ids, mask = get_tcm_pulser_ids(
+        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+    )
+    data["is_pulser"] = mask[threshold_mask]
+
+
     cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gauss_cdf
 
     try:
@@ -276,7 +278,7 @@ if kwarg_dict.pop("run_lq") is True:
 
     cal_dict, out_dict, plot_dict, lq_obj = lq_calibration(
         data,
-        selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
+        selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
         cal_dicts=cal_dict,
         eres_func=eres_func,
         cdf=cdf,
