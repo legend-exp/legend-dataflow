@@ -27,7 +27,7 @@ def lq_calibration(
     eres_func: callable,
     cdf: callable = gauss_cdf,
     selection_string: str = "",
-    plot_options: dict = {},
+    plot_options: dict | None = None,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 

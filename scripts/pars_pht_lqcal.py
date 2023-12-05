@@ -28,7 +28,7 @@ def lq_calibration(
     eres_func: callable,
     cdf: callable = gauss_cdf,
     selection_string: str = "",
-    plot_options: dict = {},
+    plot_options: dict | None = None,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 
@@ -214,7 +214,6 @@ for filelist in all_file:
 
 # run lq cal
 if kwarg_dict.pop("run_lq") is True:
-
     params = [
         "lq80",
         "dt_eff",
@@ -248,7 +247,6 @@ if kwarg_dict.pop("run_lq") is True:
         tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
     data["is_pulser"] = mask[threshold_mask]
-
 
     cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gauss_cdf
 

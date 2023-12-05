@@ -88,7 +88,9 @@ rule build_aoe_calibration:
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal_objects", extension="pkl")
+            get_pattern_pars_tmp_channel(
+                setup, "hit", "aoe_cal_objects", extension="pkl"
+            )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal")),
     log:
@@ -114,13 +116,14 @@ rule build_aoe_calibration:
         "--ecal_file {input.ecal_file} "
         "{input.files}"
 
+
 # This rule builds the lq calibration using the calibration dsp files
 rule build_lq_calibration:
     input:
         files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
         tcm_filelist=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal"),
@@ -144,7 +147,7 @@ rule build_lq_calibration:
         "par-hit"
     resources:
         runtime=300,
-shell:
+    shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/pars_hit_lq.py')} "
         "--log {log} "

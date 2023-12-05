@@ -38,7 +38,7 @@ rule build_per_energy_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
-        tier = "pht",
+        tier="pht",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
         results_file=temp(
@@ -435,7 +435,9 @@ rule build_pht_aoe_calibrations:
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "aoecal")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "pht", "objeaoecal_objectscts", extension="pkl")
+            get_pattern_pars_tmp_channel(
+                setup, "pht", "objeaoecal_objectscts", extension="pkl"
+            )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
     log:
