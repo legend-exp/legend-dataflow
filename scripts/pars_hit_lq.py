@@ -27,7 +27,7 @@ def lq_calibration(
     eres_func: callable,
     cdf: callable = gauss_cdf,
     selection_string: str = "",
-    plot_options: dict = {},
+    plot_options: dict | None = None,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 
@@ -124,7 +124,7 @@ kwarg_dict = Props.read_from(channel_dict)
 
 with open(args.ecal_file) as o:
     ecal_dict = json.load(o)
-cal_dict = ecal_dict["pars"]
+cal_dict = ecal_dict["pars"]["operations"]
 eres_dict = ecal_dict["results"]
 
 with open(args.eres_file, "rb") as o:
@@ -159,7 +159,7 @@ if kwarg_dict["run_lq"] is True:
         "dt_eff",
         kwarg_dict["energy_param"],
         kwarg_dict["cal_energy_param"],
-        kwarg_dict["selection_string"],
+        kwarg_dict["cut_field"],
     ]
 
     # load data in
@@ -183,7 +183,7 @@ if kwarg_dict["run_lq"] is True:
 
     cal_dict, out_dict, plot_dict, obj = lq_calibration(
         data,
-        selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
+        selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
         cal_dicts=cal_dict,
         eres_func=eres_func,
         cdf=cdf,

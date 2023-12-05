@@ -86,11 +86,13 @@ rule build_aoe_calibration:
         datatype="cal",
         channel="{channel}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "hit", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(
+                setup, "hit", "aoe_cal_objects", extension="pkl"
+            )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal")),
     log:
         get_pattern_log_channel(setup, "pars_hit_aoe_cal"),
     group:
@@ -107,6 +109,54 @@ rule build_aoe_calibration:
         "--inplots {input.inplots} "
         "--channel {params.channel} "
         "--aoe_results {output.aoe_results} "
+        "--eres_file {input.eres_file} "
+        "--hit_pars {output.hit_pars} "
+        "--plot_file {output.plot_file} "
+        "--tcm_filelist {input.tcm_filelist} "
+        "--ecal_file {input.ecal_file} "
+        "{input.files}"
+
+
+# This rule builds the lq calibration using the calibration dsp files
+rule build_lq_calibration:
+    input:
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+        ),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        ),
+        ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal"),
+        eres_file=get_pattern_pars_tmp_channel(
+            setup, "hit", "aoe_cal_objects", extension="pkl"
+        ),
+        inplots=get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit")),
+        lq_results=temp(
+            get_pattern_pars_tmp_channel(setup, "hit", "objects", extension="pkl")
+        ),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit")),
+    log:
+        get_pattern_log_channel(setup, "pars_hit_lq_cal"),
+    group:
+        "par-hit"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_hit_lq.py')} "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--inplots {input.inplots} "
+        "--channel {params.channel} "
+        "--lq_results {output.lq_results} "
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
