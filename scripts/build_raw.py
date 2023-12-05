@@ -3,10 +3,8 @@ import logging
 import os
 import pathlib
 
-from lgdo.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = False
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
 
 import numpy as np
 from daq2lh5.build_raw import build_raw

@@ -6,15 +6,10 @@ import pathlib
 import re
 import time
 
-from lgdo.utils import numba_defaults as lgdo_defaults
-
-lgdo_defaults.cache = False
-lgdo_defaults.boundscheck = False
-
-from dspeed.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
 import lgdo.lh5_store as lh5
 import numpy as np

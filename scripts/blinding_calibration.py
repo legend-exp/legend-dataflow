@@ -9,10 +9,8 @@ import json
 import logging
 import pickle as pkl
 
-from lgdo.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = False
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
 
 import lgdo.lh5_store as lh5
 import matplotlib as mpl
