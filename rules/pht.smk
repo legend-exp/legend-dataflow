@@ -38,11 +38,12 @@ rule build_per_energy_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        tier = "pht",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
         results_file=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "energy_cal_results", extension="pkl"
+                setup, "pht", "energy_cal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "energy_cal")),
@@ -60,6 +61,7 @@ rule build_per_energy_calibration:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--tier {params.tier} "
         "--plot_path {output.plot_file} "
         "--results_path {output.results_file} "
         "--save_path {output.ecal_file} "
@@ -74,17 +76,14 @@ rule build_pars_pht:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_pars_cal_channel(
             wildcards,
-            "pht_objects",
-            out_pattern=get_pattern_pars_tmp_channel(
-            setup, "pht", "objects", extension="pkl"
-            ),
+            "pht_objects_pkl",
         ),
     output:
         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "pht",
-            name="results",
+            name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
@@ -160,7 +159,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     tier="pht",
-                    name="energy_cal_results",
+                    name="energy_cal_objects",
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
@@ -187,14 +186,14 @@ for key, dataset in part.datasets.items():
                         name="partcal",
                     )
                 ],
-                aoe_results=[
+                partcal_results=[
                     temp(file)
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
                         key,
                         tier="pht",
-                        name="partcal_results",
+                        name="partcal_objects",
                         extension="pkl",
                     )
                 ],
@@ -230,7 +229,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
-                "--fit_results {output.aoe_results} "
+                "--fit_results {output.partcal_results} "
                 "--eres_file {input.eres_file} "
                 "--hit_pars {output.hit_pars} "
                 "--plot_file {output.plot_file} "
@@ -258,7 +257,7 @@ rule build_pht_energy_super_calibrations:
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "energy_cal_results", extension="pkl"
+            setup, "pht", "energy_cal_objects", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "energy_cal"),
     params:
@@ -267,9 +266,9 @@ rule build_pht_energy_super_calibrations:
         timestamp="{timestamp}",
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "partcal")),
-        aoe_results=temp(
+        partcal_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "partcal_results", extension="pkl"
+                setup, "pht", "partcal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "partcal")),
@@ -289,7 +288,7 @@ rule build_pht_energy_super_calibrations:
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--fit_results {output.aoe_results} "
+        "--fit_results {output.partcal_results} "
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
@@ -328,7 +327,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     tier="pht",
-                    name="partcal_results",
+                    name="partcal_objects",
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
@@ -424,7 +423,7 @@ rule build_pht_super_calibrations:
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "partcal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "partcal_results", extension="pkl"
+            setup, "pht", "partcal_objects", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "partcal"),
     params:

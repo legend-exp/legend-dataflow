@@ -41,7 +41,7 @@ rule build_energy_calibration:
         ecal_file=temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
         results_file=temp(
             get_pattern_pars_tmp_channel(
-                setup, "hit", "energy_cal_results", extension="pkl"
+                setup, "hit", "energy_cal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "energy_cal")),
@@ -78,7 +78,7 @@ rule build_aoe_calibration:
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "hit", "energy_cal_results", extension="pkl"
+            setup, "hit", "energy_cal_objects", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "hit", "energy_cal"),
     params:
