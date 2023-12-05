@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import re
 
 import numpy as np
 import pandas as pd
@@ -18,9 +19,20 @@ from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 
+def update_cal_dicts(cal_dicts, update_dict):
+    if re.match(r"(\d{8})T(\d{6})Z", list(cal_dicts)[0]):
+        for tstamp in cal_dicts:
+            if tstamp in update_dict:
+                cal_dicts[tstamp].update(update_dict[tstamp])
+            else:
+                cal_dicts[tstamp].update(update_dict)
+    else:
+        cal_dicts.update(update_dict)
+    return cal_dicts
 
 def partition_energy_cal_th(
     data: pd.Datframe,
+    hit_dicts:dict,
     energy_params: list[str],
     selection_string: str = "",
     threshold: int = 0,
@@ -28,19 +40,23 @@ def partition_energy_cal_th(
     plot_options: dict | None = None,
     simplex: bool = True,
     tail_weight: int = 20,
+    # cal_energy_params: list = None,
+    # deg:int=2,
 ) -> tuple(dict, dict, dict, dict):
     results_dict = {}
     plot_dict = {}
     full_object_dict = {}
+    # if cal_energy_params is None:
+    #     cal_energy_params = [energy_param + "_cal" for energy_param in energy_params]
     for energy_param in energy_params:
         full_object_dict[energy_param] = high_stats_fitting(
-            energy_param,
-            selection_string,
-            threshold,
-            p_val,
-            plot_options,
-            simplex,
-            tail_weight,
+            energy_param=energy_param,
+            selection_string=selection_string,
+            threshold=threshold,
+            p_val=p_val,
+            plot_options=plot_options,
+            simplex=simplex,
+            tail_weight=tail_weight,
         )
         full_object_dict[energy_param].fit_peaks(data)
         results_dict[energy_param] = full_object_dict[energy_param].get_results_dict(data)
@@ -48,7 +64,7 @@ def partition_energy_cal_th(
             plot_dict[energy_param] = full_object_dict[energy_param].fill_plot_dict(data).copy()
 
     log.info("Finished all calibrations")
-    return results_dict, plot_dict, full_object_dict
+    return hit_dicts, results_dict, plot_dict, full_object_dict
 
 
 argparser = argparse.ArgumentParser()
@@ -189,6 +205,7 @@ data, threshold_mask = load_data(
     params=params,
     threshold=kwarg_dict["threshold"],
     return_selection_mask=True,
+    cal_energy_param = kwarg_dict["energy_params"][0]
 )
 
 # get pulser mask from tcm files
@@ -208,8 +225,8 @@ ids, mask = get_tcm_pulser_ids(
 data["is_pulser"] = mask[threshold_mask]
 
 # run energy supercal
-ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
-    data, selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)", **kwarg_dict
+hit_dicts, ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
+    data, cal_dict, election_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)", **kwarg_dict
 )
 
 
@@ -252,7 +269,7 @@ if args.plot_file:
 for out in sorted(args.hit_pars):
     fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
     final_hit_dict = {
-        "pars": cal_dict[fk.timestamp],
+        "pars": hit_dicts[fk.timestamp],
         "results": {
             "ecal": results_dicts[fk.timestamp],
             "partition_ecal": ecal_results,
