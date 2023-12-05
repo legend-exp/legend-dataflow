@@ -26,8 +26,8 @@ rule build_blinding_calibration:
         channel="{channel}",
         meta=meta,
     output:
-        par_file=temp(get_pattern_pars_tmp_channel(setup, "raw_blinding_cal")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw_blinding_cal")),
+        par_file=temp(get_pattern_pars_tmp_channel(setup, "raw_blindcal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw_blindcal")),
     log:
         get_pattern_log_channel(setup, "pars_hit_blind_cal"),
     group:
@@ -50,11 +50,11 @@ rule build_blinding_calibration:
 
 checkpoint build_pars_blinding:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw_blinding_cal"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw_blinding_cal"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw_blindcal"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw_blindcal"),
     output:
-        get_pattern_par_raw(setup, name="blinding_cal"),
-        get_pattern_plts(setup, "raw", name="blinding_cal"),
+        get_pattern_par_raw(setup, name="blindcal"),
+        get_pattern_plts(setup, "raw", name="blindcal"),
     group:
         "merge-blinding"
     shell:

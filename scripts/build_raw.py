@@ -3,6 +3,11 @@ import logging
 import os
 import pathlib
 
+from lgdo.utils import numba_defaults
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = False
+
 import numpy as np
 from daq2lh5.build_raw import build_raw
 from legendmeta import LegendMetadata
@@ -27,6 +32,8 @@ configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
     "inputs"
 ]
+settings = Props.read_from(channel_dict["settings"])
+channel_dict = channel_dict["out_spec"]
 all_config = Props.read_from(channel_dict["gen_config"])
 
 chmap = LegendMetadata(path=args.chan_maps)
@@ -79,12 +86,6 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
-build_raw(
-    args.input,
-    in_stream_type="ORCA",
-    out_spec=all_config,
-    filekey=temp_output,
-    buffer_size=1024,
-)
+build_raw(args.input, out_spec=all_config, filekey=temp_output, **settings)
 
 os.rename(temp_output, args.output)
