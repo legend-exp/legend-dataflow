@@ -13,6 +13,11 @@ import os
 import pathlib
 import pickle as pkl
 
+from lgdo.utils import numba_defaults
+
+numba_defaults.cache = False
+numba_defaults.boundscheck = False
+
 import lgdo.lh5_store as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -29,7 +34,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--files", help="files", nargs="*", type=str)
 argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--plot_file", help="plot file", type=str)
-argparser.add_argument("--blind_curve", help="blinding curves file", type=str)
+argparser.add_argument("--blind_curve", help="blinding curves file", nargs="*", type=str)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--configs", help="config file", type=str)
