@@ -29,17 +29,13 @@ def lq_calibration(
     cdf: callable = gauss_cdf,
     selection_string: str = "",
     plot_options: dict = {},
-    threshold: int = 800,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 
     Parameters
     ----------
-    files: list, dict
-        Can either be a list of files, or a dict of files seperated by
-        run timestamps
-    lh5_path: string
-        The path in the LH5 files to load data from
+    data: pd.DataFrame
+        A dataframe containing the data used for calibrating LQ
     cal_dicts: dict
         A dict of hit-level operations to apply to the data
     energy_param: string
@@ -56,10 +52,6 @@ def lq_calibration(
     plot_options: dict
         A dict containing the plot functions the user wants to run,and any
         user options to provide those plot functions
-    threshold: int
-        An energy threshold in keV. Will only load in data with energy values
-        above the threshold
-
     Returns
     -------
     cal_dicts: dict
