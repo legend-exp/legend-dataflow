@@ -230,7 +230,7 @@ data["is_pulser"] = mask[threshold_mask]
 hit_dicts, ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
     data,
     cal_dict,
-    election_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
+    selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
     **kwarg_dict,
 )
 

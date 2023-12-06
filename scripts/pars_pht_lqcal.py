@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.math.fitting import gauss_cdf
+from pygama.math.peak_fitting import gauss_cdf
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import cal_lq
 from pygama.pargen.utils import get_tcm_pulser_ids, load_data

@@ -177,12 +177,24 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
             "evt": ut.tier_evt_path(setup).replace(os.getenv("PRODENV"), ""),
         },
         "file_format": {
-            "raw": pat.get_pattern_tier(setup, "raw").replace(ut.tier_raw_path(setup), ""),
-            "dsp": pat.get_pattern_tier(setup, "dsp").replace(ut.tier_dsp_path(setup), ""),
-            "hit": pat.get_pattern_tier(setup, "hit").replace(ut.tier_hit_path(setup), ""),
-            "pht": pat.get_pattern_tier(setup, "pht").replace(ut.tier_hit_path(setup), ""),
-            "evt": pat.get_pattern_tier(setup, "evt").replace(ut.tier_evt_path(setup), ""),
-            "tcm": pat.get_pattern_tier(setup, "tcm").replace(ut.tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
+                ut.tier_raw_path(setup), ""
+            ),
+            "dsp": pat.get_pattern_tier(setup, "dsp", check_in_cycle=False).replace(
+                ut.tier_dsp_path(setup), ""
+            ),
+            "hit": pat.get_pattern_tier(setup, "hit", check_in_cycle=False).replace(
+                ut.tier_hit_path(setup), ""
+            ),
+            "pht": pat.get_pattern_tier(setup, "pht", check_in_cycle=False).replace(
+                ut.tier_hit_path(setup), ""
+            ),
+            "evt": pat.get_pattern_tier(setup, "evt", check_in_cycle=False).replace(
+                ut.tier_evt_path(setup), ""
+            ),
+            "tcm": pat.get_pattern_tier(setup, "tcm", check_in_cycle=False).replace(
+                ut.tier_tcm_path(setup), ""
+            ),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",
@@ -205,12 +217,24 @@ else:
             "evt": ut.tier_evt_path(setup),
         },
         "file_format": {
-            "raw": pat.get_pattern_tier(setup, "raw").replace(ut.tier_raw_path(setup), ""),
-            "dsp": pat.get_pattern_tier(setup, "dsp").replace(ut.tier_dsp_path(setup), ""),
-            "hit": pat.get_pattern_tier(setup, "hit").replace(ut.tier_hit_path(setup), ""),
-            "pht": pat.get_pattern_tier(setup, "pht").replace(ut.tier_hit_path(setup), ""),
-            "evt": pat.get_pattern_tier(setup, "evt").replace(ut.tier_evt_path(setup), ""),
-            "tcm": pat.get_pattern_tier(setup, "tcm").replace(ut.tier_tcm_path(setup), ""),
+            "raw": pat.get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
+                ut.tier_raw_path(setup), ""
+            ),
+            "dsp": pat.get_pattern_tier(setup, "dsp", check_in_cycle=False).replace(
+                ut.tier_dsp_path(setup), ""
+            ),
+            "hit": pat.get_pattern_tier(setup, "hit", check_in_cycle=False).replace(
+                ut.tier_hit_path(setup), ""
+            ),
+            "pht": pat.get_pattern_tier(setup, "pht", check_in_cycle=False).replace(
+                ut.tier_hit_path(setup), ""
+            ),
+            "evt": pat.get_pattern_tier(setup, "evt", check_in_cycle=False).replace(
+                ut.tier_evt_path(setup), ""
+            ),
+            "tcm": pat.get_pattern_tier(setup, "tcm", check_in_cycle=False).replace(
+                ut.tier_tcm_path(setup), ""
+            ),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",

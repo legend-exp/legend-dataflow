@@ -164,7 +164,7 @@ def energy_cal_th(
             tail_weight=tail_weight,
         )
         full_object_dict[cal_energy_param].calibrate_parameter(data)
-        results_dict[cal_energy_param] = full_object_dict[energy_param].get_results_dict(data)
+        results_dict[cal_energy_param] = full_object_dict[cal_energy_param].get_results_dict(data)
         hit_dict.update(full_object_dict[cal_energy_param].hit_dict)
         if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
             plot_dict[cal_energy_param] = (
