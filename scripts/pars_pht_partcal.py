@@ -226,6 +226,13 @@ ids, mask = get_tcm_pulser_ids(
 )
 data["is_pulser"] = mask[threshold_mask]
 
+for tstamp in cal_dict:
+    if tstamp not in np.unique(data["run_timestamp"]):
+        row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+        row["run_timestamp"] = tstamp
+        row = pd.DataFrame(row)
+        data = pd.concat([data, row])
+
 # run energy supercal
 hit_dicts, ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
     data,
@@ -233,7 +240,6 @@ hit_dicts, ecal_results, plot_dict, ecal_obj = partition_energy_cal_th(
     selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
     **kwarg_dict,
 )
-
 
 if args.plot_file:
     common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None

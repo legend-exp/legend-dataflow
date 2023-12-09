@@ -241,6 +241,13 @@ if kwarg_dict.pop("run_aoe") is True:
     )
     data["is_pulser"] = mask[threshold_mask]
 
+    for tstamp in cal_dict:
+        if tstamp not in np.unique(data["run_timestamp"]):
+            row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+            row["run_timestamp"] = tstamp
+            row = pd.DataFrame(row)
+            data = pd.concat([data, row])
+
     pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
 
     mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else pol1

@@ -248,6 +248,13 @@ if kwarg_dict.pop("run_lq") is True:
     )
     data["is_pulser"] = mask[threshold_mask]
 
+    for tstamp in cal_dict:
+        if tstamp not in np.unique(data["run_timestamp"]):
+            row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+            row["run_timestamp"] = tstamp
+            row = pd.DataFrame(row)
+            data = pd.concat([data, row])
+
     cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gauss_cdf
 
     try:
