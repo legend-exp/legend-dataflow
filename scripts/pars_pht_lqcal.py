@@ -269,9 +269,9 @@ if kwarg_dict.pop("run_lq") is True:
             raise RuntimeError
     except (KeyError, RuntimeError):
         try:
-            eres = results_dicts[next(iter(results_dicts))]["ecal"][kwarg_dict["cal_energy_param"]][
-                "eres_linear"
-            ].copy()
+            eres = results_dicts[next(iter(results_dicts))]["ecal"][
+                kwarg_dict["cal_energy_param"]
+            ]["eres_linear"].copy()
 
             def eres_func(x):
                 return eval(eres["expression"], dict(x=x, **eres["parameters"]))

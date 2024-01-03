@@ -43,7 +43,7 @@ if "geds_config" in list(channel_dict):
         chmap.channelmaps.on(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
     )
 
-    ged_config[list(ged_config)[0]]["geds"]["key_list"] = sorted(ged_channels)
+    ged_config[next(iter(ged_config))]["geds"]["key_list"] = sorted(ged_channels)
     Props.add_to(all_config, ged_config)
 
 if "spms_config" in list(channel_dict):
@@ -53,7 +53,7 @@ if "spms_config" in list(channel_dict):
         chmap.channelmaps.on(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
     )
 
-    spm_config[list(spm_config)[0]]["spms"]["key_list"] = sorted(spm_channels)
+    spm_config[next(iter(spm_config))]["spms"]["key_list"] = sorted(spm_channels)
     Props.add_to(all_config, spm_config)
 
 if "auxs_config" in list(channel_dict):
@@ -67,8 +67,8 @@ if "auxs_config" in list(channel_dict):
     aux_channels += list(
         chmap.channelmaps.on(args.timestamp).map("system", unique=False)["bsln"].map("daq.rawid")
     )
-    top_key = list(aux_config)[0]
-    aux_config[top_key][list(aux_config[top_key])[0]]["key_list"] = sorted(aux_channels)
+    top_key = next(iter(aux_config))
+    aux_config[top_key][next(iter(aux_config[top_key]))]["key_list"] = sorted(aux_channels)
     Props.add_to(all_config, aux_config)
 
 if "muon_config" in list(channel_dict):
@@ -76,8 +76,8 @@ if "muon_config" in list(channel_dict):
     muon_channels = list(
         chmap.channelmaps.on(args.timestamp).map("system", unique=False)["muon"].map("daq.rawid")
     )
-    top_key = list(muon_config)[0]
-    muon_config[top_key][list(muon_config[top_key])[0]]["key_list"] = sorted(muon_channels)
+    top_key = next(iter(muon_config))
+    muon_config[top_key][next(iter(muon_config[top_key]))]["key_list"] = sorted(muon_channels)
     Props.add_to(all_config, muon_config)
 
 rng = np.random.default_rng()
