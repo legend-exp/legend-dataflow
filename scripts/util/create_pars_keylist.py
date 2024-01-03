@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import re
+import warnings
 from typing import ClassVar
 
 import snakemake as smk
@@ -126,4 +127,6 @@ class pars_key_resolve:
             pars_key_resolve.write_to_jsonl(entrylist, filename)
         else:
             msg = "No Keys found"
-            raise RuntimeError(msg)
+            warnings.warn(msg, stacklevel=0)
+            entrylist = [pars_key_resolve("00000000T000000Z", "all", [])]
+            pars_key_resolve.write_to_jsonl(entrylist, filename)

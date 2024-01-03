@@ -89,8 +89,8 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
         else:
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
-                    if len(list(set(value).intersection(self._list()))[0]) > 0:
-                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
+                    if len(next(iter(set(value).intersection(self._list())))) > 0:
+                        kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
                     else:
                         kwargs.pop(entry)
             return smk.io.expand(pattern, **self._asdict(), **kwargs)
@@ -162,8 +162,8 @@ class ProcessingFileKey(FileKey):
         else:
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
-                    if len(list(set(value).intersection(self._list()))[0]) > 0:
-                        kwargs[entry] = value[list(set(value).intersection(self._list()))[0]]
+                    if len(next(iter(set(value).intersection(self._list())))) > 0:
+                        kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
                     else:
                         kwargs.pop(entry)
             return smk.io.expand(pattern, **self._asdict(), **kwargs)

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def update_cal_dicts(cal_dicts, update_dict):
-    if re.match(r"(\d{8})T(\d{6})Z", list(cal_dicts)[0]):
+    if re.match(r"(\d{8})T(\d{6})Z", next(iter(cal_dicts))):
         for tstamp in cal_dicts:
             if tstamp in update_dict:
                 cal_dicts[tstamp].update(update_dict[tstamp])
