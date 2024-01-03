@@ -253,13 +253,14 @@ check_log_files(
     warning_file=snakemake.output.warning_log,
 )
 
-os.makedirs(snakemake.params.filedb_path, exist_ok=True)
-with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as w:
-    json.dump(file_db_config, w, indent=2)
+if snakemake.wildcards.tier != "daq":
+    os.makedirs(snakemake.params.filedb_path, exist_ok=True)
+    with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as w:
+        json.dump(file_db_config, w, indent=2)
 
-build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
-os.system(f"rm {os.path.join(snakemake.params.filedb_path, 'file_db_config.json')}")
+    build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
+    os.system(f"rm {os.path.join(snakemake.params.filedb_path, 'file_db_config.json')}")
 
-build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
+    build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
 
 pathlib.Path(snakemake.output.gen_output).touch()
