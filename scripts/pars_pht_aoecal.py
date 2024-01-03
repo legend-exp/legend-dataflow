@@ -258,7 +258,7 @@ if kwarg_dict.pop("run_aoe") is True:
         sigma_func = sigma_fit
 
     try:
-        eres = results_dicts[list(results_dicts)[0]]["partition_ecal"][
+        eres = results_dicts[next(iter(results_dicts))]["partition_ecal"][
             kwarg_dict["cal_energy_param"]
         ]["eres_linear"].copy()
 
@@ -269,7 +269,7 @@ if kwarg_dict.pop("run_aoe") is True:
             raise RuntimeError
     except (KeyError, RuntimeError):
         try:
-            eres = results_dicts[list(results_dicts)[0]]["ecal"][kwarg_dict["cal_energy_param"]][
+            eres = results_dicts[next(iter(results_dicts))]["ecal"][kwarg_dict["cal_energy_param"]][
                 "eres_linear"
             ].copy()
 
@@ -294,7 +294,7 @@ if kwarg_dict.pop("run_aoe") is True:
 
     # need to change eres func as can't pickle lambdas
     try:
-        aoe_obj.eres_func = results_dicts[list(results_dicts)[0]]["partition_ecal"][
+        aoe_obj.eres_func = results_dicts[next(iter(results_dicts))]["partition_ecal"][
             kwarg_dict["cal_energy_param"]
         ]["eres_linear"].copy()
     except KeyError:
