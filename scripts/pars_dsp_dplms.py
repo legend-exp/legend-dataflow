@@ -6,18 +6,16 @@ import pathlib
 import pickle as pkl
 import time
 
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
+
 import lgdo.lh5_store as lh5
 import numpy as np
-import pygama.pargen.dplms_ge_dict as pdd
 from legendmeta import LegendMetadata
-from pygama.dsp.utils import numba_defaults
-from pygama.pargen.energy_optimisation import (
-    event_selection,
-    index_data,
-)
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
+from pygama.pargen.dplms_ge_dict import dplms_ge_dict
+from pygama.pargen.energy_optimisation import event_selection
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
@@ -40,8 +38,9 @@ args = argparser.parse_args()
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("pygama.lgdo.lh5_store").setLevel(logging.INFO)
-logging.getLogger("h5py._conv").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
+logging.getLogger("h5py").setLevel(logging.INFO)
+logging.getLogger("matplotlib").setLevel(logging.INFO)
 logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
@@ -69,9 +68,9 @@ if dplms_dict["run_dplms"] is True:
 
     t0 = time.time()
     log.info("\nLoad fft data")
-    energies = sto.read_object(f"{args.channel}/raw/daqenergy", fft_files)[0]
+    energies = sto.read(f"{args.channel}/raw/daqenergy", fft_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    raw_fft = sto.read_object(
+    raw_fft = sto.read(
         f"{args.channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs
     )[0]
     t1 = time.time()
@@ -80,7 +79,7 @@ if dplms_dict["run_dplms"] is True:
     log.info("\nRunning event selection")
     peaks_keV = np.array(dplms_dict["peaks_keV"])
     kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
-    raw_cal, idx_list = event_selection(
+    idx_events, idx_list = event_selection(
         cal_files,
         f"{args.channel}/raw",
         dsp_config,
@@ -91,7 +90,11 @@ if dplms_dict["run_dplms"] is True:
         cut_parameters=dplms_dict["wfs_cut_pars"],
         n_events=dplms_dict["n_signals"],
     )
-    raw_cal = index_data(raw_cal, idx_list[-1])
+    raw_cal = sto.read(
+        f"{args.channel}/raw",
+        cal_files,
+        idx=idx_events,
+    )[0]
     log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
 
     if isinstance(dsp_config, str):
@@ -99,7 +102,7 @@ if dplms_dict["run_dplms"] is True:
             dsp_config = json.load(r)
 
     if args.plot_path:
-        out_dict, plot_dict = pdd.dplms_ge_dict(
+        out_dict, plot_dict = dplms_ge_dict(
             args.channel,
             raw_fft,
             raw_cal,
@@ -113,7 +116,7 @@ if dplms_dict["run_dplms"] is True:
         with open(args.plot_path, "wb") as f:
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
     else:
-        out_dict, plot_dict = pdd.dplms_ge_dict(
+        out_dict, plot_dict = dplms_ge_dict(
             args.channel,
             raw_fft,
             raw_cal,
