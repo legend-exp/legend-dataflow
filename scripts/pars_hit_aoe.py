@@ -157,6 +157,7 @@ if kwarg_dict["run_aoe"] is True:
         params += "dt_eff"
 
     if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
+        cal_dict.update(kwarg_dict["dt_cut"]["cut"])
         params.append(kwarg_dict["dt_cut"]["out_param"])
 
     # load data in

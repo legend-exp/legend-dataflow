@@ -38,11 +38,12 @@ rule build_per_energy_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        tier="pht",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
         results_file=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "energy_cal_results", extension="pkl"
+                setup, "pht", "energy_cal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "energy_cal")),
@@ -60,6 +61,7 @@ rule build_per_energy_calibration:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--tier {params.tier} "
         "--plot_path {output.plot_file} "
         "--results_path {output.results_file} "
         "--save_path {output.ecal_file} "
@@ -74,17 +76,14 @@ rule build_pars_pht:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_pars_cal_channel(
             wildcards,
-            "pht_objects",
-            out_pattern=get_pattern_pars_tmp_channel(
-            setup, "pht", "objects", extension="pkl"
-            ),
+            "pht_objects_pkl",
         ),
     output:
         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "pht",
-            name="results",
+            name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
@@ -160,7 +159,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     tier="pht",
-                    name="energy_cal_results",
+                    name="energy_cal_objects",
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
@@ -187,14 +186,14 @@ for key, dataset in part.datasets.items():
                         name="partcal",
                     )
                 ],
-                aoe_results=[
+                partcal_results=[
                     temp(file)
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
                         key,
                         tier="pht",
-                        name="partcal_results",
+                        name="partcal_objects",
                         extension="pkl",
                     )
                 ],
@@ -230,7 +229,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
-                "--fit_results {output.aoe_results} "
+                "--fit_results {output.partcal_results} "
                 "--eres_file {input.eres_file} "
                 "--hit_pars {output.hit_pars} "
                 "--plot_file {output.plot_file} "
@@ -258,7 +257,7 @@ rule build_pht_energy_super_calibrations:
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "energy_cal_results", extension="pkl"
+            setup, "pht", "energy_cal_objects", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "energy_cal"),
     params:
@@ -267,9 +266,9 @@ rule build_pht_energy_super_calibrations:
         timestamp="{timestamp}",
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "partcal")),
-        aoe_results=temp(
+        partcal_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "partcal_results", extension="pkl"
+                setup, "pht", "partcal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "partcal")),
@@ -289,7 +288,7 @@ rule build_pht_energy_super_calibrations:
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--fit_results {output.aoe_results} "
+        "--fit_results {output.partcal_results} "
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
@@ -328,7 +327,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     tier="pht",
-                    name="partcal_results",
+                    name="partcal_objects",
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
@@ -352,6 +351,7 @@ for key, dataset in part.datasets.items():
                         partition,
                         key,
                         tier="pht",
+                        name="aoecal",
                     )
                 ],
                 aoe_results=[
@@ -361,7 +361,7 @@ for key, dataset in part.datasets.items():
                         partition,
                         key,
                         tier="pht",
-                        name="objects",
+                        name="aoecal_objects",
                         extension="pkl",
                     )
                 ],
@@ -372,6 +372,7 @@ for key, dataset in part.datasets.items():
                         partition,
                         key,
                         tier="pht",
+                        name="aoecal",
                     )
                 ],
             log:
@@ -380,7 +381,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
-                    name="par_pht",
+                    name="par_pht_aoe",
                 ),
             group:
                 "par-pht"
@@ -414,7 +415,7 @@ for key, dataset in part.datasets.items():
 
 # Merged energy and a/e supercalibrations to reduce number of rules as they have same inputs/outputs
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
-rule build_pht_super_calibrations:
+rule build_pht_aoe_calibrations:
     input:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
@@ -424,7 +425,7 @@ rule build_pht_super_calibrations:
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "partcal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "partcal_results", extension="pkl"
+            setup, "pht", "partcal_objects", extension="pkl"
         ),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "partcal"),
     params:
@@ -432,11 +433,13 @@ rule build_pht_super_calibrations:
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "aoecal")),
         aoe_results=temp(
-            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(
+                setup, "pht", "objeaoecal_objectscts", extension="pkl"
+            )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
     log:
         get_pattern_log_channel(setup, "pars_pht_aoe_cal"),
     group:
@@ -454,6 +457,169 @@ rule build_pht_super_calibrations:
         "--inplots {input.inplots} "
         "--channel {params.channel} "
         "--aoe_results {output.aoe_results} "
+        "--eres_file {input.eres_file} "
+        "--hit_pars {output.hit_pars} "
+        "--plot_file {output.plot_file} "
+        "--ecal_file {input.ecal_file} "
+        "--tcm_filelist {input.tcm_filelist} "
+        "--input_files {input.files}"
+
+
+fallback_pht_rule = list(workflow.rules)[-1]
+
+rule_order_list = []
+ordered = OrderedDict(part_pht_rules)
+ordered.move_to_end("default")
+for key, items in ordered.items():
+    rule_order_list += [item.name for item in items]
+rule_order_list.append(fallback_pht_rule.name)
+workflow._ruleorder.add(*rule_order_list)  # [::-1]
+
+part_pht_rules = {}
+for key, dataset in part.datasets.items():
+    for partition in dataset.keys():
+
+        rule:
+            input:
+                files=part.get_filelists(partition, key, "dsp"),
+                tcm_files=part.get_filelists(partition, key, "tcm"),
+                ecal_file=part.get_par_files(
+                    f"{par_pht_path(setup)}/validity.jsonl",
+                    partition,
+                    key,
+                    tier="pht",
+                    name="aoecal",
+                ),
+                eres_file=part.get_par_files(
+                    f"{par_pht_path(setup)}/validity.jsonl",
+                    partition,
+                    key,
+                    tier="pht",
+                    name="aoecal_objects",
+                    extension="pkl",
+                ),
+                inplots=part.get_plt_files(
+                    f"{par_pht_path(setup)}/validity.jsonl",
+                    partition,
+                    key,
+                    tier="pht",
+                    name="aoecal",
+                ),
+            params:
+                datatype="cal",
+                channel="{channel}",
+                timestamp=part.get_timestamp(
+                    f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
+                ),
+            output:
+                hit_pars=[
+                    temp(file)
+                    for file in part.get_par_files(
+                        f"{par_pht_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="pht",
+                    )
+                ],
+                lq_results=[
+                    temp(file)
+                    for file in part.get_par_files(
+                        f"{par_pht_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="pht",
+                        name="objects",
+                        extension="pkl",
+                    )
+                ],
+                plot_file=[
+                    temp(file)
+                    for file in part.get_plt_files(
+                        f"{par_pht_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="pht",
+                    )
+                ],
+            log:
+                part.get_log_file(
+                    f"{par_pht_path(setup)}/validity.jsonl",
+                    partition,
+                    key,
+                    "pht",
+                    name="par_pht_lq",
+                ),
+            group:
+                "par-pht"
+            resources:
+                mem_swap=75,
+                runtime=300,
+            shell:
+                "{swenv} python3 -B "
+                f"{basedir}/../scripts/pars_pht_lqcal.py "
+                "--log {log} "
+                "--configs {configs} "
+                "--datatype {params.datatype} "
+                "--timestamp {params.timestamp} "
+                "--inplots {input.inplots} "
+                "--channel {params.channel} "
+                "--lq_results {output.lq_results} "
+                "--eres_file {input.eres_file} "
+                "--hit_pars {output.hit_pars} "
+                "--plot_file {output.plot_file} "
+                "--ecal_file {input.ecal_file} "
+                "--tcm_filelist {input.tcm_files} "
+                "--input_files {input.files}"
+
+        # fix_name(f"{key}-{partition}")
+
+        if key in part_pht_rules:
+            part_pht_rules[key].append(list(workflow.rules)[-1])
+        else:
+            part_pht_rules[key] = [list(workflow.rules)[-1]]
+
+
+# This rule builds the lq calibration using the calibration dsp files for the whole partition
+rule build_pht_lq_calibration:
+    input:
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+        ),
+        tcm_filelist=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        ),
+        ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "aoecal"),
+        eres_file=get_pattern_pars_tmp_channel(
+            setup, "pht", "aoecal_objects", extension="pkl"
+        ),
+        inplots=get_pattern_plts_tmp_channel(setup, "pht", "aoecal"),
+    params:
+        datatype="cal",
+        channel="{channel}",
+        timestamp="{timestamp}",
+    output:
+        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
+        lq_results=temp(
+            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
+        ),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
+    log:
+        get_pattern_log_channel(setup, "pars_pht_lq_cal"),
+    group:
+        "par-pht"
+    resources:
+        mem_swap=60,
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/./scripts/pars_pht_lqcal.py "
+        "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--inplots {input.inplots} "
+        "--channel {params.channel} "
+        "--lq_results {output.lq_results} "
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "

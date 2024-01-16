@@ -6,15 +6,10 @@ import pathlib
 import re
 import time
 
-from lgdo.utils import numba_defaults as lgdo_defaults
-
-lgdo_defaults.cache = False
-lgdo_defaults.boundscheck = False
-
-from dspeed.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
 import lgdo.lh5_store as lh5
 import numpy as np
@@ -50,6 +45,19 @@ else:
     with open(args.pars_file) as f:
         database_dic = json.load(f)
 
+
+def replace_list_with_array(dic):
+    for key, value in dic.items():
+        if isinstance(value, dict):
+            dic[key] = replace_list_with_array(value)
+        elif isinstance(value, list):
+            dic[key] = np.array(value)
+        else:
+            pass
+    return dic
+
+
+database_dic = replace_list_with_array(database_dic)
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 

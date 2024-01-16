@@ -6,18 +6,19 @@ import pathlib
 import pickle as pkl
 import time
 
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
+
 import lgdo.lh5_store as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
-from dspeed.utils import numba_defaults
 from legendmeta import LegendMetadata
 from pygama.pargen.cuts import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
 sto = lh5.LH5Store()
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = True
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
