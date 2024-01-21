@@ -67,6 +67,15 @@ ged_channels = (
 spms_channels = (
     legendmetadata.channelmap(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
 )
+auxs_channels = (
+    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["auxs"].map("daq.rawid")
+)
+blsn_channels = (
+    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["bsln"].map("daq.rawid")
+)
+puls_channels = (
+    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["puls"].map("daq.rawid")
+)
 
 store = lh5.LH5Store()
 
@@ -125,7 +134,13 @@ for channel in all_channels:
         )
         continue
 
-    if (chnum not in list(ged_channels)) and (chnum not in list(spms_channels)):
+    if (
+        (chnum not in list(ged_channels))
+        and (chnum not in list(spms_channels))
+        and (chnum not in list(auxs_channels))
+        and (chnum not in list(blsn_channels))
+        and (chnum not in list(puls_channels))
+    ):
         # if this is a PMT or not included for some reason, just copy it to the output file
         chobj, _ = store.read_object(channel + "/raw", args.input, decompress=False)
         store.write_object(
