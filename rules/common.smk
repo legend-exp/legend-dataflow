@@ -20,6 +20,15 @@ def read_filelist(wildcards):
         return files
 
 
+def read_filelist_phy(wildcards, tier):
+    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-phy"
+    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
+        0
+    ].open() as f:
+        files = f.read().splitlines()
+        return files
+
+
 def read_filelist_cal(wildcards, tier):
     label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
     with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
