@@ -53,12 +53,24 @@ def tier_hit_path(setup):
     return setup["paths"]["tier_hit"]
 
 
+def tier_evt_path(setup):
+    return setup["paths"]["tier_evt"]
+
+
+def tier_psp_path(setup):
+    return setup["paths"]["tier_psp"]
+
+
 def tier_pht_path(setup):
     return setup["paths"]["tier_pht"]
 
 
-def tier_evt_path(setup):
-    return setup["paths"]["tier_evt"]
+def tier_pet_path(setup):
+    return setup["paths"]["tier_pet"]
+
+
+def tier_skm_path(setup):
+    return setup["paths"]["tier_skm"]
 
 
 def get_tier_path(setup, tier):
@@ -70,10 +82,16 @@ def get_tier_path(setup, tier):
         return tier_dsp_path(setup)
     elif tier == "hit":
         return tier_hit_path(setup)
-    elif tier == "pht":
-        return tier_pht_path(setup)
     elif tier == "evt":
         return tier_evt_path(setup)
+    elif tier == "psp":
+        return tier_psp_path(setup)
+    elif tier == "pht":
+        return tier_pht_path(setup)
+    elif tier == "pet":
+        return tier_pet_path(setup)
+    elif tier == "skm":
+        return tier_skm_path(setup)
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)
