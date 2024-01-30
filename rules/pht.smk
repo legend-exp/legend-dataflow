@@ -281,7 +281,7 @@ rule build_pht_energy_super_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/./scripts/pars_pht_partcal.py "
+        f"{basedir}/../scripts/pars_pht_partcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -449,7 +449,7 @@ rule build_pht_aoe_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/./scripts/pars_pht_aoecal.py "
+        f"{basedir}/../scripts/pars_pht_aoecal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -612,7 +612,7 @@ rule build_pht_lq_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/./scripts/pars_pht_lqcal.py "
+        f"{basedir}/../scripts/pars_pht_lqcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
