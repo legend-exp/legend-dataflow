@@ -4,7 +4,7 @@ import glob
 import json
 import os
 
-from util.FileKey import FileKey
+from util.FileKey import FileKey, run_grouper
 from util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
 
 setup = snakemake.params.setup
@@ -52,28 +52,35 @@ for i in item_list[0]:
                 for j2 in item_list[4]:
                     filekeys.append(FileKey(i, j, k, i2, j2))
 
-filenames = []
-if tier != "blind":
-    fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
-else:
+phy_filenames = []
+other_filenames = []
+if tier == "blind":
     fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
+else:
+    fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
+
 for key in filekeys:
     fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
     files = glob.glob(fn_glob_pattern)
     for f in files:
         _key = FileKey.get_filekey_from_pattern(f, search_pattern)
-        if tier == "blind":
-            if _key.datatype == "phy":
-                filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
-            else:
-                filename = FileKey.get_path_from_filekey(_key, fn_pattern)
-        else:
-            filename = FileKey.get_path_from_filekey(_key, fn_pattern)
         if _key.name in ignore_keys:
             pass
         else:
+            if tier == "blind" and _key.datatype == "phy":
+                filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
+            elif tier == "skm" and _key.datatype != "phy":
+                filename = FileKey.get_path_from_filekey(
+                    _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
+                )
+            else:
+                filename = FileKey.get_path_from_filekey(_key, fn_pattern)
+
             if file_selection == "all":
-                filenames += filename
+                if _key.datatype == "phy":
+                    phy_filenames += filename
+                else:
+                    other_filenames += filename
             elif file_selection == "sel":
                 if analysis_runs == "all" or (
                     _key.period in analysis_runs
@@ -82,12 +89,30 @@ for key in filekeys:
                         or analysis_runs[_key.period] == "all"
                     )
                 ):
-                    filenames += filename
+                    if _key.datatype == "phy":
+                        phy_filenames += filename
+                    else:
+                        other_filenames += filename
             else:
                 msg = "unknown file selection"
                 raise ValueError(msg)
 
-filenames = sorted(filenames)
+phy_filenames = sorted(phy_filenames)
+other_filenames = sorted(other_filenames)
+
+if tier == "skm":
+    sorted_phy_filenames = run_grouper(phy_filenames)
+    phy_filenames = []
+    for run in sorted_phy_filenames:
+        run_files = sorted(
+            run,
+            key=lambda filename: FileKey.get_filekey_from_pattern(
+                filename, fn_pattern
+            ).get_unix_timestamp(),
+        )
+        phy_filenames.append(run_files[0])
+
+filenames = phy_filenames + other_filenames
 
 with open(snakemake.output[0], "w") as f:
     for fn in filenames:
