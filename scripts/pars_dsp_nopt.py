@@ -40,7 +40,7 @@ args = argparser.parse_args()
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("pygama.lgdo.lh5_store").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
 logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
 

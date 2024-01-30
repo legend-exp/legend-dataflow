@@ -40,6 +40,7 @@ args = argparser.parse_args()
 
 os.makedirs(os.path.dirname(args.log), exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+logging.getLogger("lgdo").setLevel(logging.INFO)
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 

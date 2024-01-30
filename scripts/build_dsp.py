@@ -32,6 +32,7 @@ pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
