@@ -45,11 +45,8 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-if isinstance(args.pars_file, list):
-    pars_dict = Props.read_from(args.pars_file)
-else:
-    with open(args.pars_file) as f:
-        pars_dict = json.load(f)
+
+pars_dict = Props.read_from(args.pars_file)
 
 pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
 
@@ -57,8 +54,7 @@ hit_dict = {}
 channels_present = lh5.ls(args.input)
 for channel in pars_dict:
     if channel in channel_dict:
-        with open(channel_dict[channel]) as r:
-            cfg_dict = json.load(r)
+        cfg_dict = Props.read_from(channel_dict[channel])
         Props.add_to(pars_dict[channel], cfg_dict)
     if channel in channels_present:
         hit_dict[f"{channel}/dsp"] = pars_dict[channel]
