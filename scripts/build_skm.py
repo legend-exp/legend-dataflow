@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import time
+import numpy as np
 
 import lgdo.lh5_store as lh5
 from legendmeta import LegendMetadata
@@ -101,7 +102,20 @@ if isinstance(args.tcm_files, list) and args.tcm_files[0].split(".")[-1] == "fil
 else:
     tcm_files = args.tcm_files
 
+if len(hit_files) != len(dsp_files) != len(tcm_files) != len(evt_files):
+    raise RuntimeError("Number of files for each tier must match")
+
+log.debug(f"{len(hit_files)} hit files, {len(dsp_files)} dsp files, {len(tcm_files)} tcm files, {len(evt_files)} evt files")
+
 input_files = group_files(evt_files, hit_files, dsp_files, tcm_files)
+
+log.debug(f"{len(input_files)} file pairs")
+
+pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+
+rng = np.random.default_rng()
+rand_num = f"{rng.integers(0,99999):05d}"
+temp_output = f"{args.output}.{rand_num}"
 
 for f_evt, f_hit, f_dsp, f_tcm in input_files:
     log_string = f"running files evt:{os.path.basename(f_evt)}, hit:{os.path.basename(f_hit)}," 
@@ -112,7 +126,7 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
         f_hit,
         f_dsp,
         f_tcm,
-        args.output,
+        temp_output,
         skm_config,
         wo_mode="a",
         skm_group = "skm",
@@ -123,3 +137,5 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
         tcm_id_table_pattern = "ch{}",
     )
     
+
+os.rename(temp_output, args.output)
