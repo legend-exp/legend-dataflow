@@ -18,7 +18,7 @@ import pathlib
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numexpr as ne
 import numpy as np
 from legendmeta import LegendMetadata
@@ -90,7 +90,7 @@ for chnum in list(ged_channels):
         continue
 
     # load in just the daqenergy for now
-    daqenergy, _ = store.read_object(f"ch{chnum}/raw/daqenergy", args.input)
+    daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", args.input)
 
     # read in calibration curve for this channel
     blind_curve = Props.read_from(args.blind_curve)[f"ch{chnum}"]["pars"]["operations"]
@@ -125,7 +125,7 @@ for channel in all_channels:
         chnum = int(channel[2::])
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
-        chobj, _ = store.read_object(channel, args.input, decompress=False)
+        chobj, _ = store.read(channel, args.input, decompress=False)
         store.write_object(
             chobj,
             channel,
@@ -143,7 +143,7 @@ for channel in all_channels:
         and (chnum not in list(puls_channels))
     ):
         # if this is a PMT or not included for some reason, just copy it to the output file
-        chobj, _ = store.read_object(channel + "/raw", args.input, decompress=False)
+        chobj, _ = store.read(channel + "/raw", args.input, decompress=False)
         store.write_object(
             chobj,
             group=channel,
@@ -157,9 +157,7 @@ for channel in all_channels:
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _ = store.read_object(
-        channel + "/raw", args.input, idx=tokeep, decompress=False
-    )
+    blinded_chobj, _ = store.read(channel + "/raw", args.input, idx=tokeep, decompress=False)
 
     # now write the blinded data for this channel
     store.write_object(

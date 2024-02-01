@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 
-import lgdo
+import lgdo.lh5 as lh5
 import numpy as np
 from daq2lh5.orca import orca_flashcam
 from legendmeta import LegendMetadata
@@ -35,7 +35,7 @@ rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 # get the list of channels by fcid
-ch_list = lgdo.ls(args.input, "/ch*")
+ch_list = lh5.ls(args.input, "/ch*")
 fcid_channels = {}
 for ch in ch_list:
     key = int(ch[2:])
