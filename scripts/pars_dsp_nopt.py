@@ -15,6 +15,7 @@ import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 from pygama.pargen.cuts import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
@@ -56,11 +57,9 @@ dsp_config = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["processing_c
 ]
 opt_json = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["optimiser_config"][args.channel]
 
-with open(opt_json) as r:
-    opt_dict = json.load(r)
+opt_dict = Props.read_from(opt_json)
 
-with open(args.database) as t:
-    db_dict = json.load(t)
+db_dict = Props.read_from(args.database)
 
 if opt_dict.pop("run_nopt") is True:
     with open(args.raw_filelist) as f:
@@ -83,9 +82,8 @@ if opt_dict.pop("run_nopt") is True:
     )[0]
     log.info(f"... {len(tb_data)} baselines after cuts")
 
-    if isinstance(dsp_config, str):
-        with open(dsp_config) as r:
-            dsp_config = json.load(r)
+    if isinstance(dsp_config, (str, list)):
+        dsp_config = Props.read_from(dsp_config)
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(

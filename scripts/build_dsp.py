@@ -43,11 +43,7 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
     "inputs"
 ]["processing_chain"]
 
-if isinstance(args.pars_file, list):
-    database_dic = Props.read_from(args.pars_file)
-else:
-    with open(args.pars_file) as f:
-        database_dic = json.load(f)
+database_dic = Props.read_from(args.pars_file)
 
 
 def replace_list_with_array(dic):
