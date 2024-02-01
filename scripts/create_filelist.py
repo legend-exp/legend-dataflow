@@ -17,22 +17,23 @@ search_pattern = snakemake.params.search_pattern
 ignore_keys = []
 if snakemake.params.configs:
     configs = snakemake.params.configs
-    ignored_keyslist = os.path.join(configs, "ignore_keys.keylist")
-    if os.path.isfile(ignored_keyslist):
-        with open(ignored_keyslist) as f:
-            ignore_keys = f.read().splitlines()
-        ignore_keys = [
-            key.split("#")[0].strip() if "#" in key else key.strip() for key in ignore_keys
-        ]
-    else:
-        print("no ignore_keys.keylist file found")
+    if snakemake.params.ignored_keys is not None:
+        if os.path.isfile(snakemake.params.ignored_keys):
+            with open(snakemake.params.ignored_keys) as f:
+                ignore_keys = f.read().splitlines()
+            ignore_keys = [
+                key.split("#")[0].strip() if "#" in key else key.strip() for key in ignore_keys
+            ]
+        else:
+            print("no ignore_keys.keylist file found")
 
-    analysis_runs_file = os.path.join(configs, "analysis_runs.json")
-    if os.path.isfile(analysis_runs_file):
-        with open(analysis_runs_file) as f:
-            analysis_runs = json.load(f)
-    else:
-        print("no analysis_runs file found")
+    if snakemake.params.analysis_runs_file is not None:
+        if os.path.isfile(snakemake.params.analysis_runs_file):
+            with open(snakemake.params.analysis_runs_file) as f:
+                analysis_runs = json.load(f)
+        else:
+            analysis_runs = []
+            print("no analysis_runs file found")
 
 key = FileKey.parse_keypart(keypart)
 
