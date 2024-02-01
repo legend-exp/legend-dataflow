@@ -100,6 +100,17 @@ onstart:
 
 
 onsuccess:
+    from snakemake.report import auto_report
+
+    rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
+    pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
+    #auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
+    with open(os.path.join(rep_dir,"dag.txt"), "w") as f:
+        f.writelines(str(workflow.persistence.dag))
+    #shell(f"cat {rep_dir}/dag.txt | dot -Tpdf > {rep_dir}/dag.pdf")
+    with open(f"{rep_dir}/rg.txt", "w") as f:
+        f.writelines(str(workflow.persistence.dag.rule_dot()))
+    #shell(f"cat {rep_dir}/rg.txt | dot -Tpdf > {rep_dir}/rg.pdf")
     print("Workflow finished, no error")
     shell("rm *.gen || true")
     shell(f"rm {filelist_path(setup)}/* || true")
@@ -127,5 +138,7 @@ checkpoint gen_filelist:
         configs=configs,
         chan_maps=chan_maps,
         blinding=False,
+        analysis_runs_file = os.path.join(configs,"analysis_runs.json"),
+        ignored_keys = os.path.join(configs, "ignore_keys.keylist")
     script:
         "scripts/create_{wildcards.extension}list.py"
