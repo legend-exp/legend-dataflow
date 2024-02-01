@@ -18,7 +18,7 @@ from lgdo.utils import numba_defaults
 numba_defaults.cache = False
 numba_defaults.boundscheck = False
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
@@ -60,7 +60,7 @@ det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
 # load in the data
-daqenergy = lh5.load_nda(sorted(args.files), ["daqenergy"], f"{args.channel}/raw")["daqenergy"]
+daqenergy = sto.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
 
 # calibrate daq energy using pre existing curve
 daqenergy_cal = ne.evaluate(

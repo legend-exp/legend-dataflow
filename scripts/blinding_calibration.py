@@ -13,7 +13,7 @@ import pickle as pkl
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+sto = lh5.LH5Store()
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,7 +53,7 @@ pars_dict = {}
 # peaks to search for
 peaks_keV = np.array([238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50])
 
-E_uncal = lh5.load_nda(sorted(args.files), ["daqenergy"], f"{args.channel}/raw")["daqenergy"]
+E_uncal = sto.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
 E_uncal = E_uncal[E_uncal > 200]
 guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 Euc_min = peaks_keV[0] / guess_keV * 0.6
