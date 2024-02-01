@@ -10,7 +10,7 @@ os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
@@ -67,11 +67,13 @@ if kwarg_dict["run_tau"] is True:
     ids, mask = get_tcm_pulser_ids(
         tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
-    data = lh5.load_dfs(input_file, ["daqenergy", "timestamp"], f"{args.channel}/raw")
+    data = sto.read(f"{args.channel}/raw", input_file, field_mask=["daqenergy", "timestamp"])[
+        0
+    ].view_as("pd")
     threshold = kwarg_dict.pop("threshold")
     cuts = np.where((data.daqenergy.to_numpy() > threshold) & (~mask))[0]
 
-    tb_data = sto.read_object(
+    tb_data = sto.read(
         f"{args.channel}/raw",
         input_file,
         idx=cuts,

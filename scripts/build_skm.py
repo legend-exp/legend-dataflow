@@ -1,17 +1,14 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
-import time
-import numpy as np
 
-import lgdo.lh5_store as lh5
+import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.skm.build_skm import build_skm
 from util.FileKey import ProcessingFileKey
-from util.patterns import (get_pattern_tier_pet, get_pattern_tier_dsp, get_pattern_tier_tcm, get_pattern_tier_pht)
+
 
 def group_files(fs_evt, fs_hit, fs_dsp, fs_tcm):
     """
@@ -19,9 +16,12 @@ def group_files(fs_evt, fs_hit, fs_dsp, fs_tcm):
     returns list of tuples of (f_evt f_hit f_dsp f_tcm)
     """
     grouped_files = []
-    for f_evt in sorted(fs_evt, key=lambda filename: ProcessingFileKey.get_filekey_from_pattern(
-                os.path.basename(filename)
-            ).get_unix_timestamp()):
+    for f_evt in sorted(
+        fs_evt,
+        key=lambda filename: ProcessingFileKey.get_filekey_from_pattern(
+            os.path.basename(filename)
+        ).get_unix_timestamp(),
+    ):
         key = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(f_evt))
         for f_dsp in fs_dsp:
             dsp_key = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(f_dsp))
@@ -37,14 +37,14 @@ def group_files(fs_evt, fs_hit, fs_dsp, fs_tcm):
                 break
         grouped_files.append((f_evt, f_hit, f_dsp, f_tcm))
 
-
     return grouped_files
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_files", help="hit files", nargs="*", type=str)
 argparser.add_argument("--dsp_files", help="dsp files", nargs="*", type=str)
 argparser.add_argument("--tcm_files", help="tcm files", nargs="*", type=str)
-argparser.add_argument("--evt_files", help="evt files", nargs="*",  type=str)
+argparser.add_argument("--evt_files", help="evt files", nargs="*", type=str)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -103,9 +103,12 @@ else:
     tcm_files = args.tcm_files
 
 if len(hit_files) != len(dsp_files) != len(tcm_files) != len(evt_files):
-    raise RuntimeError("Number of files for each tier must match")
+    err_msg = "Number of files for each tier must match"
+    raise RuntimeError(err_msg)
 
-log.debug(f"{len(hit_files)} hit files, {len(dsp_files)} dsp files, {len(tcm_files)} tcm files, {len(evt_files)} evt files")
+log.debug(
+    f"{len(hit_files)} hit files, {len(dsp_files)} dsp files, {len(tcm_files)} tcm files, {len(evt_files)} evt files"
+)
 
 input_files = group_files(evt_files, hit_files, dsp_files, tcm_files)
 
@@ -118,7 +121,7 @@ rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 for f_evt, f_hit, f_dsp, f_tcm in input_files:
-    log_string = f"running files evt:{os.path.basename(f_evt)}, hit:{os.path.basename(f_hit)}," 
+    log_string = f"running files evt:{os.path.basename(f_evt)}, hit:{os.path.basename(f_hit)},"
     log_string += f"\ndsp:{os.path.basename(f_dsp)}, tcm: {os.path.basename(f_tcm)}"
     log.debug(log_string)
     build_skm(
@@ -129,13 +132,13 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
         temp_output,
         skm_config,
         wo_mode="a",
-        skm_group = "skm",
-        evt_group = "evt",
-        tcm_group = "hardware_tcm_1",
-        dsp_group = "dsp",
-        hit_group = "hit",
-        tcm_id_table_pattern = "ch{}",
+        skm_group="skm",
+        evt_group="evt",
+        tcm_group="hardware_tcm_1",
+        dsp_group="dsp",
+        hit_group="hit",
+        tcm_id_table_pattern="ch{}",
     )
-    
+
 
 os.rename(temp_output, args.output)

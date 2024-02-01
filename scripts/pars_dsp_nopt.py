@@ -11,7 +11,7 @@ os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
@@ -68,11 +68,9 @@ if opt_dict.pop("run_nopt") is True:
 
     raw_files = sorted(files)
 
-    energies = sto.read_object(f"{args.channel}/raw/daqenergy", raw_files)[0]
+    energies = sto.read(f"{args.channel}/raw/daqenergy", raw_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    tb_data = sto.read_object(
-        f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs
-    )[0]
+    tb_data = sto.read(f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs)[0]
     t1 = time.time()
     log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
 
@@ -80,7 +78,7 @@ if opt_dict.pop("run_nopt") is True:
     dsp_data = run_one_dsp(tb_data, dsp_config)
     cut_dict = generate_cuts(dsp_data, parameters=opt_dict.pop("cut_pars"))
     cut_idxs = get_cut_indexes(dsp_data, cut_dict)
-    tb_data = sto.read_object(
+    tb_data = sto.read(
         f"{args.channel}/raw", raw_files, n_rows=opt_dict.pop("n_events"), idx=idxs[cut_idxs]
     )[0]
     log.info(f"... {len(tb_data)} baselines after cuts")

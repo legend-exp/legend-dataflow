@@ -13,7 +13,7 @@ import pickle as pkl
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 
-sto = lh5.LH5Store()
+import lgdo.lh5_store as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +21,7 @@ from legendmeta import LegendMetadata
 from pygama.math.histogram import better_int_binning, get_hist
 from pygama.pargen.energy_cal import hpge_find_E_peaks
 
+sto = lh5.LH5Store()
 mpl.use("agg")
 
 argparser = argparse.ArgumentParser()

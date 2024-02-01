@@ -13,12 +13,12 @@ import os
 import pathlib
 import pickle as pkl
 
+import lgdo.lh5_store as lh5
 from lgdo.utils import numba_defaults
 
 numba_defaults.cache = False
 numba_defaults.boundscheck = False
 
-import lgdo.lh5 as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
@@ -28,6 +28,7 @@ from legendmeta.catalog import Props
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 
+sto = lh5.LH5Store()
 mpl.use("Agg")
 
 argparser = argparse.ArgumentParser()
