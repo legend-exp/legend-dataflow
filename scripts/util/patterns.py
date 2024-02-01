@@ -21,6 +21,7 @@ from .utils import (
     tier_hit_path,
     tier_path,
     tier_pht_path,
+    tier_pet_path,
     tier_raw_blind_path,
     tier_skm_path,
     tier_raw_path,
@@ -166,7 +167,7 @@ def get_pattern_tier_pht(setup):
 
 def get_pattern_tier_pet(setup):
     return os.path.join(
-        f"{tier_evt_path(setup)}",
+        f"{tier_pet_path(setup)}",
         "{datatype}",
         "{period}",
         "{run}",
