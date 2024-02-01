@@ -10,6 +10,20 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.evt.build_evt import build_evt
 
+
+def replace_evt_with_key(dic, new_key):
+    for key, d in dic.items():
+        if isinstance(d, dict):
+            dic[key] = replace_evt_with_key(d, new_key)
+        elif isinstance(d, list):
+            dic[key] = [item.replace("evt", new_key) for item in d]
+        elif isinstance(d, str):
+            dic[key] = d.replace("evt", new_key)
+        else:
+            pass
+    return dic
+
+
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
@@ -47,22 +61,36 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-evt_config = Props.read_from(evt_config_file)
-
 meta = LegendMetadata(path=args.metadata)
 chmap = meta.channelmap(args.timestamp)
 
-# block for snakemake to fill in channel lists
-for field, dic in evt_config["channels"].items():
-    if isinstance(dic, dict):
-        chans = chmap.map("system", unique=False)[dic["system"]]
-        if "selectors" in dic:
-            for k, val in dic["selectors"].items():
-                chans = chans.map(k, unique=False)[val]
-        chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
-        evt_config["channels"][field] = chans
+if isinstance(evt_config_file, dict):
+    evt_config = {}
+    for key, _evt_config in evt_config_file.items():
+        if _evt_config is not None:
+            _evt_config = Props.read_from(_evt_config)
+            # block for snakemake to fill in channel lists
+            for field, dic in _evt_config["channels"].items():
+                if isinstance(dic, dict):
+                    chans = chmap.map("system", unique=False)[dic["system"]]
+                    if "selectors" in dic:
+                        for k, val in dic["selectors"].items():
+                            chans = chans.map(k, unique=False)[val]
+                    chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+                    _evt_config["channels"][field] = chans
+            evt_config[key] = replace_evt_with_key(_evt_config, f"evt/{key}")
+else:
+    evt_config = {"all": Props.read_from(evt_config_file)}
+    # block for snakemake to fill in channel lists
+    for field, dic in evt_config["channels"].items():
+        if isinstance(dic, dict):
+            chans = chmap.map("system", unique=False)[dic["system"]]
+            if "selectors" in dic:
+                for k, val in dic["selectors"].items():
+                    chans = chans.map(k, unique=False)[val]
+            chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+            evt_config["channels"][field] = chans
 
-log.debug(json.dumps(evt_config["channels"], indent=2))
 log.debug(json.dumps(evt_config, indent=2))
 
 t_start = time.time()
@@ -72,19 +100,20 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
-build_evt(
-    f_tcm=args.tcm_file,
-    f_dsp=args.dsp_file,
-    f_hit=args.hit_file,
-    f_evt=temp_output,
-    evt_config=evt_config,
-    evt_group="evt",
-    tcm_group="hardware_tcm_1",
-    dsp_group="dsp",
-    hit_group="hit",
-    tcm_id_table_pattern="ch{}",
-    wo_mode="o",
-)
+for key, config in evt_config.items():
+    build_evt(
+        f_tcm=args.tcm_file,
+        f_dsp=args.dsp_file,
+        f_hit=args.hit_file,
+        f_evt=temp_output,
+        evt_config=config,
+        evt_group=f"evt/{key}" if key != "all" else "evt",
+        tcm_group="hardware_tcm_1",
+        dsp_group="dsp",
+        hit_group="hit",
+        tcm_id_table_pattern="ch{}",
+        wo_mode="a",
+    )
 
 os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
