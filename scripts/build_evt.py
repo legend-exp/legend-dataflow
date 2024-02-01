@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import time
+import numpy as np
 
 import lgdo.lh5_store as lh5
 from legendmeta import LegendMetadata
@@ -67,10 +68,15 @@ log.debug(json.dumps(evt_config,indent=2))
 
 t_start = time.time()
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+
+rng = np.random.default_rng()
+rand_num = f"{rng.integers(0,99999):05d}"
+temp_output = f"{args.output}.{rand_num}"
+
 build_evt(f_tcm = args.tcm_file, 
         f_dsp = args.dsp_file, 
         f_hit = args.hit_file, 
-        f_evt = args.output, 
+        f_evt = temp_output, 
         evt_config = evt_config,
         evt_group = "evt",
         tcm_group = "hardware_tcm_1",
@@ -78,6 +84,8 @@ build_evt(f_tcm = args.tcm_file,
         hit_group = "hit",
         tcm_id_table_pattern = "ch{}",
         wo_mode="o")
+
+os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
 
