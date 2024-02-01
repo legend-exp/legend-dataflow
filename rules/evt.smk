@@ -1,5 +1,5 @@
 """
-Snakemake rules for processing evt tier. 
+Snakemake rules for processing evt tier.
 """
 
 from scripts.util.patterns import (
@@ -13,11 +13,12 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
+
 rule build_evt:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
         hit_file=get_pattern_tier_hit(setup),
-        tcm_file=get_pattern_tier_tcm(setup)
+        tcm_file=get_pattern_tier_tcm(setup),
     output:
         evt_file=get_pattern_tier(setup, "evt", check_in_cycle=check_in_cycle),
     params:
@@ -44,11 +45,12 @@ rule build_evt:
         "--dsp_file {input.dsp_file} "
         "--output {output.evt_file} "
 
+
 rule build_pet:
     input:
         dsp_file=get_pattern_tier_dsp(setup),
         hit_file=get_pattern_tier_pht(setup),
-        tcm_file=get_pattern_tier_tcm(setup)
+        tcm_file=get_pattern_tier_tcm(setup),
     output:
         evt_file=get_pattern_tier(setup, "pet", check_in_cycle=check_in_cycle),
     params:

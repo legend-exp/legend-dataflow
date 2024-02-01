@@ -1,5 +1,5 @@
 """
-Snakemake rules for processing skm tier. 
+Snakemake rules for processing skm tier.
 """
 
 from scripts.util.patterns import (
@@ -7,6 +7,7 @@ from scripts.util.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+
 
 rule build_skm:
     input:
@@ -19,12 +20,12 @@ rule build_skm:
         tcm_files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-phy-tcm.filelist"
         ),
-        evt_files=lambda wildcards: read_filelist_phy(wildcards, "pet")
+        evt_files=lambda wildcards: read_filelist_phy(wildcards, "pet"),
     output:
         skm_file=get_pattern_tier(setup, "skm", check_in_cycle=check_in_cycle),
     params:
         timestamp="{timestamp}",
-        datatype="{datatype}"
+        datatype="{datatype}",
     log:
         get_pattern_log(setup, "tier_skm"),
     group:
