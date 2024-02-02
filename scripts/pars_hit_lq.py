@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from pygama.pargen.lq_cal import cal_lq
 from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 
 log = logging.getLogger(__name__)
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def lq_calibration(

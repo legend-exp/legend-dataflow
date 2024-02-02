@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 from typing import Callable
 
 import numpy as np
@@ -17,6 +18,7 @@ from pygama.pargen.AoE_cal import cal_aoe, pol1, sigma_fit, standard_aoe
 from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 
 log = logging.getLogger(__name__)
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def aoe_calibration(

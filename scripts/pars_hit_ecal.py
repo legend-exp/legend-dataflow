@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 from datetime import datetime
 
 import lgdo.lh5 as lh5
@@ -25,6 +26,8 @@ from scipy.stats import binned_statistic
 log = logging.getLogger(__name__)
 mpl.use("agg")
 sto = lh5.LH5Store()
+
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def plot_baseline_timemap(

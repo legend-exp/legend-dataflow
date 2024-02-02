@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def lq_calibration(
