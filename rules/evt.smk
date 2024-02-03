@@ -31,6 +31,7 @@ rule build_evt:
         "tier-evt"
     resources:
         runtime=300,
+        mem_swap=70,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_evt.py')} "
@@ -63,6 +64,7 @@ rule build_pet:
         "tier-evt"
     resources:
         runtime=300,
+        mem_swap=70,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_evt.py')} "
