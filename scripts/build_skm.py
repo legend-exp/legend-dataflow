@@ -3,16 +3,15 @@ import logging
 import os
 import pathlib
 
+import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo.types import Table
 from pygama.skm.build_skm import build_skm
 from util.FileKey import ProcessingFileKey
-import lgdo.lh5 as lh5
-from lgdo.types import Table
 
-
-sto=lh5.LH5Store()
+sto = lh5.LH5Store()
 
 
 def group_files(fs_evt, fs_hit, fs_dsp, fs_tcm):
@@ -78,9 +77,11 @@ skm_config_file = configs.on(args.timestamp, system=args.datatype)["snakemake_ru
 ]["skm_config"]
 
 if isinstance(skm_config_file, dict):
-    skm_config = {key:Props.read_from(config_file) for key, config_file in skm_config_file.items()}
+    skm_config = {
+        key: Props.read_from(config_file) for key, config_file in skm_config_file.items()
+    }
 else:
-    skm_config = {"all":Props.read_from(skm_config_file)}
+    skm_config = {"all": Props.read_from(skm_config_file)}
 
 if isinstance(args.hit_files, list) and args.hit_files[0].split(".")[-1] == "filelist":
     hit_files = args.hit_files[0]
@@ -125,11 +126,10 @@ log.debug(f"{len(input_files)} file pairs")
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 rng = np.random.default_rng()
-rand_num = rng.integers(0,99999)
+rand_num = rng.integers(0, 99999)
 temp_output = f"{args.output}.{rand_num:05d}"
 
 for f_evt, f_hit, f_dsp, f_tcm in input_files:
-
     log_string = f"running files evt:{os.path.basename(f_evt)}, hit:{os.path.basename(f_hit)},"
     log_string += f"\ndsp:{os.path.basename(f_dsp)}, tcm: {os.path.basename(f_tcm)}"
     log.debug(log_string)
@@ -150,10 +150,11 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
             hit_group="hit",
             tcm_id_table_pattern="ch{}",
         )
-        tables[key] = sto.read(f"skm/{key}" if key != "all" else "skm", f"{args.output}.{rand_num+1:05d}")[0]
-    tbl = Table(col_dict = tables)
-    sto.write(obj=tbl, name="skm", 
-        lh5_file=temp_output, wo_mode="a")
+        tables[key] = sto.read(
+            f"skm/{key}" if key != "all" else "skm", f"{args.output}.{rand_num+1:05d}"
+        )[0]
+    tbl = Table(col_dict=tables)
+    sto.write(obj=tbl, name="skm", lh5_file=temp_output, wo_mode="a")
     os.remove(f"{args.output}.{rand_num+1:05d}")
 
 os.rename(temp_output, args.output)
