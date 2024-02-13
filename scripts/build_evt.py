@@ -5,10 +5,14 @@ import os
 import pathlib
 import time
 
+import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo.types import Table
 from pygama.evt.build_evt import build_evt
+
+sto = lh5.LH5Store()
 
 
 def replace_evt_with_key(dic, new_key):
@@ -115,6 +119,13 @@ for key, config in evt_config.items():
         wo_mode="a",
     )
 
-os.rename(temp_output, args.output)
+tables = {}
+for key in evt_config:
+    tables[key] = sto.read(f"evt/{key}" if key != "all" else "evt", temp_output)[0]
+
+tbl = Table(col_dict=tables)
+sto.write(obj=tbl, name="evt", lh5_file=args.output, wo_mode="a")
+os.remove(temp_output)
+
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
