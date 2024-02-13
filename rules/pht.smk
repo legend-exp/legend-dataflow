@@ -7,7 +7,7 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 """
 
 from scripts.util.pars_loading import pars_catalog
-from scripts.util.utils import filelist_path, par_pht_path
+from scripts.util.utils import filelist_path, par_pht_path, set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -131,14 +131,6 @@ rule build_pht:
         "--db_file {output.db_file}"
 
 
-# def fix_name(new_name):
-#     """ sets the name of the most recently created rule to be new_name
-#     """
-#     list(workflow.rules)[-1].name = new_name
-#     temp_rules = list(rules.__dict__.items())
-#     temp_rules[-1] = (new_name, temp_rules[-1][1])
-#     rules.__dict__ = dict(temp_rules)
-
 part_pht_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
@@ -171,7 +163,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}",
+                channel="{channel}" if key is "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
@@ -218,7 +210,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=75,
+                mem_swap=300,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -237,7 +229,9 @@ for key, dataset in part.datasets.items():
                 "--tcm_filelist {input.tcm_files} "
                 "--input_files {input.files}"
 
-        # fix_name(f"{key}-{partition}")
+        set_last_rule_name(
+            workflow, f"{key}-{partition}-build_pht_energy_super_calibrations"
+        )
 
         if key in part_pht_rules:
             part_pht_rules[key].append(list(workflow.rules)[-1])
@@ -252,7 +246,7 @@ rule build_pht_energy_super_calibrations:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        tcm_filelist=os.path.join(
+        tcm_files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
         ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
@@ -286,14 +280,14 @@ rule build_pht_energy_super_calibrations:
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--inplots {input.inplots} "
         "--channel {params.channel} "
+        "--inplots {input.inplots} "
         "--fit_results {output.partcal_results} "
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
         "--ecal_file {input.ecal_file} "
-        "--tcm_filelist {input.tcm_filelist} "
+        "--tcm_filelist {input.tcm_files} "
         "--input_files {input.files}"
 
 
@@ -339,7 +333,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}",
+                channel="{channel}" if key is "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
@@ -386,7 +380,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=75,
+                mem_swap=300,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -405,7 +399,9 @@ for key, dataset in part.datasets.items():
                 "--tcm_filelist {input.tcm_files} "
                 "--input_files {input.files}"
 
-        # fix_name(f"{key}-{partition}")
+        set_last_rule_name(
+            workflow, f"{key}-{partition}-build_pht_aoe_calibrations"
+        )
 
         if key in part_pht_rules:
             part_pht_rules[key].append(list(workflow.rules)[-1])
@@ -436,7 +432,7 @@ rule build_pht_aoe_calibrations:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "aoecal")),
         aoe_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "objeaoecal_objectscts", extension="pkl"
+                setup, "pht", "aoecal_objects", extension="pkl"
             )
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
@@ -507,7 +503,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}",
+                channel="{channel}" if key is "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
@@ -552,7 +548,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=75,
+                mem_swap=300,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -571,7 +567,7 @@ for key, dataset in part.datasets.items():
                 "--tcm_filelist {input.tcm_files} "
                 "--input_files {input.files}"
 
-        # fix_name(f"{key}-{partition}")
+        set_last_rule_name(workflow, f"{key}-{partition}-build_pht_lq_calibration")
 
         if key in part_pht_rules:
             part_pht_rules[key].append(list(workflow.rules)[-1])

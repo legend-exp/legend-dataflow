@@ -181,7 +181,7 @@ rule build_dsp:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=45,
+        mem_swap=50,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_dsp.py')} "
