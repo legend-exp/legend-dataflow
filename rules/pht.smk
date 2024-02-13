@@ -163,7 +163,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}" if key is "default" else key,
+                channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
@@ -333,7 +333,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}" if key is "default" else key,
+                channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
@@ -503,7 +503,7 @@ for key, dataset in part.datasets.items():
                 ),
             params:
                 datatype="cal",
-                channel="{channel}" if key is "default" else key,
+                channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
                     f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
                 ),
