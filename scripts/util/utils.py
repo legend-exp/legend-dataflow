@@ -268,3 +268,28 @@ def unix_time(value):
     else:
         msg = f"Can't convert type {type(value)} to unix time"
         raise ValueError(msg)
+
+
+def set_last_rule_name(workflow, new_name):
+    """Sets the name of the most recently created rule to be `new_name`.
+    Useful when creating rules dynamically (i.e. unnamed).
+
+    Warning
+    -------
+    This could mess up the workflow. Use at your own risk.
+    """
+    rules = workflow._rules
+    last_key = next(reversed(rules))
+    assert last_key == rules[last_key].name
+
+    rules[new_name] = rules.pop(last_key)
+    rules[new_name].name = new_name
+
+    if workflow.default_target == last_key:
+        workflow.default_target = new_name
+
+    if last_key in workflow._localrules:
+        workflow._localrules.remove(last_key)
+        workflow._localrules.add(new_name)
+
+    workflow.check_localrules()
