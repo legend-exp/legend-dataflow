@@ -181,3 +181,23 @@ class dataset_file:
         )
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
         return fk.timestamp
+
+    def get_wildcard_constraints(self, dataset, channel):
+        if channel == "default":
+            exclude_chans = []
+            default_runs = self.get_dataset(dataset, channel)
+            for channel, chan_dict in self.datasets.items():
+                if channel != "default":
+                    for _, dataset_dict in chan_dict.items():
+                        for period, runs in dataset_dict.items():
+                            if period in default_runs:
+                                for run in runs:
+                                    if run in default_runs[period]:
+                                        exclude_chans.append(channel)
+            exclude_chans = set(exclude_chans)
+            out_string = ""
+            for channel in exclude_chans:
+                out_string += f"(?!{channel})"
+            return out_string + r"ch\d{7}"
+        else:
+            return r"ch\d{7}"

@@ -134,6 +134,9 @@ rule build_pht:
 part_pht_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
+        print(
+            part.get_wildcard_constraints(partition, key),
+        )
 
         rule:
             input:
@@ -161,6 +164,8 @@ for key, dataset in part.datasets.items():
                     tier="pht",
                     name="energy_cal",
                 ),
+            wildcard_constraints:
+                channel=part.get_wildcard_constraints(partition, key),
             params:
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
@@ -331,6 +336,8 @@ for key, dataset in part.datasets.items():
                     tier="pht",
                     name="partcal",
                 ),
+            wildcard_constraints:
+                channel=part.get_wildcard_constraints(partition, key),
             params:
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
@@ -501,6 +508,8 @@ for key, dataset in part.datasets.items():
                     tier="pht",
                     name="aoecal",
                 ),
+            wildcard_constraints:
+                channel=part.get_wildcard_constraints(partition, key),
             params:
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
