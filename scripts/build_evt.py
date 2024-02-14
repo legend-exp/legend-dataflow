@@ -87,7 +87,7 @@ if isinstance(evt_config_file, dict):
                         chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
                     else:
                         chans = []
-                        _evt_config["channels"][field] = chans
+                    _evt_config["channels"][field] = chans
             evt_config[key] = replace_evt_with_key(_evt_config, f"evt/{key}")
 else:
     evt_config = {"all": Props.read_from(evt_config_file)}
