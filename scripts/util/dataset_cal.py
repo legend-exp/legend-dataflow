@@ -22,7 +22,7 @@ class dataset_file:
         self.setup = setup
 
     def get_dataset(self, dataset, channel):
-        partition_dict = self.datasets["default"]
+        partition_dict = self.datasets["default"].copy()
         if channel in self.datasets:
             partition_dict.update(self.datasets[channel])
         return partition_dict[dataset]
