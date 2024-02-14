@@ -78,10 +78,16 @@ if isinstance(evt_config_file, dict):
                 if isinstance(dic, dict):
                     chans = chmap.map("system", unique=False)[dic["system"]]
                     if "selectors" in dic:
-                        for k, val in dic["selectors"].items():
-                            chans = chans.map(k, unique=False)[val]
-                    chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
-                    _evt_config["channels"][field] = chans
+                        try:
+                            for k, val in dic["selectors"].items():
+                                chans = chans.map(k, unique=False)[val]
+                        except KeyError:
+                            chans = None
+                    if chans is not None:
+                        chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+                    else:
+                        chans = []
+                        _evt_config["channels"][field] = chans
             evt_config[key] = replace_evt_with_key(_evt_config, f"evt/{key}")
 else:
     evt_config = {"all": Props.read_from(evt_config_file)}
@@ -90,9 +96,15 @@ else:
         if isinstance(dic, dict):
             chans = chmap.map("system", unique=False)[dic["system"]]
             if "selectors" in dic:
-                for k, val in dic["selectors"].items():
-                    chans = chans.map(k, unique=False)[val]
-            chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+                try:
+                    for k, val in dic["selectors"].items():
+                        chans = chans.map(k, unique=False)[val]
+                except KeyError:
+                    chans = None
+            if chans is not None:
+                chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+            else:
+                chans = []
             evt_config["channels"][field] = chans
 
 log.debug(json.dumps(evt_config, indent=2))
