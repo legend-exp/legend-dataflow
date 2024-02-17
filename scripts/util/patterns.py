@@ -209,7 +209,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if tier_path(setup) not in file_pattern and check_in_cycle is True:
+    if tier_path(setup) not in file_pattern and check_in_cycle is True and ".." not in file_pattern:
         return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}" + f"tier_{tier}.lh5"
     else:
         return file_pattern
@@ -387,7 +387,7 @@ def get_pattern_pars(setup, tier, name=None, extension="json", check_in_cycle=Tr
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if pars_path(setup) not in file_pattern and check_in_cycle is True:
+    if pars_path(setup) not in file_pattern and check_in_cycle is True and ".." not in file_pattern:
         if name is None:
             return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}" + f"par_{tier}.{extension}"
         else:
