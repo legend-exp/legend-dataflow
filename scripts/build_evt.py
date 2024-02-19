@@ -116,28 +116,24 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
+tables = {}
 for key, config in evt_config.items():
-    build_evt(
+    tables[key] = build_evt(
         f_tcm=args.tcm_file,
         f_dsp=args.dsp_file,
         f_hit=args.hit_file,
-        f_evt=temp_output,
+        f_evt=None,
         evt_config=config,
         evt_group=f"evt/{key}" if key != "all" else "evt",
         tcm_group="hardware_tcm_1",
         dsp_group="dsp",
         hit_group="hit",
-        tcm_id_table_pattern="ch{}",
-        wo_mode="a",
+        tcm_id_table_pattern="ch{}"
     )
 
-tables = {}
-for key in evt_config:
-    tables[key] = sto.read(f"evt/{key}" if key != "all" else "evt", temp_output)[0]
-
 tbl = Table(col_dict=tables)
-sto.write(obj=tbl, name="evt", lh5_file=args.output, wo_mode="a")
-os.remove(temp_output)
+sto.write(obj=tbl, name="evt", lh5_file=temp_output, wo_mode="a")
 
+os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")

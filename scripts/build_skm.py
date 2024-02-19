@@ -135,14 +135,13 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
     log.debug(log_string)
     tables = {}
     for key, config in skm_config.items():
-        build_skm(
-            f_evt,
-            f_hit,
-            f_dsp,
-            f_tcm,
-            f"{args.output}.{rand_num+1:05d}",
-            config,
-            wo_mode="a",
+        tables[key] = build_skm(
+            f_evt = f_evt,
+            f_hit = f_hit,
+            f_dsp = f_dsp,
+            f_tcm = f_tcm,
+            f_skm= None,
+            skm_conf = config,
             skm_group=f"skm/{key}" if key != "all" else "skm",
             evt_group="evt",
             tcm_group="hardware_tcm_1",
@@ -150,11 +149,8 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
             hit_group="hit",
             tcm_id_table_pattern="ch{}",
         )
-        tables[key] = sto.read(
-            f"skm/{key}" if key != "all" else "skm", f"{args.output}.{rand_num+1:05d}"
-        )[0]
+
     tbl = Table(col_dict=tables)
     sto.write(obj=tbl, name="skm", lh5_file=temp_output, wo_mode="a")
-    os.remove(f"{args.output}.{rand_num+1:05d}")
 
 os.rename(temp_output, args.output)
