@@ -136,12 +136,12 @@ for f_evt, f_hit, f_dsp, f_tcm in input_files:
     tables = {}
     for key, config in skm_config.items():
         tables[key] = build_skm(
-            f_evt = f_evt,
-            f_hit = f_hit,
-            f_dsp = f_dsp,
-            f_tcm = f_tcm,
-            f_skm= None,
-            skm_conf = config,
+            f_evt=f_evt,
+            f_hit=f_hit,
+            f_dsp=f_dsp,
+            f_tcm=f_tcm,
+            f_skm=None,
+            skm_conf=config,
             skm_group=f"skm/{key}" if key != "all" else "skm",
             evt_group="evt",
             tcm_group="hardware_tcm_1",

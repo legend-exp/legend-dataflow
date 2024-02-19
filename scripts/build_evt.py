@@ -128,7 +128,7 @@ for key, config in evt_config.items():
         tcm_group="hardware_tcm_1",
         dsp_group="dsp",
         hit_group="hit",
-        tcm_id_table_pattern="ch{}"
+        tcm_id_table_pattern="ch{}",
     )
 
 tbl = Table(col_dict=tables)
