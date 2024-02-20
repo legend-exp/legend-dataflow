@@ -5,9 +5,9 @@ import os
 import pathlib
 import time
 
-import lgdo.lh5_store as lh5
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo.lh5 import ls
 from pygama.hit.build_hit import build_hit
 
 argparser = argparse.ArgumentParser()
@@ -29,7 +29,7 @@ pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("pygama.lgdo.lh5_store").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
 
 
@@ -45,23 +45,22 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-if isinstance(args.pars_file, list):
-    pars_dict = Props.read_from(args.pars_file)
-else:
-    with open(args.pars_file) as f:
-        pars_dict = json.load(f)
+
+pars_dict = Props.read_from(args.pars_file)
 
 pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
 
 hit_dict = {}
-channels_present = lh5.ls(args.input)
+channels_present = ls(args.input)
 for channel in pars_dict:
+    chan_pars = pars_dict[channel].copy()
     if channel in channel_dict:
-        with open(channel_dict[channel]) as r:
-            cfg_dict = json.load(r)
-        Props.add_to(pars_dict[channel], cfg_dict)
+        cfg_dict = Props.read_from(channel_dict[channel])
+        Props.add_to(cfg_dict, chan_pars)
+        chan_pars = cfg_dict
+
     if channel in channels_present:
-        hit_dict[f"{channel}/dsp"] = pars_dict[channel]
+        hit_dict[f"{channel}/dsp"] = chan_pars
 
 t_start = time.time()
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)

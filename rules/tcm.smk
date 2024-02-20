@@ -13,6 +13,9 @@ from scripts.util.patterns import (
 rule build_tier_tcm:
     input:
         get_pattern_tier_raw(setup),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
     output:
         get_pattern_tier(setup, "tcm", check_in_cycle=check_in_cycle),
     log:
@@ -26,5 +29,7 @@ rule build_tier_tcm:
         f"{workflow.source_path('../scripts/build_tcm.py')} "
         "--log {log} "
         "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
         "{input} "
         "{output}"

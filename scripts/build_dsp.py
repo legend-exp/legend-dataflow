@@ -5,17 +5,20 @@ import os
 import pathlib
 import re
 import time
+import warnings
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numpy as np
 from dspeed import build_dsp
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -32,6 +35,7 @@ pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
@@ -39,11 +43,7 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
     "inputs"
 ]["processing_chain"]
 
-if isinstance(args.pars_file, list):
-    database_dic = Props.read_from(args.pars_file)
-else:
-    with open(args.pars_file) as f:
-        database_dic = json.load(f)
+database_dic = Props.read_from(args.pars_file)
 
 
 def replace_list_with_array(dic):

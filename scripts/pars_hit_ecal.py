@@ -6,9 +6,10 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 from datetime import datetime
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,6 +25,9 @@ from scipy.stats import binned_statistic
 
 log = logging.getLogger(__name__)
 mpl.use("agg")
+sto = lh5.LH5Store()
+
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def plot_baseline_timemap(
@@ -111,7 +115,9 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
     if plot_options is None:
         plot_options = {}
     plot_dict = {}
-    data = lh5.load_dfs(files, ["bl_mean", "baseline", "timestamp"], lh5_path)
+    data = sto.read(lh5_path, files, field_mask=["bl_mean", "baseline", "timestamp"])[0].view_as(
+        "pd"
+    )
     for key, item in plot_options.items():
         if item["options"] is not None:
             plot_dict[key] = item["function"](data, **item["options"])

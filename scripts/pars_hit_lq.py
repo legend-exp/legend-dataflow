@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from pygama.pargen.lq_cal import cal_lq
 from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 
 log = logging.getLogger(__name__)
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def lq_calibration(
@@ -122,8 +124,7 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
 
 kwarg_dict = Props.read_from(channel_dict)
 
-with open(args.ecal_file) as o:
-    ecal_dict = json.load(o)
+ecal_dict = Props.read_from(args.ecal_file)
 cal_dict = ecal_dict["pars"]["operations"]
 eres_dict = ecal_dict["results"]
 

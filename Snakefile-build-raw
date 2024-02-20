@@ -88,6 +88,8 @@ checkpoint gen_filelist:
         basedir=basedir,
         configs=configs,
         chan_maps=chan_maps,
+        analysis_runs_file=None,
+        ignored_keys=os.path.join(configs, "empty_keys.keylist"),
     script:
         "scripts/create_{wildcards.extension}list.py"
 

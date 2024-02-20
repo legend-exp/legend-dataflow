@@ -175,6 +175,7 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
             "pht": ut.tier_pht_path(setup).replace(os.getenv("PRODENV"), ""),
             "tcm": ut.tier_tcm_path(setup).replace(os.getenv("PRODENV"), ""),
             "evt": ut.tier_evt_path(setup).replace(os.getenv("PRODENV"), ""),
+            "pet": ut.tier_pet_path(setup).replace(os.getenv("PRODENV"), ""),
         },
         "file_format": {
             "raw": pat.get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
@@ -195,6 +196,9 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
             "tcm": pat.get_pattern_tier(setup, "tcm", check_in_cycle=False).replace(
                 ut.tier_tcm_path(setup), ""
             ),
+            "pet": pat.get_pattern_tier(setup, "pet", check_in_cycle=False).replace(
+                ut.tier_pet_path(setup), ""
+            ),
         },
         "table_format": {
             "raw": "ch{ch:07d}/raw",
@@ -202,6 +206,7 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
             "hit": "ch{ch:07d}/hit",
             "pht": "ch{ch:07d}/hit",
             "evt": "{grp}/evt",
+            "pet": "{grp}/evt",
             "tcm": "hardware_tcm_1",
         },
     }
@@ -215,6 +220,7 @@ else:
             "tcm": ut.tier_tcm_path(setup),
             "pht": ut.tier_pht_path(setup),
             "evt": ut.tier_evt_path(setup),
+            "pet": ut.tier_pet_path(setup),
         },
         "file_format": {
             "raw": pat.get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
@@ -232,6 +238,9 @@ else:
             "evt": pat.get_pattern_tier(setup, "evt", check_in_cycle=False).replace(
                 ut.tier_evt_path(setup), ""
             ),
+            "pet": pat.get_pattern_tier(setup, "pet", check_in_cycle=False).replace(
+                ut.tier_evt_path(setup), ""
+            ),
             "tcm": pat.get_pattern_tier(setup, "tcm", check_in_cycle=False).replace(
                 ut.tier_tcm_path(setup), ""
             ),
@@ -242,6 +251,7 @@ else:
             "hit": "ch{ch:07d}/hit",
             "pht": "ch{ch:07d}/hit",
             "evt": "{grp}/evt",
+            "pet": "{grp}/pet",
             "tcm": "hardware_tcm_1",
         },
     }

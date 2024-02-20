@@ -175,7 +175,7 @@ if opt_dict.pop("run_eopt") is True:
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
 
-    if isinstance(dsp_config, str):
+    if isinstance(dsp_config, (str, list)):
         dsp_config = Props.read_from(dsp_config)
 
     dsp_config["outputs"] = ["tp_99", "tp_0_est", "dt_eff"]

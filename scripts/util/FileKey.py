@@ -2,6 +2,7 @@
 This module contains classes to convert between keys and files using the patterns defined in patterns.py
 """
 
+import os
 import re
 from collections import namedtuple
 
@@ -198,3 +199,38 @@ class ChannelProcKey(FileKey):
             file = smk.io.expand(par_pattern, **wildcards_dict, channel=chan)[0]
             filenames.append(file)
         return filenames
+
+
+def per_grouper(files):
+    """
+    Returns list containing lists of each run
+    """
+
+    pers = []
+    per_files = []
+    for file in files:
+        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        if f"{fk.experiment}-{fk.period}" not in pers:
+            pers.append(f"{fk.experiment}-{fk.period}")
+            per_files.append([])
+        for i, run in enumerate(pers):
+            if run == f"{fk.experiment}-{fk.period}":
+                per_files[i].append(file)
+    return per_files
+
+
+def run_grouper(files):
+    """
+    Returns list containing lists of each run
+    """
+    runs = []
+    run_files = []
+    for file in files:
+        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        if f"{fk.experiment}-{fk.period}-{fk.run}" not in runs:
+            runs.append(f"{fk.experiment}-{fk.period}-{fk.run}")
+            run_files.append([])
+        for i, run in enumerate(runs):
+            if run == f"{fk.experiment}-{fk.period}-{fk.run}":
+                run_files[i].append(file)
+    return run_files

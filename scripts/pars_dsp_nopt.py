@@ -11,10 +11,11 @@ os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 from pygama.pargen.cuts import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
@@ -40,7 +41,7 @@ args = argparser.parse_args()
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("pygama.lgdo.lh5_store").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
 logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
 
@@ -56,11 +57,9 @@ dsp_config = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["processing_c
 ]
 opt_json = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["optimiser_config"][args.channel]
 
-with open(opt_json) as r:
-    opt_dict = json.load(r)
+opt_dict = Props.read_from(opt_json)
 
-with open(args.database) as t:
-    db_dict = json.load(t)
+db_dict = Props.read_from(args.database)
 
 if opt_dict.pop("run_nopt") is True:
     with open(args.raw_filelist) as f:
@@ -68,11 +67,9 @@ if opt_dict.pop("run_nopt") is True:
 
     raw_files = sorted(files)
 
-    energies = sto.read_object(f"{args.channel}/raw/daqenergy", raw_files)[0]
+    energies = sto.read(f"{args.channel}/raw/daqenergy", raw_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    tb_data = sto.read_object(
-        f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs
-    )[0]
+    tb_data = sto.read(f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs)[0]
     t1 = time.time()
     log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
 
@@ -80,14 +77,13 @@ if opt_dict.pop("run_nopt") is True:
     dsp_data = run_one_dsp(tb_data, dsp_config)
     cut_dict = generate_cuts(dsp_data, parameters=opt_dict.pop("cut_pars"))
     cut_idxs = get_cut_indexes(dsp_data, cut_dict)
-    tb_data = sto.read_object(
+    tb_data = sto.read(
         f"{args.channel}/raw", raw_files, n_rows=opt_dict.pop("n_events"), idx=idxs[cut_idxs]
     )[0]
     log.info(f"... {len(tb_data)} baselines after cuts")
 
-    if isinstance(dsp_config, str):
-        with open(dsp_config) as r:
-            dsp_config = json.load(r)
+    if isinstance(dsp_config, (str, list)):
+        dsp_config = Props.read_from(dsp_config)
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(

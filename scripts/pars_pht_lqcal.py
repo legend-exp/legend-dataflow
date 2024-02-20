@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ from pygama.pargen.utils import get_tcm_pulser_ids, load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def lq_calibration(
@@ -145,15 +147,13 @@ cal_dict = {}
 results_dicts = {}
 if isinstance(args.ecal_file, list):
     for ecal in args.ecal_file:
-        with open(ecal) as o:
-            cal = json.load(o)
+        cal = Props.read_from(ecal)
 
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
         cal_dict[fk.timestamp] = cal["pars"]["operations"]
         results_dicts[fk.timestamp] = cal["results"]
 else:
-    with open(args.ecal_file) as o:
-        cal = json.load(o)
+    cal = Props.read_from(args.ecal_file)
 
     fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.ecal_file))
     cal_dict[fk.timestamp] = cal["pars"]["operations"]
