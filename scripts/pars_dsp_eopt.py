@@ -5,21 +5,25 @@ import os
 import pathlib
 import pickle as pkl
 import time
+import warnings
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5_store as lh5
+import lgdo.lh5 as lh5
 import numpy as np
 import pygama.math.peak_fitting as pgf
 import pygama.pargen.energy_optimisation as om
 import sklearn.gaussian_process.kernels as ker
+from dspeed.units import unit_registry as ureg
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dsp_optimize import run_one_dsp
 from pygama.pargen.utils import get_tcm_pulser_ids
+
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
@@ -161,7 +165,7 @@ if opt_dict.pop("run_eopt") is True:
         wf_field=opt_dict["wf_field"],
     )
 
-    tb_data = sto.read_object(
+    tb_data = sto.read(
         f"{args.channel}/raw",
         raw_files,
         idx=idx_events,
@@ -172,12 +176,14 @@ if opt_dict.pop("run_eopt") is True:
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
 
     if isinstance(dsp_config, str):
-        with open(dsp_config) as r:
-            dsp_config = json.load(r)
+        dsp_config = Props.read_from(dsp_config)
+
+    dsp_config["outputs"] = ["tp_99", "tp_0_est", "dt_eff"]
 
     init_data = run_one_dsp(tb_data, dsp_config, db_dict=db_dict, verbosity=0)
     full_dt = (init_data["tp_99"].nda - init_data["tp_0_est"].nda)[idx_list[-1]]
     flat_val = np.ceil(1.1 * np.nanpercentile(full_dt, 99) / 100) / 10
+
     if flat_val < 1.0:
         flat_val = 1.0
     elif flat_val > 4:
@@ -291,23 +297,37 @@ if opt_dict.pop("run_eopt") is True:
         + ker.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
     )
 
+    lambda_param = 5
+    sampling_rate = tb_data["waveform_presummed"]["dt"][0]
+    sampling_unit = ureg.Quantity(tb_data["waveform_presummed"]["dt"].attrs["units"])
+    waveform_sampling = sampling_rate * sampling_unit
+
     bopt_cusp = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
     )
-    bopt_cusp.lambda_param = 1
-    bopt_cusp.add_dimension("cusp", "sigma", 1, 16, 2, "us")
+    bopt_cusp.lambda_param = lambda_param
+    bopt_cusp.add_dimension("cusp", "sigma", 0.5, 16, True, "us")
 
     bopt_zac = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
     )
-    bopt_zac.lambda_param = 1
-    bopt_zac.add_dimension("zac", "sigma", 1, 16, 2, "us")
+    bopt_zac.lambda_param = lambda_param
+    bopt_zac.add_dimension("zac", "sigma", 0.5, 16, True, "us")
 
     bopt_trap = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
     )
-    bopt_trap.lambda_param = 1
-    bopt_trap.add_dimension("etrap", "rise", 1, 12, 2, "us")
+    bopt_trap.lambda_param = lambda_param
+    bopt_trap.add_dimension("etrap", "rise", 1, 12, True, "us")
 
     bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp)
     bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac)
