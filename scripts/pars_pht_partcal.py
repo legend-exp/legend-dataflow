@@ -33,6 +33,49 @@ def update_cal_dicts(cal_dicts, update_dict):
         cal_dicts.update(update_dict)
     return cal_dicts
 
+def get_results_dict(ecal_class, data):
+    if ecal_class.results:
+        fwhm_linear = ecal_class.fwhm_fit_linear.copy()
+        fwhm_linear["parameters"] = fwhm_linear["parameters"].to_dict()
+        fwhm_linear["uncertainties"] = fwhm_linear["uncertainties"].to_dict()
+        fwhm_linear["cov"] = fwhm_linear["cov"].tolist()
+        fwhm_quad = ecal_class.fwhm_fit_quadratic.copy()
+        fwhm_quad["parameters"] = fwhm_quad["parameters"].to_dict()
+        fwhm_quad["uncertainties"] = fwhm_quad["uncertainties"].to_dict()
+        fwhm_quad["cov"] = fwhm_quad["cov"].tolist()
+
+        pk_dict = {
+            Ei: {
+                "function": func_i.__name__,
+                "module": func_i.__module__,
+                "parameters_in_keV": parsi.to_dict(),
+                "uncertainties_in_keV": errorsi.to_dict(),
+                "p_val": pvali,
+                "fwhm_in_keV": list(fwhmi),
+                "pk_position":(posi, posuni),
+            }
+            for i, (Ei, parsi, errorsi, pvali, fwhmi,  posi, posuni, func_i) in enumerate(
+                zip(
+                    ecal_class.results["fitted_keV"],
+                    ecal_class.results["pk_pars"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_errors"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_pvals"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_fwhms"],
+                    ecal_class.results["pk_pos"],
+                    ecal_class.results["pk_pos_uncertainties"],
+                    ecal_class.funcs,
+                )
+            )
+        }
+
+        return {
+            "eres_linear": fwhm_linear,
+            "eres_quadratic": fwhm_quad,
+            "fitted_peaks": ecal_class.results["fitted_keV"].tolist(),
+            "pk_fits": pk_dict,
+        }
+    else:
+        return {}
 
 def partition_energy_cal_th(
     data: pd.Datframe,
@@ -44,28 +87,113 @@ def partition_energy_cal_th(
     plot_options: dict | None = None,
     simplex: bool = True,
     tail_weight: int = 20,
-    # cal_energy_params: list = None,
-    # deg:int=2,
+    cal_energy_params: list = None,
+    deg:int=2,
 ) -> tuple(dict, dict, dict, dict):
     results_dict = {}
     plot_dict = {}
     full_object_dict = {}
-    # if cal_energy_params is None:
-    #     cal_energy_params = [energy_param + "_cal" for energy_param in energy_params]
-    for energy_param in energy_params:
-        full_object_dict[energy_param] = high_stats_fitting(
+    if cal_energy_params is None:
+        cal_energy_params = [energy_param + "_cal" for energy_param in energy_params]
+    glines = [
+        238.632,
+        511,
+        583.191,
+        727.330,
+        763,
+        785,
+        860.564,
+        893,
+        1079,
+        1513,
+        1592.53,
+        1620.50,
+        2103.53,
+        2614.50,
+        3125,
+        3198,
+        3474,
+    ]  # gamma lines used for calibration
+    range_keV = [
+        (10, 10),
+        (30, 30),
+        (30, 30),
+        (30, 30),
+        (30, 15),
+        (15, 30),
+        (30, 25),
+        (25, 30),
+        (30, 30),
+        (30, 30),
+        (30, 20),
+        (20, 30),
+        (30, 30),
+        (30, 30),
+        (30, 30),
+        (30, 30),
+        (30, 30),
+    ]  # side bands width
+    funcs = [
+        pgf.extended_gauss_step_pdf,  # probably should be gauss on exp
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_gauss_step_pdf,
+        pgf.extended_gauss_step_pdf,
+    ]
+    gof_funcs = [
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+        pgf.radford_pdf,
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+        pgf.gauss_step_pdf,
+    ]
+
+    for energy_param, cal_energy_param in zip(energy_params, cal_energy_params):
+        full_object_dict[cal_energy_param] = high_stats_fitting(
             energy_param=energy_param,
+            glines=glines,
+            range_keV=range_keV,
+            funcs=funcs,
+            gof_funcs=gof_funcs,
             selection_string=selection_string,
             threshold=threshold,
             p_val=p_val,
             plot_options=plot_options,
             simplex=simplex,
             tail_weight=tail_weight,
+            cal_energy_param=cal_energy_param,
+            deg=deg,
+            fixed={1:1}
         )
-        full_object_dict[energy_param].fit_peaks(data)
-        results_dict[energy_param] = full_object_dict[energy_param].get_results_dict(data)
-        if full_object_dict[energy_param].results:
-            plot_dict[energy_param] = full_object_dict[energy_param].fill_plot_dict(data).copy()
+        full_object_dict[cal_energy_param].update_calibration(data)
+        results_dict[cal_energy_param] = get_results_dict(full_object_dict[cal_energy_param], data)
+        hit_dicts = update_cal_dicts(hit_dicts, full_object_dict[cal_energy_param].hit_dict)
+        if full_object_dict[cal_energy_param].results:
+            plot_dict[cal_energy_param] = full_object_dict[cal_energy_param].fill_plot_dict(data).copy()
 
     log.info("Finished all calibrations")
     return hit_dicts, results_dict, plot_dict, full_object_dict
@@ -96,6 +224,7 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 
 def run_splitter(files):
