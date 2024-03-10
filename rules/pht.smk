@@ -7,6 +7,7 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 """
 
 from scripts.util.pars_loading import pars_catalog
+import scripts.util.create_pars_keylist import pars_key_resolve
 from scripts.util.utils import filelist_path, par_pht_path, set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
@@ -19,6 +20,13 @@ from scripts.util.patterns import (
     get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
+)
+
+ds.pars_key_resolve.write_par_catalog(
+    ["-*-*-*-cal"],
+    os.path.join(pars_path(setup), "pht", "validity.jsonl"),
+    get_pattern_tier_raw(setup),
+    {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
 
@@ -69,31 +77,60 @@ rule build_per_energy_calibration:
         "--tcm_filelist {input.tcm_filelist} "
         "--files {input.files}"
 
-
-rule build_pars_pht:
+rule build_pars_pht_objects:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
         lambda wildcards: read_filelist_pars_cal_channel(
             wildcards,
             "pht_objects_pkl",
         ),
     output:
-        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "pht",
             name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
-        ),
-        get_pattern_plts(setup, "pht"),
+        )
     group:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/merge_channels.py')} "
+        f"{basedir}/../scripts/merge_channels.py "
         "--input {input} "
+        "--output {output} "
+
+rule build_plts_pht:
+    input:
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
+    output:
+        get_pattern_plts(setup, "pht")
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
+
+rule build_pars_pht:
+    input:
+        infiles = lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
+        plts = get_pattern_plts(setup, "pht"),
+        objects = get_pattern_pars(
+            setup,
+            "pht",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        )
+    output:
+        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
         "--output {output} "
 
 
@@ -134,9 +171,6 @@ rule build_pht:
 part_pht_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
-        print(
-            part.get_wildcard_constraints(partition, key),
-        )
 
         rule:
             input:
