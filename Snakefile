@@ -40,24 +40,17 @@ swenv = runcmd(setup)
 part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
+wildcard_constraints:
+    experiment="\w+",
+    period="\w+",
+    run="\w+",
+    datatype="\w+",
+    timestamp="\w+",
+    channel="\w+",
+
 
 include: "rules/common.smk"
 include: "rules/main.smk"
-
-
-localrules:
-    gen_filelist,
-    autogen_output,
-
-
-ds.pars_key_resolve.write_par_catalog(
-    ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "pht", "validity.jsonl"),
-    get_pattern_tier_raw(setup),
-    {"cal": ["par_pht"], "lar": ["par_pht"]},
-)
-
-
 include: "rules/tcm.smk"
 include: "rules/dsp.smk"
 include: "rules/hit.smk"
@@ -65,6 +58,10 @@ include: "rules/pht.smk"
 include: "rules/evt.smk"
 include: "rules/skm.smk"
 include: "rules/blinding_calibration.smk"
+
+localrules:
+    gen_filelist,
+    autogen_output,
 
 
 onstart:
