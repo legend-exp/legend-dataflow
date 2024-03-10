@@ -52,7 +52,8 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
-logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
+logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 
 log = logging.getLogger(__name__)
@@ -395,8 +396,10 @@ if opt_dict.pop("run_eopt") is True:
         "expression": "trapEftp*(1+dt_eff*a)",
         "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
     }
-
-    db_dict.update({"ctc_params": out_alpha_dict})
+    if "ctc_params" in db_dict: 
+        db_dict["ctc_params"].update(out_alpha_dict)
+    else:
+        db_dict.update({"ctc_params": out_alpha_dict})
 
     pathlib.Path(os.path.dirname(args.qbb_grid_path)).mkdir(parents=True, exist_ok=True)
     with open(args.qbb_grid_path, "wb") as f:
