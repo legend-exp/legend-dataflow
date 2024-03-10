@@ -398,6 +398,8 @@ if __name__ == "__main__":
                     if plot in item:
                         param_dict.update({plot: item[plot]})
                 common_dict.update({key: param_dict})
+        plot_dict = {"ecal":plot_dict}
+        plot_dict["common"] = common_dict
 
         if args.inplot_dict:
             with open(args.inplot_dict, "rb") as f:
@@ -414,7 +416,7 @@ if __name__ == "__main__":
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # save output dictionary
-    output_dict = {"pars": out_dict, "results": result_dict}
+    output_dict = {"pars": out_dict, "results": {"ecal":result_dict}}
     with open(args.save_path, "w") as fp:
         pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
         json.dump(output_dict, fp, indent=4)
@@ -422,4 +424,4 @@ if __name__ == "__main__":
     # save calibration objects
     with open(args.results_path, "wb") as fp:
         pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
-        pkl.dump(ecal_object, fp, protocol=pkl.HIGHEST_PROTOCOL)
+        pkl.dump({"ecal":ecal_object}, fp, protocol=pkl.HIGHEST_PROTOCOL)
