@@ -99,6 +99,7 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
