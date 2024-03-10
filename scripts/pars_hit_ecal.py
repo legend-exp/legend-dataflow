@@ -125,6 +125,70 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
             plot_dict[key] = item["function"](data)
     return plot_dict
 
+def get_results_dict(ecal_class, data):
+    if np.isnan(ecal_class.pars).all():
+        return {}
+    else:
+        fwhm_linear = ecal_class.fwhm_fit_linear.copy()
+        fwhm_linear["parameters"] = fwhm_linear["parameters"].to_dict()
+        fwhm_linear["uncertainties"] = fwhm_linear["uncertainties"].to_dict()
+        fwhm_linear["cov"] = fwhm_linear["cov"].tolist()
+        fwhm_quad = ecal_class.fwhm_fit_quadratic.copy()
+        fwhm_quad["parameters"] = fwhm_quad["parameters"].to_dict()
+        fwhm_quad["uncertainties"] = fwhm_quad["uncertainties"].to_dict()
+        fwhm_quad["cov"] = fwhm_quad["cov"].tolist()
+
+        pk_dict = {
+            Ei: {
+                "function": func_i.__name__,
+                "module": func_i.__module__,
+                "parameters_in_ADC": parsi.to_dict(),
+                "uncertainties_in_ADC": errorsi.to_dict(),
+                "p_val": pvali,
+                "fwhm_in_keV": list(fwhmi),
+                "pk_position":(posi, posuni),
+            }
+            for i, (Ei, parsi, errorsi, pvali, fwhmi, posi, posuni, func_i) in enumerate(
+                zip(
+                    ecal_class.results["fitted_keV"],
+                    ecal_class.results["pk_pars"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_errors"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_pvals"][ecal_class.results["pk_validities"]],
+                    ecal_class.results["pk_fwhms"],
+                    ecal_class.results["pk_pos"],
+                    ecal_class.results["pk_pos_uncertainties"],
+                    ecal_class.funcs,
+                )
+            )
+        }
+
+        return {
+            "total_fep": len(
+                data.query(
+                    f"{ecal_class.cal_energy_param}>2604&{ecal_class.cal_energy_param}<2624"
+                )
+            ),
+            "total_dep": len(
+                data.query(
+                    f"{ecal_class.cal_energy_param}>1587&{ecal_class.cal_energy_param}<1597"
+                )
+            ),
+            "pass_fep": len(
+                data.query(
+                    f"{ecal_class.cal_energy_param}>2604&{ecal_class.cal_energy_param}<2624&{ecal_class.selection_string}"
+                )
+            ),
+            "pass_dep": len(
+                data.query(
+                    f"{ecal_class.cal_energy_param}>1587&{ecal_class.cal_energy_param}<1597&{ecal_class.selection_string}"
+                )
+            ),
+            "eres_linear": fwhm_linear,
+            "eres_quadratic": fwhm_quad,
+            "fitted_peaks": ecal_class.results["fitted_keV"].tolist(),
+            "pk_fits": pk_dict,
+            "mode":ecal_class.results["mode"],
+        }
 
 def energy_cal_th(
     data: pd.Dataframe,
@@ -153,12 +217,58 @@ def energy_cal_th(
     if cal_energy_params is None:
         cal_energy_params = [energy_param + "_cal" for energy_param in energy_params]
 
+
+    glines = [
+        # 238.632,
+        583.191,
+        727.330,
+        860.564,
+        1592.53,
+        1620.50,
+        2103.53,
+        2614.50,
+    ]  # gamma lines used for calibration
+    range_keV = [
+        # (8, 8),
+        (20, 20),
+        (30, 30),
+        (30, 30),
+        (40, 20),
+        (20, 40),
+        (40, 40),
+        (60, 60),
+    ]  # side bands width
+    funcs = [
+        # pgf.extended_gauss_step_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+        pgf.extended_radford_pdf,
+    ]
+    gof_funcs = [
+        # pgf.gauss_step_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+        pgf.radford_pdf,
+    ]
+
     results_dict = {}
     plot_dict = {}
     full_object_dict = {}
     for energy_param, cal_energy_param in zip(energy_params, cal_energy_params):
         full_object_dict[cal_energy_param] = calibrate_parameter(
             energy_param,
+            glines,
+            range_keV,
+            funcs,
+            gof_funcs,
             selection_string,
             plot_options,
             guess_keV,
@@ -168,9 +278,10 @@ def energy_cal_th(
             simplex,
             deg,
             tail_weight=tail_weight,
+            cal_energy_param=cal_energy_param,
         )
         full_object_dict[cal_energy_param].calibrate_parameter(data)
-        results_dict[cal_energy_param] = full_object_dict[cal_energy_param].get_results_dict(data)
+        results_dict[cal_energy_param] = get_results_dict(full_object_dict[cal_energy_param], data)
         hit_dict.update(full_object_dict[cal_energy_param].hit_dict)
         if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
             plot_dict[cal_energy_param] = (
@@ -186,6 +297,8 @@ if __name__ == "__main__":
     argparser.add_argument("--files", help="files", nargs="*", type=str)
     argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
     argparser.add_argument("--ctc_dict", help="ctc_dict", nargs="*")
+    argparser.add_argument("--in_hit_dict", help="in_hit_dict", nargs="*", required=False)
+    argparser.add_argument("--inplot_dict", help="inplot_dict", nargs="*", required=False)
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -206,10 +319,14 @@ if __name__ == "__main__":
     logging.getLogger("lgdo").setLevel(logging.INFO)
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
+    logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+    if args.in_hit_dict:
+        hit_dict = Props.read_from(args.in_hit_dict)
 
     database_dic = Props.read_from(args.ctc_dict)
 
-    hit_dict = database_dic[args.channel]["ctc_params"]
+    hit_dict = hit_dict.update(database_dic[args.channel]["ctc_params"])
 
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
@@ -274,8 +391,6 @@ if __name__ == "__main__":
                 plot_item = common_dict.pop(plot)
                 plot_dict.update({plot: plot_item})
 
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-
         for key, item in plot_dict.items():
             if isinstance(item, dict) and len(item) > 0:
                 param_dict = {}
@@ -283,8 +398,18 @@ if __name__ == "__main__":
                     if plot in item:
                         param_dict.update({plot: item[plot]})
                 common_dict.update({key: param_dict})
-        plot_dict["common"] = common_dict
 
+        if args.inplot_dict:
+            with open(args.inplot_dict, "rb") as f:
+                total_plot_dict = pkl.load(args.inplot_dict, protocol=pkl.HIGHEST_PROTOCOL)
+            if "common" in total_plot_dict:
+                total_plot_dict["common"].update(common_dict)
+            else:
+                plot_dict["common"] = common_dict
+
+            total_plot_dict = total_plot_dict.update(plot_dict)
+
+        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
         with open(args.plot_path, "wb") as f:
             pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
