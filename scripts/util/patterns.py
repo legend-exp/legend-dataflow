@@ -432,16 +432,18 @@ def get_pattern_pars_overwrite(setup, tier, name=None):
         )
 
 
-def get_pattern_pars_tmp(setup, tier, name=None):
+def get_pattern_pars_tmp(setup, tier, name=None, datatype=None):
+    if datatype is None:
+        datatype = "{datatype}"
     if name is None:
         return os.path.join(
             f"{tmp_par_path(setup)}",
-            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_" + tier + ".json",
+            "{experiment}-{period}-{run}-"+datatype+"-{timestamp}-par_" + tier + ".json",
         )
     else:
         return os.path.join(
             f"{tmp_par_path(setup)}",
-            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
+            "{experiment}-{period}-{run}-"+datatype+"-{timestamp}-par_"
             + tier
             + "_"
             + name
