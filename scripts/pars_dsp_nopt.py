@@ -43,7 +43,8 @@ logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
-logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
+logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ if opt_dict.pop("run_nopt") is True:
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(
-            tb_data, dsp_config, db_dict, opt_dict, args.channel, display=1
+            tb_data, dsp_config, db_dict.copy(), opt_dict, args.channel, display=1
         )
     else:
         out_dict = pno.noise_optimization(

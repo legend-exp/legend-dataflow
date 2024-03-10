@@ -98,6 +98,7 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 
 def run_splitter(files):
