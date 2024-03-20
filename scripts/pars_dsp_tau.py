@@ -14,8 +14,9 @@ import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.extract_tau import dsp_preprocess_decay_const
-from pygama.pargen.utils import get_tcm_pulser_ids
+from pygama.pargen.extract_tau import ExtractTau
+from pygama.pargen.data_cleaning import get_tcm_pulser_ids, get_cut_indexes
+from pygama.pargen.dsp_optimize import run_one_dsp
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -25,6 +26,9 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 argparser.add_argument("--plot_path", help="plot path", type=str, required=False)
 argparser.add_argument("--output_file", help="output file", type=str, required=True)
+
+argparser.add_argument("--pulser_file", help="pulser file", type=str, required=False)
+
 argparser.add_argument("--raw_files", help="input files", nargs="*", type=str)
 argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str)
 args = argparser.parse_args()
@@ -38,6 +42,7 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 sto = lh5.LH5Store()
+log = logging.getLogger(__name__)
 
 configs = LegendMetadata(path=args.configs)
 config_dict = configs.on(args.timestamp, system=args.datatype)
@@ -49,6 +54,7 @@ kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_confi
 kwarg_dict = Props.read_from(kwarg_dict)
 
 if kwarg_dict["run_tau"] is True:
+    dsp_config = Props.read_from(channel_dict)
     kwarg_dict.pop("run_tau")
     if isinstance(args.raw_files, list) and args.raw_files[0].split(".")[-1] == "filelist":
         input_file = args.raw_files[0]
@@ -81,17 +87,39 @@ if kwarg_dict["run_tau"] is True:
         n_rows=kwarg_dict.pop("n_events"),
     )[0]
 
-    out_dict, plot_dict = dsp_preprocess_decay_const(
-        tb_data, channel_dict, **kwarg_dict, display=1
-    )
+    tb_out = run_one_dsp(tb_data, dsp_config)
+    log.debug("Processed Data")
+    cut_parameters = kwarg_dict.get("cut_parameters", None)
+    if cut_parameters is not None:
+        idxs = get_cut_indexes(tb_out, cut_parameters=cut_parameters)
+        log.debug("Applied cuts")
+        log.debug(f"{len(idxs)} events passed cuts")
+    else:
+        idxs = np.full(len(tb_out), True, dtype=bool)
+
+    tau = ExtractTau(dsp_config, kwarg_dict["wf_field"])
+    slopes = tb_out["tail_slope"].nda
+    log.debug("Calculating pz constant")
+    
+    tau.get_decay_constant(slopes[idxs], tb_data[kwarg_dict["wf_field"]])        
 
     if args.plot_path:
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+
+        plot_dict = tau.plot_waveforms_after_correction(tb_data, "wf_pz", 
+        norm_param=kwarg_dict.get("norm_param", "pz_mean"))
+        plot_dict.update(tau.plot_slopes(slopes[idxs]))
+
         with open(args.plot_path, "wb") as f:
             pkl.dump({"tau": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
 else:
     out_dict = {}
 
+if args.pulser_file:
+    pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
+    with open(args.pulser_file, "w") as f:
+        json.dump({"idxs": ids.tolist(), "mask": mask.tolist()} , f, indent=4)
+
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
 with open(args.output_file, "w") as f:
-    json.dump(out_dict, f, indent=4)
+    json.dump(tau.output_dict, f, indent=4)

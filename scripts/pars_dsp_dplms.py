@@ -16,14 +16,11 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
-from pygama.pargen.energy_optimisation import event_selection
-from pygama.pargen.utils import get_tcm_pulser_ids
 from lgdo import Array, Table
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
-argparser.add_argument("--cal_raw_filelist", help="cal_raw_filelist", type=str)
-argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
+argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
 argparser.add_argument("--log", help="log_file", type=str)
@@ -64,8 +61,6 @@ db_dict = Props.read_from(args.database)
 if dplms_dict["run_dplms"] is True:
     with open(args.fft_raw_filelist) as f:
         fft_files = sorted(f.read().splitlines())
-    with open(args.cal_raw_filelist) as f:
-        cal_files = sorted(f.read().splitlines())
 
     t0 = time.time()
     log.info("\nLoad fft data")
@@ -77,35 +72,20 @@ if dplms_dict["run_dplms"] is True:
     t1 = time.time()
     log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
 
-    log.info("\nRemoving pulser")
-    # get pulser mask from tcm files
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-    tcm_files = sorted(np.unique(tcm_files))
-    ids, mask = get_tcm_pulser_ids(
-        tcm_files, args.channel, dplms_dict.pop("pulser_multiplicity_threshold")
-    )
-
     log.info("\nRunning event selection")
-    peaks_keV = np.array(dplms_dict["peaks_keV"])
+    peaks_kev = np.array(dplms_dict["peaks_kev"])
     kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
-    idx_events, idx_list = event_selection(
-        cal_files,
-        f"{args.channel}/raw",
-        dsp_config,
-        db_dict,
-        peaks_keV,
-        np.arange(0, len(peaks_keV), 1).tolist(),
-        kev_widths,
-        pulser_mask=mask,
-        cut_parameters=dplms_dict["wfs_cut_pars"],
-        n_events=dplms_dict["n_signals"],
-        threshold=dplms_dict["threshold"],
-    )
+    
+    peaks_rounded = [int(peak) for peak in peaks_kev]
+    peaks = sto.read(f"{args.channel}/raw", args.peak_file , field_mask=["peak"])  [0]["peak"].nda
+    ids = np.in1d(peaks, peaks_rounded)
+    peaks = peaks[ids]
+    idx_list = [np.where(peaks==peak)[0] for peak in peaks_rounded]
+
     raw_cal = sto.read(
         f"{args.channel}/raw",
-        cal_files,
-        idx=idx_events,
+        args.peak_file,
+        idx=ids
     )[0]
     log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
 
@@ -126,9 +106,6 @@ if dplms_dict["run_dplms"] is True:
                 inplot_dict = pkl.load(r)
             inplot_dict.update({"dplms":plot_dict})
         
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path, "wb") as f:
-            pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
     else:
         out_dict = dplms_ge_dict(
             raw_fft,
@@ -146,6 +123,11 @@ if dplms_dict["run_dplms"] is True:
 else:
     out_dict = {}
     dplms_pars = Table(col_dict={"coefficients":Array([])})
+    if args.inplots:
+        with open(args.inplots, "rb") as r:
+            inplot_dict = pkl.load(r)
+    else:
+        inplot_dict={}
 
 db_dict.update(out_dict)
 
@@ -160,3 +142,8 @@ sto.write(
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.dsp_pars, "w") as w:
     json.dump(db_dict, w, indent=2)
+
+if args.plot_path:
+    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+    with open(args.plot_path, "wb") as f:
+        pkl.dump(inplot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
