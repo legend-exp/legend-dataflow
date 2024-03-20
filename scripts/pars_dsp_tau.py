@@ -14,9 +14,9 @@ import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.extract_tau import ExtractTau
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids, get_cut_indexes
+from pygama.pargen.data_cleaning import get_cut_indexes, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
+from pygama.pargen.extract_tau import ExtractTau
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -100,14 +100,15 @@ if kwarg_dict["run_tau"] is True:
     tau = ExtractTau(dsp_config, kwarg_dict["wf_field"])
     slopes = tb_out["tail_slope"].nda
     log.debug("Calculating pz constant")
-    
-    tau.get_decay_constant(slopes[idxs], tb_data[kwarg_dict["wf_field"]])        
+
+    tau.get_decay_constant(slopes[idxs], tb_data[kwarg_dict["wf_field"]])
 
     if args.plot_path:
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
 
-        plot_dict = tau.plot_waveforms_after_correction(tb_data, "wf_pz", 
-        norm_param=kwarg_dict.get("norm_param", "pz_mean"))
+        plot_dict = tau.plot_waveforms_after_correction(
+            tb_data, "wf_pz", norm_param=kwarg_dict.get("norm_param", "pz_mean")
+        )
         plot_dict.update(tau.plot_slopes(slopes[idxs]))
 
         with open(args.plot_path, "wb") as f:
@@ -118,7 +119,7 @@ else:
 if args.pulser_file:
     pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
     with open(args.pulser_file, "w") as f:
-        json.dump({"idxs": ids.tolist(), "mask": mask.tolist()} , f, indent=4)
+        json.dump({"idxs": ids.tolist(), "mask": mask.tolist()}, f, indent=4)
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
 with open(args.output_file, "w") as f:

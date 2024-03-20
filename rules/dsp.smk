@@ -20,6 +20,7 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
+
 onstart:
     if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
         os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
@@ -29,6 +30,7 @@ onstart:
         get_pattern_tier_raw(setup),
         {"cal": ["par_dsp"], "lar": ["par_dsp"]},
     )
+
 
 rule build_pars_dsp_tau:
     input:
@@ -63,6 +65,7 @@ rule build_pars_dsp_tau:
         "--pulser_file {output.pulser} "
         "--tcm_files {input.tcm_files} "
         "--raw_files {input.files}"
+
 
 rule build_pars_event_selection:
     input:
@@ -151,8 +154,10 @@ rule build_pars_dsp_dplms:
         datatype="cal",
         channel="{channel}",
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp",'dplms')),
-        lh5_path=temp(get_pattern_pars_tmp_channel(setup, "dsp","dplms",extension="lh5")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp", "dplms")),
+        lh5_path=temp(
+            get_pattern_pars_tmp_channel(setup, "dsp", "dplms", extension="lh5")
+        ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "dplms")),
     log:
         get_pattern_log_channel(setup, "pars_dsp_dplms"),
@@ -175,6 +180,7 @@ rule build_pars_dsp_dplms:
         "--dsp_pars {output.dsp_pars} "
         "--lh5_path {output.lh5_path} "
         "--plot_path {output.plots} "
+
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
@@ -213,6 +219,7 @@ rule build_pars_dsp_eopt:
         "--qbb_grid_path {output.qbb_grid} "
         "--final_dsp_pars {output.dsp_pars}"
 
+
 rule build_plts_dsp:
     input:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
@@ -225,6 +232,7 @@ rule build_plts_dsp:
         f"{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+
 
 rule build_pars_dsp_objects:
     input:
@@ -245,15 +253,18 @@ rule build_pars_dsp_objects:
         "--input {input} "
         "--output {output} "
 
+
 rule build_pars_dsp_db:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
     output:
-        temp(get_pattern_pars_tmp(
-            setup,
-            "dsp",
-            datatype="cal",
-        )),
+        temp(
+            get_pattern_pars_tmp(
+                setup,
+                "dsp",
+                datatype="cal",
+            )
+        ),
     group:
         "merge-dsp"
     shell:
@@ -262,16 +273,19 @@ rule build_pars_dsp_db:
         "--input {input} "
         "--output {output} "
 
+
 rule build_pars_dsp:
     input:
-        in_files = lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_dplms_lh5"),
-        in_db = get_pattern_pars_tmp(
+        in_files=lambda wildcards: read_filelist_pars_cal_channel(
+            wildcards, "dsp_dplms_lh5"
+        ),
+        in_db=get_pattern_pars_tmp(
             setup,
             "dsp",
             datatype="cal",
         ),
-        plts = get_pattern_plts(setup, "dsp"),
-        objects = get_pattern_pars(
+        plts=get_pattern_plts(setup, "dsp"),
+        objects=get_pattern_pars(
             setup,
             "dsp",
             name="objects",
@@ -279,13 +293,13 @@ rule build_pars_dsp:
             check_in_cycle=check_in_cycle,
         ),
     output:
-        out_file = get_pattern_pars(
+        out_file=get_pattern_pars(
             setup,
             "dsp",
             extension="lh5",
             check_in_cycle=check_in_cycle,
         ),
-        out_db = get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
+        out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
     group:
         "merge-dsp"
     shell:

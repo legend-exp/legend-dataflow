@@ -30,13 +30,11 @@ pars_key_resolve.write_par_catalog(
 psp_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
+
         rule:
             input:
                 dsp_pars=part.get_par_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl",
-                    partition,
-                    key,
-                    tier="dsp"
+                    f"{par_dsp_path(setup)}/validity.jsonl", partition, key, tier="dsp"
                 ),
                 dsp_objs=part.get_par_files(
                     f"{par_dsp_path(setup)}/validity.jsonl",
@@ -47,10 +45,7 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 dsp_plots=part.get_plt_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl",
-                    partition,
-                    key,
-                    tier="dsp"
+                    f"{par_dsp_path(setup)}/validity.jsonl", partition, key, tier="dsp"
                 ),
             wildcard_constraints:
                 channel=part.get_wildcard_constraints(partition, key),
@@ -61,26 +56,32 @@ for key, dataset in part.datasets.items():
                     f"{par_psp_path(setup)}/validity.jsonl", partition, key, tier="psp"
                 ),
             output:
-                psp_pars=temp(part.get_par_files(
-                    f"{par_psp_path(setup)}/validity.jsonl",
-                    partition,
-                    key,
-                    tier="psp"
-                )),
-                psp_objs=temp(part.get_par_files(
-                    f"{par_psp_path(setup)}/validity.jsonl",
-                    partition,
-                    key,
-                    tier="psp",
-                    name="objects",
-                    extension="pkl",
-                )),
-                psp_plots=temp(part.get_plt_files(
-                    f"{par_psp_path(setup)}/validity.jsonl",
-                    partition,
-                    key,
-                    tier="psp"
-                )),
+                psp_pars=temp(
+                    part.get_par_files(
+                        f"{par_psp_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="psp",
+                    )
+                ),
+                psp_objs=temp(
+                    part.get_par_files(
+                        f"{par_psp_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="psp",
+                        name="objects",
+                        extension="pkl",
+                    )
+                ),
+                psp_plots=temp(
+                    part.get_plt_files(
+                        f"{par_psp_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="psp",
+                    )
+                ),
             log:
                 part.get_log_file(
                     f"{par_psp_path(setup)}/validity.jsonl",
@@ -108,9 +109,7 @@ for key, dataset in part.datasets.items():
                 "--input {input.dsp_pars} "
                 "--output {output.psp_pars} "
 
-        set_last_rule_name(
-            workflow, f"{key}-{partition}-build_par_psp"
-        )
+        set_last_rule_name(workflow, f"{key}-{partition}-build_par_psp")
 
         if key in psp_rules:
             psp_rules[key].append(list(workflow.rules)[-1])
@@ -123,9 +122,7 @@ for key, dataset in part.datasets.items():
 rule build_par_psp:
     input:
         dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp"),
-        dsp_objs=get_pattern_pars_tmp_channel(
-                setup, "dsp", "objects", extension="pkl"
-            ),
+        dsp_objs=get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl"),
         dsp_plots=get_pattern_plts_tmp_channel(setup, "dsp"),
     params:
         datatype="cal",
@@ -133,9 +130,9 @@ rule build_par_psp:
         timestamp="{timestamp}",
     output:
         psp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp")),
-        psp_objs=temp(get_pattern_pars_tmp_channel(
-                setup, "psp", "objects", extension="pkl"
-        )),
+        psp_objs=temp(
+            get_pattern_pars_tmp_channel(setup, "psp", "objects", extension="pkl")
+        ),
         psp_plots=temp(get_pattern_plts_tmp_channel(setup, "psp")),
     log:
         get_pattern_log_channel(setup, "pars_psp"),
@@ -158,6 +155,7 @@ rule build_par_psp:
         "--input {input.dsp_pars} "
         "--output {output.psp_pars} "
 
+
 fallback_psp_rule = list(workflow.rules)[-1]
 rule_order_list = []
 ordered = OrderedDict(psp_rules)
@@ -165,7 +163,7 @@ ordered.move_to_end("default")
 for key, items in ordered.items():
     rule_order_list += [item.name for item in items]
 rule_order_list.append(fallback_psp_rule.name)
-workflow._ruleorder.add(*rule_order_list)  # [::-1]  
+workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 
 rule build_pars_psp_objects:
@@ -181,7 +179,7 @@ rule build_pars_psp_objects:
             name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
-        )
+        ),
     group:
         "merge-hit"
     shell:
@@ -189,12 +187,13 @@ rule build_pars_psp_objects:
         f"{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+
 
 rule build_plts_psp:
     input:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "psp"),
     output:
-        get_pattern_plts(setup, "psp")
+        get_pattern_plts(setup, "psp"),
     group:
         "merge-hit"
     shell:
@@ -203,17 +202,18 @@ rule build_plts_psp:
         "--input {input} "
         "--output {output} "
 
+
 rule build_pars_psp:
     input:
-        infiles = lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
-        plts = get_pattern_plts(setup, "psp"),
-        objects = get_pattern_pars(
+        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
+        plts=get_pattern_plts(setup, "psp"),
+        objects=get_pattern_pars(
             setup,
             "psp",
             name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
-        )
+        ),
     output:
         get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
     group:

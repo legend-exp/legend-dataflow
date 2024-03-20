@@ -4,13 +4,12 @@ import os
 import pathlib
 import pickle as pkl
 import shelve
-from legendmeta.catalog import Props
-from util.FileKey import ChannelProcKey
-import numpy as np
-
 
 import lgdo.lh5 as lh5
-from lgdo import Array
+import numpy as np
+from legendmeta.catalog import Props
+from util.FileKey import ChannelProcKey
+
 
 def replace_path(d, old_path, new_path):
     if isinstance(d, dict):
@@ -19,21 +18,30 @@ def replace_path(d, old_path, new_path):
     elif isinstance(d, list):
         for i in range(len(d)):
             d[i] = replace_path(d[i], old_path, new_path)
-    elif isinstance(d, str):
-        if old_path in d:
-            d = d.replace(old_path, new_path)
+    elif isinstance(d, str) and old_path in d:
+        d = d.replace(old_path, new_path)
     return d
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", nargs="*", type=str, required=True)
 argparser.add_argument("--output", help="output file", type=str, required=True)
-argparser.add_argument("--in_db", help="in db file (used for when lh5 files refered to in db)", type=str, required=False)
-argparser.add_argument("--out_db", help="lh5 file (used for when lh5 files refered to in db)", type=str, required=False)
+argparser.add_argument(
+    "--in_db",
+    help="in db file (used for when lh5 files referred to in db)",
+    type=str,
+    required=False,
+)
+argparser.add_argument(
+    "--out_db",
+    help="lh5 file (used for when lh5 files referred to in db)",
+    type=str,
+    required=False,
+)
 args = argparser.parse_args()
 
-# change to only have 1 output file for mutliple inputs
+# change to only have 1 output file for multiple inputs
 # don't care about processing step, check if extension matches
-
 
 
 channel_files = args.input
@@ -51,7 +59,7 @@ temp_output = f"{out_file}.{rand_num}"
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-    
+
 if file_extension == ".json":
     out_dict = {}
     for channel in channel_files:
@@ -62,7 +70,8 @@ if file_extension == ".json":
             channel_name = fkey.channel
             out_dict[channel_name] = channel_dict
         else:
-            raise RuntimeError("Output file extension does not match input file extension")
+            msg = "Output file extension does not match input file extension"
+            raise RuntimeError(msg)
 
     with open(temp_output, "w") as w:
         json.dump(out_dict, w, indent=4)
@@ -77,7 +86,7 @@ elif file_extension == ".pkl":
         fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
         channel_name = fkey.channel
         out_dict[channel_name] = channel_dict
-    
+
     with open(temp_output, "wb") as w:
         pkl.dump(out_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -97,7 +106,7 @@ elif file_extension == ".dat" or file_extension == ".dir":
             shelf[channel_name] = channel_dict
         if len(common_dict) > 0:
             shelf["common"] = common_dict
-    
+
 
 elif file_extension == ".lh5":
     sto = lh5.LH5Store()
@@ -109,21 +118,19 @@ elif file_extension == ".lh5":
             fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
             channel_name = fkey.channel
 
-            tb_in = sto.read(
-                f"{channel_name}",
-                channel
-            )[0]
+            tb_in = sto.read(f"{channel_name}", channel)[0]
 
             sto.write(
                 tb_in,
-                name = channel_name,
-                lh5_file = temp_output,
+                name=channel_name,
+                lh5_file=temp_output,
                 wo_mode="a",
             )
             if args.in_db:
                 db_dict[channel_name] = replace_path(db_dict[channel_name], channel, args.output)
         else:
-            raise RuntimeError("Output file extension does not match input file extension")
+            msg = "Output file extension does not match input file extension"
+            raise RuntimeError(msg)
     if args.out_db:
         with open(args.out_db, "w") as w:
             json.dump(db_dict, w, indent=4)

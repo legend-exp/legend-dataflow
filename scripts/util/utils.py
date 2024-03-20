@@ -128,15 +128,21 @@ def par_dsp_path(setup):
 def par_hit_path(setup):
     return setup["paths"]["par_hit"]
 
+
+def par_evt_path(setup):
+    return setup["paths"]["par_evt"]
+
+
 def par_psp_path(setup):
     return setup["paths"]["par_psp"]
+
 
 def par_pht_path(setup):
     return setup["paths"]["par_pht"]
 
 
-def par_evt_path(setup):
-    return setup["paths"]["par_evt"]
+def par_pet_path(setup):
+    return setup["paths"]["par_pet"]
 
 
 def pars_path(setup):

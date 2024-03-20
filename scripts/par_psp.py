@@ -1,16 +1,17 @@
 import argparse
 import json
 import os
-import pathlib
-from legendmeta.catalog import Props
-from legendmeta import LegendMetadata
-from util.FileKey import ChannelProcKey
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl 
-import matplotlib.dates as mdates
-from datetime import datetime
 import pickle as pkl
+from datetime import datetime
+
+import matplotlib as mpl
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
+from util.FileKey import ChannelProcKey
+
 mpl.use("Agg")
 
 
@@ -18,9 +19,13 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input files", nargs="*", type=str, required=True)
 argparser.add_argument("--output", help="output file", nargs="*", type=str, required=True)
 argparser.add_argument("--in_plots", help="input plot files", nargs="*", type=str, required=False)
-argparser.add_argument("--out_plots", help="output plot files", nargs="*", type=str, required=False)
+argparser.add_argument(
+    "--out_plots", help="output plot files", nargs="*", type=str, required=False
+)
 argparser.add_argument("--in_obj", help="input object files", nargs="*", type=str, required=False)
-argparser.add_argument("--out_obj", help="output object files", nargs="*", type=str, required=False)
+argparser.add_argument(
+    "--out_obj", help="output object files", nargs="*", type=str, required=False
+)
 
 argparser.add_argument("--log", help="log_file", type=str)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -32,9 +37,9 @@ args = argparser.parse_args()
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
-merge_config = Props.read_from(configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][
-    args.channel
-])
+merge_config = Props.read_from(
+    configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
+)
 
 ave_fields = merge_config["average_fields"]
 
@@ -58,8 +63,8 @@ for field in ave_fields:
         else:
             tmp_dict = {}
             in_dicts[tstamp]["dsp"] = tmp_dict
-        for i,key in enumerate(keys):
-            if i == len(keys)-1:
+        for i, key in enumerate(keys):
+            if i == len(keys) - 1:
                 tmp_dict[key] = val
             else:
                 if key in tmp_dict:
@@ -70,42 +75,36 @@ for field in ave_fields:
     if isinstance(vals[0], str):
         if "*" in vals[0]:
             unit = vals[0].split("*")[1]
-            if "." in vals[0]:
-                rounding = len(val.split("*")[0].split(".")[-1])
-            else:
-                rounding = 16
+            rounding = len(val.split("*")[0].split(".")[-1]) if "." in vals[0] else 16
             vals = np.array([float(val.split("*")[0]) for val in vals])
         else:
             unit = None
             rounding = 16
     else:
-        vals=np.array(vals)
+        vals = np.array(vals)
         unit = None
-    if len(vals[~np.isnan(vals)]) ==0:
-        mean_val = np.nan 
-    else:
-        mean_val = np.nanmean(vals)
-    if unit is not None:
-        mean = f"{round(mean_val, rounding)}*{unit}"
-    else:
-        mean = mean_val
+        rounding = 16
+
+    mean_val = np.nan if len(vals[~np.isnan(vals)]) == 0 else np.nanmean(vals)
+    mean = f"{round(mean_val, rounding)}*{unit}" if unit is not None else mean_val
+
     for tstamp in in_dicts:
         val = in_dicts[tstamp]
         for i, key in enumerate(keys):
-            if i == len(keys)-1:
-                val[key]= mean
+            if i == len(keys) - 1:
+                val[key] = mean
             else:
                 val = val[key]
-       
+
     fig = plt.figure()
-    plt.scatter([datetime.strptime(tstamp,'%Y%m%dT%H%M%SZ') for tstamp in in_dicts] , vals)
-    plt.axhline(y=mean_val, color='r', linestyle='-')
+    plt.scatter([datetime.strptime(tstamp, "%Y%m%dT%H%M%SZ") for tstamp in in_dicts], vals)
+    plt.axhline(y=mean_val, color="r", linestyle="-")
     plt.xlabel("time")
     if unit is not None:
         plt.ylabel(f"value {unit}")
     else:
         plt.ylabel("value")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
     plt.gcf().autofmt_xdate()
     plt.title(f"{field}")
     plot_dict[field] = fig

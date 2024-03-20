@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import pathlib
-import pickle as pkl
 import time
 import warnings
 
@@ -12,63 +11,79 @@ os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
+from bisect import bisect_left
+
 import lgdo
 import lgdo.lh5 as lh5
 import numpy as np
-from bisect import bisect_left
-from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids, generate_cuts, get_keys
 import pygama.math.histogram as pgh
 import pygama.pargen.energy_cal as pgc
+from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
+from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
-def get_out_data(raw_data, dsp_data,cut_dict, e_lower_lim, e_upper_lim,
-                ecal_pars, raw_dict, peak, final_cut_field="is_valid_cal",
-                energy_param="trapTmax"):
+
+def get_out_data(
+    raw_data,
+    dsp_data,
+    cut_dict,
+    e_lower_lim,
+    e_upper_lim,
+    ecal_pars,
+    raw_dict,
+    peak,
+    final_cut_field="is_valid_cal",
+    energy_param="trapTmax",
+):
     for outname, info in cut_dict.items():
         outcol = dsp_data.eval(info["expression"], info.get("parameters", None))
         dsp_data.add_column(outname, outcol)
-        
+
     for outname, info in raw_dict.items():
         outcol = raw_data.eval(info["expression"], info.get("parameters", None))
         raw_data.add_column(outname, outcol)
 
-    final_mask = (dsp_data[energy_param].nda > e_lower_lim) & (dsp_data[energy_param].nda < e_upper_lim)&(dsp_data[final_cut_field].nda)
-    
+    final_mask = (
+        (dsp_data[energy_param].nda > e_lower_lim)
+        & (dsp_data[energy_param].nda < e_upper_lim)
+        & (dsp_data[final_cut_field].nda)
+    )
+
     wavefrom_windowed = lgdo.WaveformTable(
-    t0=raw_data["waveform_windowed"]["t0"].nda[final_mask],
-    t0_units=raw_data["waveform_windowed"]["t0"].attrs["units"],
-    dt=raw_data["waveform_windowed"]["dt"].nda[final_mask],
-    dt_units=raw_data["waveform_windowed"]["dt"].attrs["units"],
-    values=raw_data["waveform_windowed"]["values"].nda[final_mask]
-)
+        t0=raw_data["waveform_windowed"]["t0"].nda[final_mask],
+        t0_units=raw_data["waveform_windowed"]["t0"].attrs["units"],
+        dt=raw_data["waveform_windowed"]["dt"].nda[final_mask],
+        dt_units=raw_data["waveform_windowed"]["dt"].attrs["units"],
+        values=raw_data["waveform_windowed"]["values"].nda[final_mask],
+    )
     wavefrom_presummed = lgdo.WaveformTable(
-    t0=raw_data["waveform_presummed"]["t0"].nda[final_mask],
-    t0_units=raw_data["waveform_presummed"]["t0"].attrs["units"],
-    dt=raw_data["waveform_presummed"]["dt"].nda[final_mask],
-    dt_units=raw_data["waveform_presummed"]["dt"].attrs["units"],
-    values=raw_data["waveform_presummed"]["values"].nda[final_mask]
-)
-    
-    
-    out_tbl = lgdo.Table(col_dict = {"waveform_presummed": wavefrom_presummed, 
-                                "waveform_windowed":wavefrom_windowed,
-                                "presum_rate":lgdo.Array(raw_data["presum_rate"].nda[final_mask]),
-                                "timestamp":lgdo.Array(raw_data["timestamp"].nda[final_mask]),
-                                "baseline":lgdo.Array(raw_data["baseline"].nda[final_mask]),
-                                "daqenergy":lgdo.Array(raw_data["daqenergy"].nda[final_mask]),
-                                "daqenergy_cal":lgdo.Array(raw_data["daqenergy_cal"].nda[final_mask]),
-                                "trapTmax_cal":lgdo.Array(dsp_data["trapTmax"].nda[final_mask]*ecal_pars),
-                                "peak":lgdo.Array(np.full(len(np.where(final_mask)[0]),int(peak)))
-                               })
+        t0=raw_data["waveform_presummed"]["t0"].nda[final_mask],
+        t0_units=raw_data["waveform_presummed"]["t0"].attrs["units"],
+        dt=raw_data["waveform_presummed"]["dt"].nda[final_mask],
+        dt_units=raw_data["waveform_presummed"]["dt"].attrs["units"],
+        values=raw_data["waveform_presummed"]["values"].nda[final_mask],
+    )
+
+    out_tbl = lgdo.Table(
+        col_dict={
+            "waveform_presummed": wavefrom_presummed,
+            "waveform_windowed": wavefrom_windowed,
+            "presum_rate": lgdo.Array(raw_data["presum_rate"].nda[final_mask]),
+            "timestamp": lgdo.Array(raw_data["timestamp"].nda[final_mask]),
+            "baseline": lgdo.Array(raw_data["baseline"].nda[final_mask]),
+            "daqenergy": lgdo.Array(raw_data["daqenergy"].nda[final_mask]),
+            "daqenergy_cal": lgdo.Array(raw_data["daqenergy_cal"].nda[final_mask]),
+            "trapTmax_cal": lgdo.Array(dsp_data["trapTmax"].nda[final_mask] * ecal_pars),
+            "peak": lgdo.Array(np.full(len(np.where(final_mask)[0]), int(peak))),
+        }
+    )
     return out_tbl, len(np.where(final_mask)[0])
 
 
 if __name__ == "__main__":
-
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
     argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
@@ -95,28 +110,27 @@ if __name__ == "__main__":
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
 
-
     log = logging.getLogger(__name__)
     sto = lh5.LH5Store()
     t0 = time.time()
 
     conf = LegendMetadata(path=args.configs)
     configs = conf.on(args.timestamp, system=args.datatype)
-    dsp_config = configs["snakemake_rules"]["pars_dsp_peak_selection"]["inputs"]["processing_chain"][
+    dsp_config = configs["snakemake_rules"]["pars_dsp_peak_selection"]["inputs"][
+        "processing_chain"
+    ][args.channel]
+    peak_json = configs["snakemake_rules"]["pars_dsp_peak_selection"]["inputs"]["peak_config"][
         args.channel
     ]
-    peak_json = configs["snakemake_rules"]["pars_dsp_peak_selection"]["inputs"]["peak_config"][args.channel]
 
     peak_dict = Props.read_from(peak_json)
     db_dict = Props.read_from(args.decay_const)
 
     pathlib.Path(os.path.dirname(args.peak_file)).mkdir(parents=True, exist_ok=True)
     if peak_dict.pop("run_selection") is True:
-
         rng = np.random.default_rng()
         rand_num = f"{rng.integers(0,99999):05d}"
         temp_output = f"{args.peak_file}.{rand_num}"
-
 
         with open(args.raw_filelist) as f:
             files = f.read().splitlines()
@@ -136,7 +150,8 @@ if __name__ == "__main__":
                 tcm_files, args.channel, peak_dict["pulser_multiplicity_threshold"]
             )
         else:
-            raise ValueError("No pulser file or tcm filelist provided") 
+            msg = "No pulser file or tcm filelist provided"
+            raise ValueError(msg)
 
         raw_dict = Props.read_from(args.raw_cal)[args.channel]["pars"]["operations"]
 
@@ -149,16 +164,13 @@ if __name__ == "__main__":
 
         lh5_path = f"{args.channel}/raw"
 
-
         if not isinstance(kev_widths, list):
             kev_widths = [kev_widths]
 
         if lh5_path[-1] != "/":
             lh5_path += "/"
 
-        raw_fields = [
-            field.replace(lh5_path, "") for field in lh5.ls(raw_files[0], lh5_path)
-        ]
+        raw_fields = [field.replace(lh5_path, "") for field in lh5.ls(raw_files[0], lh5_path)]
 
         tb = sto.read(lh5_path, raw_files, field_mask=["daqenergy"])[0]
 
@@ -169,18 +181,23 @@ if __name__ == "__main__":
         rough_energy = tb["daqenergy_cal"].nda
 
         masks = {}
-        for peak, kev_width in zip(peaks_kev,kev_widths) :
-            e_mask = (rough_energy > peak - 1.1* kev_width[0]) & (rough_energy < peak + 1.1* kev_width[0]) & (~mask)
+        for peak, kev_width in zip(peaks_kev, kev_widths):
+            e_mask = (
+                (rough_energy > peak - 1.1 * kev_width[0])
+                & (rough_energy < peak + 1.1 * kev_width[0])
+                & (~mask)
+            )
             masks[peak] = np.where(e_mask)[0]
             log.debug(f"{len(masks[peak])} events found in energy range for {peak}")
 
-        input_data = sto.read(f"{lh5_path}", raw_files,  n_rows=10000)[0]
+        input_data = sto.read(f"{lh5_path}", raw_files, n_rows=10000)[0]
 
         if isinstance(dsp_config, str):
             dsp_config = Props.read_from(dsp_config)
 
-        dsp_config["outputs"] = get_keys(dsp_config["outputs"], cut_parameters) + [
-            energy_parameter
+        dsp_config["outputs"] = [
+            *get_keys(dsp_config["outputs"], cut_parameters),
+            energy_parameter,
         ]
 
         log.debug("Processing data")
@@ -193,15 +210,16 @@ if __name__ == "__main__":
             cut_dict = None
 
         pk_dicts = {}
-        for peak, kev_width in zip(peaks_kev,kev_widths):
-            pk_dicts[peak] = {"idxs":(masks[peak],), 
-                            "n_rows_read":0,
-                            "obj_buf_start":0,
-                            "obj_buf":None,
-                            "kev_width":kev_width
-                            }
+        for peak, kev_width in zip(peaks_kev, kev_widths):
+            pk_dicts[peak] = {
+                "idxs": (masks[peak],),
+                "n_rows_read": 0,
+                "obj_buf_start": 0,
+                "obj_buf": None,
+                "kev_width": kev_width,
+            }
 
-        for i,file in enumerate(raw_files):
+        for file in raw_files:
             log.debug(os.path.basename(file))
             for peak, peak_dict in pk_dicts.items():
                 if peak_dict["idxs"] is not None:
@@ -213,7 +231,7 @@ if __name__ == "__main__":
                     # now split idx into idx_i and the remainder
                     idx_i = (peak_dict["idxs"][0][:n_rows_to_read_i],)
                     peak_dict["idxs"] = (peak_dict["idxs"][0][n_rows_to_read_i:] - n_rows_i,)
-                    if len(idx_i[0])>0:
+                    if len(idx_i[0]) > 0:
                         peak_dict["obj_buf"], n_rows_read_i = sto.read(
                             lh5_path,
                             file,
@@ -226,9 +244,8 @@ if __name__ == "__main__":
                         peak_dict["n_rows_read"] += n_rows_read_i
                         log.debug(f'{peak}: {peak_dict["n_rows_read"]}')
                         peak_dict["obj_buf_start"] += n_rows_read_i
-                    if peak_dict["n_rows_read"] >=10000 or file ==raw_files[-1]:
+                    if peak_dict["n_rows_read"] >= 10000 or file == raw_files[-1]:
                         if "e_lower_lim" not in peak_dict:
-
                             tb_out = run_one_dsp(peak_dict["obj_buf"], dsp_config, db_dict=db_dict)
                             energy = tb_out[energy_parameter].nda
 
@@ -245,15 +262,17 @@ if __name__ == "__main__":
                                 var,
                                 [peak_loc],
                                 n_to_fit=7,
-                            )[
-                                0
-                            ][0]
+                            )[0][0]
 
                             if mu is None or np.isnan(mu):
                                 log.debug("Fit failed, using max guess")
                                 rough_adc_to_kev = peak / peak_loc
-                                e_lower_lim = peak_loc - (1.5 * peak_dict["kev_width"][0]) / rough_adc_to_kev
-                                e_upper_lim = peak_loc + (1.5 * peak_dict["kev_width"][1]) / rough_adc_to_kev
+                                e_lower_lim = (
+                                    peak_loc - (1.5 * peak_dict["kev_width"][0]) / rough_adc_to_kev
+                                )
+                                e_upper_lim = (
+                                    peak_loc + (1.5 * peak_dict["kev_width"][1]) / rough_adc_to_kev
+                                )
                                 hist, bins, var = pgh.get_hist(
                                     energy, range=(int(e_lower_lim), int(e_upper_lim)), dx=1
                                 )
@@ -262,51 +281,53 @@ if __name__ == "__main__":
                             updated_adc_to_kev = peak / mu
                             e_lower_lim = mu - (peak_dict["kev_width"][0]) / updated_adc_to_kev
                             e_upper_lim = mu + (peak_dict["kev_width"][1]) / updated_adc_to_kev
-                            log.info(f"{peak}: lower lim is :{e_lower_lim}, upper lim is {e_upper_lim}")
+                            log.info(
+                                f"{peak}: lower lim is :{e_lower_lim}, upper lim is {e_upper_lim}"
+                            )
                             peak_dict["e_lower_lim"] = e_lower_lim
                             peak_dict["e_upper_lim"] = e_upper_lim
                             peak_dict["ecal_par"] = updated_adc_to_kev
 
-                            out_tbl, n_wfs = get_out_data(peak_dict["obj_buf"], 
-                                                        tb_out, 
-                                                        cut_dict, 
-                                                        e_lower_lim, 
-                                                        e_upper_lim,
-                                                        peak_dict["ecal_par"],
-                                                        raw_dict,
-                                                        int(peak),
-                                                        final_cut_field=final_cut_field,
-                                                        energy_param=energy_parameter
-                                                        )
-                            sto.write(out_tbl ,name= lh5_path,
-                                    lh5_file=temp_output,
-                                    wo_mode="a")
+                            out_tbl, n_wfs = get_out_data(
+                                peak_dict["obj_buf"],
+                                tb_out,
+                                cut_dict,
+                                e_lower_lim,
+                                e_upper_lim,
+                                peak_dict["ecal_par"],
+                                raw_dict,
+                                int(peak),
+                                final_cut_field=final_cut_field,
+                                energy_param=energy_parameter,
+                            )
+                            sto.write(out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a")
                             peak_dict["obj_buf"] = None
                             peak_dict["obj_buf_start"] = 0
                             peak_dict["n_events"] = n_wfs
                         else:
                             tb_out = run_one_dsp(peak_dict["obj_buf"], dsp_config, db_dict=db_dict)
-                            out_tbl, n_wfs = get_out_data(peak_dict["obj_buf"], 
-                                                        tb_out, 
-                                                        cut_dict, 
-                                                        peak_dict["e_lower_lim"], 
-                                                        peak_dict["e_upper_lim"],
-                                                        peak_dict["ecal_par"],
-                                                        raw_dict,
-                                                        int(peak),
-                                                        final_cut_field=final_cut_field,
-                                                        energy_param=energy_parameter
-                                                        )
+                            out_tbl, n_wfs = get_out_data(
+                                peak_dict["obj_buf"],
+                                tb_out,
+                                cut_dict,
+                                peak_dict["e_lower_lim"],
+                                peak_dict["e_upper_lim"],
+                                peak_dict["ecal_par"],
+                                raw_dict,
+                                int(peak),
+                                final_cut_field=final_cut_field,
+                                energy_param=energy_parameter,
+                            )
                             peak_dict["n_events"] += n_wfs
-                            sto.write(out_tbl ,name= lh5_path,
-                                    lh5_file=temp_output,
-                                    wo_mode="a")
+                            sto.write(out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a")
                             peak_dict["obj_buf"] = None
                             peak_dict["obj_buf_start"] = 0
                             if peak_dict["n_events"] >= n_events:
                                 peak_dict["idxs"] = None
                                 log.debug(f"{peak} has reached the required number of events")
-                                log.debug(f"{peak}: {peak_dict['idxs']}, {peak_dict['idxs'] is not None}")
+                                log.debug(
+                                    f"{peak}: {peak_dict['idxs']}, {peak_dict['idxs'] is not None}"
+                                )
 
     else:
         pathlib.Path(temp_output).touch()

@@ -271,9 +271,8 @@ if snakemake.wildcards.tier != "daq":
         json.dump(file_db_config, w, indent=2)
 
     build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
-    os.remove(os.path.join(snakemake.params.filedb_path, 'file_db_config.json'))
+    os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
 
     build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
 
 pathlib.Path(snakemake.output.gen_output).touch()
-

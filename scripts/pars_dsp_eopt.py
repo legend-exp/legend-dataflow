@@ -14,13 +14,16 @@ os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
-from pygama.math.distributions import hpge_peak
-import pygama.pargen.energy_optimisation as om
 import sklearn.gaussian_process.kernels as ker
 from dspeed.units import unit_registry as ureg
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.dsp_optimize import run_one_dsp, BayesianOptimizer, run_bayesian_optimisation
+from pygama.math.distributions import hpge_peak
+from pygama.pargen.dsp_optimize import (
+    BayesianOptimizer,
+    run_bayesian_optimisation,
+    run_one_dsp,
+)
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -71,8 +74,6 @@ opt_dict = Props.read_from(opt_json)
 db_dict = Props.read_from(args.decay_const)
 
 if opt_dict.pop("run_eopt") is True:
-
-
     peaks_kev = np.array(opt_dict["peaks"])
     kev_widths = [tuple(kev_width) for kev_width in opt_dict["kev_widths"]]
 
@@ -109,16 +110,12 @@ if opt_dict.pop("run_eopt") is True:
         )
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{args.channel}/raw",args.peak_file , field_mask=["peak"])  [0]["peak"].nda
+    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
     ids = np.in1d(peaks, peaks_rounded)
     peaks = peaks[ids]
-    idx_list = [np.where(peaks==peak)[0] for peak in peaks_rounded]
+    idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-    tb_data = sto.read(
-        f"{args.channel}/raw",
-        args.peak_file,
-        idx=ids
-    )[0]
+    tb_data = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
 
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
@@ -256,8 +253,8 @@ if opt_dict.pop("run_eopt") is True:
         batch_size=opt_dict["batch_size"],
         kernel=kernel,
         sampling_rate=waveform_sampling,
-        fom_value = out_field,
-        fom_error = out_err_field
+        fom_value=out_field,
+        fom_error=out_err_field,
     )
     bopt_cusp.lambda_param = lambda_param
     bopt_cusp.add_dimension("cusp", "sigma", 0.5, 16, True, "us")
@@ -267,8 +264,8 @@ if opt_dict.pop("run_eopt") is True:
         batch_size=opt_dict["batch_size"],
         kernel=kernel,
         sampling_rate=waveform_sampling,
-        fom_value = out_field,
-        fom_error = out_err_field
+        fom_value=out_field,
+        fom_error=out_err_field,
     )
     bopt_zac.lambda_param = lambda_param
     bopt_zac.add_dimension("zac", "sigma", 0.5, 16, True, "us")
@@ -278,8 +275,8 @@ if opt_dict.pop("run_eopt") is True:
         batch_size=opt_dict["batch_size"],
         kernel=kernel,
         sampling_rate=waveform_sampling,
-        fom_value = out_field,
-        fom_error = out_err_field
+        fom_value=out_field,
+        fom_error=out_err_field,
     )
     bopt_trap.lambda_param = lambda_param
     bopt_trap.add_dimension("etrap", "rise", 1, 12, True, "us")
@@ -350,7 +347,7 @@ if opt_dict.pop("run_eopt") is True:
         "expression": "trapEftp*(1+dt_eff*a)",
         "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
     }
-    if "ctc_params" in db_dict: 
+    if "ctc_params" in db_dict:
         db_dict["ctc_params"].update(out_alpha_dict)
     else:
         db_dict.update({"ctc_params": out_alpha_dict})

@@ -41,6 +41,7 @@ swenv = runcmd(setup)
 part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
+
 wildcard_constraints:
     experiment="\w+",
     period="\w+",
@@ -61,6 +62,7 @@ include: "rules/evt.smk"
 include: "rules/skm.smk"
 include: "rules/blinding_calibration.smk"
 
+
 localrules:
     gen_filelist,
     autogen_output,
@@ -69,9 +71,10 @@ localrules:
 onstart:
     print("Starting workflow")
 
+
 onsuccess:
     from snakemake.report import auto_report
-    
+
     rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
     pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
@@ -82,22 +85,22 @@ onsuccess:
         f.writelines(str(workflow.persistence.dag.rule_dot()))
         # shell(f"cat {rep_dir}/rg.txt | dot -Tpdf > {rep_dir}/rg.pdf")
     print("Workflow finished, no error")
-    
+
     # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
 
-    # remove filelists
+            # remove filelists
     files = glob.glob(os.path.join(filelist_path(setup), "*"))
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
     if os.path.exists(filelist_path(setup)):
         os.rmdir(filelist_path(setup))
-    
-    # remove logs
+
+        # remove logs
     files = glob.glob(os.path.join(tmp_log_path(setup), "*", "*.log"))
     for file in files:
         if os.path.isfile(file):

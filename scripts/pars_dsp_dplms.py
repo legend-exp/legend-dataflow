@@ -15,8 +15,8 @@ import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 from lgdo import Array, Table
+from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
@@ -54,7 +54,7 @@ configs = conf.on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
 
 dplms_json = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["dplms_pars"][args.channel]
-dplms_dict = Props.read_from(dplms_json) 
+dplms_dict = Props.read_from(dplms_json)
 
 db_dict = Props.read_from(args.database)
 
@@ -75,18 +75,14 @@ if dplms_dict["run_dplms"] is True:
     log.info("\nRunning event selection")
     peaks_kev = np.array(dplms_dict["peaks_kev"])
     kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
-    
+
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{args.channel}/raw", args.peak_file , field_mask=["peak"])  [0]["peak"].nda
+    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
     ids = np.in1d(peaks, peaks_rounded)
     peaks = peaks[ids]
-    idx_list = [np.where(peaks==peak)[0] for peak in peaks_rounded]
+    idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-    raw_cal = sto.read(
-        f"{args.channel}/raw",
-        args.peak_file,
-        idx=ids
-    )[0]
+    raw_cal = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
     log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
 
     if isinstance(dsp_config, (str, list)):
@@ -104,8 +100,8 @@ if dplms_dict["run_dplms"] is True:
         if args.inplots:
             with open(args.inplots, "rb") as r:
                 inplot_dict = pkl.load(r)
-            inplot_dict.update({"dplms":plot_dict})
-        
+            inplot_dict.update({"dplms": plot_dict})
+
     else:
         out_dict = dplms_ge_dict(
             raw_fft,
@@ -115,28 +111,30 @@ if dplms_dict["run_dplms"] is True:
             dplms_dict,
         )
 
-    coeffs = out_dict["dplms"].pop("coefficients") 
-    dplms_pars = Table(col_dict={"coefficients":Array(coeffs)})
-    out_dict["dplms"]["coefficients"] =f"loadlh5('{args.lh5_path}', '{args.channel}/dplms/coefficients')"
+    coeffs = out_dict["dplms"].pop("coefficients")
+    dplms_pars = Table(col_dict={"coefficients": Array(coeffs)})
+    out_dict["dplms"][
+        "coefficients"
+    ] = f"loadlh5('{args.lh5_path}', '{args.channel}/dplms/coefficients')"
 
     log.info(f"DPLMS creation finished in {(time.time()-t0)/60} minutes")
 else:
     out_dict = {}
-    dplms_pars = Table(col_dict={"coefficients":Array([])})
+    dplms_pars = Table(col_dict={"coefficients": Array([])})
     if args.inplots:
         with open(args.inplots, "rb") as r:
             inplot_dict = pkl.load(r)
     else:
-        inplot_dict={}
+        inplot_dict = {}
 
 db_dict.update(out_dict)
 
-pathlib.Path(os.path.dirname(args.lh5_path)).mkdir(parents=True, exist_ok=True) 
+pathlib.Path(os.path.dirname(args.lh5_path)).mkdir(parents=True, exist_ok=True)
 sto.write(
-    Table(col_dict={"dplms":dplms_pars}),
-    name = args.channel,
+    Table(col_dict={"dplms": dplms_pars}),
+    name=args.channel,
     lh5_file=args.lh5_path,
-    wo_mode="overwrite"
+    wo_mode="overwrite",
 )
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
