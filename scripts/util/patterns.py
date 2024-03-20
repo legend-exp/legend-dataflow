@@ -10,6 +10,7 @@ from .utils import (
     par_hit_path,
     par_overwrite_path,
     par_pht_path,
+    par_psp_path,
     par_raw_path,
     par_tcm_path,
     pars_path,
@@ -317,7 +318,7 @@ def get_pattern_par_evt(setup, name=None, extension="json"):
 def get_pattern_par_psp(setup, name=None, extension="json"):
     if name is not None:
         return os.path.join(
-            f"{par_evt_path(setup)}",
+            f"{par_psp_path(setup)}",
             "cal",
             "{period}",
             "{run}",
@@ -325,7 +326,7 @@ def get_pattern_par_psp(setup, name=None, extension="json"):
         )
     else:
         return os.path.join(
-            f"{par_evt_path(setup)}",
+            f"{par_psp_path(setup)}",
             "cal",
             "{period}",
             "{run}",
