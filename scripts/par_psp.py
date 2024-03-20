@@ -3,10 +3,12 @@ import json
 import os
 import pathlib
 from legendmeta.catalog import Props
+from legendmeta import LegendMetadata
 from util.FileKey import ChannelProcKey
 import numpy as np
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import matplotlib as mpl 
+import matplotlib.dates as mdates
 from datetime import datetime
 import pickle as pkl
 mpl.use("Agg")
@@ -19,13 +21,20 @@ argparser.add_argument("--in_plots", help="input plot files", nargs="*", type=st
 argparser.add_argument("--out_plots", help="output plot files", nargs="*", type=str, required=False)
 argparser.add_argument("--in_obj", help="input object files", nargs="*", type=str, required=False)
 argparser.add_argument("--out_obj", help="output object files", nargs="*", type=str, required=False)
+
+argparser.add_argument("--log", help="log_file", type=str)
+argparser.add_argument("--configs", help="configs", type=str, required=True)
+
+argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
+argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+argparser.add_argument("--channel", help="Channel", type=str, required=True)
 args = argparser.parse_args()
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
-merge_config = configs["snakemake_rules"]["pars_psp"]["inputs"]["config"][
+merge_config = Props.read_from(configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][
     args.channel
-]
+])
 
 ave_fields = merge_config["average_fields"]
 
@@ -44,22 +53,61 @@ for field in ave_fields:
         for key in keys:
             val = val[key]
         vals.append(val)
-    if len(vals[~np.isnan(vals)]) ==0:
-        mean = np.nan 
+        if "dsp" in in_dicts[tstamp]:
+            tmp_dict = in_dicts[tstamp]["dsp"]
+        else:
+            tmp_dict = {}
+            in_dicts[tstamp]["dsp"] = tmp_dict
+        for i,key in enumerate(keys):
+            if i == len(keys)-1:
+                tmp_dict[key] = val
+            else:
+                if key in tmp_dict:
+                    tmp_dict = tmp_dict[key]
+                else:
+                    tmp_dict[key] = {}
+                    tmp_dict = tmp_dict[key]
+    if isinstance(vals[0], str):
+        if "*" in vals[0]:
+            unit = vals[0].split("*")[1]
+            if "." in vals[0]:
+                rounding = len(val.split("*")[0].split(".")[-1])
+            else:
+                rounding = 16
+            vals = np.array([float(val.split("*")[0]) for val in vals])
+        else:
+            unit = None
+            rounding = 16
     else:
-        mean = np.nanmean(vals)
+        vals=np.array(vals)
+        unit = None
+    if len(vals[~np.isnan(vals)]) ==0:
+        mean_val = np.nan 
+    else:
+        mean_val = np.nanmean(vals)
+    if unit is not None:
+        mean = f"{round(mean_val, rounding)}*{unit}"
+    else:
+        mean = mean_val
     for tstamp in in_dicts:
         val = in_dicts[tstamp]
-        for key in keys:
-            val = val[key]
-        val = mean
-
+        for i, key in enumerate(keys):
+            if i == len(keys)-1:
+                val[key]= mean
+            else:
+                val = val[key]
+       
     fig = plt.figure()
     plt.scatter([datetime.strptime(tstamp,'%Y%m%dT%H%M%SZ') for tstamp in in_dicts] , vals)
-    plt.axhline(y=mean, color='r', linestyle='-')
+    plt.axhline(y=mean_val, color='r', linestyle='-')
     plt.xlabel("time")
-    plt.ylabel("value")
-    plt.title(f"{field} over time")
+    if unit is not None:
+        plt.ylabel(f"value {unit}")
+    else:
+        plt.ylabel("value")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
+    plt.gcf().autofmt_xdate()
+    plt.title(f"{field}")
     plot_dict[field] = fig
     plt.close()
 
@@ -78,11 +126,12 @@ if args.out_plots:
                     with open(infile, "rb") as f:
                         old_plot_dict = pkl.load(f)
                     break
-            new_plot_dict = old_plot_dict.update({"psp": plot_dict})
+            old_plot_dict.update({"psp": plot_dict})
+            new_plot_dict = old_plot_dict
         else:
             new_plot_dict = {"psp": plot_dict}
-        with open(file, "w") as f:
-            pkl.dump(new_plot_dict, file, protocol=pkl.HIGHEST_PROTOCOL)
+        with open(file, "wb") as f:
+            pkl.dump(new_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 if args.out_obj:
     for file in args.out_obj:
@@ -96,5 +145,5 @@ if args.out_obj:
             new_obj_dict = old_obj_dict
         else:
             new_obj_dict = {}
-        with open(file, "w") as f:
-            pkl.dump(new_obj_dict, file, protocol=pkl.HIGHEST_PROTOCOL)
+        with open(file, "wb") as f:
+            pkl.dump(new_obj_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
