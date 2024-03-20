@@ -20,6 +20,15 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
+onstart:
+    if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
+    ds.pars_key_resolve.write_par_catalog(
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
+    )
 
 rule build_pars_dsp_tau:
     input:
@@ -34,6 +43,7 @@ rule build_pars_dsp_tau:
     output:
         decay_const=temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant")),
+        pulser=temp(get_pattern_pars_tmp_channel(setup, "dsp", "pulser_ids")),
     log:
         get_pattern_log_channel(setup, "par_dsp_decay_constant"),
     group:
@@ -50,8 +60,43 @@ rule build_pars_dsp_tau:
         "--channel {params.channel} "
         "--plot_path {output.plots} "
         "--output_file {output.decay_const} "
+        "--pulser_file {output.pulser} "
         "--tcm_files {input.tcm_files} "
         "--raw_files {input.files}"
+
+rule build_pars_event_selection:
+    input:
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
+        pulser_file=get_pattern_pars_tmp_channel(setup, "dsp", "pulser_ids"),
+        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+        raw_cal=get_blinding_curve_file,
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        peak_file=temp(get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5")),
+    log:
+        get_pattern_log_channel(setup, "par_dsp_event_selection"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_event_selection.py')} "
+        "--configs {configs} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--peak_file {output.peak_file} "
+        "--pulser_file {input.pulser_file} "
+        "--decay_const {input.database} "
+        "--raw_cal {input.raw_cal} "
+        "--raw_filelist {input.files}"
 
 
 # This rule builds the optimal energy filter parameters for the dsp using fft files
@@ -98,12 +143,7 @@ rule build_pars_dsp_dplms:
         fft_files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        cal_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-        ),
-        tcm_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
-        ),
+        peak_file=get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5"),
         database=get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization"),
         inplots=get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization"),
     params:
@@ -124,8 +164,7 @@ rule build_pars_dsp_dplms:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/pars_dsp_dplms.py')} "
         "--fft_raw_filelist {input.fft_files} "
-        "--cal_raw_filelist {input.cal_files} "
-        "--tcm_filelist {input.tcm_files} "
+        "--peak_file {input.peak_file} "
         "--database {input.database} "
         "--inplots {input.inplots} "
         "--configs {configs} "
@@ -140,12 +179,7 @@ rule build_pars_dsp_dplms:
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt:
     input:
-        files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-        ),
-        tcm_filelist=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
-        ),
+        peak_file=get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5"),
         decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "dplms"),
         inplots=get_pattern_plts_tmp_channel(setup, "dsp", "dplms"),
     params:
@@ -172,8 +206,7 @@ rule build_pars_dsp_eopt:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--raw_filelist {input.files} "
-        "--tcm_filelist {input.tcm_filelist} "
+        "--peak_file {input.peak_file} "
         "--inplots {input.inplots} "
         "--decay_const {input.decay_const} "
         "--plot_path {output.plots} "
