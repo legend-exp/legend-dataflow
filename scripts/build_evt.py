@@ -15,19 +15,6 @@ from pygama.evt.build_evt import build_evt
 sto = lh5.LH5Store()
 
 
-def replace_evt_with_key(dic, new_key):
-    for key, d in dic.items():
-        if isinstance(d, dict):
-            dic[key] = replace_evt_with_key(d, new_key)
-        elif isinstance(d, list):
-            dic[key] = [item.replace("evt", new_key) for item in d]
-        elif isinstance(d, str):
-            dic[key] = d.replace("evt", new_key)
-        else:
-            pass
-    return dic
-
-
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
@@ -45,8 +32,12 @@ argparser.add_argument("--log", help="log_file", type=str)
 argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
-pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+if args.log is not None:
+    pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+else:
+    logging.basicConfig(level=logging.DEBUG)
+
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
@@ -88,7 +79,8 @@ if isinstance(evt_config_file, dict):
                     else:
                         chans = []
                     _evt_config["channels"][field] = chans
-            evt_config[key] = replace_evt_with_key(_evt_config, f"evt/{key}")
+
+            evt_config[key] = _evt_config
 else:
     evt_config = {"all": Props.read_from(evt_config_file)}
     # block for snakemake to fill in channel lists
@@ -118,17 +110,16 @@ temp_output = f"{args.output}.{rand_num}"
 
 tables = {}
 for key, config in evt_config.items():
+    datainfo = {
+        "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
+        "dsp": (args.dsp_file, "dsp", "ch{}"),
+        "hit": (args.hit_file, "hit", "ch{}"),
+        "evt": (None, "evt"),
+    }
+
     tables[key] = build_evt(
-        f_tcm=args.tcm_file,
-        f_dsp=args.dsp_file,
-        f_hit=args.hit_file,
-        f_evt=None,
-        evt_config=config,
-        evt_group=f"evt/{key}" if key != "all" else "evt",
-        tcm_group="hardware_tcm_1",
-        dsp_group="dsp",
-        hit_group="hit",
-        tcm_id_table_pattern="ch{}",
+        datainfo,
+        config,
     )
 
 tbl = Table(col_dict=tables)
