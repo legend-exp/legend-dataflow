@@ -136,11 +136,52 @@ rule build_pars_dsp_eopt:
         "--final_dsp_pars {output.dsp_pars}"
 
 
+# This rule builds the dplms energy filter for the dsp using fft and cal files
+rule build_pars_dsp_dplms:
+    input:
+        fft_files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+        ),
+        cal_files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
+        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
+        lh5_path=temp(get_pattern_pars_tmp_channel(setup, "dsp", extension="lh5")),
+        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "dplms")),
+    log:
+        get_pattern_log_channel(setup, "pars_dsp_dplms"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_dplms.py')} "
+        "--fft_raw_filelist {input.fft_files}"
+        "--cal_raw_filelist {input.cal_files}"
+        "--database {input.database} "
+        "--configs {configs} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--dsp_pars {output.dsp_pars}"
+        "--lh5_path {output.lh5_path}"
+        "--plot_path {output.plots} "
+
+
 rule build_pars_dsp:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_objects_pkl"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
     output:
         get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
         get_pattern_pars(
@@ -151,6 +192,12 @@ rule build_pars_dsp:
             check_in_cycle=check_in_cycle,
         ),
         get_pattern_plts(setup, "dsp"),
+        get_pattern_pars(
+            setup,
+            "dsp",
+            extension="lh5",
+            check_in_cycle=check_in_cycle,
+        ),
     group:
         "merge-dsp"
     shell:
