@@ -220,7 +220,7 @@ if args.plot_file:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 
-results_dict = dict(**eres_dict,lq =  out_dict)
+results_dict = dict(**eres_dict, lq=out_dict)
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.hit_pars, "w") as w:
     final_hit_dict = {
@@ -231,8 +231,8 @@ with open(args.hit_pars, "w") as w:
 
 pathlib.Path(os.path.dirname(args.lq_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
-        **object_dict,
-        lq=obj,
-    )
+    **object_dict,
+    lq=obj,
+)
 with open(args.lq_results, "wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

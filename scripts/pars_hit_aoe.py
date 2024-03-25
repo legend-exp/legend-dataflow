@@ -221,7 +221,7 @@ if args.plot_file:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
-results_dict = dict(**ecal_dict["results"], aoe =  out_dict)
+results_dict = dict(**ecal_dict["results"], aoe=out_dict)
 with open(args.hit_pars, "w") as w:
     final_hit_dict = {
         "pars": {"operations": cal_dict},
@@ -231,8 +231,8 @@ with open(args.hit_pars, "w") as w:
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
-        **object_dict,
-        aoe=obj,
-    )
+    **object_dict,
+    aoe=obj,
+)
 with open(args.aoe_results, "wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
