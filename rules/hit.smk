@@ -21,18 +21,67 @@ from scripts.util.patterns import (
 )
 
 
+onstart:
+    if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
+
+
+    ds.pars_key_resolve.write_par_catalog(
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "hit", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_hit"], "lar": ["par_hit"]},
+    )
+
+
+# This rule builds the qc using the calibration dsp files and fft files
+rule build_qc:
+    input:
+        files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
+        fft_files=lambda wildcards: read_filelist_fft(wildcards, "dsp"),
+        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
+    output:
+        qc_file=temp(get_pattern_pars_tmp_channel(setup, "hit", "qc")),
+        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "qc")),
+    log:
+        get_pattern_log_channel(setup, "pars_hit_qc"),
+    group:
+        "par-hit"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_hit_qc.py')} "
+        "--log {log} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
+        "--configs {configs} "
+        "--plot_path {output.plot_file} "
+        "--save_path {output.qc_file} "
+        "--pulser_file {input.pulser} "
+        "--cal_files {input.files} "
+        "--fft_files {input.fft_files} "
+
+
 # This rule builds the energy calibration using the calibration dsp files
 rule build_energy_calibration:
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
-        tcm_filelist=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
+        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         ctc_dict=ancient(
             lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),
+        inplots=get_pattern_plts_tmp_channel(setup, "hit", "qc"),
+        in_hit_dict=get_pattern_pars_tmp_channel(setup, "hit", "qc"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -59,11 +108,14 @@ rule build_energy_calibration:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--plot_path {output.plot_file} "
         "--results_path {output.results_file} "
         "--save_path {output.ecal_file} "
+        "--inplot_dict {input.inplots} "
+        "--in_hit_dict {input.in_hit_dict} "
         "--ctc_dict {input.ctc_dict} "
-        "--tcm_filelist {input.tcm_filelist} "
+        "--pulser_file {input.pulser} "
         "--files {input.files}"
 
 
@@ -73,9 +125,7 @@ rule build_aoe_calibration:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        tcm_filelist=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
-        ),
+        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
             setup, "hit", "energy_cal_objects", extension="pkl"
@@ -112,7 +162,7 @@ rule build_aoe_calibration:
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
-        "--tcm_filelist {input.tcm_filelist} "
+        "--pulser_file {input.pulser} "
         "--ecal_file {input.ecal_file} "
         "{input.files}"
 
@@ -123,9 +173,7 @@ rule build_lq_calibration:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        tcm_filelist=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
-        ),
+        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal"),
         eres_file=get_pattern_pars_tmp_channel(
             setup, "hit", "aoe_cal_objects", extension="pkl"
@@ -160,7 +208,7 @@ rule build_lq_calibration:
         "--eres_file {input.eres_file} "
         "--hit_pars {output.hit_pars} "
         "--plot_file {output.plot_file} "
-        "--tcm_filelist {input.tcm_filelist} "
+        "--pulser_file {input.pulser} "
         "--ecal_file {input.ecal_file} "
         "{input.files}"
 
