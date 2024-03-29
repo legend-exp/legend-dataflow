@@ -37,7 +37,7 @@ rule build_pars_dsp_tau:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
-        tcm_files=lambda wildcards: read_filelist_cal(wildcards, "tcm"),
+        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -45,7 +45,6 @@ rule build_pars_dsp_tau:
     output:
         decay_const=temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant")),
-        pulser=temp(get_pattern_pars_tmp_channel(setup, "dsp", "pulser_ids")),
     log:
         get_pattern_log_channel(setup, "par_dsp_decay_constant"),
     group:
@@ -62,8 +61,7 @@ rule build_pars_dsp_tau:
         "--channel {params.channel} "
         "--plot_path {output.plots} "
         "--output_file {output.decay_const} "
-        "--pulser_file {output.pulser} "
-        "--tcm_files {input.tcm_files} "
+        "--pulser_file {input.pulser} "
         "--raw_files {input.files}"
 
 
@@ -72,7 +70,7 @@ rule build_pars_event_selection:
         files=os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
-        pulser_file=get_pattern_pars_tmp_channel(setup, "dsp", "pulser_ids"),
+        pulser_file=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
         raw_cal=get_blinding_curve_file,
     params:
@@ -87,6 +85,7 @@ rule build_pars_event_selection:
         "par-dsp"
     resources:
         runtime=300,
+        mem_swap=70,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/pars_dsp_event_selection.py')} "
