@@ -23,6 +23,7 @@ from .utils import (
     tier_path,
     tier_pet_path,
     tier_pht_path,
+    tier_psp_path,
     tier_raw_blind_path,
     tier_raw_path,
     tier_skm_path,
@@ -148,7 +149,7 @@ def get_pattern_tier_evt(setup):
 
 def get_pattern_tier_psp(setup):
     return os.path.join(
-        f"{tier_evt_path(setup)}",
+        f"{tier_psp_path(setup)}",
         "{datatype}",
         "{period}",
         "{run}",
