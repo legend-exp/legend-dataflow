@@ -38,6 +38,15 @@ def read_filelist_cal(wildcards, tier):
         return files
 
 
+def read_filelist_fft(wildcards, tier):
+    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-fft"
+    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
+        0
+    ].open() as f:
+        files = f.read().splitlines()
+        return files
+
+
 def read_filelist_pars_cal_channel(wildcards, tier):
     """
     This function will read the filelist of the channels and return a list of dsp files one for each channel
