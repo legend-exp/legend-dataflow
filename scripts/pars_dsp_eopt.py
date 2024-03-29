@@ -11,6 +11,8 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -26,6 +28,8 @@ from pygama.pargen.dsp_optimize import (
 )
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+warnings.filterwarnings(action="ignore", category=np.RankWarning)
+
 
 argparser = argparse.ArgumentParser()
 
@@ -44,7 +48,6 @@ argparser.add_argument("--channel", help="Channel", type=str, required=True)
 argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
-
 
 argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
 args = argparser.parse_args()

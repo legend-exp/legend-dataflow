@@ -10,6 +10,8 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np

@@ -9,6 +9,8 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -30,7 +32,7 @@ argparser.add_argument("--output_file", help="output file", type=str, required=T
 argparser.add_argument("--pulser_file", help="pulser file", type=str, required=False)
 
 argparser.add_argument("--raw_files", help="input files", nargs="*", type=str)
-argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str)
+argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str, required=False)
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -63,17 +65,23 @@ if kwarg_dict["run_tau"] is True:
     else:
         input_file = args.raw_files
 
-    if isinstance(args.tcm_files, list) and args.tcm_files[0].split(".")[-1] == "filelist":
-        tcm_files = args.tcm_files[0]
-        with open(tcm_files) as f:
+    if args.pulser_file:
+        with open(args.pulser_file) as f:
+            pulser_dict = json.load(f)
+        mask = np.array(pulser_dict["mask"])
+
+    elif args.tcm_filelist:
+        # get pulser mask from tcm files
+        with open(args.tcm_filelist) as f:
             tcm_files = f.read().splitlines()
+        tcm_files = sorted(np.unique(tcm_files))
+        ids, mask = get_tcm_pulser_ids(
+            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+        )
     else:
-        tcm_files = args.tcm_files
-    # get pulser mask from tcm files
-    tcm_files = sorted(np.unique(tcm_files))
-    ids, mask = get_tcm_pulser_ids(
-        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-    )
+        msg = "No pulser file or tcm filelist provided"
+        raise ValueError(msg)
+
     data = sto.read(f"{args.channel}/raw", input_file, field_mask=["daqenergy", "timestamp"])[
         0
     ].view_as("pd")
