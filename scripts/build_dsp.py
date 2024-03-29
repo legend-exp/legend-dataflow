@@ -51,7 +51,7 @@ def replace_list_with_array(dic):
         if isinstance(value, dict):
             dic[key] = replace_list_with_array(value)
         elif isinstance(value, list):
-            dic[key] = np.array(value)
+            dic[key] = np.array(value, dtype="float32")
         else:
             pass
     return dic
