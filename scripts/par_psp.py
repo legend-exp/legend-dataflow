@@ -85,7 +85,7 @@ for field in ave_fields:
         unit = None
         rounding = 16
 
-    mean_val = np.nan if len(vals[~np.isnan(vals)]) == 0 else np.nanmean(vals)
+    mean_val = np.nan if len(vals[~np.isnan(vals)]) == 0 else np.nanmedian(vals)
     mean = f"{round(mean_val, rounding)}*{unit}" if unit is not None else mean_val
 
     for tstamp in in_dicts:
