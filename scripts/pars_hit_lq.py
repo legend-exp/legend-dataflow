@@ -8,17 +8,44 @@ import pathlib
 import pickle as pkl
 import warnings
 
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
+
 import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.math.peak_fitting import gauss_cdf
+from pygama.math.distributions import gaussian
+from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
-from pygama.pargen.lq_cal import cal_lq
-from pygama.pargen.utils import get_tcm_pulser_ids, load_data
+from pygama.pargen.lq_cal import LQCal
+from pygama.pargen.utils import load_data
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+
+
+def get_results_dict(lq_class):
+    return {
+        "cal_energy_param": lq_class.cal_energy_param,
+        "rt_correction": lq_class.dt_fit_pars,
+        # "cdf": lq_class.cdf.name,
+        "1590-1596keV": lq_class.timecorr_df.to_dict("index"),
+        "cut_value": lq_class.cut_val,
+        "sfs": lq_class.low_side_sf.to_dict("index"),
+    }
+
+
+def fill_plot_dict(lq_class, data, plot_options, plot_dict=None):
+    if plot_dict is not None:
+        for key, item in plot_options.items():
+            if item["options"] is not None:
+                plot_dict[key] = item["function"](lq_class, data, **item["options"])
+            else:
+                plot_dict[key] = item["function"](lq_class, data)
+    else:
+        plot_dict = {}
+    return plot_dict
 
 
 def lq_calibration(
@@ -27,7 +54,7 @@ def lq_calibration(
     energy_param: str,
     cal_energy_param: str,
     eres_func: callable,
-    cdf: callable = gauss_cdf,
+    cdf: callable = gaussian,
     selection_string: str = "",
     plot_options: dict | None = None,
 ):
@@ -62,17 +89,16 @@ def lq_calibration(
         A dict containing the results of the LQ calibration
     plot_dict: dict
         A dict containing all the figures specified by the plot options
-    lq: cal_lq class
-        The cal_lq object used for the LQ calibration
+    lq: LQCal class
+        The LQCal object used for the LQ calibration
     """
 
-    lq = cal_lq(
+    lq = LQCal(
         cal_dicts,
         cal_energy_param,
         eres_func,
         cdf,
         selection_string,
-        plot_options,
     )
 
     data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
@@ -88,12 +114,14 @@ def lq_calibration(
 
     lq.calibrate(data, "LQ_Ecorr")
     log.info("Calibrated LQ")
-    return cal_dicts, lq.get_results_dict(), lq.fill_plot_dict(data), lq
+    return cal_dicts, get_results_dict(lq), fill_plot_dict(lq, data, plot_options), lq
 
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs="*", type=str)
-argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
+argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
+argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
+
 argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
 argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
@@ -126,7 +154,7 @@ kwarg_dict = Props.read_from(channel_dict)
 
 ecal_dict = Props.read_from(args.ecal_file)
 cal_dict = ecal_dict["pars"]["operations"]
-eres_dict = ecal_dict["results"]
+eres_dict = ecal_dict["results"]["ecal"]
 
 with open(args.eres_file, "rb") as o:
     object_dict = pkl.load(o)
@@ -134,7 +162,7 @@ with open(args.eres_file, "rb") as o:
 if kwarg_dict["run_lq"] is True:
     kwarg_dict.pop("run_lq")
 
-    cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gauss_cdf
+    cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gaussian
 
     if "plot_options" in kwarg_dict:
         for field, item in kwarg_dict["plot_options"].items():
@@ -173,13 +201,25 @@ if kwarg_dict["run_lq"] is True:
         return_selection_mask=True,
     )
 
-    # get pulser mask from tcm files
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-    tcm_files = sorted(tcm_files)
-    ids, mask = get_tcm_pulser_ids(
-        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-    )
+    if args.pulser_file:
+        with open(args.pulser_file) as f:
+            pulser_dict = json.load(f)
+        mask = np.array(pulser_dict["mask"])
+        if "pulser_multiplicity_threshold" in kwarg_dict:
+            kwarg_dict.pop("pulser_multiplicity_threshold")
+
+    elif args.tcm_filelist:
+        # get pulser mask from tcm files
+        with open(args.tcm_filelist) as f:
+            tcm_files = f.read().splitlines()
+        tcm_files = sorted(np.unique(tcm_files))
+        ids, mask = get_tcm_pulser_ids(
+            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+        )
+    else:
+        msg = "No pulser file or tcm filelist provided"
+        raise ValueError(msg)
+
     data["is_pulser"] = mask[threshold_mask]
 
     cal_dict, out_dict, plot_dict, obj = lq_calibration(
@@ -220,7 +260,7 @@ if args.plot_file:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 
-results_dict = dict(**eres_dict,lq =  out_dict)
+results_dict = dict(**eres_dict, lq=out_dict)
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
 with open(args.hit_pars, "w") as w:
     final_hit_dict = {
@@ -231,8 +271,8 @@ with open(args.hit_pars, "w") as w:
 
 pathlib.Path(os.path.dirname(args.lq_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
-        **object_dict,
-        lq=obj,
-    )
+    **object_dict,
+    lq=obj,
+)
 with open(args.lq_results, "wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

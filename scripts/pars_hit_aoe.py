@@ -9,16 +9,46 @@ import pickle as pkl
 import warnings
 from typing import Callable
 
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
+
 import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.AoE_cal import *  # noqa: F403
-from pygama.pargen.AoE_cal import cal_aoe, pol1, sigma_fit, standard_aoe
-from pygama.pargen.utils import get_tcm_pulser_ids, load_data
+from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
+from pygama.pargen.data_cleaning import get_tcm_pulser_ids
+from pygama.pargen.utils import load_data
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+
+
+def get_results_dict(aoe_class):
+    return {
+        "cal_energy_param": aoe_class.cal_energy_param,
+        "dt_param": aoe_class.dt_param,
+        "rt_correction": aoe_class.dt_corr,
+        "1000-1300keV": aoe_class.timecorr_df.to_dict("index"),
+        "correction_fit_results": aoe_class.energy_corr_res_dict,
+        "low_cut": aoe_class.low_cut_val,
+        "high_cut": aoe_class.high_cut_val,
+        "low_side_sfs": aoe_class.low_side_sfs.to_dict("index"),
+        "2_side_sfs": aoe_class.two_side_sfs.to_dict("index"),
+    }
+
+
+def fill_plot_dict(aoe_class, data, plot_options, plot_dict=None):
+    if plot_dict is not None:
+        for key, item in plot_options.items():
+            if item["options"] is not None:
+                plot_dict[key] = item["function"](aoe_class, data, **item["options"])
+            else:
+                plot_dict[key] = item["function"](aoe_class, data)
+    else:
+        plot_dict = {}
+    return plot_dict
 
 
 def aoe_calibration(
@@ -28,36 +58,34 @@ def aoe_calibration(
     energy_param: str,
     cal_energy_param: str,
     eres_func: Callable,
-    pdf: Callable = standard_aoe,
+    pdf: Callable = aoe_peak,
     selection_string: str = "",
     dt_corr: bool = False,
     dep_correct: bool = False,
     dt_cut: dict | None = None,
     high_cut_val: int = 3,
-    mean_func: Callable = pol1,
-    sigma_func: Callable = sigma_fit,
-    dep_acc: float = 0.9,
+    mean_func: Callable = Pol1,
+    sigma_func: Callable = SigmaFit,
+    # dep_acc: float = 0.9,
     dt_param: str = "dt_eff",
     comptBands_width: int = 20,
     plot_options: dict | None = None,
 ):
     data["AoE_Uncorr"] = data[current_param] / data[energy_param]
-    aoe = cal_aoe(
-        cal_dicts,
-        cal_energy_param,
-        eres_func,
-        pdf,
-        selection_string,
-        dt_corr,
-        dep_acc,
-        dep_correct,
-        dt_cut,
-        dt_param,
-        high_cut_val,
-        mean_func,
-        sigma_func,
-        comptBands_width,
-        plot_options if plot_options is not None else {},
+    aoe = CalAoE(
+        cal_dicts=cal_dicts,
+        cal_energy_param=cal_energy_param,
+        eres_func=eres_func,
+        pdf=pdf,
+        selection_string=selection_string,
+        dt_corr=dt_corr,
+        dep_correct=dep_correct,
+        dt_cut=dt_cut,
+        dt_param=dt_param,
+        high_cut_val=high_cut_val,
+        mean_func=mean_func,
+        sigma_func=sigma_func,
+        compt_bands_width=comptBands_width,
     )
 
     aoe.update_cal_dicts(
@@ -71,12 +99,13 @@ def aoe_calibration(
 
     aoe.calibrate(data, "AoE_Uncorr")
     log.info("Calibrated A/E")
-    return cal_dicts, aoe.get_results_dict(), aoe.fill_plot_dict(data), aoe
+    return cal_dicts, get_results_dict(aoe), fill_plot_dict(aoe, data, plot_options), aoe
 
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs="*", type=str)
-argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
+argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
+argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
 argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
 argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
@@ -119,11 +148,11 @@ with open(args.eres_file, "rb") as o:
 if kwarg_dict["run_aoe"] is True:
     kwarg_dict.pop("run_aoe")
 
-    pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else standard_aoe
+    pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else aoe_peak
 
-    sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else sigma_fit
+    sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else SigmaFit
 
-    mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else pol1
+    mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else Pol1
 
     if "plot_options" in kwarg_dict:
         for field, item in kwarg_dict["plot_options"].items():
@@ -173,13 +202,25 @@ if kwarg_dict["run_aoe"] is True:
         return_selection_mask=True,
     )
 
-    # get pulser mask from tcm files
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-    tcm_files = sorted(tcm_files)
-    ids, mask = get_tcm_pulser_ids(
-        tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-    )
+    if args.pulser_file:
+        with open(args.pulser_file) as f:
+            pulser_dict = json.load(f)
+        mask = np.array(pulser_dict["mask"])
+        if "pulser_multiplicity_threshold" in kwarg_dict:
+            kwarg_dict.pop("pulser_multiplicity_threshold")
+
+    elif args.tcm_filelist:
+        # get pulser mask from tcm files
+        with open(args.tcm_filelist) as f:
+            tcm_files = f.read().splitlines()
+        tcm_files = sorted(np.unique(tcm_files))
+        ids, mask = get_tcm_pulser_ids(
+            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+        )
+    else:
+        msg = "No pulser file or tcm filelist provided"
+        raise ValueError(msg)
+
     data["is_pulser"] = mask[threshold_mask]
 
     cal_dict, out_dict, plot_dict, obj = aoe_calibration(
@@ -222,7 +263,7 @@ if args.plot_file:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
-results_dict = dict(**ecal_dict["results"], aoe =  out_dict)
+results_dict = dict(**ecal_dict["results"], aoe=out_dict)
 with open(args.hit_pars, "w") as w:
     final_hit_dict = {
         "pars": {"operations": cal_dict},
@@ -232,8 +273,8 @@ with open(args.hit_pars, "w") as w:
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
-        **object_dict,
-        aoe=obj,
-    )
+    **object_dict,
+    aoe=obj,
+)
 with open(args.aoe_results, "wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

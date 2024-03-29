@@ -16,8 +16,9 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo.lh5 import ls
-from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids, generate_cut_classifiers
+from pygama.pargen.data_cleaning import get_tcm_pulser_ids, generate_cuts, get_keys, generate_cut_classifiers
 from pygama.pargen.utils import load_data
+from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 
@@ -28,19 +29,18 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
     argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
-    argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
-    argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
+    argparser.add_argument("--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False)
+    argparser.add_argument("--pulser_files", help="pulser_file", nargs="*", type=str, required=False)
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-    argparser.add_argument("--tier", help="tier", type=str, default="hit")
 
     argparser.add_argument("--log", help="log_file", type=str)
 
-    argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
-    argparser.add_argument("--save_path", help="save_path", type=str)
+    argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
+    argparser.add_argument("--save_path", help="save_path", type=str, nargs="*", )
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -54,16 +54,32 @@ if __name__ == "__main__":
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
-    channel_dict = channel_dict["pars_hit_qc"]["inputs"]["qc_config"][args.channel]
+    channel_dict = channel_dict["pars_pht_qc"]["inputs"]["qc_config"][args.channel]
+
+
+    # sort files in dictionary where keys are first timestamp from run
+    if isinstance(args.cal_files, list):
+        cal_files = []
+        for file in args.cal_files:
+            with open(file) as f:
+                cal_files += f.read().splitlines()
+    else:
+        with open(args.cal_files) as f:
+            cal_files = f.read().splitlines()
+
+    cal_files = sorted(
+        np.unique(cal_files)
+    )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+
+
 
     kwarg_dict = Props.read_from(channel_dict)
-
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
         [
             key.replace(f"{args.channel}/dsp/", "")
-            for key in ls(args.cal_files[0], f"{args.channel}/dsp/")
+            for key in ls(cal_files[0], f"{args.channel}/dsp/")
         ],
         kwarg_dict_cal["cut_parameters"],
     )
@@ -72,14 +88,14 @@ if __name__ == "__main__":
         cut_fields += get_keys(
             [
                 key.replace(f"{args.channel}/dsp/", "")
-                for key in ls(args.cal_files[0], f"{args.channel}/dsp/")
+                for key in ls(cal_files[0], f"{args.channel}/dsp/")
             ],
             init_cal["cut_parameters"],
         )
 
     # load data in
     data, threshold_mask = load_data(
-        args.cal_files,
+        cal_files,
         f"{args.channel}/dsp",
         {},
         [*cut_fields, "timestamp", "trapTmax"],
@@ -88,10 +104,15 @@ if __name__ == "__main__":
         cal_energy_param="trapTmax",
     )
 
-    if args.pulser_file:
-        with open(args.pulser_file) as f:
-            pulser_dict = json.load(f)
-        mask = np.array(pulser_dict["mask"])
+    if args.pulser_files:
+        mask = np.array([], dtype=bool)
+        for file in args.pulser_files:
+            with open(file, 'r') as f:
+                pulser_dict = json.load(f)
+            pulser_mask = np.array(pulser_dict["mask"])
+            mask = np.append(mask, pulser_mask)
+        if "pulser_multiplicity_threshold" in kwarg_dict:
+            kwarg_dict.pop("pulser_multiplicity_threshold")
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
@@ -122,9 +143,12 @@ if __name__ == "__main__":
             for key in info.get("parameters", None):
                 exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
             data[outname] = data.eval(exp, local_dict=info.get("parameters", None))
-            ct_mask = ct_mask & data[outname]
+            if "classifier" not in outname:
+                ct_mask = ct_mask & data[outname]
 
         data = data[ct_mask]
+        log.debug("initial cal cuts applied")
+        log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
 
     else:
         hit_dict_init_cal = {}
@@ -137,24 +161,50 @@ if __name__ == "__main__":
         display=1 if args.plot_path else 0,
     )
 
+    log.debug("initial cuts applied")
+    log.debug(f"cut_dict is: {json.dumps(hit_dict_cal, indent=2)}")
+
     kwarg_dict_fft = kwarg_dict["fft_fields"]
     if len(args.fft_files) > 0:
-        fft_data = load_data(
-            args.fft_files,
-            f"{args.channel}/dsp",
-            {},
-            [*list(kwarg_dict_fft["cut_parameters"]), "timestamp", "trapTmax"],
-            threshold=kwarg_dict_fft["threshold"],
-            return_selection_mask=False,
-            cal_energy_param="trapTmax",
-        )
 
-        hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
-            data,
-            kwarg_dict_fft["cut_parameters"],
-            kwarg_dict.get("rounding", 4),
-            display=1 if args.plot_path else 0,
-        )
+        # sort files in dictionary where keys are first timestamp from run
+        if isinstance(args.fft_files, list):
+            fft_files = []
+            for file in args.fft_files:
+                with open(file) as f:
+                    fft_files += f.read().splitlines()
+        else:
+            with open(args.fft_files) as f:
+                fft_files = f.read().splitlines()
+
+        fft_files = sorted(
+            np.unique(fft_files)
+        )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+
+        if len(fft_files)>0:
+            fft_data = load_data(
+                fft_files,
+                f"{args.channel}/dsp",
+                {},
+                [*list(kwarg_dict_fft["cut_parameters"]), "timestamp", "trapTmax"],
+                threshold=kwarg_dict_fft["threshold"],
+                return_selection_mask=False,
+                cal_energy_param="trapTmax",
+            )
+
+            hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
+                data,
+                kwarg_dict_fft["cut_parameters"],
+                kwarg_dict.get("rounding", 4),
+                display=1 if args.plot_path else 0,
+            )
+
+            log.debug("fft cuts applied")
+            log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
+
+        else:
+            hit_dict_fft = {}
+            plot_dict_fft = {}
     else:
         hit_dict_fft = {}
         plot_dict_fft = {}
@@ -162,11 +212,13 @@ if __name__ == "__main__":
     hit_dict = {**hit_dict_init_cal, **hit_dict_cal, **hit_dict_fft}
     plot_dict = {**plot_dict_init_cal, **plot_dict_cal, **plot_dict_fft}
 
-    pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.save_path, "w") as f:
-        json.dump(hit_dict, f, indent=4)
+    for file in args.save_path:
+        pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
+        with open(file, "w") as f:
+            json.dump(hit_dict, f, indent=4)
 
     if args.plot_path:
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path, "wb") as f:
-            pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
+        for file in args.plot_path:
+            pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
+            with open(file, "wb") as f:
+                pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
