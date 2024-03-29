@@ -10,6 +10,8 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 from bisect import bisect_left
 
@@ -91,7 +93,7 @@ if __name__ == "__main__":
 
     argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
     argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--raw_cal", help="raw_cal", type=str, required=True)
+    argparser.add_argument("--raw_cal", help="raw_cal", type=str, nargs="*", required=True)
 
     argparser.add_argument("--log", help="log_file", type=str)
 
@@ -108,6 +110,7 @@ if __name__ == "__main__":
     logging.getLogger("lgdo").setLevel(logging.INFO)
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
+    logging.getLogger("legendmeta").setLevel(logging.INFO)
     logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
 
     log = logging.getLogger(__name__)
@@ -128,6 +131,7 @@ if __name__ == "__main__":
 
     pathlib.Path(os.path.dirname(args.peak_file)).mkdir(parents=True, exist_ok=True)
     if peak_dict.pop("run_selection") is True:
+        log.debug("Starting peak selection")
         rng = np.random.default_rng()
         rand_num = f"{rng.integers(0,99999):05d}"
         temp_output = f"{args.peak_file}.{rand_num}"
@@ -190,7 +194,7 @@ if __name__ == "__main__":
             masks[peak] = np.where(e_mask)[0]
             log.debug(f"{len(masks[peak])} events found in energy range for {peak}")
 
-        input_data = sto.read(f"{lh5_path}", raw_files, n_rows=10000)[0]
+        input_data = sto.read(f"{lh5_path}", raw_files, n_rows=10000, idx=np.where(~mask)[0])[0]
 
         if isinstance(dsp_config, str):
             dsp_config = Props.read_from(dsp_config)
@@ -205,7 +209,7 @@ if __name__ == "__main__":
 
         if cut_parameters is not None:
             cut_dict = generate_cuts(tb_data, cut_parameters)
-            log.debug(f"Cuts are calculated: {cut_dict}")
+            log.debug(f"Cuts are calculated: {json.dumps(cut_dict, indent=2)}")
         else:
             cut_dict = None
 
@@ -249,10 +253,22 @@ if __name__ == "__main__":
                             tb_out = run_one_dsp(peak_dict["obj_buf"], dsp_config, db_dict=db_dict)
                             energy = tb_out[energy_parameter].nda
 
+                            init_bin_width = (
+                                2
+                                * (np.nanpercentile(energy, 75) - np.nanpercentile(energy, 25))
+                                * len(energy) ** (-1 / 3)
+                            )
+
+                            if init_bin_width > 2:
+                                init_bin_width = 2
+
                             hist, bins, var = pgh.get_hist(
                                 energy,
-                                range=(np.floor(np.nanmin(energy)), np.ceil(np.nanmax(energy))),
-                                dx=peak / (np.nanpercentile(energy, 50)),
+                                range=(
+                                    np.floor(np.nanpercentile(energy, 1)),
+                                    np.ceil(np.nanpercentile(energy, 99)),
+                                ),
+                                dx=init_bin_width,
                             )
                             peak_loc = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
 
@@ -274,7 +290,9 @@ if __name__ == "__main__":
                                     peak_loc + (1.5 * peak_dict["kev_width"][1]) / rough_adc_to_kev
                                 )
                                 hist, bins, var = pgh.get_hist(
-                                    energy, range=(int(e_lower_lim), int(e_upper_lim)), dx=1
+                                    energy,
+                                    range=(int(e_lower_lim), int(e_upper_lim)),
+                                    dx=init_bin_width,
                                 )
                                 mu = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
 
@@ -304,32 +322,37 @@ if __name__ == "__main__":
                             peak_dict["obj_buf"] = None
                             peak_dict["obj_buf_start"] = 0
                             peak_dict["n_events"] = n_wfs
+                            log.debug(f'found {peak_dict["n_events"]} events for {peak}')
                         else:
-                            tb_out = run_one_dsp(peak_dict["obj_buf"], dsp_config, db_dict=db_dict)
-                            out_tbl, n_wfs = get_out_data(
-                                peak_dict["obj_buf"],
-                                tb_out,
-                                cut_dict,
-                                peak_dict["e_lower_lim"],
-                                peak_dict["e_upper_lim"],
-                                peak_dict["ecal_par"],
-                                raw_dict,
-                                int(peak),
-                                final_cut_field=final_cut_field,
-                                energy_param=energy_parameter,
-                            )
-                            peak_dict["n_events"] += n_wfs
-                            sto.write(out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a")
-                            peak_dict["obj_buf"] = None
-                            peak_dict["obj_buf_start"] = 0
-                            if peak_dict["n_events"] >= n_events:
-                                peak_dict["idxs"] = None
-                                log.debug(f"{peak} has reached the required number of events")
-                                log.debug(
-                                    f"{peak}: {peak_dict['idxs']}, {peak_dict['idxs'] is not None}"
+                            if peak_dict["obj_buf"] is not None and len(peak_dict["obj_buf"]) > 0:
+                                tb_out = run_one_dsp(
+                                    peak_dict["obj_buf"], dsp_config, db_dict=db_dict
                                 )
+                                out_tbl, n_wfs = get_out_data(
+                                    peak_dict["obj_buf"],
+                                    tb_out,
+                                    cut_dict,
+                                    peak_dict["e_lower_lim"],
+                                    peak_dict["e_upper_lim"],
+                                    peak_dict["ecal_par"],
+                                    raw_dict,
+                                    int(peak),
+                                    final_cut_field=final_cut_field,
+                                    energy_param=energy_parameter,
+                                )
+                                peak_dict["n_events"] += n_wfs
+                                sto.write(
+                                    out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a"
+                                )
+                                peak_dict["obj_buf"] = None
+                                peak_dict["obj_buf_start"] = 0
+                                log.debug(f'found {peak_dict["n_events"]} events for {peak}')
+                                if peak_dict["n_events"] >= n_events:
+                                    peak_dict["idxs"] = None
+                                    log.debug(f"{peak} has reached the required number of events")
 
     else:
         pathlib.Path(temp_output).touch()
 
+    log.debug(f"event selection completed in {time.time()-t0} seconds")
     os.rename(temp_output, args.peak_file)
