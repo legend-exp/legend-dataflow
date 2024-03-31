@@ -21,17 +21,6 @@ from scripts.util.patterns import (
 )
 
 
-onstart:
-    if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
-        os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
-    ds.pars_key_resolve.write_par_catalog(
-        ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
-        get_pattern_tier_raw(setup),
-        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-    )
-
-
 rule build_pars_dsp_tau:
     input:
         files=os.path.join(
