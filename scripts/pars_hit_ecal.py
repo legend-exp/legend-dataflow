@@ -649,7 +649,7 @@ if __name__ == "__main__":
 
     if "monitoring_parameters" in kwarg_dict:
         monitor_dict = monitor_parameters(
-            files, f"{args.channel}/dsp", kwarg_dict["monitor_parameters"]
+            files, f"{args.channel}/dsp", kwarg_dict["monitoring_parameters"]
         )
         results_dict.update({"monitoring_parameters": monitor_dict})
 
