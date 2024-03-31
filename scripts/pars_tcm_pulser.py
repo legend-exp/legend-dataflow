@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import pathlib
-import pickle as pkl
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
@@ -15,7 +14,6 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
-
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -57,7 +55,7 @@ else:
 tcm_files = sorted(np.unique(tcm_files))
 ids, mask = get_tcm_pulser_ids(
     tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-    )
+)
 
 pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
 with open(args.pulser_file, "w") as f:

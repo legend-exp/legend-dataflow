@@ -58,7 +58,9 @@ log = logging.getLogger(__name__)
 # load in config
 configs = LegendMetadata(path=args.configs)
 if args.tier == "evt" or args.tier == "pet":
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"]["inputs"]
+    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
+        "inputs"
+    ]
     evt_config_file = config_dict["evt_config"]
 else:
     msg = "unknown tier"
@@ -69,7 +71,7 @@ chmap = meta.channelmap(args.timestamp)
 
 if isinstance(evt_config_file, dict):
     evt_config = {}
-    for key, _evt_config in evt_config_file.items():
+    for _evt_config in evt_config_file.values():
         if _evt_config is not None:
             _evt_config = Props.read_from(_evt_config)
             # block for snakemake to fill in channel lists

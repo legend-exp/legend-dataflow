@@ -128,7 +128,7 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             "eres_quadratic": fwhm_quad,
             "fitted_peaks": ecal_class.peaks_kev.tolist(),
             "pk_fits": pk_dict,
-            "peak_param":results_dict["peak_param"]
+            "peak_param": results_dict["peak_param"],
         }
 
 
@@ -392,7 +392,11 @@ if __name__ == "__main__":
                             )
             plot_dict[cal_energy_param] = param_plot_dict
 
-        for peak_dict in full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"]["peak_parameters"].values():
+        for peak_dict in (
+            full_object_dict[cal_energy_param]
+            .results["hpge_fit_energy_peaks"]["peak_parameters"]
+            .values()
+        ):
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
@@ -436,7 +440,7 @@ if __name__ == "__main__":
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
         final_hit_dict = {
             "pars": cal_dict[fk.timestamp],
-            "results": dict(**results_dicts[fk.timestamp], partition_ecal= ecal_results)
+            "results": dict(**results_dicts[fk.timestamp], partition_ecal=ecal_results),
         }
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
         with open(out, "w") as w:
@@ -444,7 +448,7 @@ if __name__ == "__main__":
 
     for out in args.fit_results:
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
-        final_object_dict = dict(**object_dict[fk.timestamp], partition_ecal = full_object_dict)
+        final_object_dict = dict(**object_dict[fk.timestamp], partition_ecal=full_object_dict)
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
         with open(out, "wb") as w:
             pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

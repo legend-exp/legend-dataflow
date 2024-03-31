@@ -47,7 +47,7 @@ def get_results_dict(aoe_class):
 
 
 def fill_plot_dict(aoe_class, data, plot_options, plot_dict=None):
-    if plot_dict is  None:
+    if plot_dict is None:
         plot_dict = {}
     for key, item in plot_options.items():
         if item["options"] is not None:
@@ -345,7 +345,7 @@ if kwarg_dict.pop("run_aoe") is True:
     except KeyError:
         aoe_obj.eres_func = {}
 else:
-    out_dict = {tstamp:None for tstamp in cal_dict}
+    out_dict = {tstamp: None for tstamp in cal_dict}
     plot_dict = {}
     aoe_obj = None
 

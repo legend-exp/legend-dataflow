@@ -6,20 +6,20 @@ import logging
 import os
 import pathlib
 import pickle as pkl
-import re
 import warnings
 
 os.environ["PYGAMA_PARALLEL"] = "false"
 os.environ["PYGAMA_FASTMATH"] = "false"
 
+import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo.lh5 import ls
-import lgdo.lh5 as lh5
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids, generate_cuts, get_keys, generate_cut_classifiers
-from pygama.pargen.utils import load_data
-from util.FileKey import ChannelProcKey, ProcessingFileKey
+from pygama.pargen.data_cleaning import (
+    generate_cut_classifiers,
+    get_keys,
+)
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,12 @@ if __name__ == "__main__":
     argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
-    argparser.add_argument("--save_path", help="save_path", type=str, nargs="*", )
+    argparser.add_argument(
+        "--save_path",
+        help="save_path",
+        type=str,
+        nargs="*",
+    )
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -68,17 +73,19 @@ if __name__ == "__main__":
             else:
                 run_files = sorted(np.unique(run_files))
                 phy_files += run_files
-                bls = sto.read("ch1027200/dsp/", run_files, field_mask = ["wf_max", "bl_mean"])[0]
-                puls = sto.read("ch1027201/dsp/",  run_files, field_mask = ["trapTmax"])[0]
-                bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda)>1000) &(puls["trapTmax"].nda<200)
+                bls = sto.read("ch1027200/dsp/", run_files, field_mask=["wf_max", "bl_mean"])[0]
+                puls = sto.read("ch1027201/dsp/", run_files, field_mask=["trapTmax"])[0]
+                bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
+                    puls["trapTmax"].nda < 200
+                )
                 bl_mask = np.append(bl_mask, bl_idxs)
     else:
         with open(args.phy_files) as f:
             phy_files = f.read().splitlines()
         phy_files = sorted(np.unique(phy_files))
-        bls = sto.read("ch1027200/dsp/", phy_files, field_mask = ["wf_max", "bl_mean"])[0]
-        puls = sto.read("ch1027201/dsp/",  phy_files, field_mask = ["trapTmax"])[0]
-        bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda)>1000) &(puls["trapTmax"].nda<200)
+        bls = sto.read("ch1027200/dsp/", phy_files, field_mask=["wf_max", "bl_mean"])[0]
+        puls = sto.read("ch1027201/dsp/", phy_files, field_mask=["trapTmax"])[0]
+        bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (puls["trapTmax"].nda < 200)
 
     kwarg_dict = Props.read_from(channel_dict)
     kwarg_dict_fft = kwarg_dict["fft_fields"]
@@ -91,8 +98,9 @@ if __name__ == "__main__":
         kwarg_dict_fft["cut_parameters"],
     )
 
-    data = sto.read(f"{args.channel}/dsp/", phy_files, 
-    field_mask=cut_fields, idx = np.where(bl_mask)[0])[0]
+    data = sto.read(
+        f"{args.channel}/dsp/", phy_files, field_mask=cut_fields, idx=np.where(bl_mask)[0]
+    )[0]
 
     hit_dict, plot_dict = generate_cut_classifiers(
         data,
@@ -107,7 +115,7 @@ if __name__ == "__main__":
     for file in args.save_path:
         pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
         with open(file, "w") as f:
-            json.dump({"pars":{"operations":hit_dict}}, f, indent=4)
+            json.dump({"pars": {"operations": hit_dict}}, f, indent=4)
 
     if args.plot_path:
         for file in args.plot_path:

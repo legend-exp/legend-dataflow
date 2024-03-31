@@ -16,9 +16,12 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo.lh5 import ls
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids, generate_cuts, get_keys, generate_cut_classifiers
+from pygama.pargen.data_cleaning import (
+    generate_cut_classifiers,
+    get_keys,
+    get_tcm_pulser_ids,
+)
 from pygama.pargen.utils import load_data
-from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 
@@ -29,8 +32,12 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
     argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
-    argparser.add_argument("--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False)
-    argparser.add_argument("--pulser_files", help="pulser_file", nargs="*", type=str, required=False)
+    argparser.add_argument(
+        "--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False
+    )
+    argparser.add_argument(
+        "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
+    )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -40,7 +47,12 @@ if __name__ == "__main__":
     argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
-    argparser.add_argument("--save_path", help="save_path", type=str, nargs="*", )
+    argparser.add_argument(
+        "--save_path",
+        help="save_path",
+        type=str,
+        nargs="*",
+    )
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -56,7 +68,6 @@ if __name__ == "__main__":
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
     channel_dict = channel_dict["pars_pht_qc"]["inputs"]["qc_config"][args.channel]
 
-
     # sort files in dictionary where keys are first timestamp from run
     if isinstance(args.cal_files, list):
         cal_files = []
@@ -70,8 +81,6 @@ if __name__ == "__main__":
     cal_files = sorted(
         np.unique(cal_files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
-
-
 
     kwarg_dict = Props.read_from(channel_dict)
     kwarg_dict_cal = kwarg_dict["cal_fields"]
@@ -107,7 +116,7 @@ if __name__ == "__main__":
     if args.pulser_files:
         mask = np.array([], dtype=bool)
         for file in args.pulser_files:
-            with open(file, 'r') as f:
+            with open(file) as f:
                 pulser_dict = json.load(f)
             pulser_mask = np.array(pulser_dict["mask"])
             mask = np.append(mask, pulser_mask)
@@ -166,7 +175,6 @@ if __name__ == "__main__":
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
     if len(args.fft_files) > 0:
-
         # sort files in dictionary where keys are first timestamp from run
         if isinstance(args.fft_files, list):
             fft_files = []
@@ -181,7 +189,7 @@ if __name__ == "__main__":
             np.unique(fft_files)
         )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
 
-        if len(fft_files)>0:
+        if len(fft_files) > 0:
             fft_data = load_data(
                 fft_files,
                 f"{args.channel}/dsp",

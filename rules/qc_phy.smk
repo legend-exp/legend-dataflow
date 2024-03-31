@@ -130,6 +130,7 @@ for key, items in ordered.items():
 rule_order_list.append(fallback_qc_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
+
 rule build_plts_pht_phy:
     input:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht_qcphy"),
@@ -147,9 +148,9 @@ rule build_plts_pht_phy:
 rule build_pars_pht_phy:
     input:
         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_qcphy"),
-        plts=get_pattern_plts(setup, "pht" , "qc_phy"),
+        plts=get_pattern_plts(setup, "pht", "qc_phy"),
     output:
-        get_pattern_pars(setup, "pht", name= "qc_phy", check_in_cycle=check_in_cycle),
+        get_pattern_pars(setup, "pht", name="qc_phy", check_in_cycle=check_in_cycle),
     group:
         "merge-hit"
     shell:
@@ -157,4 +158,3 @@ rule build_pars_pht_phy:
         f"{basedir}/../scripts/merge_channels.py "
         "--input {input.infiles} "
         "--output {output} "
-

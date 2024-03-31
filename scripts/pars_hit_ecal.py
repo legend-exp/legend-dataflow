@@ -23,7 +23,7 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from matplotlib.colors import LogNorm
 from pygama.math.distributions import nb_poly
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids
+from pygama.pargen.data_cleaning import get_mode_stdev, get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
@@ -360,6 +360,7 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
             plot_dict[key] = item["function"](data)
     return plot_dict
 
+
 def monitor_parameters(files, lh5_path, parameters):
     data = lh5.read_as(lh5_path, files, "pd", field_mask=parameters)
     out_dict = {}
@@ -367,6 +368,7 @@ def monitor_parameters(files, lh5_path, parameters):
         mode, stdev = get_mode_stdev(data[param].to_numpy())
         out_dict[param] = {"mode": mode, "stdev": stdev}
     return out_dict
+
 
 def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
     if np.isnan(ecal_class.pars).all():
@@ -627,19 +629,29 @@ if __name__ == "__main__":
                                 selection_string,
                             )
             plot_dict[cal_energy_param] = param_plot_dict
-        
-        for peak_dict in full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks_1"]["peak_parameters"].values():
+
+        for peak_dict in (
+            full_object_dict[cal_energy_param]
+            .results["hpge_fit_energy_peaks_1"]["peak_parameters"]
+            .values()
+        ):
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
-        for peak_dict in full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"]["peak_parameters"].values():
+        for peak_dict in (
+            full_object_dict[cal_energy_param]
+            .results["hpge_fit_energy_peaks"]["peak_parameters"]
+            .values()
+        ):
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
 
-    if "monitor_parameters" in kwarg_dict:
-        monitor_dict = monitor_parameters(files, f"{args.channel}/dsp", kwarg_dict["monitor_parameters"])
-        results_dict.update({"monitoring_parameters":monitor_dict})
+    if "monitoring_parameters" in kwarg_dict:
+        monitor_dict = monitor_parameters(
+            files, f"{args.channel}/dsp", kwarg_dict["monitor_parameters"]
+        )
+        results_dict.update({"monitoring_parameters": monitor_dict})
 
     # get baseline plots and save all plots to file
     if args.plot_path:

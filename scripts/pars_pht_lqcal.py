@@ -38,7 +38,7 @@ def get_results_dict(lq_class):
 
 
 def fill_plot_dict(lq_class, data, plot_options, plot_dict=None):
-    if plot_dict is  None:
+    if plot_dict is None:
         plot_dict = {}
     for key, item in plot_options.items():
         if item["options"] is not None:

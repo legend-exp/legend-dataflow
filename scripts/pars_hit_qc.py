@@ -16,7 +16,11 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo.lh5 import ls
-from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids, generate_cut_classifiers
+from pygama.pargen.data_cleaning import (
+    generate_cut_classifiers,
+    get_keys,
+    get_tcm_pulser_ids,
+)
 from pygama.pargen.utils import load_data
 
 log = logging.getLogger(__name__)
