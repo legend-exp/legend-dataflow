@@ -58,9 +58,8 @@ log = logging.getLogger(__name__)
 # load in config
 configs = LegendMetadata(path=args.configs)
 if args.tier == "evt" or args.tier == "pet":
-    evt_config_file = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_evt"
-    ]["inputs"]["evt_config"]
+    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"]["inputs"]
+    evt_config_file = config_dict["evt_config"]
 else:
     msg = "unknown tier"
     raise ValueError(msg)
@@ -88,7 +87,6 @@ if isinstance(evt_config_file, dict):
                     else:
                         chans = []
                     _evt_config["channels"][field] = chans
-            evt_config[key] = replace_evt_with_key(_evt_config, f"evt/{key}")
 else:
     evt_config = {"all": Props.read_from(evt_config_file)}
     # block for snakemake to fill in channel lists
@@ -124,15 +122,48 @@ for key, config in evt_config.items():
         f_hit=args.hit_file,
         f_evt=None,
         evt_config=config,
-        evt_group=f"evt/{key}" if key != "all" else "evt",
+        evt_group="evt",
         tcm_group="hardware_tcm_1",
         dsp_group="dsp",
         hit_group="hit",
         tcm_id_table_pattern="ch{}",
     )
 
+if "muon_config" in config_dict and config_dict["muon_config"] is not None:
+    muon_config = Props.read_from(config_dict["muon_config"])
+    # block for snakemake to fill in channel lists
+    for field, dic in muon_config["channels"].items():
+        if isinstance(dic, dict):
+            chans = chmap.map("system", unique=False)[dic["system"]]
+            if "selectors" in dic:
+                try:
+                    for k, val in dic["selectors"].items():
+                        chans = chans.map(k, unique=False)[val]
+                except KeyError:
+                    chans = None
+            if chans is not None:
+                chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+            else:
+                chans = []
+            muon_config["channels"][field] = chans
+
+muon_table = build_evt(
+    f_tcm=args.tcm_file,
+    f_dsp=args.dsp_file,
+    f_hit=args.hit_file,
+    f_evt=None,
+    evt_config=muon_config,
+    evt_group="evt",
+    tcm_group="hardware_tcm_2",
+    dsp_group="dsp",
+    hit_group="hit",
+    tcm_id_table_pattern="ch{}",
+)
+
 tbl = Table(col_dict=tables)
 sto.write(obj=tbl, name="evt", lh5_file=temp_output, wo_mode="a")
+sto.write(obj=muon_table, name="muon", lh5_file=temp_output, wo_mode="a")
+
 
 os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
