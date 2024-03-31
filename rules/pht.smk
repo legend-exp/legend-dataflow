@@ -141,7 +141,7 @@ rule build_pht_qc:
             filelist_path(setup),
             "all-{experiment}-{period}-{run}-fft-" + f"{intier}.filelist",
         ),
-        pulser_file=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         check_file=get_pattern_pars_tmp_channel(setup, "pht", "check"),
     params:
         datatype="cal",
