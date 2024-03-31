@@ -352,9 +352,7 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
     if plot_options is None:
         plot_options = {}
     plot_dict = {}
-    data = sto.read(lh5_path, files, field_mask=["bl_mean", "baseline", "timestamp"])[0].view_as(
-        "pd"
-    )
+    data = lh5.read_as(lh5_path, files, "pd", field_mask=["bl_mean", "baseline", "timestamp"])
     for key, item in plot_options.items():
         if item["options"] is not None:
             plot_dict[key] = item["function"](data, **item["options"])
@@ -362,6 +360,13 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
             plot_dict[key] = item["function"](data)
     return plot_dict
 
+def monitor_parameters(files, lh5_path, parameters):
+    data = lh5.read_as(lh5_path, files, "pd", field_mask=parameters)
+    out_dict = {}
+    for param in parameters:
+        mode, stdev = get_mode_stdev(data[param].to_numpy())
+        out_dict[param] = {"mode": mode, "stdev": stdev}
+    return out_dict
 
 def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
     if np.isnan(ecal_class.pars).all():
@@ -631,6 +636,10 @@ if __name__ == "__main__":
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+
+    if "monitor_parameters" in kwarg_dict:
+        monitor_dict = monitor_parameters(files, f"{args.channel}/dsp", kwarg_dict["monitor_parameters"])
+        results_dict.update({"monitoring_parameters":monitor_dict})
 
     # get baseline plots and save all plots to file
     if args.plot_path:
