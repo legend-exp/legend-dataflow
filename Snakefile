@@ -22,6 +22,7 @@ from scripts.util.utils import (
     filelist_path,
     metadata_path,
     tmp_log_path,
+    pars_path
 )
 from datetime import datetime
 from collections import OrderedDict
@@ -53,14 +54,20 @@ wildcard_constraints:
 
 include: "rules/common.smk"
 include: "rules/main.smk"
+
 include: "rules/tcm.smk"
+
 include: "rules/dsp.smk"
+include: "rules/psp.smk"
+
 include: "rules/hit.smk"
 include: "rules/pht.smk"
-include: "rules/psp.smk"
+
 include: "rules/evt.smk"
 include: "rules/skm.smk"
+
 include: "rules/blinding_calibration.smk"
+include: "rules/qc_phy.smk"
 
 
 localrules:
@@ -70,6 +77,26 @@ localrules:
 
 onstart:
     print("Starting workflow")
+    if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
+
+
+    ds.pars_key_resolve.write_par_catalog(
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "hit", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_hit"], "lar": ["par_hit"]},
+    )
+
+    if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
+    ds.pars_key_resolve.write_par_catalog(
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
+    )
+    
 
 
 onsuccess:
