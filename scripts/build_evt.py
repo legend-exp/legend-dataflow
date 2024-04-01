@@ -149,21 +149,21 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
             else:
                 chans = []
             muon_config["channels"][field] = chans
-
-    muon_table = build_evt(
-        f_tcm=args.tcm_file,
-        f_dsp=args.dsp_file,
-        f_hit=args.hit_file,
-        f_evt=None,
-        evt_config=muon_config,
-        evt_group="evt",
-        tcm_group="hardware_tcm_2",
-        dsp_group="dsp",
-        hit_group="hit",
-        tcm_id_table_pattern="ch{}",
-    )
-    muon_tbl = Table(col_dict={"muon": muon_table})
-    sto.write(obj=muon_tbl, name="evt2", lh5_file=temp_output, wo_mode="a")
+    if "hardware_tcm_2" in lh5.ls(args.tcm_file):
+        muon_table = build_evt(
+            f_tcm=args.tcm_file,
+            f_dsp=args.dsp_file,
+            f_hit=args.hit_file,
+            f_evt=None,
+            evt_config=muon_config,
+            evt_group="evt",
+            tcm_group="hardware_tcm_2",
+            dsp_group="dsp",
+            hit_group="hit",
+            tcm_id_table_pattern="ch{}",
+        )
+        muon_tbl = Table(col_dict={"muon": muon_table})
+        sto.write(obj=muon_tbl, name="evt2", lh5_file=temp_output, wo_mode="a")
 
 tbl = Table(col_dict=tables)
 sto.write(obj=tbl, name="evt", lh5_file=temp_output, wo_mode="a")
