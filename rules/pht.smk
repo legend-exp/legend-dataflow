@@ -35,7 +35,7 @@ rule pht_checkpoint:
     input:
         files=lambda wildcards: read_filelist_cal(wildcards, intier),
     output:
-        get_pattern_pars_tmp_channel(setup, "pht", "check"),
+        temp(get_pattern_pars_tmp_channel(setup, "pht", "check")),
     shell:
         "touch {output}"
 
