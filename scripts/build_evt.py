@@ -71,7 +71,7 @@ chmap = meta.channelmap(args.timestamp)
 
 if isinstance(evt_config_file, dict):
     evt_config = {}
-    for _evt_config in evt_config_file.values():
+    for key, _evt_config in evt_config_file.items():
         if _evt_config is not None:
             _evt_config = Props.read_from(_evt_config)
             # block for snakemake to fill in channel lists
@@ -89,6 +89,7 @@ if isinstance(evt_config_file, dict):
                     else:
                         chans = []
                     _evt_config["channels"][field] = chans
+            evt_config[key] = _evt_config
 else:
     evt_config = {"all": Props.read_from(evt_config_file)}
     # block for snakemake to fill in channel lists
