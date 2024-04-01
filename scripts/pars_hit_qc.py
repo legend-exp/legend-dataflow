@@ -143,11 +143,19 @@ if __name__ == "__main__":
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
     if len(args.fft_files) > 0:
+        fft_fields = get_keys(
+            [
+                key.replace(f"{args.channel}/dsp/", "")
+                for key in ls(args.fft_files[0], f"{args.channel}/dsp/")
+            ],
+            kwarg_dict_fft["cut_parameters"],
+        )
+
         fft_data = load_data(
             args.fft_files,
             f"{args.channel}/dsp",
             {},
-            [*list(kwarg_dict_fft["cut_parameters"]), "timestamp", "trapTmax"],
+            [*fft_fields, "timestamp", "trapTmax"],
         )
 
         hit_dict_fft, plot_dict_fft = generate_cut_classifiers(

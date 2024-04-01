@@ -190,11 +190,19 @@ if __name__ == "__main__":
         )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
 
         if len(fft_files) > 0:
+            fft_fields = get_keys(
+                [
+                    key.replace(f"{args.channel}/dsp/", "")
+                    for key in ls(fft_files[0], f"{args.channel}/dsp/")
+                ],
+                kwarg_dict_fft["cut_parameters"],
+            )
+
             fft_data = load_data(
                 fft_files,
                 f"{args.channel}/dsp",
                 {},
-                [*list(kwarg_dict_fft["cut_parameters"]), "timestamp", "trapTmax"],
+                [*fft_fields, "timestamp", "trapTmax"],
             )
 
             hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
