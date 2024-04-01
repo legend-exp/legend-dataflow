@@ -195,9 +195,6 @@ if __name__ == "__main__":
                 f"{args.channel}/dsp",
                 {},
                 [*list(kwarg_dict_fft["cut_parameters"]), "timestamp", "trapTmax"],
-                threshold=kwarg_dict_fft["threshold"],
-                return_selection_mask=False,
-                cal_energy_param="trapTmax",
             )
 
             hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
