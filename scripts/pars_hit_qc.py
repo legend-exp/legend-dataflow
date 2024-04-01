@@ -151,7 +151,7 @@ if __name__ == "__main__":
         )
 
         hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
-            data,
+            fft_data,
             kwarg_dict_fft["cut_parameters"],
             kwarg_dict.get("rounding", 4),
             display=1 if args.plot_path else 0,
