@@ -342,6 +342,7 @@ if __name__ == "__main__":
             n_events=kwarg_dict.get("n_events", None),
             allowed_p_val=kwarg_dict.get("p_val", 0),
             update_cal_pars=bool(det_status == "on"),
+            bin_width_kev=0.25,
         )
 
         full_object_dict[cal_energy_param].get_energy_res_curve(
