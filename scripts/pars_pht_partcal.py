@@ -332,7 +332,9 @@ if __name__ == "__main__":
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param, glines, 1, kwarg_dict.get("deg", 0), fixed={1: 1}
         )
-        full_object_dict[cal_energy_param].hpge_get_energy_peaks(energy)
+        full_object_dict[cal_energy_param].hpge_get_energy_peaks(
+            energy, etol_kev=5 if det_status == "on" else 10
+        )
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             energy,
             peak_pars=pk_pars,

@@ -550,7 +550,7 @@ if __name__ == "__main__":
                 (e_uncal > np.nanpercentile(e_uncal, 95))
                 & (e_uncal < np.nanpercentile(e_uncal, 99.9))
             ],
-            dx=1,
+            dx=9,
             range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
         )
 
@@ -561,7 +561,9 @@ if __name__ == "__main__":
             guess,
             kwarg_dict.get("deg", 0),
         )
-        full_object_dict[cal_energy_param].hpge_get_energy_peaks(e_uncal)
+        full_object_dict[cal_energy_param].hpge_get_energy_peaks(
+            e_uncal, etol_kev=5 if det_status == "on" else 10
+        )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             e_uncal,
