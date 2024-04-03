@@ -9,7 +9,7 @@ import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from lgdo.types import Table
+from lgdo.types import Array, Table
 from pygama.evt.build_evt import build_evt
 
 sto = lh5.LH5Store()
@@ -26,6 +26,22 @@ def replace_evt_with_key(dic, new_key):
         else:
             pass
     return dic
+
+
+def find_matching_values_with_delay(arr1, arr2, jit_delay):
+    matching_values = []
+
+    # Create an array with all possible delay values
+    delays = np.arange(0, int(1e9 * jit_delay)) * jit_delay
+
+    for delay in delays:
+        arr2_delayed = arr2 + delay
+
+        # Find matching values and indices
+        mask = np.isin(arr1, arr2_delayed, assume_unique=True)
+        matching_values.extend(arr1[mask])
+
+    return np.unique(matching_values)
 
 
 argparser = argparse.ArgumentParser()
@@ -133,7 +149,8 @@ for key, config in evt_config.items():
     )
 
 if "muon_config" in config_dict and config_dict["muon_config"] is not None:
-    muon_config = Props.read_from(config_dict["muon_config"])
+    muon_config = Props.read_from(config_dict["muon_config"]["evt_config"])
+    field_config = Props.read_from(config_dict["muon_config"]["field_config"])
     # block for snakemake to fill in channel lists
     for field, dic in muon_config["channels"].items():
         if isinstance(dic, dict):
@@ -149,6 +166,10 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
             else:
                 chans = []
             muon_config["channels"][field] = chans
+
+    trigger_timestamp = tables[field_config["ged_timestamp"]["table"]][
+        field_config["ged_timestamp"]["field"]
+    ].nda
     if "hardware_tcm_2" in lh5.ls(args.tcm_file):
         muon_table = build_evt(
             f_tcm=args.tcm_file,
@@ -164,6 +185,21 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
         )
         muon_tbl = Table(col_dict={"muon": muon_table})
         sto.write(obj=muon_tbl, name="evt2", lh5_file=temp_output, wo_mode="a")
+
+        muon_timestamp = muon_table[field_config["muon_timestamp"]["field"]].nda
+        muon_tbl_flag = muon_table[field_config["muon_flag"]["field"]].nda
+        if len(muon_timestamp[muon_tbl_flag]) > 0:
+            is_muon_veto_triggered = find_matching_values_with_delay(
+                trigger_timestamp, muon_timestamp[muon_tbl_flag], field_config["jitter"]
+            )
+            muon_flag = np.isin(trigger_timestamp, is_muon_veto_triggered)
+        else:
+            muon_flag = np.zeros(len(trigger_timestamp), dtype=bool)
+    else:
+        muon_flag = np.zeros(len(trigger_timestamp), dtype=bool)
+    tables[field_config["output_field"]["table"]].add_column(
+        field_config["output_field"]["field"], Array(muon_flag)
+    )
 
 tbl = Table(col_dict=tables)
 sto.write(obj=tbl, name="evt", lh5_file=temp_output, wo_mode="a")
