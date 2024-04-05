@@ -5,6 +5,7 @@ Snakemake rules for processing dsp tier. This is done in 4 steps:
 - combining of all channels into single pars files with associated plot and results files
 - running dsp over all channels using par file
 """
+
 from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
