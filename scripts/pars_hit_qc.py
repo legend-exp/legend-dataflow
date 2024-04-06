@@ -109,7 +109,7 @@ if __name__ == "__main__":
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    data["is_pulser"] = mask[threshold_mask]
+    data = data[mask[threshold_mask]]
 
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
