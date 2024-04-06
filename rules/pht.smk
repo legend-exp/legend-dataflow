@@ -105,7 +105,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
+                mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -151,7 +151,7 @@ rule build_pht_qc:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "qc")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_qc"),
+        get_pattern_log_channel(setup, "par_pht_qc"),
     group:
         "par-pht"
     resources:
@@ -212,7 +212,7 @@ rule build_per_energy_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "energy_cal")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_energy_cal"),
+        get_pattern_log_channel(setup, "par_pht_energy_cal"),
     group:
         "par-pht"
     resources:
@@ -327,7 +327,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
+                mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -384,7 +384,7 @@ rule build_pht_energy_super_calibrations:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "partcal")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_partcal"),
+        get_pattern_log_channel(setup, "par_pht_partcal"),
     group:
         "par-pht"
     resources:
@@ -509,7 +509,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
+                mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -565,7 +565,7 @@ rule build_pht_aoe_calibrations:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_aoe_cal"),
+        get_pattern_log_channel(setup, "par_pht_aoe_cal"),
     group:
         "par-pht"
     resources:
@@ -687,7 +687,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
+                mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -738,7 +738,7 @@ rule build_pht_lq_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_lq_cal"),
+        get_pattern_log_channel(setup, "par_pht_lq_cal"),
     group:
         "par-pht"
     resources:
