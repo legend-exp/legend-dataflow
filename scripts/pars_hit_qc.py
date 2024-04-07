@@ -109,16 +109,16 @@ if __name__ == "__main__":
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    if len(mask[threshold_mask]) < 100:
-        mask = np.random.Generator.choice(len(data), 4000 * len(args.cal_files), replace=False)
-        data = data[mask]
-    else:
-        data = data[mask[threshold_mask]]
+    data["is_pulser"] = mask[threshold_mask]
+
+    mask = np.random.Generator.choice(
+        len(data.query("~is_pulser")), 4000 * len(args.cal_files), replace=False
+    )
 
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         hit_dict_init_cal, plot_dict_init_cal = generate_cut_classifiers(
-            data,
+            data.query("~is_pulser")[mask],
             init_cal["cut_parameters"],
             init_cal.get("rounding", 4),
             display=1 if args.plot_path else 0,
@@ -137,6 +137,11 @@ if __name__ == "__main__":
     else:
         hit_dict_init_cal = {}
         plot_dict_init_cal = {}
+
+    if len(data.query("is_pulser")) > 500:
+        data = data.query("is_pulser")
+    else:
+        data = data.query("~is_pulser")[mask]
 
     hit_dict_cal, plot_dict_cal = generate_cut_classifiers(
         data,
