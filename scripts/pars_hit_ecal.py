@@ -550,7 +550,7 @@ if __name__ == "__main__":
                 (e_uncal > np.nanpercentile(e_uncal, 95))
                 & (e_uncal < np.nanpercentile(e_uncal, 99.9))
             ],
-            dx=9,
+            dx=1,
             range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
         )
 
@@ -564,6 +564,10 @@ if __name__ == "__main__":
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             e_uncal, etol_kev=5 if det_status == "on" else 20
         )
+        if 2614.50 not in full_object_dict[cal_energy_param].peaks_kev:
+            full_object_dict[cal_energy_param].hpge_get_energy_peaks(
+                e_uncal, peaks_kev=glines, etol_kev=5 if det_status == "on" else 30, n_sigma=2
+            )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             e_uncal,
