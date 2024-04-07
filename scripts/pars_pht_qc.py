@@ -137,8 +137,9 @@ if __name__ == "__main__":
 
     data["is_pulser"] = mask[threshold_mask]
 
-    mask = np.random.Generator.choice(
-        len(data.query("~is_pulser")), 4000 * len(args.cal_files), replace=False
+    rng = np.random.default_rng()
+    mask = sorted(
+        rng.choice(len(data.query("~is_pulser")), 4000 * len(args.cal_files), replace=False)
     )
 
     if "initial_cal_cuts" in kwarg_dict:
