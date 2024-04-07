@@ -562,7 +562,7 @@ if __name__ == "__main__":
             kwarg_dict.get("deg", 0),
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-            e_uncal, etol_kev=5 if det_status == "on" else 10
+            e_uncal, etol_kev=5 if det_status == "on" else 20
         )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(

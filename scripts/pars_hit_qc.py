@@ -109,7 +109,11 @@ if __name__ == "__main__":
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    data = data[mask[threshold_mask]]
+    if len(mask[threshold_mask]) < 100:
+        mask = np.random.Generator.choice(len(data), 4000 * len(args.cal_files), replace=False)
+        data = data[mask]
+    else:
+        data = data[mask[threshold_mask]]
 
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]

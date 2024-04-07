@@ -135,8 +135,8 @@ if __name__ == "__main__":
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    if len(mask[threshold_mask])==0:
-        mask= np.random.choice(len(data), 20000)
+    if len(mask[threshold_mask]) < 100:
+        mask = np.random.Generator.choice(len(data), 4000 * len(args.cal_files), replace=False)
         data = data[mask]
     else:
         data = data[mask[threshold_mask]]
