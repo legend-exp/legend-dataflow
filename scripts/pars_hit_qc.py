@@ -132,6 +132,7 @@ if __name__ == "__main__":
             ct_mask = ct_mask & data[outname]
 
         data = data[ct_mask]
+        mask = mask[ct_mask]
 
     else:
         hit_dict_init_cal = {}

@@ -140,7 +140,7 @@ if __name__ == "__main__":
     rng = np.random.default_rng()
     mask = np.full(len(data.query("~is_pulser")), False, dtype=bool)
     mask[
-        rng.choice(len(data.query("~is_pulser")), 4000 * len(args.cal_files), replace=False)
+        rng.choice(len(data.query("~is_pulser")), 2000 * len(args.cal_files), replace=False)
     ] = True
 
     if "initial_cal_cuts" in kwarg_dict:
@@ -162,6 +162,7 @@ if __name__ == "__main__":
                 ct_mask = ct_mask & data[outname]
 
         data = data[ct_mask]
+        mask = mask[ct_mask]
         log.debug("initial cal cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
 
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         hit_dict_init_cal = {}
         plot_dict_init_cal = {}
 
-    if len(data.query("is_pulser")) > 500 * len(args.cal_files):
+    if len(data.query("is_pulser")) > 200 * len(args.cal_files):
         data = data.query("is_pulser")
     else:
         data = data.query("~is_pulser")[mask]
