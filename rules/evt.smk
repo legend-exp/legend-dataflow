@@ -53,3 +53,22 @@ for tier in ("evt", "pet"):
             "--output {output.evt_file} "
 
     set_last_rule_name(workflow, f"build_{tier}")
+
+    rule:
+        input:
+            lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
+        output:
+            get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
+        params:
+            timestamp="all",
+            datatype="{datatype}",
+        log:
+            get_pattern_log(setup, "tier_skm"),
+        group:
+            "tier-evt"
+        shell:
+            "{swenv} lh5concat --verbose --overwrite "
+            "--output {output} "
+            "-- {input} &> {log}"
+
+    set_last_rule_name(workflow, f"concat_{tier}")
