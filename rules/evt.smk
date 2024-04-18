@@ -49,7 +49,7 @@ rule build_evt:
 
 rule build_pet:
     input:
-        dsp_file=get_pattern_tier_dsp(setup),
+        dsp_file=get_pattern_tier_psp(setup),
         hit_file=get_pattern_tier_pht(setup),
         tcm_file=get_pattern_tier_tcm(setup),
     output:
