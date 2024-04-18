@@ -208,6 +208,28 @@ rule build_pars_dsp_eopt:
         "--final_dsp_pars {output.dsp_pars}"
 
 
+# This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
+# rule build_pars_dsp_svm:
+#     input:
+#         hyperpars="",
+#         train_data="",
+#     output:
+#         dsp_pars=get_pattern_pars(setup, "dsp", "svm"),
+#     log:
+#         get_pattern_log_channel(setup, "pars_dsp_svm"),
+#     group:
+#         "par-dsp"
+#     resources:
+#         runtime=300,
+#     shell:
+#         "{swenv} python3 -B "
+#         f"{workflow.source_path('../scripts/pars_dsp_svm.py')} "
+#         "--log {log} "
+#         "--train_data {input.train_data} "
+#         "--train_hyperpars {input.hyperpars} "
+#         "--output_file {output.dsp_pars}"
+
+
 rule build_plts_dsp:
     input:
         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
