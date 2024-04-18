@@ -114,12 +114,12 @@ if __name__ == "__main__":
     )
 
     if args.pulser_files:
-        mask = np.array([], dtype=bool)
+        total_mask = np.array([], dtype=bool)
         for file in args.pulser_files:
             with open(file) as f:
                 pulser_dict = json.load(f)
             pulser_mask = np.array(pulser_dict["mask"])
-            mask = np.append(mask, pulser_mask)
+            total_mask = np.append(total_mask, pulser_mask)
         if "pulser_multiplicity_threshold" in kwarg_dict:
             kwarg_dict.pop("pulser_multiplicity_threshold")
 
@@ -128,14 +128,14 @@ if __name__ == "__main__":
         with open(args.tcm_filelist) as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
-        ids, mask = get_tcm_pulser_ids(
+        ids, total_mask = get_tcm_pulser_ids(
             tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    data["is_pulser"] = mask[threshold_mask]
+    data["is_pulser"] = total_mask[threshold_mask]
 
     rng = np.random.default_rng()
     mask = np.full(len(data.query("~is_pulser")), False, dtype=bool)
@@ -161,8 +161,8 @@ if __name__ == "__main__":
             if "classifier" not in outname:
                 ct_mask = ct_mask & data[outname]
 
-        data = data[ct_mask]
-        mask = mask[ct_mask]
+        mask = mask[ct_mask[~data["is_pulser"].to_numpy()]]
+        data = data[ct_mask]    
         log.debug("initial cal cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
 
@@ -170,10 +170,7 @@ if __name__ == "__main__":
         hit_dict_init_cal = {}
         plot_dict_init_cal = {}
 
-    if len(data.query("is_pulser")) > 200 * len(args.cal_files):
-        data = data.query("is_pulser")
-    else:
-        data = data.query("~is_pulser")[mask]
+    data = data.query("~is_pulser")[mask]
 
     hit_dict_cal, plot_dict_cal = generate_cut_classifiers(
         data,
