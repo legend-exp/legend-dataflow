@@ -55,9 +55,9 @@ wildcard_constraints:
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"
-# include: "rules/dsp.smk"
-# include: "rules/psp.smk"
-# include: "rules/hit.smk"
+include: "rules/dsp.smk"
+include: "rules/psp.smk"
+include: "rules/hit.smk"
 include: "rules/pht.smk"
 include: "rules/evt.smk"
 include: "rules/skm.smk"
@@ -113,7 +113,7 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-            # remove filelists
+    # remove filelists
     files = glob.glob(os.path.join(filelist_path(setup), "*"))
     for file in files:
         if os.path.isfile(file):
@@ -121,7 +121,7 @@ onsuccess:
     if os.path.exists(filelist_path(setup)):
         os.rmdir(filelist_path(setup))
 
-        # remove logs
+    # remove logs
     files = glob.glob(os.path.join(tmp_log_path(setup), "*", "*.log"))
     for file in files:
         if os.path.isfile(file):
