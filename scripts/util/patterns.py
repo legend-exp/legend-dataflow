@@ -10,6 +10,7 @@ from .utils import (
     par_hit_path,
     par_overwrite_path,
     par_pht_path,
+    par_psp_path,
     par_raw_path,
     par_tcm_path,
     pars_path,
@@ -22,6 +23,7 @@ from .utils import (
     tier_path,
     tier_pet_path,
     tier_pht_path,
+    tier_psp_path,
     tier_raw_blind_path,
     tier_raw_path,
     tier_skm_path,
@@ -147,7 +149,7 @@ def get_pattern_tier_evt(setup):
 
 def get_pattern_tier_psp(setup):
     return os.path.join(
-        f"{tier_evt_path(setup)}",
+        f"{tier_psp_path(setup)}",
         "{datatype}",
         "{period}",
         "{run}",
@@ -317,7 +319,7 @@ def get_pattern_par_evt(setup, name=None, extension="json"):
 def get_pattern_par_psp(setup, name=None, extension="json"):
     if name is not None:
         return os.path.join(
-            f"{par_evt_path(setup)}",
+            f"{par_psp_path(setup)}",
             "cal",
             "{period}",
             "{run}",
@@ -325,7 +327,7 @@ def get_pattern_par_psp(setup, name=None, extension="json"):
         )
     else:
         return os.path.join(
-            f"{par_evt_path(setup)}",
+            f"{par_psp_path(setup)}",
             "cal",
             "{period}",
             "{run}",
@@ -432,16 +434,20 @@ def get_pattern_pars_overwrite(setup, tier, name=None):
         )
 
 
-def get_pattern_pars_tmp(setup, tier, name=None):
+def get_pattern_pars_tmp(setup, tier, name=None, datatype=None):
+    if datatype is None:
+        datatype = "{datatype}"
     if name is None:
         return os.path.join(
             f"{tmp_par_path(setup)}",
-            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_" + tier + ".json",
+            "{experiment}-{period}-{run}-" + datatype + "-{timestamp}-par_" + tier + ".json",
         )
     else:
         return os.path.join(
             f"{tmp_par_path(setup)}",
-            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
+            "{experiment}-{period}-{run}-"
+            + datatype
+            + "-{timestamp}-par_"
             + tier
             + "_"
             + name
