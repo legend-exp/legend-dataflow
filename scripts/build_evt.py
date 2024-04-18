@@ -109,7 +109,7 @@ table = build_evt(
         "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
         "dsp": (args.dsp_file, "dsp", "ch{}"),
         "hit": (args.hit_file, "hit", "ch{}"),
-        "evt": (temp_output, "evt"),
+        "evt": (None, "evt"),
     },
     evt_config,
 )

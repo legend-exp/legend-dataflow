@@ -55,6 +55,8 @@ for tier in ("evt", "pet"):
     set_last_rule_name(workflow, f"build_{tier}")
 
     rule:
+        wildcard_constraints:
+            timestamp="(?!\d{8}T\d{6}Z)"
         input:
             lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
         output:

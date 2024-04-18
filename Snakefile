@@ -45,11 +45,10 @@ basedir = workflow.basedir
 
 wildcard_constraints:
     experiment="\w+",
-    period="\w+",
-    run="\w+",
-    datatype="\w+",
-    timestamp="\w+",
-    channel="\w+",
+    period="p\d{2}",
+    run="r\d{3}",
+    datatype="\w{3}",
+    timestamp="\d{8}T\d{6}Z"
 
 
 include: "rules/common.smk"
