@@ -13,7 +13,7 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-intier = "dsp"
+intier = "psp"
 
 
 qc_pht_rules = {}

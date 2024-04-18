@@ -203,26 +203,26 @@ rule build_plts_psp:
         "--output {output} "
 
 
-rule build_pars_psp:
-    input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
-        plts=get_pattern_plts(setup, "psp"),
-        objects=get_pattern_pars(
-            setup,
-            "psp",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    output:
-        get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
-    group:
-        "merge-hit"
-    shell:
-        "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
-        "--input {input.infiles} "
-        "--output {output} "
+# rule build_pars_psp:
+#     input:
+#         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
+#         plts=get_pattern_plts(setup, "psp"),
+#         objects=get_pattern_pars(
+#             setup,
+#             "psp",
+#             name="objects",
+#             extension="dir",
+#             check_in_cycle=check_in_cycle,
+#         ),
+#     output:
+#         get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
+#     group:
+#         "merge-hit"
+#     shell:
+#         "{swenv} python3 -B "
+#         f"{basedir}/../scripts/merge_channels.py "
+#         "--input {input.infiles} "
+#         "--output {output} "
 
 
 rule build_psp:

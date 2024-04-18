@@ -28,7 +28,7 @@ ds.pars_key_resolve.write_par_catalog(
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
-intier = "dsp"
+intier = "psp"
 
 
 rule pht_checkpoint:

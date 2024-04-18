@@ -203,7 +203,7 @@ def runcmd(setup):
     exec_cmd = setup["execenv"]["cmd"]
     exec_arg = setup["execenv"]["arg"]
     path_install = setup["paths"]["install"]
-    return f"PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}"
+    return f"PYTHONUSERBASE={path_install} APPTAINERENV_PREPEND_PATH={path_install}/bin {exec_cmd} {exec_arg}"
 
 
 def subst_vars_impl(x, var_values, ignore_missing=False):

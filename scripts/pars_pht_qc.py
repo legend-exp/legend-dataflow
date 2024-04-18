@@ -139,9 +139,9 @@ if __name__ == "__main__":
 
     rng = np.random.default_rng()
     mask = np.full(len(data.query("~is_pulser")), False, dtype=bool)
-    mask[
-        rng.choice(len(data.query("~is_pulser")), 2000 * len(args.cal_files), replace=False)
-    ] = True
+    mask[rng.choice(len(data.query("~is_pulser")), 2000 * len(args.cal_files), replace=False)] = (
+        True
+    )
 
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]

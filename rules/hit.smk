@@ -200,28 +200,28 @@ rule build_lq_calibration:
         "{input.files}"
 
 
-rule build_pars_hit:
-    input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
-    output:
-        get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
-        get_pattern_pars(
-            setup,
-            "hit",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-        get_pattern_plts(setup, "hit"),
-    group:
-        "merge-hit"
-    shell:
-        "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/merge_channels.py')} "
-        "--input {input} "
-        "--output {output} "
+# rule build_pars_hit:
+#     input:
+#         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
+#         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
+#         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
+#     output:
+#         get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
+#         get_pattern_pars(
+#             setup,
+#             "hit",
+#             name="objects",
+#             extension="dir",
+#             check_in_cycle=check_in_cycle,
+#         ),
+#         get_pattern_plts(setup, "hit"),
+#     group:
+#         "merge-hit"
+#     shell:
+#         "{swenv} python3 -B "
+#         f"{workflow.source_path('../scripts/merge_channels.py')} "
+#         "--input {input} "
+#         "--output {output} "
 
 
 rule build_hit:
