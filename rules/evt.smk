@@ -56,7 +56,7 @@ for tier in ("evt", "pet"):
 
     rule:
         wildcard_constraints:
-            timestamp="(?!\d{8}T\d{6}Z)"
+            timestamp="(?!\d{8}T\d{6}Z)",
         input:
             lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
         output:

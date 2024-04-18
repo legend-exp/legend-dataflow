@@ -48,7 +48,7 @@ wildcard_constraints:
     period="p\d{2}",
     run="r\d{3}",
     datatype="\w{3}",
-    timestamp="\d{8}T\d{6}Z"
+    timestamp="\d{8}T\d{6}Z",
 
 
 include: "rules/common.smk"
