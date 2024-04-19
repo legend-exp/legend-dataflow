@@ -57,8 +57,10 @@ phy_filenames = []
 other_filenames = []
 if tier == "blind":
     fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
-elif tier == "skm":
+elif tier == "skm" or tier=="pet_concat":
     fn_pattern = get_pattern_tier(setup, "pet", check_in_cycle=False)
+elif tier == "skm" or tier=="evt_concat":
+    fn_pattern = get_pattern_tier(setup, "evt", check_in_cycle=False)
 else:
     fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
 
@@ -103,23 +105,14 @@ for key in filekeys:
 phy_filenames = sorted(phy_filenames)
 other_filenames = sorted(other_filenames)
 
-if tier == "skm" or tier == "pet" or tier == "evt":
+if tier == "skm" or tier == "pet_concat" or tier == "evt_concat":
     sorted_phy_filenames = run_grouper(phy_filenames)
     phy_filenames = []
     for run in sorted_phy_filenames:
         key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
-        if tier == "skm":
-            out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "skm", check_in_cycle=False)
-                )[0]
-        elif tier == "pet":
-            out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "pet_concat", check_in_cycle=False)
-                )[0]
-        elif tier == "evt":
-            out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "evt_concat", check_in_cycle=False)
-                )[0]
+        out_key = FileKey.get_path_from_filekey(
+                        key, get_pattern_tier(setup, tier, check_in_cycle=False)
+                    )[0]
 
         phy_filenames.append(out_key)
 
