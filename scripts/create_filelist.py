@@ -72,7 +72,7 @@ for key in filekeys:
         else:
             if tier == "blind" and _key.datatype == "phy":
                 filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
-            elif tier == "skm": #and _key.datatype != "phy"
+            elif tier == "skm":  # and _key.datatype != "phy"
                 filename = FileKey.get_path_from_filekey(
                     _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
                 )
@@ -110,16 +110,16 @@ if tier == "skm" or tier == "pet" or tier == "evt":
         key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
         if tier == "skm":
             out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "skm", check_in_cycle=False)
-                )[0]
+                key, get_pattern_tier(setup, "skm", check_in_cycle=False)
+            )[0]
         elif tier == "pet":
             out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "pet_concat", check_in_cycle=False)
-                )[0]
+                key, get_pattern_tier(setup, "pet_concat", check_in_cycle=False)
+            )[0]
         elif tier == "evt":
             out_key = FileKey.get_path_from_filekey(
-                    key, get_pattern_tier(setup, "evt_concat", check_in_cycle=False)
-                )[0]
+                key, get_pattern_tier(setup, "evt_concat", check_in_cycle=False)
+            )[0]
 
         phy_filenames.append(out_key)
 

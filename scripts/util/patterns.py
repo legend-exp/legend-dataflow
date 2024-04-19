@@ -147,6 +147,7 @@ def get_pattern_tier_evt(setup):
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_evt.lh5",
     )
 
+
 def get_pattern_tier_evt_concat(setup):
     return os.path.join(
         f"{tier_evt_path(setup)}",
@@ -183,6 +184,7 @@ def get_pattern_tier_pet(setup):
         "{run}",
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_pet.lh5",
     )
+
 
 def get_pattern_tier_pet_concat(setup):
     return os.path.join(
@@ -541,6 +543,7 @@ def get_pattern_log(setup, processing_step):
         processing_step,
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-" + processing_step + ".log",
     )
+
 
 def get_pattern_log_concat(setup, processing_step):
     return os.path.join(

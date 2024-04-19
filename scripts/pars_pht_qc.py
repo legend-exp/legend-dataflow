@@ -162,7 +162,7 @@ if __name__ == "__main__":
                 ct_mask = ct_mask & data[outname]
 
         mask = mask[ct_mask[~data["is_pulser"].to_numpy()]]
-        data = data[ct_mask]    
+        data = data[ct_mask]
         log.debug("initial cal cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
 
