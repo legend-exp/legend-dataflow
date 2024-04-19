@@ -112,7 +112,7 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-        # remove filelists
+            # remove filelists
     files = glob.glob(os.path.join(filelist_path(setup), "*"))
     for file in files:
         if os.path.isfile(file):
