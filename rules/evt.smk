@@ -11,6 +11,7 @@ from scripts.util.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_log_concat,
 )
 
 
@@ -64,12 +65,12 @@ for tier in ("evt", "pet"):
         input:
             lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
         output:
-            get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
+            get_pattern_tier(setup, f"{tier}_concat", check_in_cycle=check_in_cycle),
         params:
             timestamp="all",
             datatype="{datatype}",
         log:
-            get_pattern_log(setup, "tier_skm"),
+            get_pattern_log_concat(setup, f"tier_{tier}_concat"),
         group:
             "tier-evt"
         shell:

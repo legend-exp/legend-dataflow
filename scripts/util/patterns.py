@@ -3,6 +3,7 @@ This module contains all the patterns needed for the data production
 """
 
 import os
+import pathlib
 
 from .utils import (
     par_dsp_path,
@@ -146,6 +147,13 @@ def get_pattern_tier_evt(setup):
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_evt.lh5",
     )
 
+def get_pattern_tier_evt_concat(setup):
+    return os.path.join(
+        f"{tier_evt_path(setup)}",
+        "{datatype}",
+        "{experiment}-{period}-{run}-{datatype}-tier_evt.lh5",
+    )
+
 
 def get_pattern_tier_psp(setup):
     return os.path.join(
@@ -176,14 +184,19 @@ def get_pattern_tier_pet(setup):
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_pet.lh5",
     )
 
+def get_pattern_tier_pet_concat(setup):
+    return os.path.join(
+        f"{tier_pet_path(setup)}",
+        "{datatype}",
+        "{experiment}-{period}-{run}-{datatype}-tier_pet.lh5",
+    )
+
 
 def get_pattern_tier_skm(setup):
     return os.path.join(
         f"{tier_skm_path(setup)}",
-        "{datatype}",
-        "{period}",
-        "{run}",
-        "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_skm.lh5",
+        "phy",
+        "{experiment}-{period}-{run}-{datatype}-tier_skm.lh5",
     )
 
 
@@ -200,21 +213,24 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         file_pattern = get_pattern_tier_hit(setup)
     elif tier == "evt":
         file_pattern = get_pattern_tier_evt(setup)
+    elif tier == "evt_concat":
+        file_pattern = get_pattern_tier_evt_concat(setup)
     elif tier == "psp":
         file_pattern = get_pattern_tier_psp(setup)
     elif tier == "pht":
         file_pattern = get_pattern_tier_pht(setup)
     elif tier == "pet":
         file_pattern = get_pattern_tier_pet(setup)
+    elif tier == "pet_concat":
+        file_pattern = get_pattern_tier_pet_concat(setup)
     elif tier == "skm":
         file_pattern = get_pattern_tier_skm(setup)
     else:
         msg = "invalid tier"
         raise Exception(msg)
     if (
-        tier_path(setup) not in file_pattern
+        tier_path(setup) not in str(pathlib.Path(file_pattern).resolve())
         and check_in_cycle is True
-        and ".." not in file_pattern
     ):
         return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}" + f"tier_{tier}.lh5"
     else:
@@ -394,9 +410,8 @@ def get_pattern_pars(setup, tier, name=None, extension="json", check_in_cycle=Tr
         msg = "invalid tier"
         raise Exception(msg)
     if (
-        pars_path(setup) not in file_pattern
+        pars_path(setup) not in str(pathlib.Path(file_pattern).resolve())
         and check_in_cycle is True
-        and ".." not in file_pattern
     ):
         if name is None:
             return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}" + f"par_{tier}.{extension}"
@@ -525,6 +540,13 @@ def get_pattern_log(setup, processing_step):
         f"{tmp_log_path(setup)}",
         processing_step,
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-" + processing_step + ".log",
+    )
+
+def get_pattern_log_concat(setup, processing_step):
+    return os.path.join(
+        f"{tmp_log_path(setup)}",
+        processing_step,
+        "{experiment}-{period}-{run}-{datatype}-" + processing_step + ".log",
     )
 
 

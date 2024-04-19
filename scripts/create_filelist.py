@@ -57,6 +57,8 @@ phy_filenames = []
 other_filenames = []
 if tier == "blind":
     fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
+elif tier == "skm":
+    fn_pattern = get_pattern_tier(setup, "pet", check_in_cycle=False)
 else:
     fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
 
@@ -70,7 +72,7 @@ for key in filekeys:
         else:
             if tier == "blind" and _key.datatype == "phy":
                 filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
-            elif tier == "skm" and _key.datatype != "phy":
+            elif tier == "skm": #and _key.datatype != "phy"
                 filename = FileKey.get_path_from_filekey(
                     _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
                 )
@@ -101,17 +103,25 @@ for key in filekeys:
 phy_filenames = sorted(phy_filenames)
 other_filenames = sorted(other_filenames)
 
-if tier == "skm":
+if tier == "skm" or tier == "pet" or tier == "evt":
     sorted_phy_filenames = run_grouper(phy_filenames)
     phy_filenames = []
     for run in sorted_phy_filenames:
-        run_files = sorted(
-            run,
-            key=lambda filename: FileKey.get_filekey_from_pattern(
-                filename, fn_pattern
-            ).get_unix_timestamp(),
-        )
-        phy_filenames.append(run_files[0])
+        key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
+        if tier == "skm":
+            out_key = FileKey.get_path_from_filekey(
+                    key, get_pattern_tier(setup, "skm", check_in_cycle=False)
+                )[0]
+        elif tier == "pet":
+            out_key = FileKey.get_path_from_filekey(
+                    key, get_pattern_tier(setup, "pet_concat", check_in_cycle=False)
+                )[0]
+        elif tier == "evt":
+            out_key = FileKey.get_path_from_filekey(
+                    key, get_pattern_tier(setup, "evt_concat", check_in_cycle=False)
+                )[0]
+
+        phy_filenames.append(out_key)
 
 filenames = phy_filenames + other_filenames
 
