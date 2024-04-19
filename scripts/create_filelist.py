@@ -74,7 +74,7 @@ for key in filekeys:
         else:
             if tier == "blind" and _key.datatype == "phy":
                 filename = FileKey.get_path_from_filekey(_key, get_pattern_tier_raw_blind(setup))
-            elif tier == "skm": #and _key.datatype != "phy"
+            elif tier == "skm":  # and _key.datatype != "phy"
                 filename = FileKey.get_path_from_filekey(
                     _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
                 )

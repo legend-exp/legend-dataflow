@@ -12,7 +12,7 @@ from scripts.util.patterns import (
 
 rule build_skm:
     input:
-        evt_file = get_pattern_tier(setup, "pet_concat", check_in_cycle=False),
+        evt_file=get_pattern_tier(setup, "pet_concat", check_in_cycle=False),
     output:
         skm_file=get_pattern_tier(setup, "skm", check_in_cycle=check_in_cycle),
     params:
