@@ -11,6 +11,7 @@ from scripts.util.patterns import (
     get_pattern_tier_raw,
     get_pattern_plts_tmp_channel,
 )
+from scripts.util import ProcessingFileKey
 
 
 def read_filelist(wildcards):
@@ -133,3 +134,38 @@ def set_last_rule_name(workflow, new_name):
         workflow._localrules.add(new_name)
 
     workflow.check_localrules()
+
+
+def get_svm_file(wildcards, tier, name):
+    par_overwrite_file = os.path.join(par_overwrite_path(setup), tier, "validity.jsonl")
+    pars_files_overwrite = pars_catalog.get_calib_files(
+        par_overwrite_file, wildcards.timestamp
+    )
+    for pars_file in pars_files_overwrite:
+        if name in pars_file:
+            return os.path.join(par_overwrite_path(setup), tier, pars_file)
+    raise ValueError(f"Could not find model in {pars_files_overwrite}")
+
+
+def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
+    par_overwrite_file = os.path.join(par_overwrite_path(setup), tier, "validity.jsonl")
+    if timestamp is not None:
+        pars_files_overwrite = pars_catalog.get_calib_files(
+            par_overwrite_file, timestamp
+        )
+    else:
+        pars_files_overwrite = pars_catalog.get_calib_files(
+            par_overwrite_file, wildcards.timestamp
+        )
+    if name is None:
+        fullname = f"{tier}-overwrite.json"
+    else:
+        fullname = f"{tier}_{name}-overwrite.json"
+    out_files = []
+    for pars_file in pars_files_overwrite:
+        if fullname in pars_file:
+            out_files.append(os.path.join(par_overwrite_path(setup), tier, pars_file))
+    if len(out_files) == 0:
+        raise ValueError(f"Could not find name in {pars_files_overwrite}")
+    else:
+        return out_files
