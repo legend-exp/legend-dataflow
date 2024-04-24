@@ -82,11 +82,21 @@ if kwarg_dict["run_tau"] is True:
         msg = "No pulser file or tcm filelist provided"
         raise ValueError(msg)
 
-    data = sto.read(f"{args.channel}/raw", input_file, field_mask=["daqenergy", "timestamp"])[
-        0
-    ].view_as("pd")
+    data = sto.read(
+        f"{args.channel}/raw", input_file, field_mask=["daqenergy", "timestamp", "t_sat_lo"]
+    )[0].view_as("pd")
     threshold = kwarg_dict.pop("threshold")
-    cuts = np.where((data.daqenergy.to_numpy() > threshold) & (~mask))[0]
+
+    discharges = data["t_sat_lo"] > 0
+    discharge_timestamps = np.where(data["timestamp"][discharges])[0]
+    is_recovering = np.full(len(data), False, dtype=bool)
+    for tstamp in discharge_timestamps:
+        is_recovering = is_recovering | np.where(
+            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            True,
+            False,
+        )
+    cuts = np.where((data.daqenergy.to_numpy() > threshold) & (~mask) & (~is_recovering))[0]
 
     tb_data = sto.read(
         f"{args.channel}/raw",
@@ -123,11 +133,6 @@ if kwarg_dict["run_tau"] is True:
             pkl.dump({"tau": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
 else:
     out_dict = {}
-
-if args.pulser_file:
-    pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
-    with open(args.pulser_file, "w") as f:
-        json.dump({"idxs": ids.tolist(), "mask": mask.tolist()}, f, indent=4)
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
 with open(args.output_file, "w") as f:

@@ -16,6 +16,7 @@ os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
+import pygama.pargen.energy_optimisation as om  # noqa: F401
 import sklearn.gaussian_process.kernels as ker
 from dspeed.units import unit_registry as ureg
 from legendmeta import LegendMetadata
@@ -93,6 +94,7 @@ if opt_dict.pop("run_eopt") is True:
                 "func": hpge_peak,
                 "peak": peak,
                 "kev_width": kev_width,
+                "bin_width": 5,
             }
         )
         kwarg_dicts_zac.append(
@@ -101,6 +103,7 @@ if opt_dict.pop("run_eopt") is True:
                 "func": hpge_peak,
                 "peak": peak,
                 "kev_width": kev_width,
+                "bin_width": 5,
             }
         )
         kwarg_dicts_trap.append(
@@ -109,6 +112,7 @@ if opt_dict.pop("run_eopt") is True:
                 "func": hpge_peak,
                 "peak": peak,
                 "kev_width": kev_width,
+                "bin_width": 5,
             }
         )
 

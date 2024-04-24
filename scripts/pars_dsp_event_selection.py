@@ -176,7 +176,17 @@ if __name__ == "__main__":
 
         raw_fields = [field.replace(lh5_path, "") for field in lh5.ls(raw_files[0], lh5_path)]
 
-        tb = sto.read(lh5_path, raw_files, field_mask=["daqenergy"])[0]
+        tb = sto.read(lh5_path, raw_files, field_mask=["daqenergy", "t_sat_lo", "timestamp"])[0]
+
+        discharges = tb["t_sat_lo"].nda > 0
+        discharge_timestamps = np.where(tb["timestamp"].nda[discharges])[0]
+        is_recovering = np.full(len(tb), False, dtype=bool)
+        for tstamp in discharge_timestamps:
+            is_recovering = is_recovering | np.where(
+                (((tb["timestamp"].nda - tstamp) < 0.01) & ((tb["timestamp"].nda - tstamp) > 0)),
+                True,
+                False,
+            )
 
         for outname, info in raw_dict.items():
             outcol = tb.eval(info["expression"], info.get("parameters", None))
@@ -191,7 +201,7 @@ if __name__ == "__main__":
                 & (rough_energy < peak + 1.1 * kev_width[0])
                 & (~mask)
             )
-            masks[peak] = np.where(e_mask)[0]
+            masks[peak] = np.where(e_mask & (~is_recovering))[0]
             log.debug(f"{len(masks[peak])} events found in energy range for {peak}")
 
         input_data = sto.read(f"{lh5_path}", raw_files, n_rows=10000, idx=np.where(~mask)[0])[0]
@@ -272,14 +282,17 @@ if __name__ == "__main__":
                             )
                             peak_loc = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
 
-                            mu, _, _ = pgc.hpge_fit_energy_peak_tops(
+                            peak_top_pars = pgc.hpge_fit_energy_peak_tops(
                                 hist,
                                 bins,
                                 var,
                                 [peak_loc],
                                 n_to_fit=7,
                             )[0][0]
-
+                            try:
+                                mu = peak_top_pars[0]
+                            except Exception:
+                                mu = np.nan
                             if mu is None or np.isnan(mu):
                                 log.debug("Fit failed, using max guess")
                                 rough_adc_to_kev = peak / peak_loc
