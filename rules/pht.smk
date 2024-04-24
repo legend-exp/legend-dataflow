@@ -65,6 +65,15 @@ for key, dataset in part.datasets.items():
                     tier="pht",
                     name="check",
                 ),
+                overwrite_files=get_overwrite_file(
+                    "pht",
+                    timestamp=part.get_timestamp(
+                        f"{par_pht_path(setup)}/validity.jsonl",
+                        partition,
+                        key,
+                        tier="pht",
+                    ),
+                ),
             wildcard_constraints:
                 channel=part.get_wildcard_constraints(partition, key),
             params:
@@ -117,6 +126,7 @@ for key, dataset in part.datasets.items():
                 "--channel {params.channel} "
                 "--save_path {output.hit_pars} "
                 "--plot_path {output.plot_file} "
+                "--overwrite_files {input.overwrite_files} "
                 "--pulser_files {input.pulser_files} "
                 "--fft_files {input.fft_files} "
                 "--cal_files {input.cal_files}"
@@ -143,6 +153,7 @@ rule build_pht_qc:
         ),
         pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         check_file=get_pattern_pars_tmp_channel(setup, "pht", "check"),
+        overwrite_files=lambda wildcards: get_overwrite_file("pht", wildcards=wildcards),
     params:
         datatype="cal",
         channel="{channel}",
@@ -167,6 +178,7 @@ rule build_pht_qc:
         "--channel {params.channel} "
         "--save_path {output.hit_pars} "
         "--plot_path {output.plot_file} "
+        "--overwrite_files {input.overwrite_files} "
         "--pulser_files {input.pulser_files} "
         "--fft_files {input.fft_files} "
         "--cal_files {input.cal_files}"
@@ -810,26 +822,26 @@ rule build_plts_pht:
         "--output {output} "
 
 
-rule build_pars_pht:
-    input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
-        plts=get_pattern_plts(setup, "pht"),
-        objects=get_pattern_pars(
-            setup,
-            "pht",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    output:
-        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
-    group:
-        "merge-hit"
-    shell:
-        "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
-        "--input {input.infiles} "
-        "--output {output} "
+# rule build_pars_pht:
+#     input:
+#         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
+#         plts=get_pattern_plts(setup, "pht"),
+#         objects=get_pattern_pars(
+#             setup,
+#             "pht",
+#             name="objects",
+#             extension="dir",
+#             check_in_cycle=check_in_cycle,
+#         ),
+#     output:
+#         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+#     group:
+#         "merge-hit"
+#     shell:
+#         "{swenv} python3 -B "
+#         f"{basedir}/../scripts/merge_channels.py "
+#         "--input {input.infiles} "
+#         "--output {output} "
 
 
 rule build_pht:
