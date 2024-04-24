@@ -42,7 +42,7 @@ for tier in ("evt", "pet"):
             "tier-evt"
         resources:
             runtime=300,
-            mem_swap=70,
+            mem_swap=50,
         shell:
             "{swenv} python3 -B "
             f"{workflow.source_path('../scripts/build_evt.py')} "
