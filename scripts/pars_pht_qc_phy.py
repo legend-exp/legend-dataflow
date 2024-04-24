@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import re
 import warnings
 
 os.environ["PYGAMA_PARALLEL"] = "false"
@@ -99,15 +100,51 @@ if __name__ == "__main__":
     )
 
     data = sto.read(
-        f"{args.channel}/dsp/", phy_files, field_mask=cut_fields, idx=np.where(bl_mask)[0]
-    )[0]
+        f"{args.channel}/dsp/",
+        phy_files,
+        field_mask=[*cut_fields, "daqenergy", "t_sat_lo", "timestamp"],
+        idx=np.where(bl_mask)[0],
+    )[0].view_as("pd")
 
-    hit_dict, plot_dict = generate_cut_classifiers(
-        data,
-        kwarg_dict_fft["cut_parameters"],
-        kwarg_dict.get("rounding", 4),
-        display=1 if args.plot_path else 0,
-    )
+    discharges = data["t_sat_lo"] > 0
+    discharge_timestamps = np.where(data["timestamp"][discharges])[0]
+    is_recovering = np.full(len(data), False, dtype=bool)
+    for tstamp in discharge_timestamps:
+        is_recovering = is_recovering | np.where(
+            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            True,
+            False,
+        )
+    data["is_recovering"] = is_recovering
+
+    log.debug(f"{len(discharge_timestamps)} discharges found in {len(data)} events")
+
+    hit_dict = {}
+    plot_dict = {}
+    cut_data = data.query("is_recovering==0")
+    log.debug(f"cut_data shape: {len(cut_data)}")
+    for name, cut in kwarg_dict_fft["cut_parameters"].items():
+        cut_dict, cut_plots = generate_cut_classifiers(
+            cut_data,
+            {name: cut},
+            kwarg_dict.get("rounding", 4),
+            display=1 if args.plot_path else 0,
+        )
+        hit_dict.update(cut_dict)
+        plot_dict.update(cut_plots)
+
+        log.debug(f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}")
+
+        ct_mask = np.full(len(cut_data), True, dtype=bool)
+        for outname, info in cut_dict.items():
+            # convert to pandas eval
+            exp = info["expression"]
+            for key in info.get("parameters", None):
+                exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
+            cut_data[outname] = cut_data.eval(exp, local_dict=info.get("parameters", None))
+            if "_classifier" not in outname:
+                ct_mask = ct_mask & cut_data[outname]
+        cut_data = cut_data[ct_mask]
 
     log.debug("fft cuts applied")
     log.debug(f"cut_dict is: {json.dumps(hit_dict, indent=2)}")

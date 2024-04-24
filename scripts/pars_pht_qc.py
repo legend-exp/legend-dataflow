@@ -38,6 +38,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
     )
+    argparser.add_argument(
+        "--overwrite_files", help="overwrite_files", nargs="*", type=str, required=False
+    )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -83,6 +86,101 @@ if __name__ == "__main__":
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
 
     kwarg_dict = Props.read_from(channel_dict)
+
+    if args.overwrite_files:
+        overwrite = Props.read_from(args.overwrite_files)[args.channel]["pars"]["operations"]
+    else:
+        overwrite = None
+
+    kwarg_dict_fft = kwarg_dict["fft_fields"]
+    if len(args.fft_files) > 0:
+        # sort files in dictionary where keys are first timestamp from run
+        if isinstance(args.fft_files, list):
+            fft_files = []
+            for file in args.fft_files:
+                with open(file) as f:
+                    fft_files += f.read().splitlines()
+        else:
+            with open(args.fft_files) as f:
+                fft_files = f.read().splitlines()
+
+        fft_files = sorted(
+            np.unique(fft_files)
+        )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+
+        if len(fft_files) > 0:
+            fft_fields = get_keys(
+                [
+                    key.replace(f"{args.channel}/dsp/", "")
+                    for key in ls(fft_files[0], f"{args.channel}/dsp/")
+                ],
+                kwarg_dict_fft["cut_parameters"],
+            )
+
+            fft_data = load_data(
+                fft_files,
+                f"{args.channel}/dsp",
+                {},
+                [*fft_fields, "timestamp", "trapTmax", "t_sat_lo"],
+            )
+
+            discharges = fft_data["t_sat_lo"] > 0
+            discharge_timestamps = np.where(fft_data["timestamp"][discharges])[0]
+            is_recovering = np.full(len(fft_data), False, dtype=bool)
+            for tstamp in discharge_timestamps:
+                is_recovering = is_recovering | np.where(
+                    (
+                        ((fft_data["timestamp"] - tstamp) < 0.01)
+                        & ((fft_data["timestamp"] - tstamp) > 0)
+                    ),
+                    True,
+                    False,
+                )
+            fft_data["is_recovering"] = is_recovering
+
+            hit_dict_fft = {}
+            plot_dict_fft = {}
+            cut_data = fft_data.query("is_recovering==0")
+            log.debug(f"cut_data shape: {len(cut_data)}")
+            for name, cut in kwarg_dict_fft["cut_parameters"].items():
+                cut_dict, cut_plots = generate_cut_classifiers(
+                    cut_data,
+                    {name: cut},
+                    kwarg_dict.get("rounding", 4),
+                    display=1 if args.plot_path else 0,
+                )
+                hit_dict_fft.update(cut_dict)
+                plot_dict_fft.update(cut_plots)
+
+                log.debug(f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}")
+
+                ct_mask = np.full(len(cut_data), True, dtype=bool)
+                for outname, info in cut_dict.items():
+                    # convert to pandas eval
+                    exp = info["expression"]
+                    for key in info.get("parameters", None):
+                        exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
+                    cut_data[outname] = cut_data.eval(exp, local_dict=info.get("parameters", None))
+                    if "_classifier" not in outname:
+                        ct_mask = ct_mask & cut_data[outname]
+                cut_data = cut_data[ct_mask]
+
+            log.debug("fft cuts applied")
+            log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
+
+        else:
+            hit_dict_fft = {}
+            plot_dict_fft = {}
+    else:
+        hit_dict_fft = {}
+        plot_dict_fft = {}
+
+    if overwrite is not None:
+        for name in kwarg_dict_fft["cut_parameters"]:
+            for cut_name, cut_dict in overwrite.items():
+                if name in cut_name:
+                    hit_dict_fft.update({cut_name: cut_dict})
+
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
@@ -137,11 +235,26 @@ if __name__ == "__main__":
 
     data["is_pulser"] = total_mask[threshold_mask]
 
+    discharges = data["t_sat_lo"] > 0
+    discharge_timestamps = np.where(data["timestamp"][discharges])[0]
+    is_recovering = np.full(len(data), False, dtype=bool)
+    for tstamp in discharge_timestamps:
+        is_recovering = is_recovering | np.where(
+            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            True,
+            False,
+        )
+    data["is_recovering"] = is_recovering
+
     rng = np.random.default_rng()
-    mask = np.full(len(data.query("~is_pulser")), False, dtype=bool)
-    mask[rng.choice(len(data.query("~is_pulser")), 2000 * len(args.cal_files), replace=False)] = (
-        True
-    )
+    mask = np.full(len(data.query("~is_pulser & ~is_recovering")), False, dtype=bool)
+    mask[
+        rng.choice(
+            len(data.query("~is_pulser & ~is_recovering")),
+            2000 * len(args.cal_files),
+            replace=False,
+        )
+    ] = True
 
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
@@ -161,7 +274,7 @@ if __name__ == "__main__":
             if "classifier" not in outname:
                 ct_mask = ct_mask & data[outname]
 
-        mask = mask[ct_mask[~data["is_pulser"].to_numpy()]]
+        mask = mask[ct_mask[~data["is_pulser & ~is_recovering"].to_numpy()]]
         data = data[ct_mask]
         log.debug("initial cal cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
@@ -170,7 +283,7 @@ if __name__ == "__main__":
         hit_dict_init_cal = {}
         plot_dict_init_cal = {}
 
-    data = data.query("~is_pulser")[mask]
+    data = data.query("~is_pulser & ~is_recovering")[mask]
 
     hit_dict_cal, plot_dict_cal = generate_cut_classifiers(
         data,
@@ -182,57 +295,14 @@ if __name__ == "__main__":
     log.debug("initial cuts applied")
     log.debug(f"cut_dict is: {json.dumps(hit_dict_cal, indent=2)}")
 
-    kwarg_dict_fft = kwarg_dict["fft_fields"]
-    if len(args.fft_files) > 0:
-        # sort files in dictionary where keys are first timestamp from run
-        if isinstance(args.fft_files, list):
-            fft_files = []
-            for file in args.fft_files:
-                with open(file) as f:
-                    fft_files += f.read().splitlines()
-        else:
-            with open(args.fft_files) as f:
-                fft_files = f.read().splitlines()
+    if overwrite is not None:
+        for name in kwarg_dict_cal["cut_parameters"]:
+            for cut_name, cut_dict in overwrite.items():
+                if name in cut_name:
+                    hit_dict_cal.update({cut_name: cut_dict})
 
-        fft_files = sorted(
-            np.unique(fft_files)
-        )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
-
-        if len(fft_files) > 0:
-            fft_fields = get_keys(
-                [
-                    key.replace(f"{args.channel}/dsp/", "")
-                    for key in ls(fft_files[0], f"{args.channel}/dsp/")
-                ],
-                kwarg_dict_fft["cut_parameters"],
-            )
-
-            fft_data = load_data(
-                fft_files,
-                f"{args.channel}/dsp",
-                {},
-                [*fft_fields, "timestamp", "trapTmax"],
-            )
-
-            hit_dict_fft, plot_dict_fft = generate_cut_classifiers(
-                fft_data,
-                kwarg_dict_fft["cut_parameters"],
-                kwarg_dict.get("rounding", 4),
-                display=1 if args.plot_path else 0,
-            )
-
-            log.debug("fft cuts applied")
-            log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
-
-        else:
-            hit_dict_fft = {}
-            plot_dict_fft = {}
-    else:
-        hit_dict_fft = {}
-        plot_dict_fft = {}
-
-    hit_dict = {**hit_dict_init_cal, **hit_dict_cal, **hit_dict_fft}
-    plot_dict = {**plot_dict_init_cal, **plot_dict_cal, **plot_dict_fft}
+    hit_dict = {**hit_dict_fft, **hit_dict_init_cal, **hit_dict_cal}
+    plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
 
     for file in args.save_path:
         pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
