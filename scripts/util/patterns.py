@@ -234,7 +234,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         tier_path(setup) not in str(pathlib.Path(file_pattern).resolve())
         and check_in_cycle is True
     ):
-        return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}" + f"tier_{tier}.lh5"
+        return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}-" + f"tier_{tier}.lh5"
     else:
         return file_pattern
 
@@ -416,14 +416,35 @@ def get_pattern_pars(setup, tier, name=None, extension="json", check_in_cycle=Tr
         and check_in_cycle is True
     ):
         if name is None:
-            return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}" + f"par_{tier}.{extension}"
+            return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{extension}"
         else:
             return (
-                "/tmp/{experiment}-{period}-{run}-cal-{timestamp}"
+                "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-"
                 + f"par_{tier}_{name}.{extension}"
             )
     else:
         return file_pattern
+
+
+def get_pattern_pars_svm(setup, tier, name=None, ext="json"):
+    if name is not None:
+        return os.path.join(
+            f"{par_overwrite_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}_{name}.{ext}",
+        )
+    else:
+        return os.path.join(
+            f"{par_overwrite_path(setup)}",
+            tier,
+            "cal",
+            "{period}",
+            "{run}",
+            "{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{ext}",
+        )
 
 
 def get_pattern_pars_overwrite(setup, tier, name=None):
