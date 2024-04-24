@@ -22,6 +22,13 @@ from scripts.util.patterns import (
 
 pars_key_resolve.write_par_catalog(
     ["-*-*-*-cal"],
+    os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
+    get_pattern_tier_raw(setup),
+    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
+)
+
+pars_key_resolve.write_par_catalog(
+    ["-*-*-*-cal"],
     os.path.join(pars_path(setup), "psp", "validity.jsonl"),
     get_pattern_tier_raw(setup),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
@@ -34,7 +41,11 @@ for key, dataset in part.datasets.items():
         rule:
             input:
                 dsp_pars=part.get_par_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl", partition, key, tier="dsp"
+                    f"{par_dsp_path(setup)}/validity.jsonl",
+                    partition,
+                    key,
+                    tier="dsp",
+                    name="eopt",
                 ),
                 dsp_objs=part.get_par_files(
                     f"{par_dsp_path(setup)}/validity.jsonl",
@@ -62,6 +73,7 @@ for key, dataset in part.datasets.items():
                         partition,
                         key,
                         tier="psp",
+                        name="eopt",
                     )
                 ),
                 psp_objs=temp(
@@ -121,7 +133,7 @@ for key, dataset in part.datasets.items():
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_par_psp:
     input:
-        dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp"),
+        dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp", "eopt"),
         dsp_objs=get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl"),
         dsp_plots=get_pattern_plts_tmp_channel(setup, "dsp"),
     params:
@@ -129,7 +141,7 @@ rule build_par_psp:
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        psp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp")),
+        psp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp", "eopt")),
         psp_objs=temp(
             get_pattern_pars_tmp_channel(setup, "psp", "objects", extension="pkl")
         ),
@@ -164,6 +176,48 @@ for key, items in ordered.items():
     rule_order_list += [item.name for item in items]
 rule_order_list.append(fallback_psp_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
+
+
+rule build_svm_psp:
+    input:
+        hyperpars=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars"),
+        train_data=lambda wildcards: get_svm_file(wildcards, "psp", "svm_train"),
+    output:
+        dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
+    log:
+        get_pattern_log(setup, "pars_psp_svm").replace("{datatype}", "cal"),
+    group:
+        "par-dsp-svm"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_build_svm.py')} "
+        "--log {log} "
+        "--train_data {input.train_data} "
+        "--train_hyperpars {input.hyperpars} "
+        "--output_file {output.dsp_pars}"
+
+
+rule build_pars_psp_svm:
+    input:
+        dsp_pars=get_pattern_pars_tmp_channel(setup, "psp_eopt"),
+        svm_model=get_pattern_pars(setup, "psp", "svm", "pkl"),
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp")),
+    log:
+        get_pattern_log_channel(setup, "pars_dsp_svm"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_svm.py')} "
+        "--log {log} "
+        "--input_file {input.dsp_pars} "
+        "--output_file {output.dsp_pars} "
+        "--svm_file {input.svm_model}"
 
 
 rule build_pars_psp_objects:
@@ -203,26 +257,26 @@ rule build_plts_psp:
         "--output {output} "
 
 
-# rule build_pars_psp:
-#     input:
-#         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
-#         plts=get_pattern_plts(setup, "psp"),
-#         objects=get_pattern_pars(
-#             setup,
-#             "psp",
-#             name="objects",
-#             extension="dir",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#     output:
-#         get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
-#     group:
-#         "merge-hit"
-#     shell:
-#         "{swenv} python3 -B "
-#         f"{basedir}/../scripts/merge_channels.py "
-#         "--input {input.infiles} "
-#         "--output {output} "
+rule build_pars_psp:
+    input:
+        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
+        plts=get_pattern_plts(setup, "psp"),
+        objects=get_pattern_pars(
+            setup,
+            "psp",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+    output:
+        get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
+        "--output {output} "
 
 
 rule build_psp:
@@ -256,4 +310,4 @@ rule build_psp:
         "--input {input.raw_file} "
         "--output {output.tier_file} "
         "--db_file {output.db_file} "
-        "--pars_file {input.pars_file}"
+        "--pars_file {input.pars_file} "

@@ -7,6 +7,7 @@ Snakemake rules for processing dsp tier. This is done in 4 steps:
 """
 
 from scripts.util.pars_loading import pars_catalog
+from scripts.util.utils import par_dsp_path
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -19,6 +20,8 @@ from scripts.util.patterns import (
     get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_pars_overwrite,
+    get_pattern_pars_svm,
 )
 
 
@@ -182,7 +185,7 @@ rule build_pars_dsp_eopt:
         datatype="cal",
         channel="{channel}",
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp_eopt")),
         qbb_grid=temp(
             get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl")
         ),
@@ -209,26 +212,46 @@ rule build_pars_dsp_eopt:
         "--final_dsp_pars {output.dsp_pars}"
 
 
-# This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
-# rule build_pars_dsp_svm:
-#     input:
-#         hyperpars="",
-#         train_data="",
-#     output:
-#         dsp_pars=get_pattern_pars(setup, "dsp", "svm"),
-#     log:
-#         get_pattern_log_channel(setup, "pars_dsp_svm"),
-#     group:
-#         "par-dsp"
-#     resources:
-#         runtime=300,
-#     shell:
-#         "{swenv} python3 -B "
-#         f"{workflow.source_path('../scripts/pars_dsp_svm.py')} "
-#         "--log {log} "
-#         "--train_data {input.train_data} "
-#         "--train_hyperpars {input.hyperpars} "
-#         "--output_file {output.dsp_pars}"
+rule build_svm_dsp:
+    input:
+        hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
+        train_data=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_train"),
+    output:
+        dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
+    log:
+        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal"),
+    group:
+        "par-dsp-svm"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_build_svm.py')} "
+        "--log {log} "
+        "--train_data {input.train_data} "
+        "--train_hyperpars {input.hyperpars} "
+        "--output_file {output.dsp_pars}"
+
+
+rule build_pars_dsp_svm:
+    input:
+        dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp_eopt"),
+        svm_file=get_pattern_pars(setup, "dsp", "svm", "pkl"),
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
+    log:
+        get_pattern_log_channel(setup, "pars_dsp_svm"),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+    shell:
+        "{swenv} python3 -B "
+        f"{workflow.source_path('../scripts/pars_dsp_svm.py')} "
+        "--log {log} "
+        "--input_file {input.dsp_pars} "
+        "--output_file {output.dsp_pars} "
+        "--svm_file {input.svm_file}"
 
 
 rule build_plts_dsp:
@@ -353,4 +376,4 @@ rule build_dsp:
         "--input {input.raw_file} "
         "--output {output.tier_file} "
         "--db_file {output.db_file} "
-        "--pars_file {input.pars_file}"
+        "--pars_file {input.pars_file} "
