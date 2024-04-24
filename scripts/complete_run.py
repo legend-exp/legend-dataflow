@@ -167,6 +167,23 @@ def build_file_dbs(input_files, output_dir):
 setup = snakemake.params.setup
 basedir = snakemake.params.basedir
 
+check_log_files(
+    snakemake.params.log_path,
+    snakemake.output.summary_log,
+    snakemake.output.gen_output,
+    warning_file=snakemake.output.warning_log,
+)
+
+if snakemake.wildcards.tier != "daq":
+    os.makedirs(snakemake.params.filedb_path, exist_ok=True)
+    with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as w:
+        json.dump(file_db_config, w, indent=2)
+
+    build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
+    os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
+
+    build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
+
 if os.getenv("PRODENV") in snakemake.params.filedb_path:
     file_db_config = {
         "data_dir": "$PRODENV",
@@ -257,22 +274,5 @@ else:
             "tcm": "hardware_tcm_1",
         },
     }
-
-check_log_files(
-    snakemake.params.log_path,
-    snakemake.output.summary_log,
-    snakemake.output.gen_output,
-    warning_file=snakemake.output.warning_log,
-)
-
-if snakemake.wildcards.tier != "daq":
-    os.makedirs(snakemake.params.filedb_path, exist_ok=True)
-    with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as w:
-        json.dump(file_db_config, w, indent=2)
-
-    build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
-    os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
-
-    build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
 
 pathlib.Path(snakemake.output.gen_output).touch()
