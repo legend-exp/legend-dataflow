@@ -459,7 +459,13 @@ if __name__ == "__main__":
     if args.in_hit_dict:
         hit_dict = Props.read_from(args.in_hit_dict)
 
-    database_dic = Props.read_from(args.ctc_dict)
+    db_files = [
+        par_file
+        for par_file in args.ctc_dict
+        if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yml"
+    ]
+
+    database_dic = Props.read_from(db_files)
 
     hit_dict.update(database_dic[args.channel]["ctc_params"])
 
