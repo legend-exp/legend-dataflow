@@ -235,7 +235,7 @@ rule build_pars_psp_objects:
             check_in_cycle=check_in_cycle,
         ),
     group:
-        "merge-hit"
+        "merge-psp"
     shell:
         "{swenv} python3 -B "
         f"{basedir}/../scripts/merge_channels.py "
@@ -249,7 +249,27 @@ rule build_plts_psp:
     output:
         get_pattern_plts(setup, "psp"),
     group:
-        "merge-hit"
+        "merge-psp"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
+
+
+rule build_pars_psp_db:
+    input:
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
+    output:
+        temp(
+            get_pattern_pars_tmp(
+                setup,
+                "psp",
+                datatype="cal",
+            )
+        ),
+    group:
+        "merge-psp"
     shell:
         "{swenv} python3 -B "
         f"{basedir}/../scripts/merge_channels.py "
@@ -259,7 +279,14 @@ rule build_plts_psp:
 
 rule build_pars_psp:
     input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "psp"),
+        in_files=lambda wildcards: read_filelist_pars_cal_channel(
+            wildcards, "dsp_dplms_lh5"
+        ),
+        in_db=get_pattern_pars_tmp(
+            setup,
+            "psp",
+            datatype="cal",
+        ),
         plts=get_pattern_plts(setup, "psp"),
         objects=get_pattern_pars(
             setup,
@@ -269,14 +296,22 @@ rule build_pars_psp:
             check_in_cycle=check_in_cycle,
         ),
     output:
-        get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
+        out_file=get_pattern_pars(
+            setup,
+            "psp",
+            extension="lh5",
+            check_in_cycle=check_in_cycle,
+        ),
+        out_db=get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
     group:
-        "merge-hit"
+        "merge-psp"
     shell:
         "{swenv} python3 -B "
         f"{basedir}/../scripts/merge_channels.py "
-        "--input {input.infiles} "
-        "--output {output} "
+        "--output {output.out_file} "
+        "--in_db {input.in_db} "
+        "--out_db {output.out_db} "
+        "--input {input.in_files} "
 
 
 rule build_psp:
