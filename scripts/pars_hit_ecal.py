@@ -532,7 +532,7 @@ if __name__ == "__main__":
         (1592.53, (40, 20), pgf.gauss_on_step),
         (1620.50, (20, 40), pgf.gauss_on_step),
         (2103.53, (40, 40), pgf.gauss_on_step),
-        (2614.50, (60, 60), pgf.hpge_peak),
+        (2614.553, (60, 60), pgf.hpge_peak),
     ]
 
     glines = [pk_par[0] for pk_par in pk_pars]
@@ -570,14 +570,21 @@ if __name__ == "__main__":
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             e_uncal, etol_kev=5 if det_status == "on" else 20
         )
-        if 2614.50 not in full_object_dict[cal_energy_param].peaks_kev:
+        if 2614.553 not in full_object_dict[cal_energy_param].peaks_kev:
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
                 e_uncal, peaks_kev=glines, etol_kev=5 if det_status == "on" else 30, n_sigma=2
             )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
+        if det_status != "on":
+            full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
+                e_uncal,
+                peaks_kev=got_peaks_kev,
+                update_cal_pars=True,
+                allowed_p_val=0,
+            )
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             e_uncal,
-            peaks_kev=[2614.50],
+            peaks_kev=[2614.553],
             peak_pars=pk_pars,
             tail_weight=kwarg_dict.get("tail_weight", 0),
             n_events=kwarg_dict.get("n_events", None),

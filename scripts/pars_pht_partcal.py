@@ -308,7 +308,7 @@ if __name__ == "__main__":
         (1592.53, (30, 20), pgf.hpge_peak),
         (1620.50, (20, 30), pgf.hpge_peak),
         (2103.53, (30, 30), pgf.hpge_peak),
-        (2614.50, (30, 30), pgf.hpge_peak),
+        (2614.553, (30, 30), pgf.hpge_peak),
         (3125, (30, 30), pgf.gauss_on_step),
         (3198, (30, 30), pgf.gauss_on_step),
         (3474, (30, 30), pgf.gauss_on_step),
@@ -330,11 +330,19 @@ if __name__ == "__main__":
     for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
         energy = data.query(selection_string)[energy_param].to_numpy()
         full_object_dict[cal_energy_param] = HPGeCalibration(
-            energy_param, glines, 1, kwarg_dict.get("deg", 0), fixed={1: 1}
+            energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             energy, etol_kev=5 if det_status == "on" else 10
         )
+
+        if det_status != "on":
+            full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
+                energy,
+                update_cal_pars=True,
+                allowed_p_val=0,
+            )
+
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             energy,
             peak_pars=pk_pars,
