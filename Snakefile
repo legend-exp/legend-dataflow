@@ -95,7 +95,7 @@ onstart:
 onsuccess:
     from snakemake.report import auto_report
 
-    rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
+    rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow() , '%Y%m%dT%H%M%SZ')}"
     pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
     with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
@@ -112,7 +112,7 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-        # remove filelists
+            # remove filelists
     files = glob.glob(os.path.join(filelist_path(setup), "*"))
     for file in files:
         if os.path.isfile(file):
