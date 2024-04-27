@@ -53,11 +53,11 @@
         "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif"
       },
       "pkg_versions": {
-        "pygama": "pygama==1.6.0",
-        "pylegendmeta": "pylegendmeta==0.9.0",
-        "dspeed": "dspeed==1.3.0",
-        "legend-pydataobj": "legend-pydataobj==1.5.1",
-        "legend-daq2lh5": "legend-daq2lh5==1.2.0"
+        "pygama": "pygama==2.0.0a1",
+        "pylegendmeta": "pylegendmeta==0.10.0",
+        "dspeed": "dspeed==1.3.0a6",
+        "legend-pydataobj": "legend-pydataobj==1.6.1",
+        "legend-daq2lh5": "legend-daq2lh5==1.2.1"
       }
     }
   }
