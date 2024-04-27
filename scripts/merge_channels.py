@@ -20,7 +20,7 @@ def replace_path(d, old_path, new_path):
             d[i] = replace_path(d[i], old_path, new_path)
     elif isinstance(d, str) and old_path in d:
         d = d.replace(old_path, new_path)
-        d = f"$_/{os.path.basename(new_path)}"
+        d = d.replace(new_path, f"$_/{os.path.basename(new_path)}")
     return d
 
 
