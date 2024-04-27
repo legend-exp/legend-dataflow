@@ -181,7 +181,7 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_svm_psp:
     input:
         hyperpars=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(wildcards, "psp", "svm_train"),
+        train_data=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars").replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:
@@ -329,12 +329,12 @@ rule build_psp:
         tier_file=get_pattern_tier(setup, "psp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "psp_db"),
     log:
-        get_pattern_log(setup, "tier_dsp"),
+        get_pattern_log(setup, "tier_psp"),
     group:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=50,
+        mem_swap=40,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_dsp.py')} "

@@ -215,7 +215,7 @@ rule build_pars_dsp_eopt:
 rule build_svm_dsp:
     input:
         hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_train"),
+        train_data=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars").replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
@@ -365,7 +365,7 @@ rule build_dsp:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=50,
+        mem_swap=40,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_dsp.py')} "
