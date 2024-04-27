@@ -181,7 +181,9 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_svm_psp:
     input:
         hyperpars=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars").replace("hyperpars.json", "train.lh5"),
+        train_data=lambda wildcards: get_svm_file(
+            wildcards, "psp", "svm_hyperpars"
+        ).replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:

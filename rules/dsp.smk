@@ -215,7 +215,9 @@ rule build_pars_dsp_eopt:
 rule build_svm_dsp:
     input:
         hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars").replace("hyperpars.json", "train.lh5"),
+        train_data=lambda wildcards: get_svm_file(
+            wildcards, "dsp", "svm_hyperpars"
+        ).replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
