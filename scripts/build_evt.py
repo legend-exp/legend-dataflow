@@ -7,7 +7,7 @@ import time
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.types import Array
 from pygama.evt import build_evt
@@ -64,7 +64,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # load in config
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(args.configs, lazy=True)
 if args.tier == "evt" or args.tier == "pet":
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"
@@ -74,7 +74,7 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-meta = LegendMetadata(path=args.metadata)
+meta = LegendMetadata(path=args.metadata, lazy=True)
 chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
