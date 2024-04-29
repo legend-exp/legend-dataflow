@@ -21,8 +21,8 @@ for tier in ("evt", "pet"):
         input:
             dsp_file=(
                 get_pattern_tier_dsp(setup)
-                if tier == "evt"
-                else get_pattern_tier_psp(setup)
+                # if tier == "evt"
+                # else get_pattern_tier_psp(setup)
             ),
             hit_file=(
                 get_pattern_tier_hit(setup)
