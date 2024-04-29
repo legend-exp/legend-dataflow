@@ -11,22 +11,31 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
-import pygama.math.peak_fitting as pgf
-import pygama.pargen.energy_optimisation as om
+import pygama.pargen.energy_optimisation as om  # noqa: F401
 import sklearn.gaussian_process.kernels as ker
+from dspeed.units import unit_registry as ureg
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.dsp_optimize import run_one_dsp
-from pygama.pargen.utils import get_tcm_pulser_ids
+from pygama.math.distributions import hpge_peak
+from pygama.pargen.dsp_optimize import (
+    BayesianOptimizer,
+    run_bayesian_optimisation,
+    run_one_dsp,
+)
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+warnings.filterwarnings(action="ignore", category=np.RankWarning)
+
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
-argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=True)
+
+argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
+
 argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
@@ -41,7 +50,6 @@ argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, requ
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
 
-
 argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
 args = argparser.parse_args()
 
@@ -51,12 +59,12 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
-logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
+logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 
 log = logging.getLogger(__name__)
-
-
+sto = lh5.LH5Store()
 t0 = time.time()
 
 conf = LegendMetadata(path=args.configs)
@@ -70,106 +78,51 @@ opt_dict = Props.read_from(opt_json)
 db_dict = Props.read_from(args.decay_const)
 
 if opt_dict.pop("run_eopt") is True:
-    with open(args.raw_filelist) as f:
-        files = f.read().splitlines()
-
-    raw_files = sorted(files)
-
-    # get pulser mask from tcm files
-    with open(args.tcm_filelist) as f:
-        tcm_files = f.read().splitlines()
-    tcm_files = sorted(np.unique(tcm_files))
-    ids, mask = get_tcm_pulser_ids(
-        tcm_files, args.channel, opt_dict.pop("pulser_multiplicity_threshold")
-    )
-
-    peaks_keV = np.array(opt_dict["peaks"])
+    peaks_kev = np.array(opt_dict["peaks"])
     kev_widths = [tuple(kev_width) for kev_width in opt_dict["kev_widths"]]
 
     kwarg_dicts_cusp = []
     kwarg_dicts_trap = []
     kwarg_dicts_zac = []
-    for peak in peaks_keV:
-        peak_idx = np.where(peaks_keV == peak)[0][0]
+    for peak in peaks_kev:
+        peak_idx = np.where(peaks_kev == peak)[0][0]
         kev_width = kev_widths[peak_idx]
-        if peak == 238.632:
-            kwarg_dicts_cusp.append(
-                {
-                    "parameter": "cuspEmax",
-                    "func": pgf.extended_gauss_step_pdf,
-                    "gof_func": pgf.gauss_step_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-            kwarg_dicts_zac.append(
-                {
-                    "parameter": "zacEmax",
-                    "func": pgf.extended_gauss_step_pdf,
-                    "gof_func": pgf.gauss_step_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-            kwarg_dicts_trap.append(
-                {
-                    "parameter": "trapEmax",
-                    "func": pgf.extended_gauss_step_pdf,
-                    "gof_func": pgf.gauss_step_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-        else:
-            kwarg_dicts_cusp.append(
-                {
-                    "parameter": "cuspEmax",
-                    "func": pgf.extended_radford_pdf,
-                    "gof_func": pgf.radford_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-            kwarg_dicts_zac.append(
-                {
-                    "parameter": "zacEmax",
-                    "func": pgf.extended_radford_pdf,
-                    "gof_func": pgf.radford_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-            kwarg_dicts_trap.append(
-                {
-                    "parameter": "trapEmax",
-                    "func": pgf.extended_radford_pdf,
-                    "gof_func": pgf.radford_pdf,
-                    "peak": peak,
-                    "kev_width": kev_width,
-                }
-            )
-    sto = lh5.LH5Store()
-    idx_events, idx_list = om.event_selection(
-        raw_files,
-        f"{args.channel}/raw",
-        dsp_config,
-        db_dict,
-        peaks_keV,
-        np.arange(0, len(peaks_keV), 1).tolist(),
-        kev_widths,
-        pulser_mask=mask,
-        cut_parameters=opt_dict["cut_parameters"],
-        n_events=opt_dict["n_events"],
-        threshold=opt_dict["threshold"],
-        wf_field=opt_dict["wf_field"],
-    )
 
-    tb_data = sto.read(
-        f"{args.channel}/raw",
-        raw_files,
-        idx=idx_events,
-        n_rows=opt_dict["n_events"],
-    )[0]
+        kwarg_dicts_cusp.append(
+            {
+                "parameter": "cuspEmax",
+                "func": hpge_peak,
+                "peak": peak,
+                "kev_width": kev_width,
+                "bin_width": 5,
+            }
+        )
+        kwarg_dicts_zac.append(
+            {
+                "parameter": "zacEmax",
+                "func": hpge_peak,
+                "peak": peak,
+                "kev_width": kev_width,
+                "bin_width": 5,
+            }
+        )
+        kwarg_dicts_trap.append(
+            {
+                "parameter": "trapEmax",
+                "func": hpge_peak,
+                "peak": peak,
+                "kev_width": kev_width,
+                "bin_width": 5,
+            }
+        )
+
+    peaks_rounded = [int(peak) for peak in peaks_kev]
+    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    ids = np.in1d(peaks, peaks_rounded)
+    peaks = peaks[ids]
+    idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
+
+    tb_data = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
 
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
@@ -182,6 +135,7 @@ if opt_dict.pop("run_eopt") is True:
     init_data = run_one_dsp(tb_data, dsp_config, db_dict=db_dict, verbosity=0)
     full_dt = (init_data["tp_99"].nda - init_data["tp_0_est"].nda)[idx_list[-1]]
     flat_val = np.ceil(1.1 * np.nanpercentile(full_dt, 99) / 100) / 10
+
     if flat_val < 1.0:
         flat_val = 1.0
     elif flat_val > 4:
@@ -201,26 +155,27 @@ if opt_dict.pop("run_eopt") is True:
     kwarg_dict = [
         {
             "peak_dicts": kwarg_dicts_cusp,
-            "ctc_param": "QDrift",
+            "ctc_param": "dt_eff",
             "idx_list": idx_list,
-            "peaks_keV": peaks_keV,
+            "peaks_kev": peaks_kev,
         },
         {
             "peak_dicts": kwarg_dicts_zac,
-            "ctc_param": "QDrift",
+            "ctc_param": "dt_eff",
             "idx_list": idx_list,
-            "peaks_keV": peaks_keV,
+            "peaks_kev": peaks_kev,
         },
         {
             "peak_dicts": kwarg_dicts_trap,
-            "ctc_param": "QDrift",
+            "ctc_param": "dt_eff",
             "idx_list": idx_list,
-            "peaks_keV": peaks_keV,
+            "peaks_kev": peaks_kev,
         },
     ]
 
     fom = eval(opt_dict["fom"])
-
+    out_field = opt_dict["fom_field"]
+    out_err_field = opt_dict["fom_err_field"]
     sample_x = np.array(opt_dict["initial_samples"])
 
     results_cusp = []
@@ -246,18 +201,18 @@ if opt_dict.pop("run_eopt") is True:
 
         res = fom(tb_out, kwarg_dict[0])
         results_cusp.append(res)
-        sample_y_cusp.append(res["y_val"])
-        err_y_cusp.append(res["y_err"])
+        sample_y_cusp.append(res[out_field])
+        err_y_cusp.append(res[out_err_field])
 
         res = fom(tb_out, kwarg_dict[1])
         results_zac.append(res)
-        sample_y_zac.append(res["y_val"])
-        err_y_zac.append(res["y_err"])
+        sample_y_zac.append(res[out_field])
+        err_y_zac.append(res[out_err_field])
 
         res = fom(tb_out, kwarg_dict[2])
         results_trap.append(res)
-        sample_y_trap.append(res["y_val"])
-        err_y_trap.append(res["y_err"])
+        sample_y_trap.append(res[out_field])
+        err_y_trap.append(res[out_err_field])
 
         log.info(f"{i+1} Finished")
 
@@ -295,23 +250,43 @@ if opt_dict.pop("run_eopt") is True:
         + ker.WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
     )
 
-    bopt_cusp = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
-    )
-    bopt_cusp.lambda_param = 1
-    bopt_cusp.add_dimension("cusp", "sigma", 1, 16, 2, "us")
+    lambda_param = 5
+    sampling_rate = tb_data["waveform_presummed"]["dt"][0]
+    sampling_unit = ureg.Quantity(tb_data["waveform_presummed"]["dt"].attrs["units"])
+    waveform_sampling = sampling_rate * sampling_unit
 
-    bopt_zac = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
+    bopt_cusp = BayesianOptimizer(
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
+        fom_value=out_field,
+        fom_error=out_err_field,
     )
-    bopt_zac.lambda_param = 1
-    bopt_zac.add_dimension("zac", "sigma", 1, 16, 2, "us")
+    bopt_cusp.lambda_param = lambda_param
+    bopt_cusp.add_dimension("cusp", "sigma", 0.5, 16, True, "us")
 
-    bopt_trap = om.BayesianOptimizer(
-        acq_func=opt_dict["acq_func"], batch_size=opt_dict["batch_size"], kernel=kernel
+    bopt_zac = BayesianOptimizer(
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
+        fom_value=out_field,
+        fom_error=out_err_field,
     )
-    bopt_trap.lambda_param = 1
-    bopt_trap.add_dimension("etrap", "rise", 1, 12, 2, "us")
+    bopt_zac.lambda_param = lambda_param
+    bopt_zac.add_dimension("zac", "sigma", 0.5, 16, True, "us")
+
+    bopt_trap = BayesianOptimizer(
+        acq_func=opt_dict["acq_func"],
+        batch_size=opt_dict["batch_size"],
+        kernel=kernel,
+        sampling_rate=waveform_sampling,
+        fom_value=out_field,
+        fom_error=out_err_field,
+    )
+    bopt_trap.lambda_param = lambda_param
+    bopt_trap.add_dimension("etrap", "rise", 1, 12, True, "us")
 
     bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp)
     bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac)
@@ -331,7 +306,7 @@ if opt_dict.pop("run_eopt") is True:
 
     optimisers = [bopt_cusp, bopt_zac, bopt_trap]
 
-    out_param_dict, out_results_list = om.run_optimisation(
+    out_param_dict, out_results_list = run_bayesian_optimisation(
         tb_data,
         dsp_config,
         [fom],
@@ -379,8 +354,10 @@ if opt_dict.pop("run_eopt") is True:
         "expression": "trapEftp*(1+dt_eff*a)",
         "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
     }
-
-    db_dict.update({"ctc_params": out_alpha_dict})
+    if "ctc_params" in db_dict:
+        db_dict["ctc_params"].update(out_alpha_dict)
+    else:
+        db_dict.update({"ctc_params": out_alpha_dict})
 
     pathlib.Path(os.path.dirname(args.qbb_grid_path)).mkdir(parents=True, exist_ok=True)
     with open(args.qbb_grid_path, "wb") as f:

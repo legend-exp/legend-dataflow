@@ -148,7 +148,9 @@ def build_valid_keys(input_files, output_dir):
         with open(out_file, "w") as w:
             w.write(out_string)
 
-    os.system(f"rm {input_files}")
+    for input_file in input_files:
+        if os.path.isfile(input_file):
+            os.remove(input_file)
 
 
 def build_file_dbs(input_files, output_dir):
@@ -164,6 +166,13 @@ def build_file_dbs(input_files, output_dir):
 
 setup = snakemake.params.setup
 basedir = snakemake.params.basedir
+
+check_log_files(
+    snakemake.params.log_path,
+    snakemake.output.summary_log,
+    snakemake.output.gen_output,
+    warning_file=snakemake.output.warning_log,
+)
 
 if os.getenv("PRODENV") in snakemake.params.filedb_path:
     file_db_config = {
@@ -188,7 +197,7 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
                 ut.tier_hit_path(setup), ""
             ),
             "pht": pat.get_pattern_tier(setup, "pht", check_in_cycle=False).replace(
-                ut.tier_hit_path(setup), ""
+                ut.tier_pht_path(setup), ""
             ),
             "evt": pat.get_pattern_tier(setup, "evt", check_in_cycle=False).replace(
                 ut.tier_evt_path(setup), ""
@@ -233,7 +242,7 @@ else:
                 ut.tier_hit_path(setup), ""
             ),
             "pht": pat.get_pattern_tier(setup, "pht", check_in_cycle=False).replace(
-                ut.tier_hit_path(setup), ""
+                ut.tier_pht_path(setup), ""
             ),
             "evt": pat.get_pattern_tier(setup, "evt", check_in_cycle=False).replace(
                 ut.tier_evt_path(setup), ""
@@ -256,20 +265,13 @@ else:
         },
     }
 
-check_log_files(
-    snakemake.params.log_path,
-    snakemake.output.summary_log,
-    snakemake.output.gen_output,
-    warning_file=snakemake.output.warning_log,
-)
-
 if snakemake.wildcards.tier != "daq":
     os.makedirs(snakemake.params.filedb_path, exist_ok=True)
     with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as w:
         json.dump(file_db_config, w, indent=2)
 
     build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
-    os.system(f"rm {os.path.join(snakemake.params.filedb_path, 'file_db_config.json')}")
+    os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
 
     build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
 

@@ -18,6 +18,18 @@ from dspeed import build_dsp
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 
+
+def replace_list_with_array(dic):
+    for key, value in dic.items():
+        if isinstance(value, dict):
+            dic[key] = replace_list_with_array(value)
+        elif isinstance(value, list):
+            dic[key] = np.array(value, dtype="float32")
+        else:
+            pass
+    return dic
+
+
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 argparser = argparse.ArgumentParser()
@@ -43,20 +55,14 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
     "inputs"
 ]["processing_chain"]
 
-database_dic = Props.read_from(args.pars_file)
+channel_dict = {chan: Props.read_from(file) for chan, file in channel_dict.items()}
+db_files = [
+    par_file
+    for par_file in args.pars_file
+    if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yml"
+]
 
-
-def replace_list_with_array(dic):
-    for key, value in dic.items():
-        if isinstance(value, dict):
-            dic[key] = replace_list_with_array(value)
-        elif isinstance(value, list):
-            dic[key] = np.array(value)
-        else:
-            pass
-    return dic
-
-
+database_dic = Props.read_from(db_files, subst_pathvar=True)
 database_dic = replace_list_with_array(database_dic)
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
@@ -88,8 +94,8 @@ raw_fields = [field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channe
 
 outputs = {}
 channels = []
-for channel, file in channel_dict.items():
-    output = Props.read_from(file)["outputs"]
+for channel, chan_dict in channel_dict.items():
+    output = chan_dict["outputs"]
     in_dict = False
     for entry in outputs:
         if outputs[entry]["fields"] == output:

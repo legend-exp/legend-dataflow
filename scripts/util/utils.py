@@ -129,12 +129,20 @@ def par_hit_path(setup):
     return setup["paths"]["par_hit"]
 
 
+def par_evt_path(setup):
+    return setup["paths"]["par_evt"]
+
+
+def par_psp_path(setup):
+    return setup["paths"]["par_psp"]
+
+
 def par_pht_path(setup):
     return setup["paths"]["par_pht"]
 
 
-def par_evt_path(setup):
-    return setup["paths"]["par_evt"]
+def par_pet_path(setup):
+    return setup["paths"]["par_pet"]
 
 
 def pars_path(setup):
@@ -150,10 +158,14 @@ def get_pars_path(setup, tier):
         return par_dsp_path(setup)
     elif tier == "hit":
         return par_hit_path(setup)
-    elif tier == "pht":
-        return par_pht_path(setup)
     elif tier == "evt":
         return par_evt_path(setup)
+    elif tier == "psp":
+        return par_psp_path(setup)
+    elif tier == "pht":
+        return par_pht_path(setup)
+    elif tier == "pet":
+        return par_pet_path(setup)
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)
@@ -191,7 +203,7 @@ def runcmd(setup):
     exec_cmd = setup["execenv"]["cmd"]
     exec_arg = setup["execenv"]["arg"]
     path_install = setup["paths"]["install"]
-    return f"PYTHONUSERBASE={path_install} {exec_cmd} {exec_arg}"
+    return f"PYTHONUSERBASE={path_install} APPTAINERENV_PREPEND_PATH={path_install}/bin {exec_cmd} {exec_arg}"
 
 
 def subst_vars_impl(x, var_values, ignore_missing=False):

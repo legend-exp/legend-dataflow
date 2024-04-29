@@ -10,13 +10,15 @@ os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.pargen.cuts import generate_cuts, get_cut_indexes
+from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
 sto = lh5.LH5Store()
@@ -43,7 +45,8 @@ logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
-logging.getLogger("pygama.dsp.processing_chain").setLevel(logging.INFO)
+logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
@@ -75,7 +78,7 @@ if opt_dict.pop("run_nopt") is True:
 
     log.info(f"Select baselines {len(tb_data)}")
     dsp_data = run_one_dsp(tb_data, dsp_config)
-    cut_dict = generate_cuts(dsp_data, parameters=opt_dict.pop("cut_pars"))
+    cut_dict = generate_cuts(dsp_data, cut_dict=opt_dict.pop("cut_pars"))
     cut_idxs = get_cut_indexes(dsp_data, cut_dict)
     tb_data = sto.read(
         f"{args.channel}/raw", raw_files, n_rows=opt_dict.pop("n_events"), idx=idxs[cut_idxs]
@@ -87,7 +90,7 @@ if opt_dict.pop("run_nopt") is True:
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(
-            tb_data, dsp_config, db_dict, opt_dict, args.channel, display=1
+            tb_data, dsp_config, db_dict.copy(), opt_dict, args.channel, display=1
         )
     else:
         out_dict = pno.noise_optimization(

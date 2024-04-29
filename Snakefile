@@ -10,7 +10,7 @@ This includes:
 - the same for partition level tiers
 """
 
-import pathlib, os, json, sys
+import pathlib, os, json, sys, glob
 import scripts.util as ds
 from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import get_pattern_tier_raw
@@ -21,6 +21,8 @@ from scripts.util.utils import (
     chan_map_path,
     filelist_path,
     metadata_path,
+    tmp_log_path,
+    pars_path,
 )
 from datetime import datetime
 from collections import OrderedDict
@@ -41,8 +43,25 @@ part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
 
+wildcard_constraints:
+    experiment="\w+",
+    period="p\d{2}",
+    run="r\d{3}",
+    datatype="\w{3}",
+    timestamp="\d{8}T\d{6}Z",
+
+
 include: "rules/common.smk"
 include: "rules/main.smk"
+include: "rules/tcm.smk"
+include: "rules/dsp.smk"
+include: "rules/psp.smk"
+include: "rules/hit.smk"
+include: "rules/pht.smk"
+include: "rules/evt.smk"
+include: "rules/skm.smk"
+include: "rules/blinding_calibration.smk"
+include: "rules/qc_phy.smk"
 
 
 localrules:
@@ -50,59 +69,33 @@ localrules:
     autogen_output,
 
 
-ds.pars_key_resolve.write_par_catalog(
-    ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "pht", "validity.jsonl"),
-    get_pattern_tier_raw(setup),
-    {"cal": ["par_pht"], "lar": ["par_pht"]},
-)
-
-
-include: "rules/tcm.smk"
-include: "rules/dsp.smk"
-include: "rules/hit.smk"
-include: "rules/pht.smk"
-include: "rules/evt.smk"
-include: "rules/skm.smk"
-include: "rules/blinding_calibration.smk"
-
-
 onstart:
     print("Starting workflow")
-    shell(f"rm {pars_path(setup)}/dsp/validity.jsonl || true")
-    shell(f"rm {pars_path(setup)}/hit/validity.jsonl || true")
-    shell(f"rm {pars_path(setup)}/pht/validity.jsonl || true")
-    shell(f"rm {pars_path(setup)}/raw/validity.jsonl || true")
-    ds.pars_key_resolve.write_par_catalog(
-        ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "raw", "validity.jsonl"),
-        get_pattern_tier_raw(setup),
-        {"cal": ["par_raw"]},
-    )
-    ds.pars_key_resolve.write_par_catalog(
-        ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
-        get_pattern_tier_raw(setup),
-        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-    )
+    if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
+
+
     ds.pars_key_resolve.write_par_catalog(
         ["-*-*-*-cal"],
         os.path.join(pars_path(setup), "hit", "validity.jsonl"),
         get_pattern_tier_raw(setup),
         {"cal": ["par_hit"], "lar": ["par_hit"]},
     )
+
+    if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
+        os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
     ds.pars_key_resolve.write_par_catalog(
         ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "pht", "validity.jsonl"),
+        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
         get_pattern_tier_raw(setup),
-        {"cal": ["par_pht"], "lar": ["par_pht"]},
+        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
     )
 
 
 onsuccess:
     from snakemake.report import auto_report
 
-    rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
+    rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow() , '%Y%m%dT%H%M%SZ')}"
     pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
     with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
@@ -112,8 +105,32 @@ onsuccess:
         f.writelines(str(workflow.persistence.dag.rule_dot()))
         # shell(f"cat {rep_dir}/rg.txt | dot -Tpdf > {rep_dir}/rg.pdf")
     print("Workflow finished, no error")
-    shell("rm *.gen || true")
-    shell(f"rm {filelist_path(setup)}/* || true")
+
+    # remove .gen files
+    files = glob.glob("*.gen")
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+
+            # remove filelists
+    files = glob.glob(os.path.join(filelist_path(setup), "*"))
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+    if os.path.exists(filelist_path(setup)):
+        os.rmdir(filelist_path(setup))
+
+        # remove logs
+    files = glob.glob(os.path.join(tmp_log_path(setup), "*", "*.log"))
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+    dirs = glob.glob(os.path.join(tmp_log_path(setup), "*"))
+    for d in dirs:
+        if os.path.isdir(d):
+            os.rmdir(d)
+    if os.path.exists(tmp_log_path(setup)):
+        os.rmdir(tmp_log_path(setup))
 
 
 # Placeholder, can email or maybe put message in slack

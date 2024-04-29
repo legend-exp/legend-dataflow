@@ -6,28 +6,20 @@ from scripts.util.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_log_concat,
 )
 
 
 rule build_skm:
     input:
-        dsp_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-phy-dsp.filelist"
-        ),
-        hit_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-phy-pht.filelist"
-        ),
-        tcm_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-phy-tcm.filelist"
-        ),
-        evt_files=lambda wildcards: read_filelist_phy(wildcards, "pet"),
+        evt_file=get_pattern_tier(setup, "pet_concat", check_in_cycle=False),
     output:
         skm_file=get_pattern_tier(setup, "skm", check_in_cycle=check_in_cycle),
     params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
+        timestamp="all",
+        datatype="phy",
     log:
-        get_pattern_log(setup, "tier_skm"),
+        get_pattern_log_concat(setup, "tier_skm"),
     group:
         "tier-skm"
     resources:
@@ -39,9 +31,5 @@ rule build_skm:
         "--metadata {meta} "
         "--log {log} "
         "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--hit_files {input.hit_files} "
-        "--tcm_files {input.tcm_files} "
-        "--dsp_files {input.dsp_files} "
-        "--evt_files {input.evt_files} "
+        "--evt_file {input.evt_file} "
         "--output {output.skm_file} "
