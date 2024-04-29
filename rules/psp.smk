@@ -336,7 +336,7 @@ rule build_psp:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=40,
+        mem_swap=25,
     shell:
         "{swenv} python3 -B "
         f"{workflow.source_path('../scripts/build_dsp.py')} "
