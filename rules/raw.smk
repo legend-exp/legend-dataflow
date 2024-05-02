@@ -27,7 +27,7 @@ rule build_raw:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_raw.py "
+        "{basedir}/../scripts/build_raw.py "
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "
@@ -59,7 +59,7 @@ rule build_raw_blind:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_raw_blind.py "
+        "{basedir}/../scripts/build_raw_blind.py "
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "

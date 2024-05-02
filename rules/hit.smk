@@ -42,7 +42,7 @@ rule build_qc:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_hit_qc.py "
+        "{basedir}/../scripts/pars_hit_qc.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -89,7 +89,7 @@ rule build_energy_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_hit_ecal.py "
+        "{basedir}/../scripts/pars_hit_ecal.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -138,7 +138,7 @@ rule build_aoe_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_hit_aoe.py "
+        "{basedir}/../scripts/pars_hit_aoe.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -184,7 +184,7 @@ rule build_lq_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_hit_lq.py "
+        "{basedir}/../scripts/pars_hit_lq.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -219,7 +219,7 @@ rule build_pars_hit:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -245,7 +245,7 @@ rule build_hit:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_hit.py "
+        "{basedir}/../scripts/build_hit.py "
         "--configs {configs} "
         "--log {log} "
         "--tier {params.tier} "

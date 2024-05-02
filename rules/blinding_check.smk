@@ -36,7 +36,7 @@ rule build_blinding_check:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/check_blinding.py "
+        "{basedir}/../scripts/check_blinding.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -60,6 +60,6 @@ checkpoint build_pars_raw:
         "merge-blinding"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "

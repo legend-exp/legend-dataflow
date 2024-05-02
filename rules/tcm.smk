@@ -28,7 +28,7 @@ rule build_tier_tcm:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_tcm.py "
+        "{basedir}/../scripts/build_tcm.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -55,7 +55,7 @@ rule build_pulser_ids:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_tcm_pulser.py "
+        "{basedir}/../scripts/pars_tcm_pulser.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

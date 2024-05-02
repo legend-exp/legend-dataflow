@@ -96,7 +96,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/par_psp.py "
+                "{basedir}/../scripts/par_psp.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -142,7 +142,7 @@ rule build_par_psp:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/par_psp.py "
+        "{basedir}/../scripts/par_psp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -184,7 +184,7 @@ rule build_pars_psp_objects:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -198,7 +198,7 @@ rule build_plts_psp:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -248,7 +248,7 @@ rule build_psp:
         mem_swap=50,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_dsp.py "
+        "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

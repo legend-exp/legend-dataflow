@@ -67,7 +67,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_qc_phy.py "
+                "{basedir}/../scripts/pars_pht_qc_phy.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -109,7 +109,7 @@ rule build_pht_qc_phy:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_qc_phy.py "
+        "{basedir}/../scripts/pars_pht_qc_phy.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -140,7 +140,7 @@ rule build_plts_pht_phy:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -155,6 +155,6 @@ rule build_pars_pht_phy:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input.infiles} "
         "--output {output} "
