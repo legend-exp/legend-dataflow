@@ -96,7 +96,10 @@ class pars_key_resolve:
     @staticmethod
     def get_keys(keypart, search_pattern):
         d = FileKey.parse_keypart(keypart)
-        tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
+        try:
+            tier_pattern_rx = re.compile(smk.io.regex_from_filepattern(search_pattern))
+        except AttributeError:
+            tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
         fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]
         files = glob.glob(fn_glob_pattern)
         keys = []
