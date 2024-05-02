@@ -69,12 +69,13 @@ for tier in ("evt", "pet"):
         params:
             timestamp="all",
             datatype="{datatype}",
+            lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat"
         log:
             get_pattern_log_concat(setup, f"tier_{tier}_concat"),
         group:
             "tier-evt"
         shell:
-            "{swenv} lh5concat --verbose --overwrite "
+            "{swenv} {params.lh5concat_exe} --verbose --overwrite "
             "--output {output} "
             "-- {input} &> {log}"
 
