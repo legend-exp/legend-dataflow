@@ -52,9 +52,16 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
     @classmethod
     def get_filekey_from_pattern(cls, filename, pattern=None):
         if pattern is None:
-            key_pattern_rx = re.compile(smk.io.regex(cls.key_pattern))
+            try:
+                key_pattern_rx = re.compile(smk.io.regex_from_filepattern(cls.key_pattern))
+            except AttributeError:
+                key_pattern_rx = re.compile(smk.io.regex(cls.key_pattern))
         else:
-            key_pattern_rx = re.compile(smk.io.regex(pattern))
+            try:
+                key_pattern_rx = re.compile(smk.io.regex_from_filepattern(pattern))
+            except AttributeError:
+                key_pattern_rx = re.compile(smk.io.regex(pattern))
+
         if key_pattern_rx.match(filename) is None:
             return None
         else:
