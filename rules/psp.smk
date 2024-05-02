@@ -108,7 +108,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/par_psp.py "
+                "{basedir}/../scripts/par_psp.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -154,7 +154,7 @@ rule build_par_psp:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/par_psp.py "
+        "{basedir}/../scripts/par_psp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -194,7 +194,7 @@ rule build_svm_psp:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_dsp_build_svm.py "
+        "{basedir}/../scripts/pars_dsp_build_svm.py "
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -215,7 +215,7 @@ rule build_pars_psp_svm:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_dsp_svm.py "
+        "{basedir}/../scripts/pars_dsp_svm.py "
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "
@@ -240,7 +240,7 @@ rule build_pars_psp_objects:
         "merge-psp"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -254,7 +254,7 @@ rule build_plts_psp:
         "merge-psp"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -274,7 +274,7 @@ rule build_pars_psp_db:
         "merge-psp"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -309,7 +309,7 @@ rule build_pars_psp:
         "merge-psp"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--output {output.out_file} "
         "--in_db {input.in_db} "
         "--out_db {output.out_db} "
@@ -339,7 +339,7 @@ rule build_psp:
         mem_swap=25,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_dsp.py "
+        "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

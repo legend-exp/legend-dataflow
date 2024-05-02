@@ -45,7 +45,7 @@ for tier in ("evt", "pet"):
             mem_swap=50,
         shell:
             "{swenv} python3 -B "
-            f"{basedir}/../scripts/build_evt.py "
+            "{basedir}/../scripts/build_evt.py "
             "--configs {configs} "
             "--metadata {meta} "
             "--log {log} "

@@ -118,7 +118,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_qc.py "
+                "{basedir}/../scripts/pars_pht_qc.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -170,7 +170,7 @@ rule build_pht_qc:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_qc.py "
+        "{basedir}/../scripts/pars_pht_qc.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -231,7 +231,7 @@ rule build_per_energy_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_hit_ecal.py "
+        "{basedir}/../scripts/pars_hit_ecal.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -343,7 +343,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_partcal.py "
+                "{basedir}/../scripts/pars_pht_partcal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -404,7 +404,7 @@ rule build_pht_energy_super_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_partcal.py "
+        "{basedir}/../scripts/pars_pht_partcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -525,7 +525,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_aoecal.py "
+                "{basedir}/../scripts/pars_pht_aoecal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -585,7 +585,7 @@ rule build_pht_aoe_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_aoecal.py "
+        "{basedir}/../scripts/pars_pht_aoecal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -703,7 +703,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_lqcal.py "
+                "{basedir}/../scripts/pars_pht_lqcal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -758,7 +758,7 @@ rule build_pht_lq_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_lqcal.py "
+        "{basedir}/../scripts/pars_pht_lqcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -803,7 +803,7 @@ rule build_pars_pht_objects:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -817,7 +817,7 @@ rule build_plts_pht:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
@@ -839,7 +839,7 @@ rule build_plts_pht:
 #         "merge-hit"
 #     shell:
 #         "{swenv} python3 -B "
-#         f"{basedir}/../scripts/merge_channels.py "
+#         "{basedir}/../scripts/merge_channels.py "
 #         "--input {input.infiles} "
 #         "--output {output} "
 
@@ -865,7 +865,7 @@ rule build_pht:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_hit.py "
+        "{basedir}/../scripts/build_hit.py "
         "--configs {configs} "
         "--log {log} "
         "--tier {params.tier} "
