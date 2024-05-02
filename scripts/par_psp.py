@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import pickle as pkl
 from datetime import datetime
@@ -112,8 +111,7 @@ for field in ave_fields:
 
 for file in args.output:
     tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
-    with open(file, "w") as f:
-        json.dump(in_dicts[tstamp], f, indent=2)
+    Props.write_to(file, in_dicts[tstamp])
 
 
 if args.out_plots:

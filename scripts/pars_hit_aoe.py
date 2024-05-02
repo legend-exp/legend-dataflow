@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -203,8 +202,7 @@ if kwarg_dict["run_aoe"] is True:
     )
 
     if args.pulser_file:
-        with open(args.pulser_file) as f:
-            pulser_dict = json.load(f)
+        pulser_dict = Props.read_from(args.pulser_file)
         mask = np.array(pulser_dict["mask"])
         if "pulser_multiplicity_threshold" in kwarg_dict:
             kwarg_dict.pop("pulser_multiplicity_threshold")
@@ -264,12 +262,11 @@ if args.plot_file:
 
 pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
 results_dict = dict(**ecal_dict["results"], aoe=out_dict)
-with open(args.hit_pars, "w") as w:
-    final_hit_dict = {
-        "pars": {"operations": cal_dict},
-        "results": results_dict,
-    }
-    json.dump(final_hit_dict, w, indent=4)
+final_hit_dict = {
+    "pars": {"operations": cal_dict},
+    "results": results_dict,
+}
+Props.write_to(args.hit_pars, final_hit_dict)
 
 pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(

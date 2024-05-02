@@ -214,8 +214,7 @@ if __name__ == "__main__":
     if args.pulser_files:
         total_mask = np.array([], dtype=bool)
         for file in args.pulser_files:
-            with open(file) as f:
-                pulser_dict = json.load(f)
+            pulser_dict = Props.read_from(file)
             pulser_mask = np.array(pulser_dict["mask"])
             total_mask = np.append(total_mask, pulser_mask)
         if "pulser_multiplicity_threshold" in kwarg_dict:
@@ -306,8 +305,7 @@ if __name__ == "__main__":
 
     for file in args.save_path:
         pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
-        with open(file, "w") as f:
-            json.dump(hit_dict, f, indent=4)
+        Props.write_to(file, hit_dict)
 
     if args.plot_path:
         for file in args.plot_path:

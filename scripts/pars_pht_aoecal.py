@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import json
 import logging
 import os
 import pathlib
@@ -264,8 +263,7 @@ if kwarg_dict.pop("run_aoe") is True:
     if args.pulser_files:
         mask = np.array([], dtype=bool)
         for file in args.pulser_files:
-            with open(file) as f:
-                pulser_dict = json.load(f)
+            pulser_dict = Props.read_from(file)
             pulser_mask = np.array(pulser_dict["mask"])
             mask = np.append(mask, pulser_mask)
         if "pulser_multiplicity_threshold" in kwarg_dict:
@@ -394,8 +392,7 @@ for out in sorted(args.hit_pars):
         ),
     }
     pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
-    with open(out, "w") as w:
-        json.dump(final_hit_dict, w, indent=4)
+    Props.write_to(out, final_hit_dict)
 
 for out in args.aoe_results:
     fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
