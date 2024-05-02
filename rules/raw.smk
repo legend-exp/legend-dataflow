@@ -27,7 +27,7 @@ rule build_raw:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_raw.py')} "
+        f"{basedir}/../scripts/build_raw.py "
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "
@@ -59,7 +59,7 @@ rule build_raw_blind:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_raw_blind.py')} "
+        f"{basedir}/../scripts/build_raw_blind.py "
         "--log {log} "
         "--configs {configs} "
         "--chan_maps {chan_maps} "

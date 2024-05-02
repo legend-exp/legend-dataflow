@@ -248,7 +248,7 @@ rule build_psp:
         mem_swap=50,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_dsp.py')} "
+        f"{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

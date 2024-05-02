@@ -45,7 +45,7 @@ for tier in ("evt", "pet"):
             mem_swap=70,
         shell:
             "{swenv} python3 -B "
-            f"{workflow.source_path('../scripts/build_evt.py')} "
+            f"{basedir}/../scripts/build_evt.py "
             "--configs {configs} "
             "--metadata {meta} "
             "--log {log} "

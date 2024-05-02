@@ -219,7 +219,7 @@ rule build_per_energy_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_ecal.py')} "
+        f"{basedir}/../scripts/pars_hit_ecal.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -853,7 +853,7 @@ rule build_pht:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_hit.py')} "
+        f"{basedir}/../scripts/build_hit.py "
         "--configs {configs} "
         "--log {log} "
         "--tier {params.tier} "

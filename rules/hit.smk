@@ -42,7 +42,7 @@ rule build_qc:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_qc.py')} "
+        f"{basedir}/../scripts/pars_hit_qc.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -89,7 +89,7 @@ rule build_energy_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_ecal.py')} "
+        f"{basedir}/../scripts/pars_hit_ecal.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -138,7 +138,7 @@ rule build_aoe_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_aoe.py')} "
+        f"{basedir}/../scripts/pars_hit_aoe.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -184,7 +184,7 @@ rule build_lq_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_lq.py')} "
+        f"{basedir}/../scripts/pars_hit_lq.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -200,28 +200,28 @@ rule build_lq_calibration:
         "{input.files}"
 
 
-# rule build_pars_hit:
-#     input:
-#         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
-#         lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
-#         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
-#     output:
-#         get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
-#         get_pattern_pars(
-#             setup,
-#             "hit",
-#             name="objects",
-#             extension="dir",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#         get_pattern_plts(setup, "hit"),
-#     group:
-#         "merge-hit"
-#     shell:
-#         "{swenv} python3 -B "
-#         f"{workflow.source_path('../scripts/merge_channels.py')} "
-#         "--input {input} "
-#         "--output {output} "
+rule build_pars_hit:
+    input:
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
+        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
+        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
+    output:
+        get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
+        get_pattern_pars(
+            setup,
+            "hit",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+        get_pattern_plts(setup, "hit"),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
 
 
 rule build_hit:
@@ -245,7 +245,7 @@ rule build_hit:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_hit.py')} "
+        f"{basedir}/../scripts/build_hit.py "
         "--configs {configs} "
         "--log {log} "
         "--tier {params.tier} "
