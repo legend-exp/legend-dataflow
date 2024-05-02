@@ -46,7 +46,7 @@ rule build_pars_dsp_tau:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_tau.py')} "
+        f"{basedir}/../scripts/pars_dsp_tau.py "
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -81,7 +81,7 @@ rule build_pars_event_selection:
         mem_swap=70,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_event_selection.py')} "
+        f"{basedir}/../scripts/pars_dsp_event_selection.py "
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -119,7 +119,7 @@ rule build_pars_dsp_nopt:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_nopt.py')} "
+        f"{basedir}/../scripts/pars_dsp_nopt.py "
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
@@ -159,7 +159,7 @@ rule build_pars_dsp_dplms:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_dplms.py')} "
+        f"{basedir}/../scripts/pars_dsp_dplms.py "
         "--fft_raw_filelist {input.fft_files} "
         "--peak_file {input.peak_file} "
         "--database {input.database} "
@@ -198,7 +198,7 @@ rule build_pars_dsp_eopt:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_eopt.py')} "
+        f"{basedir}/../scripts/pars_dsp_eopt.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -228,7 +228,7 @@ rule build_svm_dsp:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_build_svm.py')} "
+        f"{basedir}/../scripts/pars_dsp_build_svm.py "
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -249,7 +249,7 @@ rule build_pars_dsp_svm:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_dsp_svm.py')} "
+        f"{basedir}/../scripts/pars_dsp_svm.py "
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "
@@ -370,7 +370,7 @@ rule build_dsp:
         mem_swap=25,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_dsp.py')} "
+        f"{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

@@ -28,7 +28,7 @@ rule build_tier_tcm:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_tcm.py')} "
+        f"{basedir}/../scripts/build_tcm.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -55,7 +55,7 @@ rule build_pulser_ids:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_tcm_pulser.py')} "
+        f"{basedir}/../scripts/pars_tcm_pulser.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
