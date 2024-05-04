@@ -49,6 +49,50 @@ rule build_blinding_check:
         "--files {input.files} "
 
 
+rule build_plts_raw:
+    input:
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+    output:
+        get_pattern_plts(setup, "raw"),
+    group:
+        "merge-raw"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
+
+
+rule build_pars_raw:
+    input:
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+        plts=get_pattern_plts(
+            setup,
+            "raw",
+        ),
+    output:
+        get_pattern_pars(setup, "raw", check_in_cycle=check_in_cycle),
+    group:
+        "merge-raw"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+
+
 checkpoint build_pars_raw:
     input:
         lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw"),

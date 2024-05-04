@@ -24,8 +24,12 @@ from scripts.util.patterns import (
 # This rule builds the qc using the calibration dsp files and fft files
 rule build_qc:
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "dsp"),
-        fft_files=lambda wildcards: read_filelist_fft(wildcards, "dsp"),
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+        ),
+        fft_files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
+        ),
         pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
     params:
         timestamp="{timestamp}",
@@ -200,13 +204,19 @@ rule build_lq_calibration:
         "{input.files}"
 
 
-rule build_pars_hit:
+rule build_pars_hit_objects:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "hit"),
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "hit_objects_pkl"),
+        lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "hit",
+            basedir,
+            configs,
+            chan_maps,
+            name="objects",
+            extension="pkl",
+        ),
     output:
-        get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
         get_pattern_pars(
             setup,
             "hit",
@@ -214,6 +224,26 @@ rule build_pars_hit:
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
+
+
+rule build_plts_hit:
+    input:
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "hit",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+    output:
         get_pattern_plts(setup, "hit"),
     group:
         "merge-hit"
@@ -221,6 +251,35 @@ rule build_pars_hit:
         "{swenv} python3 -B "
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
+        "--output {output} "
+
+
+rule build_pars_hit:
+    input:
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "hit",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+        plts=get_pattern_plts(setup, "hit"),
+        objects=get_pattern_pars(
+            setup,
+            "hit",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+    output:
+        get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
         "--output {output} "
 
 

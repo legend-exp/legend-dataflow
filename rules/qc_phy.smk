@@ -133,7 +133,15 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_plts_pht_phy:
     input:
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht_qcphy"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="qcphy",
+        ),
     output:
         get_pattern_plts(setup, "pht", "qc_phy"),
     group:
@@ -147,7 +155,15 @@ rule build_plts_pht_phy:
 
 rule build_pars_pht_phy:
     input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_qcphy"),
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="qcphy",
+        ),
         plts=get_pattern_plts(setup, "pht", "qc_phy"),
     output:
         get_pattern_pars(setup, "pht", name="qc_phy", check_in_cycle=check_in_cycle),

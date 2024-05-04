@@ -44,13 +44,15 @@ basedir = workflow.basedir
 
 
 wildcard_constraints:
-    experiment="\w+",
-    period="p\d{2}",
-    run="r\d{3}",
-    datatype="\w{3}",
-    timestamp="\d{8}T\d{6}Z",
+    experiment=r"\w+",
+    period=r"p\d{2}",
+    run=r"r\d{3}",
+    datatype=r"\w{3}",
+    timestamp=r"\d{8}T\d{6}Z",
 
 
+include: "rules/filelist_gen.smk"
+include: "rules/chanlist_gen.smk"
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"
@@ -138,23 +140,25 @@ onerror:
     print("An error occurred :( ")
 
 
-checkpoint gen_filelist:
+rule gen_filelist:
     """
     This rule generates the filelist. It is a checkpoint so when it is run it will update
     the dag passed on the files it finds as an output. It does this by taking in the search
     pattern, using this to find all the files that match this pattern, deriving the keys from
     the files found and generating the list of new files needed.
     """
+    input:
+        lambda wildcards: get_filelist(
+            wildcards,
+            setup,
+            get_pattern_tier_raw(setup),
+            ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
+            analysis_runs_file=os.path.join(configs, "analysis_runs.json"),
+        ),
     output:
-        os.path.join(filelist_path(setup), "{label}-{tier}.{extension}list"),
-    params:
-        setup=lambda wildcards: setup,
-        search_pattern=lambda wildcards: get_pattern_tier_raw(setup),
-        basedir=basedir,
-        configs=configs,
-        chan_maps=chan_maps,
-        blinding=False,
-        analysis_runs_file=os.path.join(configs, "analysis_runs.json"),
-        ignored_keys=os.path.join(configs, "ignore_keys.keylist"),
-    script:
-        "scripts/create_{wildcards.extension}list.py"
+        os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
+    run:
+        with open(snakemake.output[0], "w") as f:
+            for fn in snakemake.input[0]:
+                f.write(f"{fn}\n")
+

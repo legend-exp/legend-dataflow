@@ -33,7 +33,10 @@ intier = "psp"
 
 rule pht_checkpoint:
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, intier),
+        files=os.path.join(
+            filelist_path(setup),
+            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
+        ),
     output:
         temp(get_pattern_pars_tmp_channel(setup, "pht", "check")),
     shell:
@@ -787,9 +790,15 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_pars_pht_objects:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(
-            wildcards,
-            "pht_objects_pkl",
+        lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="objects",
+            extension="pkl",
         ),
     output:
         get_pattern_pars(
@@ -810,7 +819,14 @@ rule build_pars_pht_objects:
 
 rule build_plts_pht:
     input:
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+        ),
     output:
         get_pattern_plts(setup, "pht"),
     group:
@@ -822,26 +838,33 @@ rule build_plts_pht:
         "--output {output} "
 
 
-# rule build_pars_pht:
-#     input:
-#         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
-#         plts=get_pattern_plts(setup, "pht"),
-#         objects=get_pattern_pars(
-#             setup,
-#             "pht",
-#             name="objects",
-#             extension="dir",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#     output:
-#         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
-#     group:
-#         "merge-hit"
-#     shell:
-#         "{swenv} python3 -B "
-#         "{basedir}/../scripts/merge_channels.py "
-#         "--input {input.infiles} "
-#         "--output {output} "
+rule build_pars_pht:
+    input:
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+        plts=get_pattern_plts(setup, "pht"),
+        objects=get_pattern_pars(
+            setup,
+            "pht",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+    output:
+        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
+        "--output {output} "
 
 
 rule build_pht:

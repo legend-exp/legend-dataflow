@@ -258,7 +258,14 @@ rule build_pars_dsp_svm:
 
 rule build_plts_dsp:
     input:
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "dsp"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "dsp",
+            basedir,
+            configs,
+            chan_maps,
+        ),
     output:
         get_pattern_plts(setup, "dsp"),
     group:
@@ -272,7 +279,16 @@ rule build_plts_dsp:
 
 rule build_pars_dsp_objects:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp_objects_pkl"),
+        lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "dsp",
+            basedir,
+            configs,
+            chan_maps,
+            name="objects",
+            extension="pkl",
+        ),
     output:
         get_pattern_pars(
             setup,
@@ -292,7 +308,14 @@ rule build_pars_dsp_objects:
 
 rule build_pars_dsp_db:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "dsp"),
+        lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "dsp",
+            basedir,
+            configs,
+            chan_maps,
+        ),
     output:
         temp(
             get_pattern_pars_tmp(
@@ -312,8 +335,15 @@ rule build_pars_dsp_db:
 
 rule build_pars_dsp:
     input:
-        in_files=lambda wildcards: read_filelist_pars_cal_channel(
-            wildcards, "dsp_dplms_lh5"
+        in_files=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "dsp",
+            basedir,
+            configs,
+            chan_maps,
+            name="dplms",
+            extension="lh5",
         ),
         in_db=get_pattern_pars_tmp(
             setup,

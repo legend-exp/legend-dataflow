@@ -14,65 +14,6 @@ from scripts.util.patterns import (
 from scripts.util import ProcessingFileKey
 
 
-def read_filelist(wildcards):
-    with checkpoints.gen_filelist.get(
-        label=wildcards.label, tier=wildcards.tier, extension="file"
-    ).output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-def read_filelist_phy(wildcards, tier):
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-phy"
-    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
-        0
-    ].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-def read_filelist_cal(wildcards, tier):
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal"
-    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
-        0
-    ].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-def read_filelist_fft(wildcards, tier):
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-fft"
-    with checkpoints.gen_filelist.get(label=label, tier=tier, extension="file").output[
-        0
-    ].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-def read_filelist_pars_cal_channel(wildcards, tier):
-    """
-    This function will read the filelist of the channels and return a list of dsp files one for each channel
-    """
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(
-        label=label, tier=f"par_{tier}", extension="chan"
-    ).output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
-def read_filelist_plts_cal_channel(wildcards, tier):
-    """
-    This function will read the filelist of the channels and return a list of dsp files one for each channel
-    """
-    label = f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels"
-    with checkpoints.gen_filelist.get(
-        label=label, tier=f"plt_{tier}", extension="chan"
-    ).output[0].open() as f:
-        files = f.read().splitlines()
-        return files
-
-
 def get_blinding_curve_file(wildcards):
     """func to get the blinding calibration curves from the overrides"""
     par_files = pars_catalog.get_calib_files(
@@ -99,16 +40,16 @@ def get_blinding_check_file(wildcards):
         return [str(Path(par_raw_path(setup)) / par_file) for par_file in par_files]
 
 
-def get_pattern(tier):
-    """
-    This func gets the search pattern for the relevant tier passed.
-    """
-    if tier == "daq":
-        return get_pattern_unsorted_data(setup)
-    elif tier == "raw":
-        return get_pattern_tier_daq(setup)
-    else:
-        return get_pattern_tier_raw(setup)
+# def get_pattern(tier):
+#     """
+#     This func gets the search pattern for the relevant tier passed.
+#     """
+#     if tier == "daq":
+#         return get_pattern_unsorted_data(setup)
+#     elif tier == "raw":
+#         return get_pattern_tier_daq(setup)
+#     else:
+#         return get_pattern_tier_raw(setup)
 
 
 def set_last_rule_name(workflow, new_name):
