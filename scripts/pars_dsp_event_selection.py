@@ -287,7 +287,7 @@ if __name__ == "__main__":
                                 bins,
                                 var,
                                 [peak_loc],
-                                n_to_fit=7,
+                                n_to_fit=1,
                             )[0][0]
                             try:
                                 mu = peak_top_pars[0]
