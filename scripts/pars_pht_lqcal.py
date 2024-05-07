@@ -99,7 +99,7 @@ def lq_calibration(
     lq = LQCal(
         cal_dicts,
         cal_energy_param,
-        dt_param
+        dt_param,
         eres_func,
         cdf,
         selection_string,
