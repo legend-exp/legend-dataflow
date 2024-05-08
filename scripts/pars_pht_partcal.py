@@ -377,12 +377,13 @@ if __name__ == "__main__":
             no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("ctc", "noctc")
 
             cal_dict = update_cal_dicts(
-                cal_energy_param.replace("ctc", "noctc"), {cal_energy_param: no_ctc_dict}
+                cal_dict, {cal_energy_param.replace("ctc", "noctc"): no_ctc_dict}
             )
             cal_dict = update_cal_dicts(
+                cal_dict,
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctcnoctc')})",
+                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
                         "parameters": {},
                     }
                 }
