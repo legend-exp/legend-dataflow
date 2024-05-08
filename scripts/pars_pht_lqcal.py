@@ -29,9 +29,9 @@ warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 def get_results_dict(lq_class):
     return {
         "cal_energy_param": lq_class.cal_energy_param,
+        "DEP_means": lq_class.timecorr_df.to_dict("index"),
         "rt_correction": lq_class.dt_fit_pars,
-        # "cdf": lq_class.cdf.name,
-        "1590-1596keV": lq_class.timecorr_df.to_dict("index"),
+        "cut_fit_pars": lq_class.cut_fit_pars,
         "cut_value": lq_class.cut_val,
         "sfs": lq_class.low_side_sf.to_dict("index"),
     }
@@ -54,6 +54,7 @@ def lq_calibration(
     cal_dicts: dict,
     energy_param: str,
     cal_energy_param: str,
+    dt_param: str,
     eres_func: callable,
     cdf: callable = gaussian,
     selection_string: str = "",
@@ -72,6 +73,8 @@ def lq_calibration(
         raw lq values
     cal_energy_param: string
         The calibrated energy parameter of choice
+    dt_param: string
+        The drift-time parameter of choice
     eres_func: callable
         The energy resolution functions
     cdf: callable
@@ -96,6 +99,7 @@ def lq_calibration(
     lq = LQCal(
         cal_dicts,
         cal_energy_param,
+        dt_param,
         eres_func,
         cdf,
         selection_string,
