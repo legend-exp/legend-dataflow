@@ -287,10 +287,12 @@ if __name__ == "__main__":
                                 bins,
                                 var,
                                 [peak_loc],
-                                n_to_fit=1,
+                                n_to_fit=7,
                             )[0][0]
                             try:
                                 mu = peak_top_pars[0]
+                                if mu > np.nanmax(bins) or mu < np.nanmin(bins):
+                                    raise ValueError
                             except Exception:
                                 mu = np.nan
                             if mu is None or np.isnan(mu):
