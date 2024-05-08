@@ -372,6 +372,21 @@ if __name__ == "__main__":
         cal_dict = update_cal_dicts(
             cal_dict, {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
         )
+        if "ctc" in cal_energy_param:
+            no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
+            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("ctc", "noctc")
+
+            cal_dict = update_cal_dicts(
+                cal_energy_param.replace("ctc", "noctc"), {cal_energy_param: no_ctc_dict}
+            )
+            cal_dict = update_cal_dicts(
+                {
+                    cal_energy_param.replace("_ctc", ""): {
+                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctcnoctc')})",
+                        "parameters": {},
+                    }
+                }
+            )
 
         if args.plot_file:
             param_plot_dict = {}
