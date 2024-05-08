@@ -31,7 +31,7 @@ def get_results_dict(lq_class):
         "cal_energy_param": lq_class.cal_energy_param,
         "DEP_means": lq_class.timecorr_df.to_dict("index"),
         "rt_correction": lq_class.dt_fit_pars,
-        "cut_fit_pars": lq_class.cut_fit_pars,
+        "cut_fit_pars": lq_class.cut_fit_pars.to_dict(),
         "cut_value": lq_class.cut_val,
         "sfs": lq_class.low_side_sf.to_dict("index"),
     }
