@@ -822,26 +822,26 @@ rule build_plts_pht:
         "--output {output} "
 
 
-# rule build_pars_pht:
-#     input:
-#         infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
-#         plts=get_pattern_plts(setup, "pht"),
-#         objects=get_pattern_pars(
-#             setup,
-#             "pht",
-#             name="objects",
-#             extension="dir",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#     output:
-#         get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
-#     group:
-#         "merge-hit"
-#     shell:
-#         "{swenv} python3 -B "
-#         f"{basedir}/../scripts/merge_channels.py "
-#         "--input {input.infiles} "
-#         "--output {output} "
+rule build_pars_pht:
+    input:
+        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
+        plts=get_pattern_plts(setup, "pht"),
+        objects=get_pattern_pars(
+            setup,
+            "pht",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+    output:
+        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+    group:
+        "merge-hit"
+    shell:
+        "{swenv} python3 -B "
+        f"{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
+        "--output {output} "
 
 
 rule build_pht:
