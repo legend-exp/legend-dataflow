@@ -428,6 +428,16 @@ if __name__ == "__main__":
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
 
+        if det_status != "on":
+            for peak_dict in (
+                full_object_dict[cal_energy_param]
+                .results["hpge_cal_energy_peak_tops"]["peak_parameters"]
+                .values()
+            ):
+                peak_dict["function"] = peak_dict["function"].name
+                peak_dict["parameters"] = peak_dict["parameters"].to_dict()
+                peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+
     if args.plot_file:
         common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
 
