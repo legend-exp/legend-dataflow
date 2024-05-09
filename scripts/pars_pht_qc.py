@@ -88,7 +88,11 @@ if __name__ == "__main__":
     kwarg_dict = Props.read_from(channel_dict)
 
     if args.overwrite_files:
-        overwrite = Props.read_from(args.overwrite_files)[args.channel]["pars"]["operations"]
+        overwrite = Props.read_from(args.overwrite_files)
+        if args.channel in overwrite:
+            overwrite = overwrite[args.channel]["pars"]["operations"]
+        else:
+            overwrite = None
     else:
         overwrite = None
 

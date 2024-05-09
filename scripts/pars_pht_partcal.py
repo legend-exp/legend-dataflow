@@ -333,15 +333,10 @@ if __name__ == "__main__":
             energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-            energy, etol_kev=5 if det_status == "on" else 10
+            energy,
+            etol_kev=5 if det_status == "on" else 10,
+            update_cal_pars=bool(det_status == "on"),
         )
-
-        if det_status != "on":
-            full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
-                energy,
-                update_cal_pars=True,
-                allowed_p_val=0,
-            )
 
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             energy,
@@ -427,16 +422,6 @@ if __name__ == "__main__":
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
-
-        if det_status != "on":
-            for peak_dict in (
-                full_object_dict[cal_energy_param]
-                .results["hpge_cal_energy_peak_tops"]["peak_parameters"]
-                .values()
-            ):
-                peak_dict["function"] = peak_dict["function"].name
-                peak_dict["parameters"] = peak_dict["parameters"].to_dict()
-                peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
 
     if args.plot_file:
         common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
