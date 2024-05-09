@@ -337,6 +337,8 @@ if __name__ == "__main__":
             etol_kev=5 if det_status == "on" else 10,
             update_cal_pars=bool(det_status == "on"),
         )
+        if det_status != "on":
+            full_object_dict[cal_energy_param].peak_locs = np.array(glines)
 
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             energy,
