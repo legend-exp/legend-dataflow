@@ -2,6 +2,7 @@
 Snakemake rules for processing evt tier.
 """
 
+from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import (
     get_pattern_tier_hit,
     get_pattern_tier_dsp,
@@ -13,6 +14,7 @@ from scripts.util.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
+
 
 
 for tier in ("evt", "pet"):
@@ -30,6 +32,10 @@ for tier in ("evt", "pet"):
                 else get_pattern_tier_pht(setup)
             ),
             tcm_file=get_pattern_tier_tcm(setup),
+            xtalk_matrix= lambda wildcards : get_svm_file(tier=tier ,wildcards=wildcards, name="xtc"),
+            par_files = lambda wildcards: pars_catalog.get_par_file(
+                setup, wildcards.timestamp, "pht"
+            )
         output:
             evt_file=get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
         params:
@@ -52,6 +58,8 @@ for tier in ("evt", "pet"):
             "--tier {params.tier} "
             "--datatype {params.datatype} "
             "--timestamp {params.timestamp} "
+            "--xtc_file {input.xtalk_matrix} "
+            "--par_files {input.par_files} "
             "--hit_file {input.hit_file} "
             "--tcm_file {input.tcm_file} "
             "--dsp_file {input.dsp_file} "

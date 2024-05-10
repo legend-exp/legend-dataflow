@@ -36,7 +36,6 @@ argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
 argparser.add_argument("--tcm_file", help="tcm file", type=str)
 argparser.add_argument("--xtc_file", help="xtc file", type=str)
-argparser.add_argument("--xtc_file2", help="xtc file2", type=str)
 argparser.add_argument("--par_files", help="par files", nargs="*")
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -82,32 +81,22 @@ chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
 
-exp_string = f"""
-pygama.evt.modules.geds.apply_xtalk_correction_and_calibrate(
-    <...>,
-    return_mode='energy',
-    uncal_energy_expr='dsp.cuspEmax',
-    cal_energy_expr='hit.cuspEmax_cal',
-    multiplicity_expr='(xtalk_corr_energy>10) & (hit.is_negative_polarity_candidate != 63)',
-    xtalk_threshold=50,
-    recal_var='hit.cuspEmax_cal',
-    xtalk_matrix_filename='{args.xtc_file2}',
-    cal_par_files={args.par_files})
-"""
-exp_string = exp_string.replace("\n", "")
+if args.datatype == "phy":
+    exp_string = evt_config["operations"]["geds___energy"]["expression"]
+    exp_string = exp_string.replace("xtalk_matrix_filename=''", f"xtalk_matrix_filename='{args.xtc_file}'")
+    exp_string = exp_string.replace("cal_par_files=''", f"cal_par_files={args.par_files}")
+    exp_string2 = exp_string.replace("return_mode='energy'", "return_mode='tcm_index'")
 
-exp_string2 = exp_string.replace("return_mode='energy'", "return_mode='tcm_index'")
-
-file_path_config = {
-    "operations":{
-        "geds___energy":{
-            "expression":exp_string
-        },
-        "_geds___tcm_idx":{
-            "expression":exp_string2
+    file_path_config = {
+        "operations":{
+            "geds___energy":{
+                "expression":exp_string
+            },
+            "_geds___tcm_idx":{
+                "expression":exp_string2
+            }
         }
     }
-}
 
 log.debug(json.dumps(file_path_config, indent=2))
 
