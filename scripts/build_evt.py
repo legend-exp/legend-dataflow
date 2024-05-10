@@ -96,9 +96,9 @@ if args.datatype == "phy":
         }
     }
 
-log.debug(json.dumps(file_path_config, indent=2))
+    log.debug(json.dumps(file_path_config, indent=2))
 
-Props.add_to(evt_config, file_path_config)
+    Props.add_to(evt_config, file_path_config)
 
 # block for snakemake to fill in channel lists
 for field, dic in evt_config["channels"].items():
