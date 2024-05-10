@@ -156,7 +156,7 @@ def build_valid_keys(input_files, output_dir):
 def build_file_dbs(input_files, output_dir):
     input_files = glob.glob(input_files)
     key_dict = get_keys(input_files)
-    
+
     for key in list(key_dict):
         experiment, period, run, dtype = key.split("-")
         out_file = os.path.join(output_dir, f"{key}-filedb.h5")

@@ -16,7 +16,6 @@ from scripts.util.patterns import (
 )
 
 
-
 for tier in ("evt", "pet"):
 
     rule:
@@ -32,10 +31,12 @@ for tier in ("evt", "pet"):
                 else get_pattern_tier_pht(setup)
             ),
             tcm_file=get_pattern_tier_tcm(setup),
-            xtalk_matrix= lambda wildcards : get_svm_file(tier=tier ,wildcards=wildcards, name="xtc"),
-            par_files = lambda wildcards: pars_catalog.get_par_file(
+            xtalk_matrix=lambda wildcards: get_svm_file(
+                tier=tier, wildcards=wildcards, name="xtc"
+            ),
+            par_files=lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "pht"
-            )
+            ),
         output:
             evt_file=get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
         params:
