@@ -133,7 +133,7 @@ def get_keys(files):
 
 
 def build_valid_keys(input_files, output_dir):
-    infiles = glob.glob(input_files)
+    infiles = glob.glob(os.path.join(input_files, "*db.json"))
     key_dict = get_keys(infiles)
 
     for key in list(key_dict):
