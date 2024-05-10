@@ -333,15 +333,12 @@ if __name__ == "__main__":
             energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-            energy, etol_kev=5 if det_status == "on" else 10
+            energy,
+            etol_kev=5 if det_status == "on" else 10,
+            update_cal_pars=bool(det_status == "on"),
         )
-
         if det_status != "on":
-            full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
-                energy,
-                update_cal_pars=True,
-                allowed_p_val=0,
-            )
+            full_object_dict[cal_energy_param].peak_locs = np.array(glines)
 
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             energy,
@@ -372,6 +369,22 @@ if __name__ == "__main__":
         cal_dict = update_cal_dicts(
             cal_dict, {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
         )
+        if "ctc" in cal_energy_param:
+            no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
+            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("ctc", "noctc")
+
+            cal_dict = update_cal_dicts(
+                cal_dict, {cal_energy_param.replace("ctc", "noctc"): no_ctc_dict}
+            )
+            cal_dict = update_cal_dicts(
+                cal_dict,
+                {
+                    cal_energy_param.replace("_ctc", ""): {
+                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "parameters": {},
+                    }
+                },
+            )
 
         if args.plot_file:
             param_plot_dict = {}

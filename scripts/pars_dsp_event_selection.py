@@ -291,6 +291,8 @@ if __name__ == "__main__":
                             )[0][0]
                             try:
                                 mu = peak_top_pars[0]
+                                if mu > np.nanmax(bins) or mu < np.nanmin(bins):
+                                    raise ValueError
                             except Exception:
                                 mu = np.nan
                             if mu is None or np.isnan(mu):
