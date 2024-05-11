@@ -84,10 +84,10 @@ evt_config = Props.read_from(evt_config_file)
 if args.datatype == "phy":
     exp_string = evt_config["operations"]["geds___energy"]["expression"]
     exp_string = exp_string.replace(
-        "xtalk_matrix_filename=''", f"xtalk_matrix_filename='{args.xtc_file}'"
+        'xtalk_matrix_filename=""', f'xtalk_matrix_filename="{args.xtc_file}"'
     )
-    exp_string = exp_string.replace("cal_par_files=''", f"cal_par_files={args.par_files}")
-    exp_string2 = exp_string.replace("return_mode='energy'", "return_mode='tcm_index'")
+    exp_string = exp_string.replace('cal_par_files=""', f"cal_par_files={args.par_files}")
+    exp_string2 = exp_string.replace('return_mode="energy"', 'return_mode="tcm_index"')
 
     file_path_config = {
         "operations": {
