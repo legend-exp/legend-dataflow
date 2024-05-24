@@ -68,7 +68,7 @@ for key, dataset in part.datasets.items():
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
                         key,
-                        tier="pht"
+                        tier="pht",
                     )
                 ],
                 partcal_results=[
@@ -122,9 +122,7 @@ for key, dataset in part.datasets.items():
                 "--pulser_files {input.pulser_files} "
                 "--input_files {input.files}"
 
-        set_last_rule_name(
-            workflow, f"{key}-{partition}-par_pht_fast"
-        )
+        set_last_rule_name(workflow, f"{key}-{partition}-par_pht_fast")
         slow_rule = workflow._rules[f"{key}-{partition}-build_pht_lq_calibration"]
 
         if key in pht_fast_rules:
@@ -154,9 +152,7 @@ rule par_pht_fast:
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
         partcal_results=temp(
-            get_pattern_pars_tmp_channel(
-                setup, "pht", "objects", extension="pkl"
-            )
+            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
     log:
