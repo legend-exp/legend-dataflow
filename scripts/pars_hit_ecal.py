@@ -229,7 +229,7 @@ def bin_spectrum(
     cut_field="is_valid_cal",
     pulser_field="is_pulser",
     erange=(0, 3000),
-    dx=2,
+    dx=0.5,
 ):
     bins = np.arange(erange[0], erange[1] + dx, dx)
     return {
@@ -413,6 +413,8 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             ),
             "eres_linear": fwhm_linear,
             "eres_quadratic": fwhm_quad,
+            # "calibration_parameters":results_dict["calibration_parameters"].to_dict(),
+            # "calibration_uncertainty":results_dict["calibration_uncertainties"].to_dict(),
             "fitted_peaks": ecal_class.peaks_kev.tolist(),
             "pk_fits": pk_dict,
         }
@@ -529,10 +531,10 @@ if __name__ == "__main__":
         (583.191, (20, 20), pgf.hpge_peak),
         (727.330, (30, 30), pgf.hpge_peak),
         (860.564, (30, 25), pgf.hpge_peak),
-        (1592.53, (40, 20), pgf.gauss_on_step),
+        (1592.511, (40, 20), pgf.gauss_on_step),
         (1620.50, (20, 40), pgf.gauss_on_step),
-        (2103.53, (40, 40), pgf.gauss_on_step),
-        (2614.553, (60, 60), pgf.hpge_peak),
+        (2103.511, (40, 40), pgf.gauss_on_step),
+        (2614.511, (40, 40), pgf.hpge_peak),
     ]
 
     glines = [pk_par[0] for pk_par in pk_pars]
@@ -560,7 +562,7 @@ if __name__ == "__main__":
             range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
         )
 
-        guess = 2614.553 / bins[np.nanargmax(hist)]
+        guess = 2614.511 / bins[np.nanargmax(hist)]
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param,
             glines,
@@ -570,7 +572,7 @@ if __name__ == "__main__":
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             e_uncal, etol_kev=5 if det_status == "on" else 20
         )
-        if 2614.553 not in full_object_dict[cal_energy_param].peaks_kev:
+        if 2614.511 not in full_object_dict[cal_energy_param].peaks_kev:
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
                 e_uncal, peaks_kev=glines, etol_kev=5 if det_status == "on" else 30, n_sigma=2
             )
@@ -584,7 +586,7 @@ if __name__ == "__main__":
             )
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
             e_uncal,
-            peaks_kev=[2614.553],
+            peaks_kev=[2614.511],
             peak_pars=pk_pars,
             tail_weight=kwarg_dict.get("tail_weight", 0),
             n_events=kwarg_dict.get("n_events", None),
