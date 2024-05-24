@@ -56,7 +56,7 @@
         "pygama": "pygama==2.0.0a1",
         "pylegendmeta": "pylegendmeta==0.10.0",
         "dspeed": "dspeed==1.4.0a1",
-        "legend-pydataobj": "legend-pydataobj==1.6.1",
+        "legend-pydataobj": "legend-pydataobj==1.7.0",
         "legend-daq2lh5": "legend-daq2lh5==1.2.1"
       }
     }
