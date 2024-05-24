@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import logging
 import os
 import pathlib
 import pickle as pkl
-import re
 import warnings
 
 os.environ["PYGAMA_PARALLEL"] = "false"
@@ -15,18 +13,14 @@ os.environ["PYGAMA_FASTMATH"] = "false"
 
 import numpy as np
 import pandas as pd
-import pygama.math.distributions as pgf
-import pygama.math.histogram as pgh
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from pygama.math.distributions import nb_poly
+from pars_pht_aoecal import run_aoe_calibration
+from pars_pht_lqcal import run_lq_calibration
+from pars_pht_partcal import calibrate_partition
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
-
-from pars_pht_lqcal import run_lq_calibration
-from pars_pht_aoecal import run_aoe_calibration
-from pars_pht_partcal import calibrate_partition
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -49,6 +43,7 @@ def run_splitter(files):
             if run == f"{fk.period}-{fk.run}":
                 run_files[i].append(file)
     return run_files
+
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
@@ -128,9 +123,15 @@ if __name__ == "__main__":
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(timestamp, system=args.datatype)["snakemake_rules"]
 
-    kwarg_dict = Props.read_from(channel_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][args.channel])
-    aoe_kwarg_dict = Props.read_from(channel_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel])
-    lq_kwarg_dict = Props.read_from(channel_dict["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel])
+    kwarg_dict = Props.read_from(
+        channel_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][args.channel]
+    )
+    aoe_kwarg_dict = Props.read_from(
+        channel_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel]
+    )
+    lq_kwarg_dict = Props.read_from(
+        channel_dict["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel]
+    )
 
     params = [
         kwarg_dict["final_cut_field"],
@@ -140,14 +141,14 @@ if __name__ == "__main__":
 
     if aoe_kwarg_dict["run_aoe"] is True:
         aoe_params = [
-                aoe_kwarg_dict["final_cut_field"],
-                aoe_kwarg_dict["current_param"],
-                "tp_0_est",
-                "tp_99",
-                aoe_kwarg_dict["energy_param"],
-                aoe_kwarg_dict["cal_energy_param"],
-                "timestamp",
-            ]
+            aoe_kwarg_dict["final_cut_field"],
+            aoe_kwarg_dict["current_param"],
+            "tp_0_est",
+            "tp_99",
+            aoe_kwarg_dict["energy_param"],
+            aoe_kwarg_dict["cal_energy_param"],
+            "timestamp",
+        ]
         if "dt_param" in aoe_kwarg_dict:
             aoe_params.append(aoe_kwarg_dict["dt_param"])
         else:
@@ -220,7 +221,7 @@ if __name__ == "__main__":
         args.datatype,
         gen_plots=bool(args.plot_file),
     )
-    
+
     cal_dicts, results_dicts, object_dicts, plot_dicts = run_aoe_calibration(
         data,
         cal_dicts,
@@ -231,7 +232,7 @@ if __name__ == "__main__":
         args.configs,
         args.channel,
         args.datatype,
-        #gen_plots=bool(args.plot_file),
+        # gen_plots=bool(args.plot_file),
     )
 
     cal_dicts, results_dicts, object_dicts, plot_dicts = run_lq_calibration(
@@ -244,7 +245,7 @@ if __name__ == "__main__":
         args.configs,
         args.channel,
         args.datatype,
-        #gen_plots=bool(args.plot_file),
+        # gen_plots=bool(args.plot_file),
     )
 
     if args.plot_file:
@@ -256,7 +257,7 @@ if __name__ == "__main__":
     for out in sorted(args.hit_pars):
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
         final_hit_dict = {
-            "pars": {"operations":cal_dict[fk.timestamp]},
+            "pars": {"operations": cal_dict[fk.timestamp]},
             "results": results_dicts[fk.timestamp],
         }
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
