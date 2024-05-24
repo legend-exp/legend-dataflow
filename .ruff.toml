@@ -1,4 +1,4 @@
-select = [
+lint.select = [
   "E", "F", "W", # flake8
   "B",           # flake8-bugbear
   "I",           # isort
@@ -23,7 +23,7 @@ select = [
   "NPY",         # NumPy specific rules
   "PD",          # pandas-vet
 ]
-extend-ignore = [
+lint.extend-ignore = [
   "ISC003", # Explicitly concatenated string should be implicitly concatenated
   "PGH001", # Usage of eval()
   "G004",   # Logging statement uses f-string
@@ -35,9 +35,9 @@ extend-ignore = [
 ]
 target-version = "py37"
 src = ["src"]
-unfixable = [
+lint.unfixable = [
   "T20",  # Removes print statements
   "F841", # Removes unused variables
 ]
-exclude = []
-flake8-unused-arguments.ignore-variadic-names = true
+lint.exclude = []
+lint.flake8-unused-arguments.ignore-variadic-names = true
