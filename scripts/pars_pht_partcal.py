@@ -116,7 +116,7 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             dic["uncertainties"] = dic["uncertainties"].to_dict()
             dic.pop("covariance")
 
-        return {
+        out_dict = {
             "total_fep": len(data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")),
             "total_dep": len(data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")),
             "pass_fep": len(
@@ -127,12 +127,17 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             ),
             "eres_linear": fwhm_linear,
             "eres_quadratic": fwhm_quad,
-            "calibration_parameters": results_dict["calibration_parameters"].to_dict(),
-            "calibration_uncertainty": results_dict["calibration_uncertainties"].to_dict(),
             "fitted_peaks": ecal_class.peaks_kev.tolist(),
             "pk_fits": pk_dict,
             "peak_param": results_dict["peak_param"],
         }
+        if "calibration_parameters" in results_dict:
+            out_dict["calibration_parameters"] = results_dict["calibration_parameters"].to_dict()
+            out_dict["calibration_uncertainty"] = results_dict[
+                "calibration_uncertainties"
+            ].to_dict()
+
+        return out_dict
 
 
 def calibrate_partition(
