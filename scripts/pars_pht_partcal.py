@@ -260,7 +260,7 @@ def calibrate_partition(
 
                 full_object_dict[cal_energy_param] = HPGeCalibration(
                     energy_param,
-                    list(*full_object_dict[cal_energy_param].peaks_kev, 2614.511),
+                    [*full_object_dict[cal_energy_param].peaks_kev, 2614.511],
                     1,
                     kwarg_dict.get("deg", 0),  # , fixed={1: 1}
                 )
