@@ -573,8 +573,14 @@ if __name__ == "__main__":
             e_uncal, etol_kev=5 if det_status == "on" else 20
         )
         if 2614.511 not in full_object_dict[cal_energy_param].peaks_kev:
+            full_object_dict[cal_energy_param] = HPGeCalibration(
+                energy_param,
+                glines,
+                guess,
+                kwarg_dict.get("deg", 0),
+            )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-                e_uncal, peaks_kev=glines, etol_kev=5 if det_status == "on" else 30, n_sigma=2
+                e_uncal, etol_kev=5 if det_status == "on" else 30, n_sigma=2
             )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         if det_status != "on":
