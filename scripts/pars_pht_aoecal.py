@@ -7,6 +7,7 @@ import logging
 import os
 import pathlib
 import pickle as pkl
+import re
 import warnings
 from typing import Callable
 
@@ -159,8 +160,16 @@ def run_aoe_calibration(
         sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else SigmaFit
 
         if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
+            cut_dict = kwarg_dict["dt_cut"]["cut"]
             for tstamp in cal_dicts:
-                cal_dicts[tstamp].update(kwarg_dict["dt_cut"]["cut"])
+                cal_dicts[tstamp].update(cut_dict)
+
+            exp = cut_dict[next(iter(cut_dict))]["expression"]
+            for key in cut_dict[next(iter(cut_dict))]["parameters"]:
+                exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
+            data[next(iter(cut_dict))] = data.eval(
+                exp, local_dict=cut_dict[next(iter(cut_dict))]["parameters"]
+            )
 
         try:
             eres = copy.deepcopy(
