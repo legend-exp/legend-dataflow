@@ -25,7 +25,7 @@ lint.select = [
 ]
 lint.extend-ignore = [
   "ISC003", # Explicitly concatenated string should be implicitly concatenated
-  "PGH001", # Usage of eval()
+  "S307", # Usage of eval()
   "G004",   # Logging statement uses f-string
   "PLR",    # Design related pylint codes
   "E501",   # Line too long
