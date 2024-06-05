@@ -268,4 +268,4 @@ if __name__ == "__main__":
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
         with open(out, "wb") as w:
-            pkl.dump(object_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
+            pkl.dump(object_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
