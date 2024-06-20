@@ -162,4 +162,3 @@ rule gen_filelist:
         with open(snakemake.output[0], "w") as f:
             for fn in snakemake.input[0]:
                 f.write(f"{fn}\n")
-

@@ -1,4 +1,3 @@
-
 # ruff: noqa: F821, T201
 
 import os
@@ -6,14 +5,17 @@ import random
 import re
 
 from scripts.util.FileKey import ChannelProcKey
-from scripts.util.patterns import get_pattern_pars_tmp_channel, get_pattern_plts_tmp_channel
+from scripts.util.patterns import (
+    get_pattern_pars_tmp_channel,
+    get_pattern_plts_tmp_channel,
+)
 from scripts.util.utils import filelist_path, runcmd
 
 
-def get_par_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=None, extension="json"):
-    tier_pattern = (
-        "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
-    )
+def get_par_chanlist(
+    setup, keypart, tier, basedir, configs, chan_maps, name=None, extension="json"
+):
+    tier_pattern = "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
     keypart_rx = re.compile(tier_pattern)
     d = keypart_rx.match(tier).groupdict()
 
@@ -21,7 +23,7 @@ def get_par_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=Non
 
     output_file = os.path.join(
         filelist_path(setup),
-        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
+        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0 , 99999):05d}",
     )
 
     cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
@@ -37,12 +39,13 @@ def get_par_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=Non
     os.remove(output_file)
     return filenames
 
+
 def get_plt_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=None):
     key = ChannelProcKey.parse_keypart(keypart)
 
     output_file = os.path.join(
         filelist_path(setup),
-        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
+        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0 , 99999):05d}",
     )
 
     cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
