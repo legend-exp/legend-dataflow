@@ -23,7 +23,7 @@ def get_par_chanlist(
 
     output_file = os.path.join(
         filelist_path(setup),
-        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
+        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0 , 99999):05d}",
     )
 
     cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
@@ -45,7 +45,7 @@ def get_plt_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=Non
 
     output_file = os.path.join(
         filelist_path(setup),
-        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
+        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0 , 99999):05d}",
     )
 
     cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
