@@ -1,4 +1,3 @@
-
 # ruff: noqa: F821, T201
 
 import os
@@ -6,14 +5,17 @@ import random
 import re
 
 from scripts.util.FileKey import ChannelProcKey
-from scripts.util.patterns import get_pattern_pars_tmp_channel, get_pattern_plts_tmp_channel
+from scripts.util.patterns import (
+    get_pattern_pars_tmp_channel,
+    get_pattern_plts_tmp_channel,
+)
 from scripts.util.utils import filelist_path, runcmd
 
 
-def get_par_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=None, extension="json"):
-    tier_pattern = (
-        "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
-    )
+def get_par_chanlist(
+    setup, keypart, tier, basedir, configs, chan_maps, name=None, extension="json"
+):
+    tier_pattern = "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
     keypart_rx = re.compile(tier_pattern)
     d = keypart_rx.match(tier).groupdict()
 
@@ -36,6 +38,7 @@ def get_par_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=Non
     filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
     os.remove(output_file)
     return filenames
+
 
 def get_plt_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=None):
     key = ChannelProcKey.parse_keypart(keypart)

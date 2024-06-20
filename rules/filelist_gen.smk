@@ -13,7 +13,8 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
             with open(ignore_keys_file) as f:
                 ignore_keys = f.read().splitlines()
             ignore_keys = [
-                key.split("#")[0].strip() if "#" in key else key.strip() for key in ignore_keys
+                key.split("#")[0].strip() if "#" in key else key.strip()
+                for key in ignore_keys
             ]
         else:
             print("no ignore_keys.keylist file found")
@@ -152,5 +153,11 @@ def get_filelist(
 
     filekeys = get_keys(keypart)
     return build_filelist(
-        setup, filekeys, search_pattern, wildcards.tier, ignore_keys, analysis_runs, file_selection
+        setup,
+        filekeys,
+        search_pattern,
+        wildcards.tier,
+        ignore_keys,
+        analysis_runs,
+        file_selection,
     )
