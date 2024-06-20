@@ -15,6 +15,8 @@ from scripts.util.patterns import (
     get_pattern_log_concat,
 )
 
+from scripts.util import utils
+
 
 for tier in ("evt", "pet"):
 
@@ -78,13 +80,15 @@ for tier in ("evt", "pet"):
         params:
             timestamp="all",
             datatype="{datatype}",
+            lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat",
+            ro_input=lambda wildcards, input: utils.as_ro(config, input),
         log:
             get_pattern_log_concat(setup, f"tier_{tier}_concat"),
         group:
             "tier-evt"
         shell:
-            "{swenv} lh5concat --verbose --overwrite "
+            "{swenv} {params.lh5concat_exe} --verbose --overwrite "
             "--output {output} "
-            "-- {input} &> {log}"
+            "-- {params.ro_input} &> {log}"
 
     set_last_rule_name(workflow, f"concat_{tier}")

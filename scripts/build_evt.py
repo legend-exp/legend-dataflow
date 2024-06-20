@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import pathlib
 import time
 
@@ -13,6 +14,16 @@ from lgdo.types import Array
 from pygama.evt import build_evt
 
 sto = lh5.LH5Store()
+
+def as_ro(path):
+    sub_pattern = ["^/global", "/dvs_ro"]
+
+    if isinstance(path, str):
+        return re.sub(*sub_pattern, path)
+    if isinstance(path, Path):
+        return Path(re.sub(*sub_pattern, path.name))
+
+    return [as_ro(config, p) for p in path]
 
 
 def find_matching_values_with_delay(arr1, arr2, jit_delay):
@@ -66,7 +77,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # load in config
-configs = LegendMetadata(path=args.configs)
+configs = LegendMetadata(path=as_ro(args.configs), lazy=True)
 if args.tier == "evt" or args.tier == "pet":
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"
@@ -76,7 +87,7 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-meta = LegendMetadata(path=args.metadata)
+meta = LegendMetadata(path=as_ro(args.metadata), lazy=True)
 chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
@@ -121,15 +132,11 @@ log.debug(json.dumps(evt_config["channels"], indent=2))
 t_start = time.time()
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-rng = np.random.default_rng()
-rand_num = f"{rng.integers(0,99999):05d}"
-temp_output = f"{args.output}.{rand_num}"
-
 table = build_evt(
     {
-        "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
-        "dsp": (args.dsp_file, "dsp", "ch{}"),
-        "hit": (args.hit_file, "hit", "ch{}"),
+        "tcm": (as_ro(args.tcm_file), "hardware_tcm_1", "ch{}"),
+        "dsp": (as_ro(args.dsp_file), "dsp", "ch{}"),
+        "hit": (as_ro(args.hit_file), "hit", "ch{}"),
         "evt": (None, "evt"),
     },
     evt_config,
@@ -157,12 +164,12 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
     trigger_timestamp = table[field_config["ged_timestamp"]["table"]][
         field_config["ged_timestamp"]["field"]
     ].nda
-    if "hardware_tcm_2" in lh5.ls(args.tcm_file):
+    if "hardware_tcm_2" in lh5.ls(as_ro(args.tcm_file)):
         muon_table = build_evt(
             {
-                "tcm": (args.tcm_file, "hardware_tcm_2", "ch{}"),
-                "dsp": (args.dsp_file, "dsp", "ch{}"),
-                "hit": (args.hit_file, "hit", "ch{}"),
+                "tcm": (as_ro(args.tcm_file), "hardware_tcm_2", "ch{}"),
+                "dsp": (as_ro(args.dsp_file), "dsp", "ch{}"),
+                "hit": (as_ro(args.hit_file), "hit", "ch{}"),
                 "evt": (None, "evt"),
             },
             muon_config,
@@ -183,8 +190,7 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
         field_config["output_field"]["field"], Array(muon_flag)
     )
 
-sto.write(obj=table, name="evt", lh5_file=temp_output, wo_mode="a")
+sto.write(obj=table, name="evt", lh5_file=args.output, wo_mode="a")
 
-os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
