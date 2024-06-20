@@ -117,11 +117,10 @@ def readable_json(dic, ncol=6, indent=4):
     return out_string
 
 
-def get_keys(input_files):
+def get_keys(files):
     def get_run(Filekey):
         return f"{Filekey.experiment}-{Filekey.period}-{Filekey.run}-{Filekey.datatype}"
 
-    files = glob.glob(input_files)
     key_dict = {}
     for file in files:
         key = FileKey.get_filekey_from_filename(os.path.basename(file))
@@ -133,7 +132,8 @@ def get_keys(input_files):
 
 
 def build_valid_keys(input_files, output_dir):
-    key_dict = get_keys(input_files)
+    infiles = glob.glob(input_files)
+    key_dict = get_keys(infiles)
 
     for key in list(key_dict):
         dtype = key.split("-")[-1]
@@ -147,13 +147,15 @@ def build_valid_keys(input_files, output_dir):
         with open(out_file, "w") as w:
             w.write(out_string)
 
-    for input_file in input_files:
+    for input_file in infiles:
         if os.path.isfile(input_file):
             os.remove(input_file)
 
 
 def build_file_dbs(input_files, output_dir):
+    input_files = glob.glob(input_files)
     key_dict = get_keys(input_files)
+
     for key in list(key_dict):
         experiment, period, run, dtype = key.split("-")
         out_file = os.path.join(output_dir, f"{key}-filedb.h5")

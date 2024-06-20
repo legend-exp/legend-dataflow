@@ -363,7 +363,7 @@ rule build_psp:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=25,
+        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_dsp.py "

@@ -26,6 +26,7 @@ from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+warnings.filterwarnings(action="ignore", category=np.RankWarning)
 
 
 def run_splitter(files):
@@ -65,7 +66,7 @@ def bin_spectrum(
     cut_field="is_valid_cal",
     pulser_field="is_pulser",
     erange=(0, 3000),
-    dx=2,
+    dx=0.25,
 ):
     bins = np.arange(erange[0], erange[1] + dx, dx)
     return {
@@ -114,7 +115,7 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             dic["uncertainties"] = dic["uncertainties"].to_dict()
             dic.pop("covariance")
 
-        return {
+        out_dict = {
             "total_fep": len(data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")),
             "total_dep": len(data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")),
             "pass_fep": len(
@@ -129,6 +130,279 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             "pk_fits": pk_dict,
             "peak_param": results_dict["peak_param"],
         }
+        if "calibration_parameters" in results_dict:
+            out_dict["calibration_parameters"] = results_dict["calibration_parameters"].to_dict()
+            out_dict["calibration_uncertainty"] = results_dict[
+                "calibration_uncertainties"
+            ].to_dict()
+
+        return out_dict
+
+
+def calibrate_partition(
+    data,
+    cal_dicts,
+    results_dicts,
+    object_dicts,
+    plot_dicts,
+    timestamp,
+    metadata_path,
+    configs,
+    channel,
+    datatype,
+    gen_plots=True,
+):
+
+    # load metadata
+    meta = LegendMetadata(path=metadata_path)
+    chmap = meta.channelmap(timestamp)
+
+    det_status = chmap.map("daq.rawid")[int(channel[2:])]["analysis"]["usability"]
+
+    configs = LegendMetadata(path=configs)
+    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"]["pars_pht_partcal"][
+        "inputs"
+    ]["pars_pht_partcal_config"][channel]
+
+    kwarg_dict = Props.read_from(channel_dict)
+
+    if "plot_options" in kwarg_dict:
+        for field, item in kwarg_dict["plot_options"].items():
+            kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
+
+    nruns = len(np.unique(data["run_timestamp"]))
+
+    # calibrate
+    pk_pars = [
+        # (238.632, (10, 10), pgf.gauss_on_step), #double line
+        # (241.0, (10, 10), pgf.gauss_on_step), #double line
+        (277.371, (10, 7), pgf.gauss_on_linear),
+        (288.2, (7, 10), pgf.gauss_on_linear),
+        (300.1, (10, 10), pgf.gauss_on_linear),
+        (453.0, (10, 10), pgf.gauss_on_linear),
+        # (511, (20, 20), pgf.gauss_on_step), double line
+        (549.8, (10, 10), pgf.gauss_on_linear),
+        (583.187, (20, 20), pgf.hpge_peak),
+        (727.330, (20, 20), pgf.hpge_peak),
+        (763.13, (20, 10), pgf.gauss_on_linear),
+        (785.37, (10, 20), pgf.gauss_on_linear),
+        (860.557, (20, 20), pgf.hpge_peak),
+        (893.408, (20, 20), pgf.gauss_on_linear),
+        (927.6, (20, 20), pgf.gauss_on_linear),
+        (952.120, (20, 20), pgf.gauss_on_linear),
+        (982.7, (20, 20), pgf.gauss_on_linear),
+        (1078.62, (20, 7), pgf.gauss_on_linear),
+        (1093.9, (7, 20), pgf.gauss_on_linear),
+        (1512.7, (20, 20), pgf.gauss_on_linear),
+        (1592.511, (20, 20), pgf.hpge_peak),
+        (1620.50, (20, 20), pgf.hpge_peak),
+        (1679.7, (20, 20), pgf.gauss_on_linear),
+        (1806.0, (20, 20), pgf.gauss_on_linear),
+        (2103.511, (20, 20), pgf.hpge_peak),
+        (2614.511, (40, 20), pgf.hpge_peak),
+        (3125.511, (20, 20), pgf.gauss_on_linear),
+        (3197.7, (20, 20), pgf.gauss_on_linear),
+        (3475.1, (20, 20), pgf.gauss_on_linear),
+    ]
+
+    glines = [pk_par[0] for pk_par in pk_pars]
+
+    if "cal_energy_params" not in kwarg_dict:
+        cal_energy_params = [energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]]
+    else:
+        cal_energy_params = kwarg_dict["cal_energy_params"]
+
+    selection_string = f"~is_pulser&{kwarg_dict['final_cut_field']}"
+
+    ecal_results = {}
+    partcal_plot_dict = {}
+    full_object_dict = {}
+
+    for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
+        energy = data.query(selection_string)[energy_param].to_numpy()
+        full_object_dict[cal_energy_param] = HPGeCalibration(
+            energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
+        )
+        full_object_dict[cal_energy_param].hpge_get_energy_peaks(
+            energy,
+            etol_kev=5 if det_status == "on" else 10,
+            update_cal_pars=bool(det_status == "on"),
+        )
+        if det_status != "on":
+            full_object_dict[cal_energy_param].peak_locs = np.array(glines)
+
+        full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
+            energy,
+            peak_pars=pk_pars,
+            tail_weight=kwarg_dict.get("tail_weight", 0),
+            n_events=kwarg_dict.get("n_events", None),
+            allowed_p_val=kwarg_dict.get("p_val", 0),
+            update_cal_pars=bool(det_status == "on"),
+            bin_width_kev=0.1 if nruns > 3 else 0.5,
+        )
+
+        if (
+            2614.511 not in full_object_dict[cal_energy_param].peaks_kev
+            and det_status == "on"
+            and (cal_energy_param == "cuspEmax_ctc_cal")
+        ):
+            csqr = full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
+                "peak_parameters"
+            ][2614.511]["chi_square"]
+            if csqr[0] / csqr[1] < 100:
+                allowed_p_val = (
+                    0.9
+                    * full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
+                        "peak_parameters"
+                    ][2614.511]["p_value"]
+                )
+
+                full_object_dict[cal_energy_param] = HPGeCalibration(
+                    energy_param,
+                    [*full_object_dict[cal_energy_param].peaks_kev, 2614.511],
+                    1,
+                    kwarg_dict.get("deg", 0),  # , fixed={1: 1}
+                )
+                full_object_dict[cal_energy_param].hpge_get_energy_peaks(
+                    energy,
+                    etol_kev=5 if det_status == "on" else 10,
+                    update_cal_pars=bool(det_status == "on"),
+                )
+
+                full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
+                    energy,
+                    peak_pars=pk_pars,
+                    tail_weight=kwarg_dict.get("tail_weight", 0),
+                    n_events=kwarg_dict.get("n_events", None),
+                    allowed_p_val=allowed_p_val,
+                    update_cal_pars=bool(det_status == "on"),
+                    bin_width_kev=0.2 if nruns > 3 else 0.5,
+                )
+            else:
+                err = f"2614.511 peak not found in {cal_energy_param} fit, reduced csqr {csqr[0]/csqr[1]} not below 10, check fit"
+                raise ValueError(err)
+
+        full_object_dict[cal_energy_param].get_energy_res_curve(
+            FWHMLinear,
+            interp_energy_kev={"Qbb": 2039.0},
+        )
+        full_object_dict[cal_energy_param].get_energy_res_curve(
+            FWHMQuadratic,
+            interp_energy_kev={"Qbb": 2039.0},
+        )
+
+        data[cal_energy_param] = nb_poly(
+            data[energy_param].to_numpy(), full_object_dict[cal_energy_param].pars
+        )
+
+        ecal_results[cal_energy_param] = get_results_dict(
+            full_object_dict[cal_energy_param], data, cal_energy_param, selection_string
+        )
+        cal_dicts = update_cal_dicts(
+            cal_dicts, {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
+        )
+        if "ctc" in cal_energy_param:
+            no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
+            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("ctc", "noctc")
+
+            cal_dicts = update_cal_dicts(
+                cal_dicts, {cal_energy_param.replace("ctc", "noctc"): no_ctc_dict}
+            )
+            cal_dicts = update_cal_dicts(
+                cal_dicts,
+                {
+                    cal_energy_param.replace("_ctc", ""): {
+                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "parameters": {},
+                    }
+                },
+            )
+
+        if gen_plots is True:
+            param_plot_dict = {}
+            if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
+                param_plot_dict["fwhm_fit"] = full_object_dict[cal_energy_param].plot_eres_fit(
+                    energy
+                )
+                param_plot_dict["cal_fit"] = full_object_dict[cal_energy_param].plot_cal_fit(
+                    energy
+                )
+                if det_status == "on":
+                    param_plot_dict["cal_fit_with_errors"] = full_object_dict[
+                        cal_energy_param
+                    ].plot_cal_fit_with_errors(energy)
+                if (
+                    len(
+                        full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
+                            "peak_parameters"
+                        ]
+                    )
+                    < 17
+                ):
+                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
+                        energy, ncols=4, nrows=4
+                    )
+                elif (
+                    len(
+                        full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
+                            "peak_parameters"
+                        ]
+                    )
+                    < 26
+                ):
+                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
+                        energy, ncols=5, nrows=5
+                    )
+                else:
+                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
+                        energy, ncols=6, nrows=5
+                    )
+
+                if "plot_options" in kwarg_dict:
+                    for key, item in kwarg_dict["plot_options"].items():
+                        if item["options"] is not None:
+                            param_plot_dict[key] = item["function"](
+                                data,
+                                cal_energy_param,
+                                selection_string,
+                                **item["options"],
+                            )
+                        else:
+                            param_plot_dict[key] = item["function"](
+                                data,
+                                cal_energy_param,
+                                selection_string,
+                            )
+            partcal_plot_dict[cal_energy_param] = param_plot_dict
+
+        for peak_dict in (
+            full_object_dict[cal_energy_param]
+            .results["hpge_fit_energy_peaks"]["peak_parameters"]
+            .values()
+        ):
+            peak_dict["function"] = peak_dict["function"].name
+            peak_dict["parameters"] = peak_dict["parameters"].to_dict()
+            peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+
+    out_result_dicts = {}
+    for tstamp, result_dict in results_dicts.items():
+        out_result_dicts[tstamp] = dict(**result_dict, partition_ecal=ecal_results)
+
+    out_object_dicts = {}
+    for tstamp, object_dict in object_dicts.items():
+        out_object_dicts[tstamp] = dict(**object_dict, partition_ecal=full_object_dict)
+
+    common_dict = partcal_plot_dict.pop("common") if "common" in list(partcal_plot_dict) else None
+    out_plot_dicts = {}
+    for tstamp, plot_dict in plot_dicts.items():
+        if "common" in list(plot_dict) and common_dict is not None:
+            plot_dict["common"].update(partcal_plot_dict["common"])
+        elif common_dict is not None:
+            plot_dict["common"] = common_dict
+        plot_dict.update({"partition_ecal": partcal_plot_dict})
+        out_plot_dicts[tstamp] = plot_dict
+
+    return cal_dicts, out_result_dicts, out_object_dicts, out_plot_dicts
 
 
 if __name__ == "__main__":
@@ -165,74 +439,35 @@ if __name__ == "__main__":
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
 
-    meta = LegendMetadata(path=args.metadata)
-    chmap = meta.channelmap(args.timestamp)
-
-    det_status = chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["usability"]
-
-    configs = LegendMetadata(path=args.configs)
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "pars_pht_partcal"
-    ]["inputs"]["pars_pht_partcal_config"][args.channel]
-
-    kwarg_dict = Props.read_from(channel_dict)
-
     cal_dict = {}
     results_dicts = {}
-    if isinstance(args.ecal_file, list):
-        for ecal in args.ecal_file:
-            cal = Props.read_from(ecal)
+    for ecal in args.ecal_file:
+        cal = Props.read_from(ecal)
 
-            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
-            cal_dict[fk.timestamp] = cal["pars"]
-            results_dicts[fk.timestamp] = cal["results"]
-    else:
-        cal = Props.read_from(args.ecal_file)
-
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.ecal_file))
+        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
         cal_dict[fk.timestamp] = cal["pars"]
         results_dicts[fk.timestamp] = cal["results"]
 
     object_dict = {}
-    if isinstance(args.eres_file, list):
-        for ecal in args.eres_file:
-            with open(ecal, "rb") as o:
-                cal = pkl.load(o)
-            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
-            object_dict[fk.timestamp] = cal
-    else:
-        with open(args.eres_file, "rb") as o:
+    for ecal in args.eres_file:
+        with open(ecal, "rb") as o:
             cal = pkl.load(o)
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.eres_file))
+        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
         object_dict[fk.timestamp] = cal
 
     inplots_dict = {}
     if args.inplots:
-        if isinstance(args.inplots, list):
-            for ecal in args.inplots:
-                with open(ecal, "rb") as o:
-                    cal = pkl.load(o)
-                fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
-                inplots_dict[fk.timestamp] = cal
-        else:
-            with open(args.inplots, "rb") as o:
+        for ecal in args.inplots:
+            with open(ecal, "rb") as o:
                 cal = pkl.load(o)
-            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.inplots))
+            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
             inplots_dict[fk.timestamp] = cal
 
-    if "plot_options" in kwarg_dict:
-        for field, item in kwarg_dict["plot_options"].items():
-            kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
-
     # sort files in dictionary where keys are first timestamp from run
-    if isinstance(args.input_files, list):
-        files = []
-        for file in args.input_files:
-            with open(file) as f:
-                files += f.read().splitlines()
-    else:
-        with open(args.input_files) as f:
-            files = f.read().splitlines()
+    files = []
+    for file in args.input_files:
+        with open(file) as f:
+            files += f.read().splitlines()
 
     files = sorted(
         np.unique(files)
@@ -244,6 +479,13 @@ if __name__ == "__main__":
         fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(sorted(filelist)[0]))
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
+
+    configs = LegendMetadata(path=args.configs)
+    channel_dict = configs.on(timestamp, system=args.datatype)["snakemake_rules"][
+        "pars_pht_partcal"
+    ]["inputs"]["pars_pht_partcal_config"][args.channel]
+
+    kwarg_dict = Props.read_from(channel_dict)
 
     params = [
         kwarg_dict["final_cut_field"],
@@ -292,171 +534,37 @@ if __name__ == "__main__":
             row = pd.DataFrame(row)
             data = pd.concat([data, row])
 
-    pk_pars = [
-        (238.632, (10, 10), pgf.gauss_on_step),
-        (511, (30, 30), pgf.gauss_on_step),
-        (583.191, (30, 30), pgf.hpge_peak),
-        (727.330, (30, 30), pgf.hpge_peak),
-        (763, (30, 15), pgf.gauss_on_step),
-        (785, (15, 30), pgf.gauss_on_step),
-        (860.564, (30, 25), pgf.hpge_peak),
-        (893, (25, 30), pgf.gauss_on_step),
-        (1079, (30, 30), pgf.gauss_on_step),
-        (1513, (30, 30), pgf.gauss_on_step),
-        (1592.53, (30, 20), pgf.hpge_peak),
-        (1620.50, (20, 30), pgf.hpge_peak),
-        (2103.53, (30, 30), pgf.hpge_peak),
-        (2614.553, (30, 30), pgf.hpge_peak),
-        (3125, (30, 30), pgf.gauss_on_step),
-        (3198, (30, 30), pgf.gauss_on_step),
-        (3474, (30, 30), pgf.gauss_on_step),
-    ]
-
-    glines = [pk_par[0] for pk_par in pk_pars]
-
-    if "cal_energy_params" not in kwarg_dict:
-        cal_energy_params = [energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]]
-    else:
-        cal_energy_params = kwarg_dict["cal_energy_params"]
-
-    selection_string = f"~is_pulser&{kwarg_dict['final_cut_field']}"
-
-    ecal_results = {}
-    plot_dict = {}
-    full_object_dict = {}
-
-    for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
-        energy = data.query(selection_string)[energy_param].to_numpy()
-        full_object_dict[cal_energy_param] = HPGeCalibration(
-            energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
-        )
-        full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-            energy, etol_kev=5 if det_status == "on" else 10
-        )
-
-        if det_status != "on":
-            full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
-                energy,
-                update_cal_pars=True,
-                allowed_p_val=0,
-            )
-
-        full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
-            energy,
-            peak_pars=pk_pars,
-            tail_weight=kwarg_dict.get("tail_weight", 0),
-            n_events=kwarg_dict.get("n_events", None),
-            allowed_p_val=kwarg_dict.get("p_val", 0),
-            update_cal_pars=bool(det_status == "on"),
-            bin_width_kev=0.25,
-        )
-
-        full_object_dict[cal_energy_param].get_energy_res_curve(
-            FWHMLinear,
-            interp_energy_kev={"Qbb": 2039.0},
-        )
-        full_object_dict[cal_energy_param].get_energy_res_curve(
-            FWHMQuadratic,
-            interp_energy_kev={"Qbb": 2039.0},
-        )
-
-        data[cal_energy_param] = nb_poly(
-            data[energy_param].to_numpy(), full_object_dict[cal_energy_param].pars
-        )
-
-        ecal_results[cal_energy_param] = get_results_dict(
-            full_object_dict[cal_energy_param], data, cal_energy_param, selection_string
-        )
-        cal_dict = update_cal_dicts(
-            cal_dict, {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
-        )
-
-        if args.plot_file:
-            param_plot_dict = {}
-            if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
-                param_plot_dict["fwhm_fit"] = full_object_dict[cal_energy_param].plot_eres_fit(
-                    energy
-                )
-                param_plot_dict["cal_fit"] = full_object_dict[cal_energy_param].plot_cal_fit(
-                    energy
-                )
-                param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
-                    energy, ncols=4, nrows=5
-                )
-
-                if "plot_options" in kwarg_dict:
-                    for key, item in kwarg_dict["plot_options"].items():
-                        if item["options"] is not None:
-                            param_plot_dict[key] = item["function"](
-                                data,
-                                cal_energy_param,
-                                selection_string,
-                                **item["options"],
-                            )
-                        else:
-                            param_plot_dict[key] = item["function"](
-                                data,
-                                cal_energy_param,
-                                selection_string,
-                            )
-            plot_dict[cal_energy_param] = param_plot_dict
-
-        for peak_dict in (
-            full_object_dict[cal_energy_param]
-            .results["hpge_fit_energy_peaks"]["peak_parameters"]
-            .values()
-        ):
-            peak_dict["function"] = peak_dict["function"].name
-            peak_dict["parameters"] = peak_dict["parameters"].to_dict()
-            peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+    cal_dicts, results_dicts, object_dicts, plot_dicts = calibrate_partition(
+        data,
+        cal_dict,
+        results_dicts,
+        object_dict,
+        inplots_dict,
+        timestamp,
+        args.metadata,
+        args.configs,
+        args.channel,
+        args.datatype,
+        gen_plots=bool(args.plot_file),
+    )
 
     if args.plot_file:
-        common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
-
-        if isinstance(args.plot_file, list):
-            for plot_file in args.plot_file:
-                fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(plot_file))
-                if args.inplots:
-                    out_plot_dict = inplots_dict[fk.timestamp]
-                    out_plot_dict.update({"partition_ecal": plot_dict})
-                else:
-                    out_plot_dict = {"partition_ecal": plot_dict}
-
-                if "common" in list(out_plot_dict) and common_dict is not None:
-                    out_plot_dict["common"].update(common_dict)
-                elif common_dict is not None:
-                    out_plot_dict["common"] = common_dict
-
-                pathlib.Path(os.path.dirname(plot_file)).mkdir(parents=True, exist_ok=True)
-                with open(plot_file, "wb") as w:
-                    pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
-        else:
-            if args.inplots:
-                fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(args.plot_file))
-                out_plot_dict = inplots_dict[fk.timestamp]
-                out_plot_dict.update({"partition_ecal": plot_dict})
-            else:
-                out_plot_dict = {"partition_ecal": plot_dict}
-            if "common" in list(out_plot_dict) and common_dict is not None:
-                out_plot_dict["common"].update(common_dict)
-            elif common_dict is not None:
-                out_plot_dict["common"] = common_dict
-            pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
-            with open(args.plot_file, "wb") as w:
-                pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
+        for plot_file in args.plot_file:
+            pathlib.Path(os.path.dirname(plot_file)).mkdir(parents=True, exist_ok=True)
+            with open(plot_file, "wb") as w:
+                pkl.dump(plot_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
 
     for out in sorted(args.hit_pars):
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
         final_hit_dict = {
             "pars": cal_dict[fk.timestamp],
-            "results": dict(**results_dicts[fk.timestamp], partition_ecal=ecal_results),
+            "results": results_dicts[fk.timestamp],
         }
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
         Props.write_to(out, final_hit_dict)
 
     for out in args.fit_results:
         fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
-        final_object_dict = dict(**object_dict[fk.timestamp], partition_ecal=full_object_dict)
         pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
         with open(out, "wb") as w:
-            pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
+            pkl.dump(object_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)

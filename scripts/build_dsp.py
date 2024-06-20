@@ -79,6 +79,8 @@ build_dsp(
     database=database_dic,
     chan_config=channel_dict,
     write_mode="r",
+    buffer_len=3200 if args.datatype == "cal" else 3200,
+    block_width=16,
 )
 
 log.info(f"build_dsp finished in {time.time()-start}")

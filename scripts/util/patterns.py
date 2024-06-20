@@ -3,7 +3,6 @@ This module contains all the patterns needed for the data production
 """
 
 import os
-import pathlib
 
 from .utils import (
     par_dsp_path,
@@ -230,10 +229,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if (
-        tier_path(setup) not in str(pathlib.Path(file_pattern).resolve())
-        and check_in_cycle is True
-    ):
+    if tier_path(setup) not in os.path.normpath(file_pattern) and check_in_cycle is True:
         return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}-" + f"tier_{tier}.lh5"
     else:
         return file_pattern
@@ -411,10 +407,7 @@ def get_pattern_pars(setup, tier, name=None, extension="json", check_in_cycle=Tr
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if (
-        pars_path(setup) not in str(pathlib.Path(file_pattern).resolve())
-        and check_in_cycle is True
-    ):
+    if pars_path(setup) not in os.path.normpath(file_pattern) and check_in_cycle is True:
         if name is None:
             return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{extension}"
         else:

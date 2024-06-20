@@ -88,7 +88,11 @@ if __name__ == "__main__":
     kwarg_dict = Props.read_from(channel_dict)
 
     if args.overwrite_files:
-        overwrite = Props.read_from(args.overwrite_files)[args.channel]["pars"]["operations"]
+        overwrite = Props.read_from(args.overwrite_files)
+        if args.channel in overwrite:
+            overwrite = overwrite[args.channel]["pars"]["operations"]
+        else:
+            overwrite = None
     else:
         overwrite = None
 
@@ -130,7 +134,7 @@ if __name__ == "__main__":
             for tstamp in discharge_timestamps:
                 is_recovering = is_recovering | np.where(
                     (
-                        ((fft_data["timestamp"] - tstamp) < 0.01)
+                        ((fft_data["timestamp"] - tstamp) <= 0.01)
                         & ((fft_data["timestamp"] - tstamp) > 0)
                     ),
                     True,
@@ -205,7 +209,7 @@ if __name__ == "__main__":
         cal_files,
         f"{args.channel}/dsp",
         {},
-        [*cut_fields, "timestamp", "trapTmax"],
+        [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
         return_selection_mask=True,
         cal_energy_param="trapTmax",
@@ -239,7 +243,7 @@ if __name__ == "__main__":
     is_recovering = np.full(len(data), False, dtype=bool)
     for tstamp in discharge_timestamps:
         is_recovering = is_recovering | np.where(
-            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            (((data["timestamp"] - tstamp) <= 0.01) & ((data["timestamp"] - tstamp) > 0)),
             True,
             False,
         )
@@ -258,7 +262,7 @@ if __name__ == "__main__":
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         hit_dict_init_cal, plot_dict_init_cal = generate_cut_classifiers(
-            data.query("~is_pulser")[mask],
+            data.query("~is_pulser&~is_recovering")[mask],
             init_cal["cut_parameters"],
             init_cal.get("rounding", 4),
             display=1 if args.plot_path else 0,
@@ -273,7 +277,7 @@ if __name__ == "__main__":
             if "classifier" not in outname:
                 ct_mask = ct_mask & data[outname]
 
-        mask = mask[ct_mask[~data["is_pulser & ~is_recovering"].to_numpy()]]
+        mask = mask[ct_mask[(~data["is_pulser"] & ~data["is_recovering"]).to_numpy()]]
         data = data[ct_mask]
         log.debug("initial cal cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")

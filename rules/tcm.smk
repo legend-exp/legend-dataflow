@@ -26,6 +26,7 @@ rule build_tier_tcm:
         "tier-tcm"
     resources:
         runtime=300,
+        mem_swap=20,
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_tcm.py "

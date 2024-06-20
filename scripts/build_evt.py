@@ -35,6 +35,8 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
 argparser.add_argument("--tcm_file", help="tcm file", type=str)
+argparser.add_argument("--xtc_file", help="xtc file", type=str)
+argparser.add_argument("--par_files", help="par files", nargs="*")
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -78,6 +80,25 @@ meta = LegendMetadata(path=args.metadata)
 chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
+
+if args.datatype == "phy":
+    exp_string = evt_config["operations"]["geds___energy"]["expression"]
+    exp_string = exp_string.replace(
+        'xtalk_matrix_filename=""', f'xtalk_matrix_filename="{args.xtc_file}"'
+    )
+    exp_string = exp_string.replace('cal_par_files=""', f"cal_par_files={args.par_files}")
+    exp_string2 = exp_string.replace('return_mode="energy"', 'return_mode="tcm_index"')
+
+    file_path_config = {
+        "operations": {
+            "geds___energy": {"expression": exp_string},
+            "_geds___tcm_idx": {"expression": exp_string2},
+        }
+    }
+
+    log.debug(json.dumps(file_path_config, indent=2))
+
+    Props.add_to(evt_config, file_path_config)
 
 # block for snakemake to fill in channel lists
 for field, dic in evt_config["channels"].items():

@@ -52,7 +52,7 @@ for key, dataset in part.datasets.items():
                 cal_files=part.get_filelists(partition, key, intier),
                 fft_files=part.get_filelists(partition, key, intier, datatype="fft"),
                 pulser_files=[
-                    file.replace("pht", "tcm")
+                    file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
@@ -117,7 +117,7 @@ for key, dataset in part.datasets.items():
             group:
                 "par-pht"
             resources:
-                mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
+                mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
@@ -260,7 +260,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("pht", "tcm")
+                    file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
@@ -442,7 +442,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("pht", "tcm")
+                    file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,
@@ -622,7 +622,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("pht", "tcm")
+                    file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         f"{par_pht_path(setup)}/validity.jsonl",
                         partition,

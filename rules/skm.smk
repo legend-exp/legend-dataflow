@@ -16,7 +16,7 @@ rule build_skm:
     output:
         skm_file=get_pattern_tier(setup, "skm", check_in_cycle=check_in_cycle),
     params:
-        timestamp="all",
+        timestamp="20230410T000000Z",
         datatype="phy",
     log:
         get_pattern_log_concat(setup, "tier_skm"),
@@ -28,7 +28,7 @@ rule build_skm:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_skm.py "
         "--configs {configs} "
-        "--metadata {meta} "
+        "--timestamp {params.timestamp} "
         "--log {log} "
         "--datatype {params.datatype} "
         "--evt_file {input.evt_file} "
