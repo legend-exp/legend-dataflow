@@ -31,9 +31,9 @@ if snakemake.params.configs:
         if os.path.isfile(snakemake.params.analysis_runs_file):
             with open(snakemake.params.analysis_runs_file) as f:
                 analysis_runs = json.load(f)
-        else:
-            analysis_runs = []
-            print("no analysis_runs file found")
+    else:
+        analysis_runs = []
+        print("no analysis_runs file found")
 
 key = FileKey.parse_keypart(keypart)
 
