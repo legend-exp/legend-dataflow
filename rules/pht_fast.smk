@@ -164,7 +164,7 @@ rule par_pht_fast:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_fast.py "
+        "{basedir}/../scripts/pars_pht_fast.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

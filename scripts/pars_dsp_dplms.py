@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -140,8 +139,7 @@ sto.write(
 )
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
-with open(args.dsp_pars, "w") as w:
-    json.dump(db_dict, w, indent=2)
+Props.write_to(args.dsp_pars, dplms_dict)
 
 if args.plot_path:
     pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)

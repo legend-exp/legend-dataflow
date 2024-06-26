@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -66,8 +65,7 @@ if kwarg_dict["run_tau"] is True:
         input_file = args.raw_files
 
     if args.pulser_file:
-        with open(args.pulser_file) as f:
-            pulser_dict = json.load(f)
+        pulser_dict = Props.read_from(args.pulser_file)
         mask = np.array(pulser_dict["mask"])
 
     elif args.tcm_filelist:
@@ -135,5 +133,4 @@ else:
     out_dict = {}
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
-with open(args.output_file, "w") as f:
-    json.dump(tau.output_dict, f, indent=4)
+Props.write_to(args.output_file, tau.output_dict)

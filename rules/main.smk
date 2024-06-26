@@ -24,7 +24,7 @@ rule autogen_output:
     and fields in each file.
     """
     input:
-        filelist=read_filelist,
+        filelist=os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
     output:
         gen_output="{label}-{tier}.gen",
         summary_log=f"{log_path(setup)}/summary-"

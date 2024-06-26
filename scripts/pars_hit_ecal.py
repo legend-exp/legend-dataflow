@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import json
 import logging
 import os
 import pathlib
@@ -464,7 +463,9 @@ if __name__ == "__main__":
     db_files = [
         par_file
         for par_file in args.ctc_dict
-        if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yml"
+        if os.path.splitext(par_file)[1] == ".json"
+        or os.path.splitext(par_file)[1] == ".yml"
+        or os.path.splitext(par_file)[1] == ".yaml"
     ]
 
     database_dic = Props.read_from(db_files)
@@ -509,8 +510,7 @@ if __name__ == "__main__":
     )
 
     if args.pulser_file:
-        with open(args.pulser_file) as f:
-            pulser_dict = json.load(f)
+        pulser_dict = Props.read_from(args.pulser_file)
         mask = np.array(pulser_dict["mask"])
 
     elif args.tcm_filelist:
@@ -742,9 +742,7 @@ if __name__ == "__main__":
 
     # save output dictionary
     output_dict = {"pars": hit_dict, "results": {"ecal": results_dict}}
-    with open(args.save_path, "w") as fp:
-        pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
-        json.dump(output_dict, fp, indent=4)
+    Props.write_to(args.save_path, output_dict)
 
     # save calibration objects
     with open(args.results_path, "wb") as fp:
