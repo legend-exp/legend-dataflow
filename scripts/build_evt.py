@@ -3,8 +3,8 @@ import json
 import logging
 import os
 import re
-import pathlib
 import time
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -15,6 +15,7 @@ from pygama.evt import build_evt
 
 sto = lh5.LH5Store()
 
+
 def as_ro(path):
     sub_pattern = ["^/global", "/dvs_ro"]
 
@@ -23,7 +24,7 @@ def as_ro(path):
     if isinstance(path, Path):
         return Path(re.sub(*sub_pattern, path.name))
 
-    return [as_ro(config, p) for p in path]
+    return [as_ro(p) for p in path]
 
 
 def find_matching_values_with_delay(arr1, arr2, jit_delay):
@@ -62,7 +63,7 @@ argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
 if args.log is not None:
-    pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 else:
     logging.basicConfig(level=logging.DEBUG)
@@ -130,7 +131,7 @@ for field, dic in evt_config["channels"].items():
 log.debug(json.dumps(evt_config["channels"], indent=2))
 
 t_start = time.time()
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 table = build_evt(
     {
