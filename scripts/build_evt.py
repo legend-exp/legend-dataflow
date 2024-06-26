@@ -2,29 +2,19 @@ import argparse
 import json
 import logging
 import os
-import re
 import time
 from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.types import Array
 from pygama.evt import build_evt
 
+from .util.utils import as_ro
+
 sto = lh5.LH5Store()
-
-
-def as_ro(path):
-    sub_pattern = ["^/global", "/dvs_ro"]
-
-    if isinstance(path, str):
-        return re.sub(*sub_pattern, path)
-    if isinstance(path, Path):
-        return Path(re.sub(*sub_pattern, path.name))
-
-    return [as_ro(p) for p in path]
 
 
 def find_matching_values_with_delay(arr1, arr2, jit_delay):
@@ -78,7 +68,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # load in config
-configs = LegendMetadata(path=as_ro(args.configs), lazy=True)
+configs = TextDB(path=as_ro(args.configs), lazy=True)
 if args.tier == "evt" or args.tier == "pet":
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"

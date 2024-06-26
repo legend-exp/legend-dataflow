@@ -310,7 +310,7 @@ def set_last_rule_name(workflow, new_name):
 
 
 def as_ro(config, path):
-    if "read_only_fs_sub_pattern" not in config:
+    if "read_only_fs_sub_pattern" not in config or config["read_only_fs_sub_pattern"] is None:
         return path
 
     sub_pattern = config["read_only_fs_sub_pattern"]
