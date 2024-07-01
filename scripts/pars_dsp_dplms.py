@@ -79,7 +79,7 @@ if dplms_dict["run_dplms"] is True:
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
     peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
-    ids = np.in1d(peaks, peaks_rounded)
+    ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
