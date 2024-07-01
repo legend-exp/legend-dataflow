@@ -29,10 +29,10 @@ rule autogen_output:
         gen_output="{label}-{tier}.gen",
         summary_log=f"{log_path(setup)}/summary-"
         + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow() , '%Y%m%dT%H%M%SZ')}.log",
+        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
         warning_log=f"{log_path(setup)}/warning-"
         + "{label}-{tier}"
-        + f"-{datetime.strftime(datetime.utcnow() , '%Y%m%dT%H%M%SZ')}.log",
+        + f"-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}.log",
     params:
         log_path=tmp_log_path(setup),
         tmp_par_path=os.path.join(tmp_par_path(setup), "*_db.json"),
