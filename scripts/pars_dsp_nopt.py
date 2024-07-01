@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -115,5 +114,4 @@ if args.plot_path:
         pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
-with open(args.dsp_pars, "w") as w:
-    json.dump(dict(nopt_pars=out_dict, **db_dict), w, indent=4)
+Props.write_to(args.dsp_pars, dict(nopt_pars=out_dict, **db_dict))

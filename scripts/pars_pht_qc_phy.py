@@ -151,8 +151,7 @@ if __name__ == "__main__":
 
     for file in args.save_path:
         pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
-        with open(file, "w") as f:
-            json.dump({"pars": {"operations": hit_dict}}, f, indent=4)
+        Props.write_to(file, {"pars": {"operations": hit_dict}})
 
     if args.plot_path:
         for file in args.plot_path:

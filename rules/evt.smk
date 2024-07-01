@@ -52,7 +52,7 @@ for tier in ("evt", "pet"):
             mem_swap=50,
         shell:
             "{swenv} python3 -B "
-            f"{workflow.source_path('../scripts/build_evt.py')} "
+            "{basedir}/../scripts/build_evt.py "
             "--configs {configs} "
             "--metadata {meta} "
             "--log {log} "
@@ -70,7 +70,7 @@ for tier in ("evt", "pet"):
 
     rule:
         wildcard_constraints:
-            timestamp="(?!\d{8}T\d{6}Z)",
+            timestamp=r"(?!\d{8}T\d{6}Z)",
         input:
             lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
         output:

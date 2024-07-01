@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -118,5 +117,4 @@ full_dict = {
     "valid_keys": {key: {"valid_channels": {"raw": raw_channels, "dsp": channels}}},
 }
 pathlib.Path(os.path.dirname(args.db_file)).mkdir(parents=True, exist_ok=True)
-with open(args.db_file, "w") as w:
-    json.dump(full_dict, w, indent=4)
+Props.write_to(args.db_file, full_dict)

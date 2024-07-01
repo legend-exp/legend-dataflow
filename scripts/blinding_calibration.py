@@ -5,7 +5,6 @@ and deriving a simple scaling relation from adc to keV.
 """
 
 import argparse
-import json
 import logging
 import os
 import pickle as pkl
@@ -18,6 +17,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from legendmeta import LegendMetadata
+from legendmeta.catalog import Props
 from pygama.math.histogram import better_int_binning, get_hist
 from pygama.pargen.energy_cal import hpge_find_E_peaks
 
@@ -120,6 +120,4 @@ plt.close()
 #     with open(args.plot_file, "wb") as w:
 #         pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
 #     plt.close()
-
-with open(args.blind_curve, "w") as w:
-    json.dump(out_dict, w, indent=4)
+Props.write_to_file(args.blind_curve, out_dict)

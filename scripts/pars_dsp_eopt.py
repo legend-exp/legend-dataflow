@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -367,8 +366,7 @@ else:
     pathlib.Path(args.qbb_grid_path).touch()
 
 pathlib.Path(os.path.dirname(args.final_dsp_pars)).mkdir(parents=True, exist_ok=True)
-with open(args.final_dsp_pars, "w") as w:
-    json.dump(db_dict, w, indent=4)
+Props.write_to(args.final_dsp_pars, db_dict)
 
 if args.plot_path:
     if args.inplots:

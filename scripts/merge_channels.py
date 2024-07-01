@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import pathlib
 import pickle as pkl
@@ -61,7 +60,7 @@ temp_output = f"{out_file}.{rand_num}"
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 
-if file_extension == ".json":
+if file_extension == ".json" or file_extension == ".yaml" or file_extension == ".yml":
     out_dict = {}
     for channel in channel_files:
         if pathlib.Path(channel).suffix == file_extension:
@@ -74,8 +73,7 @@ if file_extension == ".json":
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)
 
-    with open(temp_output, "w") as w:
-        json.dump(out_dict, w, indent=4)
+    Props.write_to(temp_output, out_dict)
 
     os.rename(temp_output, out_file)
 
@@ -133,7 +131,6 @@ elif file_extension == ".lh5":
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)
     if args.out_db:
-        with open(args.out_db, "w") as w:
-            json.dump(db_dict, w, indent=4)
+        Props.write_to(args.out_db, db_dict)
 
     os.rename(temp_output, out_file)

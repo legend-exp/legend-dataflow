@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -58,5 +57,4 @@ ids, mask = get_tcm_pulser_ids(
 )
 
 pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
-with open(args.pulser_file, "w") as f:
-    json.dump({"idxs": ids.tolist(), "mask": mask.tolist()}, f, indent=4)
+Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

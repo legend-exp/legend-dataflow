@@ -33,7 +33,10 @@ intier = "psp"
 
 rule pht_checkpoint:
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, intier),
+        files=os.path.join(
+            filelist_path(setup),
+            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
+        ),
     output:
         temp(get_pattern_pars_tmp_channel(setup, "pht", "check")),
     shell:
@@ -118,7 +121,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_qc.py "
+                "{basedir}/../scripts/pars_pht_qc.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -170,7 +173,7 @@ rule build_pht_qc:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_qc.py "
+        "{basedir}/../scripts/pars_pht_qc.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -231,7 +234,7 @@ rule build_per_energy_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_hit_ecal.py')} "
+        "{basedir}/../scripts/pars_hit_ecal.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -343,7 +346,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_partcal.py "
+                "{basedir}/../scripts/pars_pht_partcal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -404,7 +407,7 @@ rule build_pht_energy_super_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_partcal.py "
+        "{basedir}/../scripts/pars_pht_partcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -525,7 +528,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_aoecal.py "
+                "{basedir}/../scripts/pars_pht_aoecal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -585,7 +588,7 @@ rule build_pht_aoe_calibrations:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_aoecal.py "
+        "{basedir}/../scripts/pars_pht_aoecal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -703,7 +706,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_lqcal.py "
+                "{basedir}/../scripts/pars_pht_lqcal.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -758,7 +761,7 @@ rule build_pht_lq_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_lqcal.py "
+        "{basedir}/../scripts/pars_pht_lqcal.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -787,9 +790,15 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_pars_pht_objects:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(
-            wildcards,
-            "pht_objects_pkl",
+        lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="objects",
+            extension="pkl",
         ),
     output:
         get_pattern_pars(
@@ -803,28 +812,42 @@ rule build_pars_pht_objects:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
 
 rule build_plts_pht:
     input:
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+        ),
     output:
         get_pattern_plts(setup, "pht"),
     group:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
 
 rule build_pars_pht:
     input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht"),
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+        ),
         plts=get_pattern_plts(setup, "pht"),
         objects=get_pattern_pars(
             setup,
@@ -839,7 +862,7 @@ rule build_pars_pht:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input.infiles} "
         "--output {output} "
 
@@ -865,7 +888,7 @@ rule build_pht:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_hit.py')} "
+        "{basedir}/../scripts/build_hit.py "
         "--configs {configs} "
         "--log {log} "
         "--tier {params.tier} "

@@ -7,7 +7,6 @@ then it will skip the check.
 """
 
 import argparse
-import json
 import logging
 import os
 import pathlib
@@ -98,8 +97,7 @@ plt.close()
 # if detector is in ac mode it will always pass this check
 if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status is False:
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w") as f:
-        json.dump({}, f)
+    Props.write_to(args.output, {})
 else:
     msg = "peaks not found in daqenergy"
     raise RuntimeError(msg)

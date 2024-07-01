@@ -29,7 +29,7 @@ rule build_tier_tcm:
         mem_swap=20,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_tcm.py')} "
+        "{basedir}/../scripts/build_tcm.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -41,7 +41,9 @@ rule build_tier_tcm:
 # This rule builds the tcm files each raw file
 rule build_pulser_ids:
     input:
-        tcm_files=lambda wildcards: read_filelist_cal(wildcards, "tcm"),
+        tcm_files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -56,7 +58,7 @@ rule build_pulser_ids:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/pars_tcm_pulser.py')} "
+        "{basedir}/../scripts/pars_tcm_pulser.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "

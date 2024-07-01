@@ -36,7 +36,7 @@ rule build_blinding_check:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/check_blinding.py')} "
+        "{basedir}/../scripts/check_blinding.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -47,6 +47,50 @@ rule build_blinding_check:
         "--blind_curve {input.par_file} "
         "--plot_file {output.plot_file} "
         "--files {input.files} "
+
+
+rule build_plts_raw:
+    input:
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+    output:
+        get_pattern_plts(setup, "raw"),
+    group:
+        "merge-raw"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input} "
+        "--output {output} "
+
+
+rule build_pars_raw:
+    input:
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+        ),
+        plts=get_pattern_plts(
+            setup,
+            "raw",
+        ),
+    output:
+        get_pattern_pars(setup, "raw", check_in_cycle=check_in_cycle),
+    group:
+        "merge-raw"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
 
 
 checkpoint build_pars_raw:
@@ -60,6 +104,6 @@ checkpoint build_pars_raw:
         "merge-blinding"
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/merge_channels.py')} "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "

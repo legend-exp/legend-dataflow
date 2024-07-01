@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import pickle as pkl
@@ -10,6 +9,7 @@ os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
 import lgdo.lh5 as lh5
+from legendmeta.catalog import Props
 from sklearn.svm import SVC
 
 argparser = argparse.ArgumentParser()
@@ -31,8 +31,7 @@ log = logging.getLogger(__name__)
 tb, _ = sto.read("ml_train/dsp", args.train_data)
 log.debug("loaded data")
 
-with open(args.train_hyperpars) as hyperpars_file:
-    hyperpars = json.load(hyperpars_file)
+hyperpars = Props.read_from(args.train_hyperpars)
 
 # Define training inputs
 dwts_norm = tb["dwt_norm"].nda

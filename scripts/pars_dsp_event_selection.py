@@ -141,8 +141,7 @@ if __name__ == "__main__":
         raw_files = sorted(files)
 
         if args.pulser_file:
-            with open(args.pulser_file) as f:
-                pulser_dict = json.load(f)
+            pulser_dict = Props.read_from(args.pulser_file)
             mask = np.array(pulser_dict["mask"])
 
         elif args.tcm_filelist:

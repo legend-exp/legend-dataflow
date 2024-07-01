@@ -1,8 +1,9 @@
 import argparse
-import json
 import logging
 import os
 import pathlib
+
+from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)
@@ -24,13 +25,11 @@ logging.getLogger("h5py").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
-with open(args.input_file) as r:
-    par_data = json.load(r)
+par_data = Props.read_from(args.input_file)
 
 file = f"'$_/{os.path.basename(args.svm_file)}'"
 
 par_data["svm"] = {"model_file": file}
 
 pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
-with open(args.output_file, "w") as w:
-    json.dump(par_data, w, indent=4)
+Props.write_to(args.output_file, par_data)

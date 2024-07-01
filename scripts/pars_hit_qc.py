@@ -158,8 +158,7 @@ if __name__ == "__main__":
     )
 
     if args.pulser_file:
-        with open(args.pulser_file) as f:
-            pulser_dict = json.load(f)
+        pulser_dict = Props.read_from(args.pulser_file)
         mask = np.array(pulser_dict["mask"])
 
     elif args.tcm_filelist:
@@ -231,8 +230,7 @@ if __name__ == "__main__":
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
 
     pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.save_path, "w") as f:
-        json.dump(hit_dict, f, indent=4)
+    Props.write_to(args.save_path, hit_dict)
 
     if args.plot_path:
         pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)

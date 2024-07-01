@@ -67,7 +67,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_qc_phy.py "
+                "{basedir}/../scripts/pars_pht_qc_phy.py "
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -109,7 +109,7 @@ rule build_pht_qc_phy:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/pars_pht_qc_phy.py "
+        "{basedir}/../scripts/pars_pht_qc_phy.py "
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -133,21 +133,37 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_plts_pht_phy:
     input:
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "pht_qcphy"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="qcphy",
+        ),
     output:
         get_pattern_plts(setup, "pht", "qc_phy"),
     group:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
 
 
 rule build_pars_pht_phy:
     input:
-        infiles=lambda wildcards: read_filelist_pars_cal_channel(wildcards, "pht_qcphy"),
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "pht",
+            basedir,
+            configs,
+            chan_maps,
+            name="qcphy",
+        ),
         plts=get_pattern_plts(setup, "pht", "qc_phy"),
     output:
         get_pattern_pars(setup, "pht", name="qc_phy", check_in_cycle=check_in_cycle),
@@ -155,6 +171,6 @@ rule build_pars_pht_phy:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/merge_channels.py "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input.infiles} "
         "--output {output} "

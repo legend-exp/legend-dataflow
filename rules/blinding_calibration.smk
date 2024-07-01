@@ -36,7 +36,7 @@ rule build_blinding_calibration:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/blinding_calibration.py')} "
+        "{basedir}/../scripts/blinding_calibration.py "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -48,17 +48,46 @@ rule build_blinding_calibration:
         "--files {input.files} "
 
 
-checkpoint build_pars_blinding:
+rule build_plts_blinding:
     input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw_blindcal"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw_blindcal"),
+        lambda wildcards: get_plt_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+            name="blindcal",
+        ),
     output:
-        get_pattern_par_raw(setup, name="blindcal"),
         get_pattern_plts(setup, "raw", name="blindcal"),
     group:
-        "merge-blinding"
+        "merge-blindcal"
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/merge_channels.py')} "
+        "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
+        "--output {output} "
+
+
+rule build_pars_blinding:
+    input:
+        infiles=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "raw",
+            basedir,
+            configs,
+            chan_maps,
+            name="blindcal",
+        ),
+        plts=get_pattern_plts(setup, "raw", name="blindcal"),
+    output:
+        get_pattern_pars(setup, "raw", name="blindcal", check_in_cycle=check_in_cycle),
+    group:
+        "merge-blindcal"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--input {input.infiles} "
         "--output {output} "

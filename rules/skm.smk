@@ -26,7 +26,7 @@ rule build_skm:
         runtime=300,
     shell:
         "{swenv} python3 -B "
-        f"{basedir}/../scripts/build_skm.py "
+        "{basedir}/../scripts/build_skm.py "
         "--configs {configs} "
         "--timestamp {params.timestamp} "
         "--log {log} "
