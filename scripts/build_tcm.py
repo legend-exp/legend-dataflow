@@ -6,9 +6,11 @@ import pathlib
 import lgdo.lh5 as lh5
 import numpy as np
 from daq2lh5.orca import orca_flashcam
-from legendmeta import LegendMetadata
+from legendmeta import TextDB
 from legendmeta.catalog import Props
 from pygama.evt.build_tcm import build_tcm
+
+from .util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -23,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(as_ro(args.configs), lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_tcm"][
     "inputs"
 ]
@@ -34,7 +36,7 @@ rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 # get the list of channels by fcid
-ch_list = lh5.ls(args.input, "/ch*")
+ch_list = lh5.ls(as_ro(args.input), "/ch*")
 fcid_channels = {}
 for ch in ch_list:
     key = int(ch[2:])
@@ -48,7 +50,11 @@ for fcid in fcid_channels:
     out_name = f"hardware_tcm_{fcid}"
     ch_list = fcid_channels[fcid]
     build_tcm(
-        [(args.input, ch_list)], out_file=temp_output, out_name=out_name, wo_mode="o", **settings
+        [(as_ro(args.input), ch_list)],
+        out_file=temp_output,
+        out_name=out_name,
+        wo_mode="o",
+        **settings,
     )
 
 os.rename(temp_output, args.output)

@@ -21,6 +21,8 @@ from legendmeta.catalog import Props
 from pygama.math.histogram import better_int_binning, get_hist
 from pygama.pargen.energy_cal import hpge_find_E_peaks
 
+from .util.utils import as_ro
+
 sto = lh5.LH5Store()
 mpl.use("agg")
 
@@ -46,7 +48,7 @@ log = logging.getLogger(__name__)
 
 
 # load in channel map
-meta = LegendMetadata(args.meta)
+meta = LegendMetadata(as_ro(args.meta), lazy=True)
 chmap = meta.channelmap(args.timestamp)
 
 # if chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["is_blinded"] is True:
@@ -54,7 +56,7 @@ pars_dict = {}
 # peaks to search for
 peaks_keV = np.array([238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50])
 
-E_uncal = sto.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
+E_uncal = sto.read(f"{args.channel}/raw/daqenergy", as_ro(sorted(args.files)))[0].view_as("np")
 E_uncal = E_uncal[E_uncal > 200]
 guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 Euc_min = peaks_keV[0] / guess_keV * 0.6

@@ -7,8 +7,10 @@ from timestamp to unix time
 
 import copy
 import os
+import re
 import string
 from datetime import datetime
+from pathlib import Path
 
 # from dateutil import parser
 
@@ -305,3 +307,17 @@ def set_last_rule_name(workflow, new_name):
         workflow._localrules.add(new_name)
 
     workflow.check_localrules()
+
+
+def as_ro(config, path):
+    if "read_only_fs_sub_pattern" not in config or config["read_only_fs_sub_pattern"] is None:
+        return path
+
+    sub_pattern = config["read_only_fs_sub_pattern"]
+
+    if isinstance(path, str):
+        return re.sub(*sub_pattern, path)
+    if isinstance(path, Path):
+        return Path(re.sub(*sub_pattern, path.name))
+
+    return [as_ro(config, p) for p in path]

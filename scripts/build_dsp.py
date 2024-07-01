@@ -14,8 +14,10 @@ os.environ["DSPEED_BOUNDSCHECK"] = "false"
 import lgdo.lh5 as lh5
 import numpy as np
 from dspeed import build_dsp
-from legendmeta import LegendMetadata
+from legendmeta import TextDB
 from legendmeta.catalog import Props
+
+from .util.utils import as_ro
 
 
 def replace_list_with_array(dic):
@@ -49,16 +51,16 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(as_ro(args.configs), lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_dsp"][
     "inputs"
 ]["processing_chain"]
 
 channel_dict = {chan: Props.read_from(file) for chan, file in channel_dict.items()}
 db_files = [
-    par_file
+    as_ro(par_file)
     for par_file in args.pars_file
-    if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yml"
+    if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yaml"
 ]
 
 database_dic = Props.read_from(db_files, subst_pathvar=True)
@@ -67,13 +69,13 @@ database_dic = replace_list_with_array(database_dic)
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 rng = np.random.default_rng()
-rand_num = f"{rng.integers(0,99999):05d}"
+rand_num = f"{rng.integers(0, 99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
 start = time.time()
 
 build_dsp(
-    args.input,
+    as_ro(args.input),
     temp_output,
     {},
     database=database_dic,
@@ -89,9 +91,13 @@ os.rename(temp_output, args.output)
 
 key = os.path.basename(args.output).replace("-tier_dsp.lh5", "")
 
-raw_channels = [channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)]
+raw_channels = [
+    channel for channel in lh5.ls(as_ro(args.input)) if re.match("(ch\\d{7})", channel)
+]
 
-raw_fields = [field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channels[0]}/raw/")]
+raw_fields = [
+    field.split("/")[-1] for field in lh5.ls(as_ro(args.input), f"{raw_channels[0]}/raw/")
+]
 
 outputs = {}
 channels = []

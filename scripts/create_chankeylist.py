@@ -11,10 +11,10 @@ argparser.add_argument("--channelmap", help="Channel Map", type=str, required=Tr
 argparser.add_argument("--output_file", help="output_file", type=str, required=True)
 args = argparser.parse_args()
 
-configs = LegendMetadata(path=args.configs)
+configs = LegendMetadata(path=args.configs, lazy=True)
 status_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
 
-channel_map = LegendMetadata(path=args.channelmap)
+channel_map = LegendMetadata(path=args.channelmap, lazy=True)
 chmap = channel_map.channelmaps.on(args.timestamp)
 
 channels = [
