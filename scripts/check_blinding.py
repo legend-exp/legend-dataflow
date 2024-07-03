@@ -12,23 +12,21 @@ import os
 import pathlib
 import pickle as pkl
 
-import lgdo.lh5_store as lh5
-from lgdo.utils import numba_defaults
-
-numba_defaults.cache = False
-numba_defaults.boundscheck = False
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo import lh5
+from lgdo.utils import numba_defaults
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
+from util.utils import as_ro
 
-sto = lh5.LH5Store()
 mpl.use("Agg")
+numba_defaults.cache = False
+numba_defaults.boundscheck = False
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--files", help="files", nargs="*", type=str)
@@ -53,14 +51,14 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # get the usability status for this channel
-chmap = LegendMetadata(args.metadata).channelmap(args.timestamp).map("daq.rawid")
+chmap = LegendMetadata(as_ro(args.metadata), lazy=True).channelmap(args.timestamp).map("daq.rawid")
 det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 
 # read in calibration curve for this channel
 blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
 # load in the data
-daqenergy = sto.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
+daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(as_ro(args.files)))[0].view_as("np")
 
 # calibrate daq energy using pre existing curve
 daqenergy_cal = ne.evaluate(
@@ -92,9 +90,9 @@ with open(args.plot_file, "wb") as w:
     pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
 plt.close()
 
-
-# check for peaks within +- 5keV of  2614 and 583 to ensure blinding still valid and if so create file else raise error
-# if detector is in ac mode it will always pass this check
+# check for peaks within +- 5keV of  2614 and 583 to ensure blinding still
+# valid and if so create file else raise error.  if detector is in ac mode it
+# will always pass this check
 if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status is False:
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     Props.write_to(args.output, {})

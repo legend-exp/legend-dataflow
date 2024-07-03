@@ -3,15 +3,14 @@ import logging
 import os
 import pathlib
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-
 import numpy as np
-from daq2lh5.build_raw import build_raw
+from daq2lh5 import build_raw
 from legendmeta import TextDB
 from legendmeta.catalog import Props
+from util.utils import as_ro
 
-from .util.utils import as_ro
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)

@@ -23,8 +23,7 @@ import numpy as np
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
-
-from .util.utils import as_ro
+from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)

@@ -153,7 +153,7 @@ def build_valid_keys(input_files, output_dir):
 
 
 def build_file_dbs(input_files, output_dir):
-    input_files = glob.glob(input_files)
+    input_files = glob.glob(ut.as_ro(input_files))
     key_dict = get_keys(input_files)
 
     for key in list(key_dict):
@@ -161,8 +161,12 @@ def build_file_dbs(input_files, output_dir):
         out_file = os.path.join(output_dir, f"{key}-filedb.h5")
         pathlib.Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
         file_path = f"{dtype}/{period}/{run}"
-        cmd = f"{ut.runcmd(setup)} python3 -B {basedir}/scripts/build_fdb.py  --file_path {file_path} --output_file {out_file} --config {os.path.join(output_dir, 'file_db_config.json')}"
-        os.system(cmd)
+        os.system(
+            f"{ut.runcmd(setup)} python3 -B {basedir}/scripts/build_fdb.py "
+            f"--file_path {file_path} "
+            f"--output_file {out_file} "
+            f"--config {os.path.join(output_dir, 'file_db_config.json')}"
+        )
 
 
 setup = snakemake.params.setup
@@ -175,7 +179,7 @@ check_log_files(
     warning_file=snakemake.output.warning_log,
 )
 
-if os.getenv("PRODENV") in snakemake.params.filedb_path:
+if os.getenv("PRODENV") is not None and os.getenv("PRODENV") in snakemake.params.filedb_path:
     file_db_config = {
         "data_dir": "$PRODENV",
         "tier_dirs": {
@@ -221,6 +225,8 @@ if os.getenv("PRODENV") in snakemake.params.filedb_path:
         },
     }
 else:
+    print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
+
     file_db_config = {
         "data_dir": "/",
         "tier_dirs": {

@@ -2,8 +2,7 @@ import argparse
 
 from legendmeta.catalog import Props
 from pygama.flow.file_db import FileDB
-
-from .util.utils import as_ro
+from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--config", help="config", type=str, required=True)

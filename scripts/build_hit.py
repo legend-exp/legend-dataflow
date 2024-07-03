@@ -8,8 +8,7 @@ from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
-
-from .util.utils import as_ro
+from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)

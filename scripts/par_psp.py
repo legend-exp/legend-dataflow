@@ -10,6 +10,7 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from util.FileKey import ChannelProcKey
+from util.utils import as_ro
 
 mpl.use("Agg")
 
@@ -34,8 +35,7 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 args = argparser.parse_args()
 
-conf = LegendMetadata(path=args.configs)
-configs = conf.on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(as_ro(args.configs), lazy=True).on(args.timestamp, system=args.datatype)
 merge_config = Props.read_from(
     configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
 )
@@ -44,7 +44,7 @@ ave_fields = merge_config["average_fields"]
 
 # partitions could be different for different channels - do separately for each channel
 in_dicts = {}
-for file in args.input:
+for file in as_ro(args.input):
     tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
     in_dicts[tstamp] = Props.read_from(file)
 
@@ -105,7 +105,7 @@ for field in ave_fields:
         plt.ylabel("value")
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
     plt.gcf().autofmt_xdate()
-    plt.title(f"{field}")
+    plt.title(field)
     plot_dict[field] = fig
     plt.close()
 
@@ -113,12 +113,11 @@ for file in args.output:
     tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
     Props.write_to(file, in_dicts[tstamp])
 
-
 if args.out_plots:
     for file in args.out_plots:
         tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
         if args.in_plots:
-            for infile in args.in_plots:
+            for infile in as_ro(args.in_plots):
                 if tstamp in infile:
                     with open(infile, "rb") as f:
                         old_plot_dict = pkl.load(f)

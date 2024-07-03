@@ -9,21 +9,19 @@ import logging
 import os
 import pickle as pkl
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-
-import lgdo.lh5_store as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
+from lgdo import lh5
 from pygama.math.histogram import better_int_binning, get_hist
 from pygama.pargen.energy_cal import hpge_find_E_peaks
+from util.utils import as_ro
 
-from .util.utils import as_ro
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
 
-sto = lh5.LH5Store()
 mpl.use("agg")
 
 argparser = argparse.ArgumentParser()
@@ -38,14 +36,12 @@ argparser.add_argument("--configs", help="configs", type=str)
 argparser.add_argument("--log", help="log", type=str)
 args = argparser.parse_args()
 
-
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
-
 
 # load in channel map
 meta = LegendMetadata(as_ro(args.meta), lazy=True)
@@ -56,7 +52,7 @@ pars_dict = {}
 # peaks to search for
 peaks_keV = np.array([238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50])
 
-E_uncal = sto.read(f"{args.channel}/raw/daqenergy", as_ro(sorted(args.files)))[0].view_as("np")
+E_uncal = lh5.read(f"{args.channel}/raw/daqenergy", as_ro(sorted(args.files)))[0].view_as("np")
 E_uncal = E_uncal[E_uncal > 200]
 guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 Euc_min = peaks_keV[0] / guess_keV * 0.6

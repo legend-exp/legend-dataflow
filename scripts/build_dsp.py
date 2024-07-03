@@ -6,18 +6,17 @@ import re
 import time
 import warnings
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-
-import lgdo.lh5 as lh5
 import numpy as np
 from dspeed import build_dsp
 from legendmeta import TextDB
 from legendmeta.catalog import Props
+from lgdo import lh5
+from util.utils import as_ro
 
-from .util.utils import as_ro
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
 
 
 def replace_list_with_array(dic):

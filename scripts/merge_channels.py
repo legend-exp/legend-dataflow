@@ -4,10 +4,11 @@ import pathlib
 import pickle as pkl
 import shelve
 
-import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta.catalog import Props
+from lgdo import lh5
 from util.FileKey import ChannelProcKey
+from util.utils import as_ro
 
 
 def replace_path(d, old_path, new_path):
@@ -42,9 +43,7 @@ args = argparser.parse_args()
 
 # change to only have 1 output file for multiple inputs
 # don't care about processing step, check if extension matches
-
-
-channel_files = args.input
+channel_files = as_ro(args.input)
 
 file_extension = pathlib.Path(args.output).suffix
 
@@ -54,11 +53,9 @@ else:
     out_file = args.output
 
 rng = np.random.default_rng()
-rand_num = f"{rng.integers(0,99999):05d}"
-temp_output = f"{out_file}.{rand_num}"
+temp_output = f"{out_file}.{rng.integers(0, 99999):05d}"
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-
 
 if file_extension == ".json" or file_extension == ".yaml" or file_extension == ".yml":
     out_dict = {}
@@ -108,8 +105,6 @@ elif file_extension == ".dat" or file_extension == ".dir":
 
 
 elif file_extension == ".lh5":
-    sto = lh5.LH5Store()
-
     if args.in_db:
         db_dict = Props.read_from(args.in_db)
     for channel in channel_files:
@@ -117,9 +112,9 @@ elif file_extension == ".lh5":
             fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
             channel_name = fkey.channel
 
-            tb_in = sto.read(f"{channel_name}", channel)[0]
+            tb_in = lh5.read(f"{channel_name}", channel)[0]
 
-            sto.write(
+            lh5.write(
                 tb_in,
                 name=channel_name,
                 lh5_file=temp_output,

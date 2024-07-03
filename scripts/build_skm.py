@@ -8,8 +8,7 @@ from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
-
-from .util.utils import as_ro
+from util.utils import as_ro
 
 
 def get_all_out_fields(input_table, out_fields, current_field=""):

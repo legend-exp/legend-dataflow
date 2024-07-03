@@ -11,8 +11,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.types import Array
 from pygama.evt import build_evt
-
-from .util.utils import as_ro
+from util.utils import as_ro
 
 sto = lh5.LH5Store()
 
