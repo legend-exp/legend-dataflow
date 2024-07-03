@@ -22,7 +22,6 @@ from lgdo import lh5
 from lgdo.utils import numba_defaults
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
-from util.utils import as_ro
 
 mpl.use("Agg")
 numba_defaults.cache = False
@@ -51,14 +50,14 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # get the usability status for this channel
-chmap = LegendMetadata(as_ro(args.metadata), lazy=True).channelmap(args.timestamp).map("daq.rawid")
+chmap = LegendMetadata(args.metadata, lazy=True).channelmap(args.timestamp).map("daq.rawid")
 det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 
 # read in calibration curve for this channel
 blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
 # load in the data
-daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(as_ro(args.files)))[0].view_as("np")
+daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
 
 # calibrate daq energy using pre existing curve
 daqenergy_cal = ne.evaluate(

@@ -354,6 +354,7 @@ rule build_psp:
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
         tier_file=get_pattern_tier(setup, "psp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "psp_db"),
@@ -368,10 +369,10 @@ rule build_psp:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
-        "--configs {configs} "
+        f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--input {input.raw_file} "
+        "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
         "--db_file {output.db_file} "
-        "--pars_file {input.pars_file} "
+        "--pars_file {params.ro_input[pars_file]} "

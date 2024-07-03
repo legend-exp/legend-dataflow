@@ -16,6 +16,7 @@ rule build_raw:
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
+        ro_input=lambda _, input: ro(input),
     output:
         get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
     log:
@@ -29,11 +30,11 @@ rule build_raw:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_raw.py "
         "--log {log} "
-        "--configs {configs} "
-        "--chan_maps {chan_maps} "
+        f"--configs {ro(configs)} "
+        f"--chan_maps {ro(chan_maps)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "{input} {output}"
+        "{params.ro_input} {output}"
 
 
 rule build_raw_blind:
@@ -44,10 +45,10 @@ rule build_raw_blind:
     input:
         tier_file=get_pattern_tier_raw(setup).replace("{datatype}", "phy"),
         blind_file=get_blinding_curve_file,
-        check_file=get_blinding_check_file,
     params:
         timestamp="{timestamp}",
         datatype="phy",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
         get_pattern_tier_raw_blind(setup),
     log:
@@ -61,11 +62,11 @@ rule build_raw_blind:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_raw_blind.py "
         "--log {log} "
-        "--configs {configs} "
-        "--chan_maps {chan_maps} "
-        "--metadata {meta} "
+        f"--configs {ro(configs)} "
+        f"--chan_maps {ro(chan_maps)} "
+        f"--metadata {ro(meta)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--blind_curve {input.blind_file} "
-        "--input {input.tier_file} "
+        "--blind_curve {params.ro_input[blind_file]} "
+        "--input {params.ro_input[tier_file]} "
         "--output {output}"

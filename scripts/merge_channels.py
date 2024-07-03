@@ -8,7 +8,6 @@ import numpy as np
 from legendmeta.catalog import Props
 from lgdo import lh5
 from util.FileKey import ChannelProcKey
-from util.utils import as_ro
 
 
 def replace_path(d, old_path, new_path):
@@ -43,7 +42,7 @@ args = argparser.parse_args()
 
 # change to only have 1 output file for multiple inputs
 # don't care about processing step, check if extension matches
-channel_files = as_ro(args.input)
+channel_files = args.input
 
 file_extension = pathlib.Path(args.output).suffix
 

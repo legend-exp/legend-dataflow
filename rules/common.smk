@@ -12,6 +12,11 @@ from scripts.util.patterns import (
     get_pattern_plts_tmp_channel,
 )
 from scripts.util import ProcessingFileKey
+from scripts.util import utils
+
+
+def ro(path):
+    return utils.as_ro(setup, path)
 
 
 def get_blinding_curve_file(wildcards):

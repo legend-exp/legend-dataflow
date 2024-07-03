@@ -8,7 +8,6 @@ from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
-from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)
@@ -34,7 +33,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
-configs = TextDB(as_ro(args.configs), lazy=True)
+configs = TextDB(args.configs, lazy=True)
 if args.tier == "hit" or args.tier == "pht":
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"][
         "inputs"
@@ -43,12 +42,12 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-pars_dict = Props.read_from(as_ro(args.pars_file))
+pars_dict = Props.read_from(args.pars_file)
 
 pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
 
 hit_dict = {}
-channels_present = lh5.ls(as_ro(args.input))
+channels_present = lh5.ls(args.input)
 for channel in pars_dict:
     chan_pars = pars_dict[channel].copy()
     if channel in channel_dict:
@@ -61,7 +60,7 @@ for channel in pars_dict:
 
 t_start = time.time()
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-build_hit(as_ro(args.input), lh5_tables_config=hit_dict, outfile=args.output)
+build_hit(args.input, lh5_tables_config=hit_dict, outfile=args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
 

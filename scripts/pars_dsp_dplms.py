@@ -11,7 +11,6 @@ from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
-from util.utils import as_ro
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
@@ -51,13 +50,13 @@ logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
 
-configs = LegendMetadata(as_ro(args.configs), lazy=True).on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
 
 dplms_json = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["dplms_pars"][args.channel]
-dplms_dict = Props.read_from(as_ro(dplms_json))
+dplms_dict = Props.read_from(dplms_json)
 
-db_dict = Props.read_from(as_ro(args.database))
+db_dict = Props.read_from(args.database)
 
 if dplms_dict["run_dplms"] is True:
     with open(args.fft_raw_filelist) as f:

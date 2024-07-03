@@ -224,12 +224,14 @@ rule build_pars_hit_objects:
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
+    params:
+        ro_input=lambda _, input: ro(input),
     group:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/merge_channels.py "
-        "--input {input} "
+        "--input {params.ro_input} "
         "--output {output} "
 
 
@@ -245,12 +247,14 @@ rule build_plts_hit:
         ),
     output:
         get_pattern_plts(setup, "hit"),
+    params:
+        ro_input=lambda _, input: ro(input),
     group:
         "merge-hit"
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/merge_channels.py "
-        "--input {input} "
+        "--input {params.ro_input} "
         "--output {output} "
 
 
@@ -272,6 +276,8 @@ rule build_pars_hit:
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
+    params:
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
         get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
     group:
@@ -279,7 +285,7 @@ rule build_pars_hit:
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/merge_channels.py "
-        "--input {input.infiles} "
+        "--input {params.ro_input[infiles]} "
         "--output {output} "
 
 
@@ -296,6 +302,7 @@ rule build_hit:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="hit",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
         get_pattern_log(setup, "tier_hit"),
     group:
@@ -305,12 +312,12 @@ rule build_hit:
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_hit.py "
-        "--configs {configs} "
+        f"--configs {ro(configs)} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--pars_file {input.pars_file} "
+        "--pars_file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
-        "--input {input.dsp_file} "
+        "--input {params.ro_input[dsp_file]} "
         "--db_file {output.db_file}"

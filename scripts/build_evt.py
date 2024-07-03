@@ -11,7 +11,6 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.types import Array
 from pygama.evt import build_evt
-from util.utils import as_ro
 
 sto = lh5.LH5Store()
 
@@ -63,11 +62,10 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
 
-
 log = logging.getLogger(__name__)
 
 # load in config
-configs = TextDB(path=as_ro(args.configs), lazy=True)
+configs = TextDB(args.configs, lazy=True)
 if args.tier == "evt" or args.tier == "pet":
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"
@@ -77,7 +75,7 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-meta = LegendMetadata(path=as_ro(args.metadata), lazy=True)
+meta = LegendMetadata(args.metadata, lazy=True)
 chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
@@ -124,9 +122,9 @@ Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 table = build_evt(
     {
-        "tcm": (as_ro(args.tcm_file), "hardware_tcm_1", "ch{}"),
-        "dsp": (as_ro(args.dsp_file), "dsp", "ch{}"),
-        "hit": (as_ro(args.hit_file), "hit", "ch{}"),
+        "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
+        "dsp": (args.dsp_file, "dsp", "ch{}"),
+        "hit": (args.hit_file, "hit", "ch{}"),
         "evt": (None, "evt"),
     },
     evt_config,
@@ -154,12 +152,12 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
     trigger_timestamp = table[field_config["ged_timestamp"]["table"]][
         field_config["ged_timestamp"]["field"]
     ].nda
-    if "hardware_tcm_2" in lh5.ls(as_ro(args.tcm_file)):
+    if "hardware_tcm_2" in lh5.ls(args.tcm_file):
         muon_table = build_evt(
             {
-                "tcm": (as_ro(args.tcm_file), "hardware_tcm_2", "ch{}"),
-                "dsp": (as_ro(args.dsp_file), "dsp", "ch{}"),
-                "hit": (as_ro(args.hit_file), "hit", "ch{}"),
+                "tcm": (args.tcm_file, "hardware_tcm_2", "ch{}"),
+                "dsp": (args.dsp_file, "dsp", "ch{}"),
+                "hit": (args.hit_file, "hit", "ch{}"),
                 "evt": (None, "evt"),
             },
             muon_config,

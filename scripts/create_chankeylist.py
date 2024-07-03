@@ -1,7 +1,6 @@
 import argparse
 
 from legendmeta import LegendMetadata, TextDB
-from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -12,10 +11,10 @@ argparser.add_argument("--channelmap", help="Channel Map", type=str, required=Tr
 argparser.add_argument("--output_file", help="output_file", type=str, required=True)
 args = argparser.parse_args()
 
-configs = TextDB(as_ro(args.configs), lazy=True)
+configs = TextDB(args.configs, lazy=True)
 status_map = configs.on(args.timestamp, system=args.datatype)["analysis"]
 
-channel_map = LegendMetadata(as_ro(args.channelmap), lazy=True)
+channel_map = LegendMetadata(args.channelmap, lazy=True)
 chmap = channel_map.channelmaps.on(args.timestamp)
 
 channels = [

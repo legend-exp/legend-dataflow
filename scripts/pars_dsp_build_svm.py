@@ -6,7 +6,6 @@ import pickle as pkl
 from legendmeta.catalog import Props
 from lgdo import lh5
 from sklearn.svm import SVC
-from util.utils import as_ro
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
@@ -28,10 +27,10 @@ logging.getLogger("h5py").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # Load files
-tb, _ = lh5.read("ml_train/dsp", as_ro(args.train_data))
+tb, _ = lh5.read("ml_train/dsp", args.train_data)
 log.debug("loaded data")
 
-hyperpars = Props.read_from(as_ro(args.train_hyperpars))
+hyperpars = Props.read_from(args.train_hyperpars)
 
 # Define training inputs
 dwts_norm = tb["dwt_norm"].nda

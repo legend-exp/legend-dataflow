@@ -8,7 +8,6 @@ from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
-from util.utils import as_ro
 
 
 def get_all_out_fields(input_table, out_fields, current_field=""):
@@ -45,7 +44,7 @@ logging.getLogger("h5py._conv").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # load in config
-configs = TextDB(as_ro(args.configs), lazy=True).on(args.timestamp, system=args.datatype)
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 skm_config_file = configs["snakemake_rules"]["tier_skm"]["inputs"]["skm_config"]
 
 evt_filter = Props.read_from(skm_config_file)["evt_filter"]
@@ -53,7 +52,7 @@ out_fields = Props.read_from(skm_config_file)["keep_fields"]
 
 store = lh5.LH5Store()
 
-evt = lh5.read_as("evt", as_ro(args.evt_file), "ak")
+evt = lh5.read_as("evt", args.evt_file, "ak")
 
 # remove unwanted events
 skm = eval(f"evt[{evt_filter}]")

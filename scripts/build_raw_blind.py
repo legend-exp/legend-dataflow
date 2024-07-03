@@ -23,7 +23,6 @@ import numpy as np
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
-from util.utils import as_ro
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)
@@ -45,7 +44,7 @@ logging.getLogger("lgdo").setLevel(logging.INFO)
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = TextDB(as_ro(args.configs), lazy=True)
+configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)
 
 hdf_settings = Props.read_from(channel_dict["snakemake_rules"]["tier_raw"]["inputs"]["settings"])[
@@ -62,7 +61,7 @@ width = blinding_settings["width_in_keV"]  # keV
 all_channels = lh5.ls(args.input)
 
 # list of Ge channels and SiPM channels with associated metadata
-legendmetadata = LegendMetadata(as_ro(args.metadata), lazy=True)
+legendmetadata = LegendMetadata(args.metadata, lazy=True)
 ged_channels = (
     legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
 )
@@ -91,7 +90,7 @@ for chnum in list(ged_channels):
         continue
 
     # load in just the daqenergy for now
-    daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", as_ro(args.input))
+    daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", args.input)
 
     # read in calibration curve for this channel
     blind_curve = Props.read_from(args.blind_curve)[f"ch{chnum}"]["pars"]["operations"]
@@ -126,7 +125,7 @@ for channel in all_channels:
         chnum = int(channel[2::])
     except ValueError:
         # if this isn't an interesting channel, just copy it to the output file
-        chobj, _ = store.read(channel, as_ro(args.input), decompress=False)
+        chobj, _ = store.read(channel, args.input, decompress=False)
         store.write_object(
             chobj,
             channel,
@@ -144,7 +143,7 @@ for channel in all_channels:
         and (chnum not in list(puls_channels))
     ):
         # if this is a PMT or not included for some reason, just copy it to the output file
-        chobj, _ = store.read(channel + "/raw", as_ro(args.input), decompress=False)
+        chobj, _ = store.read(channel + "/raw", args.input, decompress=False)
         store.write_object(
             chobj,
             group=channel,
@@ -158,9 +157,7 @@ for channel in all_channels:
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _ = store.read(
-        channel + "/raw", as_ro(args.input), idx=tokeep, decompress=False
-    )
+    blinded_chobj, _ = store.read(channel + "/raw", args.input, idx=tokeep, decompress=False)
 
     # now write the blinded data for this channel
     store.write_object(

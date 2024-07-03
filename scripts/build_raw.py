@@ -7,7 +7,6 @@ import numpy as np
 from daq2lh5 import build_raw
 from legendmeta import TextDB
 from legendmeta.catalog import Props
-from util.utils import as_ro
 
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
@@ -27,7 +26,7 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = TextDB(as_ro(args.configs), lazy=True)
+configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
     "inputs"
 ]
@@ -35,7 +34,7 @@ settings = Props.read_from(channel_dict["settings"])
 channel_dict = channel_dict["out_spec"]
 all_config = Props.read_from(channel_dict["gen_config"])
 
-chmap = TextDB(as_ro(args.chan_maps), lazy=True)
+chmap = TextDB(args.chan_maps, lazy=True)
 
 if "geds_config" in list(channel_dict):
     ged_config = Props.read_from(channel_dict["geds_config"])
@@ -85,6 +84,6 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
-build_raw(as_ro(args.input), out_spec=all_config, filekey=temp_output, **settings)
+build_raw(args.input, out_spec=all_config, filekey=temp_output, **settings)
 
 os.rename(temp_output, args.output)
