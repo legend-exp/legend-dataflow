@@ -38,7 +38,7 @@ for tier in ("evt", "pet"):
                 setup, wildcards.timestamp, "pht"
             ),
         output:
-            evt_file=get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
+            get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
         params:
             timestamp="{timestamp}",
             datatype="{datatype}",
@@ -65,7 +65,7 @@ for tier in ("evt", "pet"):
             "--hit_file {params.ro_input[hit_file]} "
             "--tcm_file {params.ro_input[tcm_file]} "
             "--dsp_file {params.ro_input[dsp_file]} "
-            "--output {output.evt_file} "
+            "--output {output} "
 
     set_last_rule_name(workflow, f"build_{tier}")
 

@@ -1,18 +1,21 @@
 # ruff: noqa: F821, T201
 
+import datetime
 import glob
+import json
 import os
 import pathlib
-from datetime import datetime
 from pathlib import Path
 
 import util.patterns as pat
 import util.utils as ut
-from util.CalibCatalog import Props
 from util.FileKey import FileKey
+
+print("INFO: dataflow ran successfully, now few final checks and scripts")
 
 
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
+    now = datetime.datetime.now(datetime.UTC).strftime("%d/%m/%y %H:%M")
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     if warning_file is not None:
         os.makedirs(os.path.dirname(warning_file), exist_ok=True)
@@ -27,11 +30,11 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                             if "ERROR" in line:
                                 if n_errors == 0:
                                     f.write(
-                                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n"
+                                        f"{gen_output} successfully generated at {now} with errors \n"
                                     )
                                 if n_warnings == 0:
                                     w.write(
-                                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with warnings \n"
+                                        f"{gen_output} successfully generated at {now} with warnings \n"
                                     )
                                 f.write(f"{os.path.basename(file)} : {line}\n")
                                 n_errors += 1
@@ -43,13 +46,9 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 os.remove(file)
                 text = None
             if n_errors == 0:
-                f.write(
-                    f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n"
-                )
+                f.write(f"{gen_output} successfully generated at {now} with no errors \n")
             if n_warnings == 0:
-                w.write(
-                    f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no warnings \n"
-                )
+                w.write(f"{gen_output} successfully generated at {now} with no warnings \n")
     else:
         with open(output_file, "w") as f:
             n_errors = 0
@@ -61,7 +60,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                             if "ERROR" in line:
                                 if n_errors == 0:
                                     f.write(
-                                        f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with errors \n"
+                                        f"{gen_output} successfully generated at {now} with errors \n"
                                     )
                                 f.write(f"{os.path.basename(file)} : {line}\n")
                                 n_errors += 1
@@ -70,9 +69,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 os.remove(file)
                 text = None
             if n_errors == 0:
-                f.write(
-                    f"{gen_output} successfully generated at {datetime.utcnow().strftime('%d/%m/%y %H:%M')} with no errors \n"
-                )
+                f.write(f"{gen_output} successfully generated at {now} with no errors \n")
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
         if len(os.listdir(path)) == 0:
@@ -153,7 +150,7 @@ def build_valid_keys(input_files, output_dir):
 
 
 def build_file_dbs(input_files, output_dir):
-    input_files = glob.glob(ut.as_ro(input_files))
+    input_files = glob.glob(ut.as_ro(snakemake.params.setup, input_files))
     key_dict = get_keys(input_files)
 
     for key in list(key_dict):
@@ -171,6 +168,8 @@ def build_file_dbs(input_files, output_dir):
 
 setup = snakemake.params.setup
 basedir = snakemake.params.basedir
+
+print("INFO: ...checking log files")
 
 check_log_files(
     snakemake.params.log_path,
@@ -273,10 +272,11 @@ else:
     }
 
 if snakemake.wildcards.tier != "daq":
+    print("INFO: ...building FileDBs")
+
     os.makedirs(snakemake.params.filedb_path, exist_ok=True)
-    Props.write_to(
-        file_db_config, os.path.join(snakemake.params.filedb_path, "file_db_config.json")
-    )
+    with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as f:
+        json.dump(file_db_config, f, indent=2)
 
     build_file_dbs(snakemake.params.tmp_par_path, snakemake.params.filedb_path)
     os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
