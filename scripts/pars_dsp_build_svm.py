@@ -3,14 +3,14 @@ import logging
 import os
 import pickle as pkl
 
+from legendmeta.catalog import Props
+from lgdo import lh5
+from sklearn.svm import SVC
+
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 os.environ["DSPEED_CACHE"] = "false"
 os.environ["DSPEED_BOUNDSCHECK"] = "false"
-
-import lgdo.lh5 as lh5
-from legendmeta.catalog import Props
-from sklearn.svm import SVC
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)
@@ -24,11 +24,10 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 
-sto = lh5.LH5Store()
 log = logging.getLogger(__name__)
 
 # Load files
-tb, _ = sto.read("ml_train/dsp", args.train_data)
+tb, _ = lh5.read("ml_train/dsp", args.train_data)
 log.debug("loaded data")
 
 hyperpars = Props.read_from(args.train_hyperpars)
@@ -36,7 +35,6 @@ hyperpars = Props.read_from(args.train_hyperpars)
 # Define training inputs
 dwts_norm = tb["dwt_norm"].nda
 labels = tb["dc_label"].nda
-
 
 log.debug("training model")
 # Initialize and train SVM
@@ -50,7 +48,6 @@ svm = SVC(
 )
 
 svm.fit(dwts_norm, labels)
-
 log.debug("trained model")
 
 # Save trained model with pickle

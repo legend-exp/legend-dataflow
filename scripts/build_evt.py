@@ -2,12 +2,12 @@ import argparse
 import json
 import logging
 import os
-import pathlib
 import time
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.types import Array
 from pygama.evt import build_evt
@@ -51,7 +51,7 @@ argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
 if args.log is not None:
-    pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 else:
     logging.basicConfig(level=logging.DEBUG)
@@ -62,11 +62,10 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py._conv").setLevel(logging.INFO)
 
-
 log = logging.getLogger(__name__)
 
 # load in config
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(args.configs, lazy=True)
 if args.tier == "evt" or args.tier == "pet":
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"
@@ -76,7 +75,7 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-meta = LegendMetadata(path=args.metadata)
+meta = LegendMetadata(args.metadata, lazy=True)
 chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
@@ -119,11 +118,7 @@ for field, dic in evt_config["channels"].items():
 log.debug(json.dumps(evt_config["channels"], indent=2))
 
 t_start = time.time()
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-
-rng = np.random.default_rng()
-rand_num = f"{rng.integers(0,99999):05d}"
-temp_output = f"{args.output}.{rand_num}"
+Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
 table = build_evt(
     {
@@ -183,8 +178,7 @@ if "muon_config" in config_dict and config_dict["muon_config"] is not None:
         field_config["output_field"]["field"], Array(muon_flag)
     )
 
-sto.write(obj=table, name="evt", lh5_file=temp_output, wo_mode="a")
+sto.write(obj=table, name="evt", lh5_file=args.output, wo_mode="a")
 
-os.rename(temp_output, args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")

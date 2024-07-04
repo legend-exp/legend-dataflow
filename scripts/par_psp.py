@@ -34,8 +34,7 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 args = argparser.parse_args()
 
-conf = LegendMetadata(path=args.configs)
-configs = conf.on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 merge_config = Props.read_from(
     configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
 )
@@ -105,14 +104,13 @@ for field in ave_fields:
         plt.ylabel("value")
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
     plt.gcf().autofmt_xdate()
-    plt.title(f"{field}")
+    plt.title(field)
     plot_dict[field] = fig
     plt.close()
 
 for file in args.output:
     tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
     Props.write_to(file, in_dicts[tstamp])
-
 
 if args.out_plots:
     for file in args.out_plots:

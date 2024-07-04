@@ -18,6 +18,7 @@ rule build_tier_tcm:
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
+        input=lambda _, input: ro(input),
     output:
         get_pattern_tier(setup, "tcm", check_in_cycle=check_in_cycle),
     log:
@@ -31,23 +32,20 @@ rule build_tier_tcm:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_tcm.py "
         "--log {log} "
-        "--configs {configs} "
+        f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "{input} "
-        "{output}"
+        "-- {params.input} {output}"
 
 
 # This rule builds the tcm files each raw file
 rule build_pulser_ids:
     input:
-        tcm_files=os.path.join(
+        os.path.join(
             filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        input=lambda _, input: ro(input),
     output:
         pulser=temp(get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids")),
     log:
@@ -60,9 +58,9 @@ rule build_pulser_ids:
         "{swenv} python3 -B "
         "{basedir}/../scripts/pars_tcm_pulser.py "
         "--log {log} "
-        "--configs {configs} "
+        r"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--tcm_files {input.tcm_files} "
+        "--tcm_files {params.input} "
         "--pulser_file {output.pulser} "

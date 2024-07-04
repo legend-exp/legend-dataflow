@@ -3,13 +3,13 @@ import logging
 import os
 import pathlib
 
+import numpy as np
+from daq2lh5 import build_raw
+from legendmeta import TextDB
+from legendmeta.catalog import Props
+
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
-
-import numpy as np
-from daq2lh5.build_raw import build_raw
-from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
     "inputs"
 ]
@@ -34,7 +34,7 @@ settings = Props.read_from(channel_dict["settings"])
 channel_dict = channel_dict["out_spec"]
 all_config = Props.read_from(channel_dict["gen_config"])
 
-chmap = LegendMetadata(path=args.chan_maps)
+chmap = TextDB(args.chan_maps, lazy=True)
 
 if "geds_config" in list(channel_dict):
     ged_config = Props.read_from(channel_dict["geds_config"])

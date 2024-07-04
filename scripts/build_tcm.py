@@ -6,7 +6,7 @@ import pathlib
 import lgdo.lh5 as lh5
 import numpy as np
 from daq2lh5.orca import orca_flashcam
-from legendmeta import LegendMetadata
+from legendmeta import TextDB
 from legendmeta.catalog import Props
 from pygama.evt.build_tcm import build_tcm
 
@@ -23,15 +23,12 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = LegendMetadata(path=args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_tcm"][
-    "inputs"
-]
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+channel_dict = configs["snakemake_rules"]["tier_tcm"]["inputs"]
 settings = Props.read_from(channel_dict["config"])
 
 rng = np.random.default_rng()
-rand_num = f"{rng.integers(0,99999):05d}"
-temp_output = f"{args.output}.{rand_num}"
+temp_output = f"{args.output}.{rng.integers(0, 99999):05d}"
 
 # get the list of channels by fcid
 ch_list = lh5.ls(args.input, "/ch*")
@@ -45,10 +42,12 @@ for ch in ch_list:
 
 # make a hardware_tcm_[fcid] for each fcid
 for fcid in fcid_channels:
-    out_name = f"hardware_tcm_{fcid}"
-    ch_list = fcid_channels[fcid]
     build_tcm(
-        [(args.input, ch_list)], out_file=temp_output, out_name=out_name, wo_mode="o", **settings
+        [(args.input, fcid_channels[fcid])],
+        out_file=temp_output,
+        out_name=f"hardware_tcm_{fcid}",
+        wo_mode="o",
+        **settings,
     )
 
 os.rename(temp_output, args.output)

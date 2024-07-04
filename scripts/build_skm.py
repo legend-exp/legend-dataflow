@@ -98,6 +98,5 @@ for field in out_fields:
         if attr != "datatype":
             ptr2.attrs[attr] = val
 
-
 # write-append to disk
 store.write(out_table_skm, "skm", args.output, wo_mode="w")

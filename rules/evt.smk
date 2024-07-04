@@ -43,6 +43,7 @@ for tier in ("evt", "pet"):
             timestamp="{timestamp}",
             datatype="{datatype}",
             tier=tier,
+            ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
         log:
             get_pattern_log(setup, f"tier_{tier}"),
         group:
@@ -51,19 +52,19 @@ for tier in ("evt", "pet"):
             runtime=300,
             mem_swap=50,
         shell:
-            "{swenv} python3 -B "
-            "{basedir}/../scripts/build_evt.py "
-            "--configs {configs} "
-            "--metadata {meta} "
+            f"{swenv} python3 -B "
+            f"{basedir}/../scripts/build_evt.py "
+            f"--configs {ro(configs)} "
+            f"--metadata {ro(meta)} "
             "--log {log} "
             "--tier {params.tier} "
             "--datatype {params.datatype} "
             "--timestamp {params.timestamp} "
-            "--xtc_file {input.xtalk_matrix} "
-            "--par_files {input.par_files} "
-            "--hit_file {input.hit_file} "
-            "--tcm_file {input.tcm_file} "
-            "--dsp_file {input.dsp_file} "
+            "--xtc_file {params.ro_input[xtalk_matrix]} "
+            "--par_files {params.ro_input[par_files]} "
+            "--hit_file {params.ro_input[hit_file]} "
+            "--tcm_file {params.ro_input[tcm_file]} "
+            "--dsp_file {params.ro_input[dsp_file]} "
             "--output {output.evt_file} "
 
     set_last_rule_name(workflow, f"build_{tier}")
@@ -72,19 +73,28 @@ for tier in ("evt", "pet"):
         wildcard_constraints:
             timestamp=r"(?!\d{8}T\d{6}Z)",
         input:
-            lambda wildcards: sorted(read_filelist_phy(wildcards, tier)),
+            lambda wildcards: sorted(
+                get_filelist(
+                    wildcards,
+                    setup,
+                    get_pattern_tier_raw(setup),
+                    ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
+                )
+            ),
         output:
             get_pattern_tier(setup, f"{tier}_concat", check_in_cycle=check_in_cycle),
         params:
             timestamp="all",
             datatype="{datatype}",
+            lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat",
+            ro_input=lambda _, input: utils.as_ro(setup, input),
         log:
             get_pattern_log_concat(setup, f"tier_{tier}_concat"),
         group:
             "tier-evt"
         shell:
-            "{swenv} lh5concat --verbose --overwrite "
+            "{swenv} {params.lh5concat_exe} --verbose --overwrite "
             "--output {output} "
-            "-- {input} &> {log}"
+            "-- {params.ro_input} &> {log}"
 
     set_last_rule_name(workflow, f"concat_{tier}")

@@ -880,6 +880,7 @@ rule build_pht:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="pht",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
         get_pattern_log(setup, "tier_pht"),
     group:
@@ -889,12 +890,12 @@ rule build_pht:
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_hit.py "
-        "--configs {configs} "
+        f"--configs {ro(configs)} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--pars_file {input.pars_file} "
+        "--pars_file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
-        "--input {input.dsp_file} "
+        "--input {params.ro_input[dsp_file]} "
         "--db_file {output.db_file}"

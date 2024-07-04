@@ -5,19 +5,19 @@ import pathlib
 import pickle as pkl
 import time
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
+
+os.environ["LGDO_CACHE"] = "false"
+os.environ["LGDO_BOUNDSCHECK"] = "false"
+os.environ["DSPEED_CACHE"] = "false"
+os.environ["DSPEED_BOUNDSCHECK"] = "false"
+os.environ["PYGAMA_PARALLEL"] = "false"
+os.environ["PYGAMA_FASTMATH"] = "false"
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
@@ -50,8 +50,7 @@ logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
 
-conf = LegendMetadata(path=args.configs)
-configs = conf.on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
 
 dplms_json = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["dplms_pars"][args.channel]

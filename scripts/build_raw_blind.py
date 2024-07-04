@@ -18,11 +18,11 @@ import pathlib
 os.environ["LGDO_CACHE"] = "false"
 os.environ["LGDO_BOUNDSCHECK"] = "false"
 
-import lgdo.lh5 as lh5
 import numexpr as ne
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
+from lgdo import lh5
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)
@@ -44,7 +44,7 @@ logging.getLogger("lgdo").setLevel(logging.INFO)
 
 pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
 
-configs = LegendMetadata(path=args.configs)
+configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)
 
 hdf_settings = Props.read_from(channel_dict["snakemake_rules"]["tier_raw"]["inputs"]["settings"])[
@@ -61,7 +61,7 @@ width = blinding_settings["width_in_keV"]  # keV
 all_channels = lh5.ls(args.input)
 
 # list of Ge channels and SiPM channels with associated metadata
-legendmetadata = LegendMetadata(args.metadata)
+legendmetadata = LegendMetadata(args.metadata, lazy=True)
 ged_channels = (
     legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
 )
