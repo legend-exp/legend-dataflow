@@ -18,6 +18,9 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
             ]
         else:
             print("no ignore_keys.keylist file found")
+            ignore_keys = []
+    else:
+        ignore_keys = []
 
     if analysis_runs_file is not None:
         if os.path.isfile(analysis_runs_file):
@@ -26,6 +29,8 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
         else:
             analysis_runs = []
             print("no analysis_runs file found")
+    else:
+        analysis_runs = []
     return analysis_runs, ignore_keys
 
 
@@ -157,6 +162,31 @@ def get_filelist(
         filekeys,
         search_pattern,
         wildcards.tier,
+        ignore_keys,
+        analysis_runs,
+        file_selection,
+    )
+
+
+def get_filelist_full_wildcards(
+    wildcards,
+    setup,
+    search_pattern,
+    tier,
+    ignore_keys_file=None,
+    analysis_runs_file=None,
+    file_selection="all",
+):
+    keypart = f"-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}"
+
+    analysis_runs, ignore_keys = get_analysis_runs(ignore_keys_file, analysis_runs_file)
+
+    filekeys = get_keys(keypart)
+    return build_filelist(
+        setup,
+        filekeys,
+        search_pattern,
+        tier,
         ignore_keys,
         analysis_runs,
         file_selection,
