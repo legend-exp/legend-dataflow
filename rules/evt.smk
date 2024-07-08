@@ -74,10 +74,11 @@ for tier in ("evt", "pet"):
             timestamp=r"(?!\d{8}T\d{6}Z)",
         input:
             lambda wildcards: sorted(
-                get_filelist(
+                get_filelist_full_wildcards(
                     wildcards,
                     setup,
                     get_pattern_tier_raw(setup),
+                    tier,
                     ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
                 )
             ),
