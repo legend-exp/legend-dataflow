@@ -203,6 +203,7 @@ def build_file_dbs(gen_tier_path, output_dir):
                     str(out_file),
                     "--config",
                     str(output_dir / "file_db_config.json"),
+                    "--assume-nonsparse" if speck[0] == "phy" else "",
                 ],
                 env=cmdenv,
             )
