@@ -45,18 +45,6 @@ def get_blinding_check_file(wildcards):
         return [str(Path(par_raw_path(setup)) / par_file) for par_file in par_files]
 
 
-# def get_pattern(tier):
-#     """
-#     This func gets the search pattern for the relevant tier passed.
-#     """
-#     if tier == "daq":
-#         return get_pattern_unsorted_data(setup)
-#     elif tier == "raw":
-#         return get_pattern_tier_daq(setup)
-#     else:
-#         return get_pattern_tier_raw(setup)
-
-
 def set_last_rule_name(workflow, new_name):
     """Sets the name of the most recently created rule to be `new_name`.
     Useful when creating rules dynamically (i.e. unnamed).
