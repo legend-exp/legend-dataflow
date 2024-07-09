@@ -144,11 +144,12 @@ onsuccess:
 
 
 rule gen_filelist:
-    """
-    This rule generates the filelist. It is a checkpoint so when it is run it will update
-    the dag passed on the files it finds as an output. It does this by taking in the search
-    pattern, using this to find all the files that match this pattern, deriving the keys from
-    the files found and generating the list of new files needed.
+    """Generate file list.
+
+    It is a checkpoint so when it is run it will update the dag passed on the
+    files it finds as an output. It does this by taking in the search pattern,
+    using this to find all the files that match this pattern, deriving the keys
+    from the files found and generating the list of new files needed.
     """
     input:
         lambda wildcards: get_filelist(
@@ -162,5 +163,5 @@ rule gen_filelist:
         os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
     run:
         with open(output[0], "w") as f:
-            for fn in input[0]:
+            for fn in input:
                 f.write(f"{fn}\n")
