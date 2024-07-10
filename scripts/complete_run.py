@@ -135,7 +135,7 @@ def get_keys(files):
 
 
 def build_valid_keys(input_files, output_dir):
-    infiles = glob.glob(input_files)
+    infiles = glob.glob(as_ro(input_files))
     key_dict = get_keys(infiles)
 
     for key in list(key_dict):
@@ -189,7 +189,7 @@ def build_file_dbs(gen_tier_path, output_dir):
         out_file = output_dir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
         print(f"INFO: ......building {out_file}")
 
-        cmdline, cmdenv = ut.runcmd_popen(setup)
+        cmdline, cmdenv = ut.runcmd_popen(snakemake.params.setup)
 
         cmdenv["PRODENV"] = as_ro(os.getenv("PRODENV"))
 
@@ -200,7 +200,7 @@ def build_file_dbs(gen_tier_path, output_dir):
                     *cmdline,
                     "python3",
                     "-B",
-                    f"{basedir}/scripts/build_fdb.py",
+                    f"{snakemake.params.basedir}/scripts/build_fdb.py",
                     "--scan-path",
                     spec,
                     "--output",
@@ -232,13 +232,10 @@ def build_file_dbs(gen_tier_path, output_dir):
     print(f"INFO: ...took {dt}")
 
 
-setup = snakemake.params.setup
-basedir = snakemake.params.basedir
-
 print("INFO: ...checking log files")
 
 check_log_files(
-    snakemake.params.log_path,
+    ut.tmp_log_path(snakemake.params.setup),
     snakemake.output.summary_log,
     snakemake.output.gen_output,
     warning_file=snakemake.output.warning_log,
@@ -250,7 +247,7 @@ if os.getenv("PRODENV") is not None and os.getenv("PRODENV") in snakemake.params
     prodenv = as_ro(os.getenv("PRODENV"))
 
     def tdirs(tier):
-        return as_ro(ut.get_tier_path(setup, tier)).replace(prodenv, "")
+        return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(prodenv, "")
 
     file_db_config["data_dir"] = "$PRODENV"
 
@@ -258,7 +255,7 @@ else:
     print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
 
     def tdirs(tier):
-        return as_ro(ut.get_tier_path(setup, tier))
+        return as_ro(ut.get_tier_path(snakemake.params.setup, tier))
 
     file_db_config["data_dir"] = "/"
 
@@ -274,8 +271,8 @@ file_db_config["tier_dirs"] = {
 
 
 def fformat(tier):
-    return as_ro(pat.get_pattern_tier(setup, tier, check_in_cycle=False)).replace(
-        as_ro(ut.get_tier_path(setup, tier)), ""
+    return as_ro(pat.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)).replace(
+        as_ro(ut.get_tier_path(snakemake.params.setup, tier)), ""
     )
 
 
@@ -308,9 +305,12 @@ if snakemake.wildcards.tier != "daq":
     with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as f:
         json.dump(file_db_config, f, indent=2)
 
-    build_file_dbs(ut.tier_path(setup), snakemake.params.filedb_path)
+    build_file_dbs(ut.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
     os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
 
-    # build_valid_keys(snakemake.params.tmp_par_path, snakemake.params.valid_keys_path)
+    build_valid_keys(
+        os.path.join(ut.tmp_par_path(snakemake.params.setup), "*_db.json"),
+        snakemake.params.valid_keys_path,
+    )
 
 Path(snakemake.output.gen_output).touch()
