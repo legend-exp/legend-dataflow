@@ -170,7 +170,7 @@ def find_gen_runs(gen_tier_path):
 
 
 def build_file_dbs(gen_tier_path, outdir):
-    tic = time.process_time()
+    tic = time.time()
 
     gen_tier_path = Path(as_ro(gen_tier_path))
     outdir = Path(outdir)
@@ -230,7 +230,7 @@ def build_file_dbs(gen_tier_path, outdir):
             msg = f"at least one FileDB building thread failed: {_cmdline}"
             raise RuntimeError(msg)
 
-    toc = time.process_time()
+    toc = time.time()
     dt = timedelta(seconds=toc - tic)
     print(f"INFO: ...took {dt}")
 
@@ -253,15 +253,8 @@ else:
 
     file_db_config["data_dir"] = "/"
 
-file_db_config["tier_dirs"] = {
-    "raw": tdirs("raw"),
-    "dsp": tdirs("dsp"),
-    "hit": tdirs("hit"),
-    "tcm": tdirs("tcm"),
-    "pht": tdirs("pht"),
-    "evt": tdirs("evt"),
-    "pet": tdirs("pet"),
-}
+
+file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["table_format"]}
 
 
 def fformat(tier):
@@ -271,24 +264,8 @@ def fformat(tier):
 
 
 file_db_config |= {
-    "file_format": {
-        "raw": fformat("raw"),
-        "dsp": fformat("dsp"),
-        "hit": fformat("hit"),
-        "pht": fformat("pht"),
-        "evt": fformat("evt"),
-        "tcm": fformat("tcm"),
-        "pet": fformat("pet"),
-    },
-    "table_format": {
-        "raw": "ch{ch:07d}/raw",
-        "dsp": "ch{ch:07d}/dsp",
-        "hit": "ch{ch:07d}/hit",
-        "pht": "ch{ch:07d}/hit",
-        "evt": "{grp}/evt",
-        "pet": "{grp}/evt",
-        "tcm": "hardware_tcm_1",
-    },
+    "file_format": {k: fformat(k) for k in snakemake.params.setup["table_format"]},
+    "table_format": snakemake.params.setup["table_format"],
 }
 
 if snakemake.wildcards.tier != "daq":
