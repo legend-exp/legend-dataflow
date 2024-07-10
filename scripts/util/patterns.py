@@ -230,7 +230,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         msg = "invalid tier"
         raise Exception(msg)
     if tier_path(setup) not in os.path.normpath(file_pattern) and check_in_cycle is True:
-        return "/tmp/{experiment}-{period}-{run}-{datatype}-{timestamp}-" + f"tier_{tier}.lh5"
+        return "/tmp/" + os.path.basename(file_pattern)
     else:
         return file_pattern
 

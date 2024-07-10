@@ -227,9 +227,7 @@ def per_grouper(files):
 
 
 def run_grouper(files):
-    """
-    Returns list containing lists of each run
-    """
+    """Returns list containing lists of each run"""
     runs = []
     run_files = []
     for file in files:

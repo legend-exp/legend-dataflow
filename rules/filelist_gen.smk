@@ -70,8 +70,10 @@ def get_pattern(setup, tier):
 
 def concat_phy_filenames(setup, phy_filenames, tier):
     fn_pattern = get_pattern(setup, tier)
+    # group files by run
     sorted_phy_filenames = run_grouper(phy_filenames)
     phy_filenames = []
+
     for run in sorted_phy_filenames:
         key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
         out_key = FileKey.get_path_from_filekey(
@@ -79,6 +81,7 @@ def concat_phy_filenames(setup, phy_filenames, tier):
         )[0]
 
         phy_filenames.append(out_key)
+
     return phy_filenames
 
 
@@ -104,6 +107,7 @@ def build_filelist(
     for key in filekeys:
         fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
         files = glob.glob(fn_glob_pattern)
+
         for f in files:
             _key = FileKey.get_filekey_from_pattern(f, search_pattern)
             if _key.name in ignore_keys:
@@ -143,8 +147,10 @@ def build_filelist(
 
     phy_filenames = sorted(phy_filenames)
     other_filenames = sorted(other_filenames)
+
     if tier == "skm" or tier == "pet_concat" or tier == "evt_concat":
-        concat_phy_filenames(setup, phy_filenames, tier)
+        phy_filenames = concat_phy_filenames(setup, phy_filenames, tier)
+
     return phy_filenames + other_filenames
 
 
@@ -157,6 +163,7 @@ def get_filelist(
     analysis_runs, ignore_keys = get_analysis_runs(ignore_keys_file, analysis_runs_file)
 
     filekeys = get_keys(keypart)
+
     return build_filelist(
         setup,
         filekeys,

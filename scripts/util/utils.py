@@ -8,6 +8,7 @@ from timestamp to unix time
 import copy
 import os
 import re
+import shlex
 import string
 from datetime import datetime
 from pathlib import Path
@@ -201,11 +202,42 @@ def filelist_path(setup):
     return setup["paths"]["tmp_filelists"]
 
 
-def runcmd(setup):
-    exec_cmd = setup["execenv"]["cmd"]
-    exec_arg = setup["execenv"]["arg"]
+def runcmd(setup, aslist=False):
+    exec_cmd = shlex.split(setup["execenv"]["cmd"])
+    exec_arg = shlex.split(setup["execenv"]["arg"])
     path_install = setup["paths"]["install"]
-    return f"PYTHONUSERBASE={path_install} APPTAINERENV_PREPEND_PATH={path_install}/bin {exec_cmd} {exec_arg}"
+
+    cmdline = (
+        f"PYTHONUSERBASE={path_install}",
+        "APPTAINERENV_PREPEND_PATH={path_install}/bin",
+        *exec_cmd,
+        *exec_arg,
+    )
+
+    if "env" in setup["execenv"]:
+        for k, v in setup["execenv"]["env"].items():
+            cmdline = [f"{k}={v}", *cmdline]
+
+    if aslist:
+        return cmdline
+
+    return " ".join(cmdline)
+
+
+def runcmd_popen(setup):
+    exec_cmd = shlex.split(setup["execenv"]["cmd"])
+    exec_arg = shlex.split(setup["execenv"]["arg"])
+    path_install = setup["paths"]["install"]
+
+    cmdenv = {
+        "PYTHONUSERBASE": path_install,
+        "APPTAINERENV_PREPEND_PATH": f"{path_install}/bin",
+    }
+
+    if "env" in setup["execenv"]:
+        cmdenv |= setup["execenv"]["env"]
+
+    return exec_cmd + exec_arg, cmdenv
 
 
 def subst_vars_impl(x, var_values, ignore_missing=False):

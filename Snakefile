@@ -10,7 +10,15 @@ This includes:
 - the same for partition level tiers
 """
 
-import pathlib, os, json, sys, glob
+import pathlib
+import os
+import json
+import sys
+import glob
+from datetime import datetime
+from collections import OrderedDict
+import logging
+
 import scripts.util as ds
 from scripts.util.pars_loading import pars_catalog
 from scripts.util.patterns import get_pattern_tier_raw
@@ -24,16 +32,13 @@ from scripts.util.utils import (
     tmp_log_path,
     pars_path,
 )
-from datetime import datetime
-from collections import OrderedDict
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
 # configfile: "have/to/specify/path/to/your/config.json"
 
-check_in_cycle = True
-
 subst_vars_in_snakemake_config(workflow, config)
 
+check_in_cycle = True
 setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
@@ -73,10 +78,10 @@ localrules:
 
 
 onstart:
-    print("Starting workflow")
+    print("INFO: starting workflow")
+
     if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
         os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
-
 
     ds.pars_key_resolve.write_par_catalog(
         ["-*-*-*-cal"],
@@ -87,6 +92,7 @@ onstart:
 
     if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
         os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
+
     ds.pars_key_resolve.write_par_catalog(
         ["-*-*-*-cal"],
         os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
@@ -101,15 +107,16 @@ onsuccess:
     rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
     pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
+
     with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
         f.writelines(str(workflow.persistence.dag))
         # shell(f"cat {rep_dir}/dag.txt | dot -Tpdf > {rep_dir}/dag.pdf")
+
     with open(f"{rep_dir}/rg.txt", "w") as f:
         f.writelines(str(workflow.persistence.dag.rule_dot()))
         # shell(f"cat {rep_dir}/rg.txt | dot -Tpdf > {rep_dir}/rg.pdf")
-    print("Workflow finished, no error")
 
-    # remove .gen files
+        # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):
@@ -136,17 +143,13 @@ onsuccess:
         os.rmdir(tmp_log_path(setup))
 
 
-# Placeholder, can email or maybe put message in slack
-onerror:
-    print("An error occurred :( ")
-
-
 rule gen_filelist:
-    """
-    This rule generates the filelist. It is a checkpoint so when it is run it will update
-    the dag passed on the files it finds as an output. It does this by taking in the search
-    pattern, using this to find all the files that match this pattern, deriving the keys from
-    the files found and generating the list of new files needed.
+    """Generate file list.
+
+    It is a checkpoint so when it is run it will update the dag passed on the
+    files it finds as an output. It does this by taking in the search pattern,
+    using this to find all the files that match this pattern, deriving the keys
+    from the files found and generating the list of new files needed.
     """
     input:
         lambda wildcards: get_filelist(
@@ -159,6 +162,6 @@ rule gen_filelist:
     output:
         os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
     run:
-        with open(snakemake.output[0], "w") as f:
-            for fn in snakemake.input[0]:
+        with open(output[0], "w") as f:
+            for fn in input:
                 f.write(f"{fn}\n")
