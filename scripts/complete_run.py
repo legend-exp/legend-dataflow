@@ -5,6 +5,8 @@ import glob
 import json
 import os
 import subprocess
+import time
+from datetime import timedelta
 from pathlib import Path
 
 import util.patterns as pat
@@ -168,6 +170,8 @@ def find_gen_runs(gen_tier_path):
 
 
 def build_file_dbs(gen_tier_path, output_dir):
+    tic = time.process_time()
+
     gen_tier_path = Path(as_ro(gen_tier_path))
     output_dir = Path(output_dir)
 
@@ -213,17 +217,19 @@ def build_file_dbs(gen_tier_path, output_dir):
             os.wait()
             processes.difference_update([p for p in processes if p.poll() is not None])
 
-        for p in processes:
-            if p.poll() is None:
-                p.wait()
+    for p in processes:
+        if p.poll() is None:
+            p.wait()
 
-        for p in processes:
-            if p.returncode != 0:
-                _cmdline = (
-                    " ".join([f"{k}={v}" for k, v in cmdenv.items()]) + " " + " ".join(p.args)
-                )
-                msg = f"at least one FileDB building thread failed: {_cmdline}"
-                raise RuntimeError(msg)
+    for p in processes:
+        if p.returncode != 0:
+            _cmdline = " ".join([f"{k}={v}" for k, v in cmdenv.items()]) + " " + " ".join(p.args)
+            msg = f"at least one FileDB building thread failed: {_cmdline}"
+            raise RuntimeError(msg)
+
+    toc = time.process_time()
+    dt = timedelta(seconds=toc - tic)
+    print(f"INFO: ...took {dt}")
 
 
 setup = snakemake.params.setup
