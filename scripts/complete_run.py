@@ -169,11 +169,11 @@ def find_gen_runs(gen_tier_path):
     return runs | runs_concat
 
 
-def build_file_dbs(gen_tier_path, output_dir):
+def build_file_dbs(gen_tier_path, outdir):
     tic = time.process_time()
 
     gen_tier_path = Path(as_ro(gen_tier_path))
-    output_dir = Path(output_dir)
+    outdir = Path(outdir)
 
     # find generated directories
     runs = find_gen_runs(gen_tier_path)
@@ -184,10 +184,11 @@ def build_file_dbs(gen_tier_path, output_dir):
     processes = set()
     for spec in runs:
         speck = spec.split("/")
-        output_dir.mkdir(parents=True, exist_ok=True)
+        outdir.mkdir(parents=True, exist_ok=True)
         # TODO: replace l200 with {experiment}
-        out_file = output_dir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
-        print(f"INFO: ......building {out_file}")
+        outfile = outdir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
+        logfile = Path(ut.tmp_log_path(snakemake.params.setup)) / outfile.with_suffix(".log").name
+        print(f"INFO: ......building {outfile}")
 
         cmdline, cmdenv = ut.runcmd_popen(snakemake.params.setup)
 
@@ -204,9 +205,11 @@ def build_file_dbs(gen_tier_path, output_dir):
                     "--scan-path",
                     spec,
                     "--output",
-                    str(out_file),
+                    str(outfile),
                     "--config",
-                    str(output_dir / "file_db_config.json"),
+                    str(outdir / "file_db_config.json"),
+                    "--log",
+                    str(logfile),
                     "--assume-nonsparse" if speck[0] == "phy" else "",
                 ],
                 env=cmdenv,
@@ -231,15 +234,6 @@ def build_file_dbs(gen_tier_path, output_dir):
     dt = timedelta(seconds=toc - tic)
     print(f"INFO: ...took {dt}")
 
-
-print("INFO: ...checking log files")
-
-check_log_files(
-    ut.tmp_log_path(snakemake.params.setup),
-    snakemake.output.summary_log,
-    snakemake.output.gen_output,
-    warning_file=snakemake.output.warning_log,
-)
 
 file_db_config = {}
 
@@ -312,5 +306,14 @@ if snakemake.wildcards.tier != "daq":
         os.path.join(ut.tmp_par_path(snakemake.params.setup), "*_db.json"),
         snakemake.params.valid_keys_path,
     )
+
+print("INFO: ...checking log files")
+
+check_log_files(
+    ut.tmp_log_path(snakemake.params.setup),
+    snakemake.output.summary_log,
+    snakemake.output.gen_output,
+    warning_file=snakemake.output.warning_log,
+)
 
 Path(snakemake.output.gen_output).touch()

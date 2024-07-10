@@ -1,21 +1,35 @@
 import argparse
 import logging
+from pathlib import Path
 
 import numpy as np
 from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.flow.file_db import FileDB
 
-log = logging.getLogger(__name__)
-
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--config", required=True)
 argparser.add_argument("--scan-path", required=True)
 argparser.add_argument("--output", required=True)
+argparser.add_argument("--log")
 argparser.add_argument("--assume-nonsparse", action="store_true")
 args = argparser.parse_args()
 
 config = Props.read_from(args.config)
+
+if args.log is not None:
+    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+else:
+    logging.basicConfig(level=logging.DEBUG)
+
+logging.getLogger("legendmeta").setLevel(logging.INFO)
+logging.getLogger("numba").setLevel(logging.INFO)
+logging.getLogger("parse").setLevel(logging.INFO)
+logging.getLogger("lgdo").setLevel(logging.INFO)
+logging.getLogger("h5py._conv").setLevel(logging.INFO)
+
+log = logging.getLogger(__name__)
 
 fdb = FileDB(config, scan=False)
 fdb.scan_files([args.scan_path])
