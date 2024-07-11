@@ -10,6 +10,7 @@ from scripts.util.patterns import (
     get_pattern_log_channel,
     get_pattern_par_raw,
     get_pattern_plts,
+    get_pattern_pars,
 )
 
 
