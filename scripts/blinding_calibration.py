@@ -51,7 +51,14 @@ pars_dict = {}
 # peaks to search for
 peaks_keV = np.array([238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50])
 
-E_uncal = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
+if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
+    input_file = args.files[0]
+    with open(input_file) as f:
+        input_file = f.read().splitlines()
+else:
+    input_file = args.files
+
+E_uncal = lh5.read(f"{args.channel}/raw/daqenergy", sorted(input_file))[0].view_as("np")
 E_uncal = E_uncal[E_uncal > 200]
 guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 Euc_min = peaks_keV[0] / guess_keV * 0.6

@@ -5,6 +5,7 @@ Snakemake rules for calibrating daq energy for blinding. Two steps:
 """
 
 from scripts.util.patterns import (
+    get_pattern_pars,
     get_pattern_par_raw,
     get_pattern_plts,
     get_pattern_pars_tmp_channel,
@@ -19,7 +20,9 @@ rule build_blinding_calibration:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "raw"),
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",
