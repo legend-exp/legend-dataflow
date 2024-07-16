@@ -56,8 +56,16 @@ det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
 # read in calibration curve for this channel
 blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
+# get files
+if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
+    input_file = args.files[0]
+    with open(input_file) as f:
+        input_file = f.read().splitlines()
+else:
+    input_file = args.files
+
 # load in the data
-daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
+daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(input_file))[0].view_as("np")
 
 # calibrate daq energy using pre existing curve
 daqenergy_cal = ne.evaluate(

@@ -20,7 +20,9 @@ rule build_blinding_check:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "raw"),
+        files=os.path.join(
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
         par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
@@ -92,19 +94,5 @@ rule build_pars_raw:
     shell:
         "{swenv} python3 -B "
         "{basedir}/../scripts/merge_channels.py "
-
-
-checkpoint build_pars_raw:
-    input:
-        lambda wildcards: read_filelist_pars_cal_channel(wildcards, "raw"),
-        lambda wildcards: read_filelist_plts_cal_channel(wildcards, "raw"),
-    output:
-        get_pattern_par_raw(setup),
-        get_pattern_plts(setup, "raw"),
-    group:
-        "merge-blinding"
-    shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
-        "--input {input} "
+        "--input {input.infiles} "
         "--output {output} "
