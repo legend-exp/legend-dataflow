@@ -46,6 +46,9 @@ rule build_pulser_ids:
         ),
     params:
         input=lambda _, input: ro(input),
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
     output:
         pulser=temp(get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids")),
     log:
@@ -58,7 +61,7 @@ rule build_pulser_ids:
         "{swenv} python3 -B "
         "{basedir}/../scripts/pars_tcm_pulser.py "
         "--log {log} "
-        r"--configs {ro(configs)} "
+        f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
