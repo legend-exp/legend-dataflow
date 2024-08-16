@@ -205,18 +205,19 @@ def filelist_path(setup):
 def runcmd(setup, aslist=False):
     exec_cmd = shlex.split(setup["execenv"]["cmd"])
     exec_arg = shlex.split(setup["execenv"]["arg"])
+    
     path_install = setup["paths"]["install"]
-
-    cmdline = (
-        f"PYTHONUSERBASE={path_install}",
-        "APPTAINERENV_PREPEND_PATH={path_install}/bin",
-        *exec_cmd,
-        *exec_arg,
-    )
+    exec_env = ["--env=PYTHONUSERBASE={path_install}"]
 
     if "env" in setup["execenv"]:
         for k, v in setup["execenv"]["env"].items():
-            cmdline = [f"{k}={v}", *cmdline]
+            exec_env += [f"--env={k}={v}"]
+
+    cmdline = [
+        *exec_cmd,
+        *exec_arg,
+        *exec_env,
+    ]
 
     if aslist:
         return cmdline
