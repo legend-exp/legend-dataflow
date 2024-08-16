@@ -15,9 +15,6 @@ import logging
 import os
 import pathlib
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-
 import numexpr as ne
 import numpy as np
 from legendmeta import LegendMetadata, TextDB

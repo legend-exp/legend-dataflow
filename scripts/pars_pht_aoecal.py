@@ -10,9 +10,6 @@ import re
 import warnings
 from typing import Callable
 
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata

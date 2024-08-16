@@ -5,14 +5,6 @@ import os
 import pathlib
 import time
 import warnings
-
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 from bisect import bisect_left
 
 import lgdo

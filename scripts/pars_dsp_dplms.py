@@ -12,13 +12,6 @@ from legendmeta.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
 argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)

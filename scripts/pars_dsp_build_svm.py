@@ -7,11 +7,6 @@ from legendmeta.catalog import Props
 from lgdo import lh5
 from sklearn.svm import SVC
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)
 argparser.add_argument("--output_file", help="output SVM file", type=str, required=True)
