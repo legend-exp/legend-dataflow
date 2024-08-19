@@ -203,42 +203,17 @@ def filelist_path(setup):
 
 
 def runcmd(setup, aslist=False):
-    exec_cmd = shlex.split(setup["execenv"]["cmd"])
-    exec_arg = shlex.split(setup["execenv"]["arg"])
-    
-    path_install = setup["paths"]["install"]
-    exec_env = ["--env=PYTHONUSERBASE={path_install}"]
-
+    cmdline  = shlex.split(setup["execenv"]["cmd"])
+    cmdline += shlex.split(setup["execenv"]["arg"])
+    cmdline += [f"--env=PYTHONUSERBASE={setup['paths']['install']}"]
     if "env" in setup["execenv"]:
-        for k, v in setup["execenv"]["env"].items():
-            exec_env += [f"--env={k}={v}"]
-
-    cmdline = [
-        *exec_cmd,
-        *exec_arg,
-        *exec_env,
-    ]
+        cmdline += [ f"--env={var}=\"{val}\"" for var, val in setup["execenv"]["env"].items() ]
+        
 
     if aslist:
         return cmdline
 
     return " ".join(cmdline)
-
-
-def runcmd_popen(setup):
-    exec_cmd = shlex.split(setup["execenv"]["cmd"])
-    exec_arg = shlex.split(setup["execenv"]["arg"])
-    path_install = setup["paths"]["install"]
-
-    cmdenv = {
-        "PYTHONUSERBASE": path_install,
-        "APPTAINERENV_PREPEND_PATH": f"{path_install}/bin",
-    }
-
-    if "env" in setup["execenv"]:
-        cmdenv |= setup["execenv"]["env"]
-
-    return exec_cmd + exec_arg, cmdenv
 
 
 def subst_vars_impl(x, var_values, ignore_missing=False):
