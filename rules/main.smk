@@ -10,6 +10,10 @@ from scripts.util.utils import (
 
 timestamp = datetime.strftime(datetime.utcnow(), "%Y%m%dT%H%M%SZ")
 
+# Make sure that numba procesors are compiled before we begin
+onstart:
+    shell('python3 -c "import dspeed; import lgdo"')
+
 
 # Create "{label}-{tier}.gen", based on "{label}.keylist" via
 # "{label}-{tier}.filelist". Will implicitly trigger creation of all files in
