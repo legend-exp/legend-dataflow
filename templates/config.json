@@ -51,13 +51,13 @@
       "execenv": {
         "cmd": "apptainer run",
         "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif",
-	"env": {
-	    "HDF5_USE_FILE_LOCKING": "False",
-	    "LGDO_BOUNDSCHECK": "false",
-	    "DSPEED_BOUNDSCHECK": "false",
-	    "PYGAMA_PARALLEL": "false",
-	    "PYGAMA_FASTMATH": "false"
-	}
+        "env": {
+          "HDF5_USE_FILE_LOCKING": "False",
+          "LGDO_BOUNDSCHECK": "false",
+          "DSPEED_BOUNDSCHECK": "false",
+          "PYGAMA_PARALLEL": "false",
+          "PYGAMA_FASTMATH": "false"
+        }
       },
       "pkg_versions": {
         "pygama": "pygama==2.0.1",

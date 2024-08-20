@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import pickle as pkl
 
 from legendmeta.catalog import Props

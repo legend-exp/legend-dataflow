@@ -10,6 +10,7 @@ from scripts.util.utils import (
 
 timestamp = datetime.strftime(datetime.utcnow(), "%Y%m%dT%H%M%SZ")
 
+
 # Create "{label}-{tier}.gen", based on "{label}.keylist" via
 # "{label}-{tier}.filelist". Will implicitly trigger creation of all files in
 # "{label}-{tier}.filelist". Example:

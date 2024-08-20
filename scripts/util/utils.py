@@ -203,12 +203,11 @@ def filelist_path(setup):
 
 
 def runcmd(setup, aslist=False):
-    cmdline  = shlex.split(setup["execenv"]["cmd"])
+    cmdline = shlex.split(setup["execenv"]["cmd"])
     cmdline += shlex.split(setup["execenv"]["arg"])
     cmdline += [f"--env=PYTHONUSERBASE={setup['paths']['install']}"]
     if "env" in setup["execenv"]:
-        cmdline += [ f"--env={var}=\"{val}\"" for var, val in setup["execenv"]["env"].items() ]
-        
+        cmdline += [f'--env={var}="{val}"' for var, val in setup["execenv"]["env"].items()]
 
     if aslist:
         return cmdline
