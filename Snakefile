@@ -111,7 +111,6 @@ onstart:
     )
 
 
-
 onsuccess:
     from snakemake.report import auto_report
 
