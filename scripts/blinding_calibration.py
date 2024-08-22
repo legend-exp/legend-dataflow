@@ -6,7 +6,6 @@ and deriving a simple scaling relation from adc to keV.
 
 import argparse
 import logging
-import os
 import pickle as pkl
 
 import matplotlib as mpl

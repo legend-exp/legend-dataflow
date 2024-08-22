@@ -81,7 +81,7 @@ onstart:
     print("INFO: starting workflow")
 
     # Make sure numba processors are compiled before we begin
-    shell("{swenv} python3 -B -c \"import dspeed; import lgdo\"")
+    shell('{swenv} python3 -B -c "import dspeed; import lgdo"')
 
     if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
         os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
