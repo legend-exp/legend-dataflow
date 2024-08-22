@@ -21,13 +21,6 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-ds.pars_key_resolve.write_par_catalog(
-    ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "pht", "validity.jsonl"),
-    get_pattern_tier_raw(setup),
-    {"cal": ["par_pht"], "lar": ["par_pht"]},
-)
-
 intier = "psp"
 
 

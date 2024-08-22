@@ -103,6 +103,14 @@ onstart:
         {"cal": ["par_dsp"], "lar": ["par_dsp"]},
     )
 
+    ds.pars_key_resolve.write_par_catalog(
+        ["-*-*-*-cal"],
+        os.path.join(pars_path(setup), "pht", "validity.jsonl"),
+        get_pattern_tier_raw(setup),
+        {"cal": ["par_pht"], "lar": ["par_pht"]},
+    )
+
+
 
 onsuccess:
     from snakemake.report import auto_report
