@@ -209,7 +209,7 @@ def runcmd(setup, aslist=False):
 
     cmdline = (
         f"PYTHONUSERBASE={path_install}",
-        "APPTAINERENV_PREPEND_PATH={path_install}/bin",
+        f"APPTAINERENV_PREPEND_PATH={path_install}/bin",
         *exec_cmd,
         *exec_arg,
     )
