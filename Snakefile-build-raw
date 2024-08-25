@@ -53,9 +53,8 @@ localrules:
     autogen_output,
 
 
-ds.pars_key_resolve.write_par_catalog(
+raw_par_catalog = ds.pars_key_resolve.get_par_catalog(
     ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "raw", "validity.jsonl"),
     [
         get_pattern_unsorted_data(setup),
         get_pattern_tier_daq(setup),
@@ -67,6 +66,12 @@ ds.pars_key_resolve.write_par_catalog(
 
 onstart:
     print("Starting workflow")
+
+    raw_par_cat_file = os.path.join(pars_path(setup), "raw", "validity.jsonl")
+    if os.path.isfile(raw_par_cat_file):
+        os.remove(os.path.join(pars_path(setup), "raw", "validity.jsonl"))
+    pathlib.Path(os.path.dirname(raw_par_cat_file)).mkdir(parents=True, exist_ok=True)
+    ds.pars_key_resolve.write_to_jsonl(raw_par_catalog, raw_par_cat_file)
 
 
 onsuccess:

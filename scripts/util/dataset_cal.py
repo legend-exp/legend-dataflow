@@ -5,7 +5,6 @@ This module uses the partition database files to the necessary inputs for partit
 import json
 import os
 
-from .CalibCatalog import PropsStream
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .patterns import (
     get_pattern_log_channel,
@@ -50,7 +49,7 @@ class dataset_file:
 
     def get_par_files(
         self,
-        catalog_file,
+        catalog,
         dataset,
         channel,
         tier,
@@ -61,8 +60,8 @@ class dataset_file:
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
-        for item in PropsStream.read_from(catalog_file):
-            par_files = item["apply"]
+        for item in catalog:
+            par_files = item.apply
             for par_file in par_files:
                 if par_file.split("-")[-1] == f"par_{tier}.json":
                     all_par_files.append(par_file)
@@ -99,7 +98,7 @@ class dataset_file:
 
     def get_plt_files(
         self,
-        catalog_file,
+        catalog,
         dataset,
         channel,
         tier,
@@ -109,8 +108,8 @@ class dataset_file:
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
-        for item in PropsStream.read_from(catalog_file):
-            par_files = item["apply"]
+        for item in catalog:
+            par_files = item.apply
             for par_file in par_files:
                 if par_file.split("-")[-1] == f"par_{tier}.json":
                     all_par_files.append(par_file)
@@ -143,7 +142,7 @@ class dataset_file:
 
     def get_log_file(
         self,
-        catalog_file,
+        catalog,
         dataset,
         channel,
         tier,
@@ -152,7 +151,7 @@ class dataset_file:
         name=None,
     ):
         par_files = self.get_par_files(
-            catalog_file,
+            catalog,
             dataset,
             channel,
             tier,
@@ -167,11 +166,9 @@ class dataset_file:
             fk.channel = channel
         return fk.get_path_from_filekey(get_pattern_log_channel(self.setup, name))[0]
 
-    def get_timestamp(
-        self, catalog_file, dataset, channel, tier, experiment="l200", datatype="cal"
-    ):
+    def get_timestamp(self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"):
         par_files = self.get_par_files(
-            catalog_file,
+            catalog,
             dataset,
             channel,
             tier,

@@ -21,6 +21,12 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
+pht_par_catalog = ds.pars_key_resolve.get_par_catalog(
+    ["-*-*-*-cal"],
+    get_pattern_tier_raw(setup),
+    {"cal": ["par_pht"], "lar": ["par_pht"]},
+)
+
 intier = "psp"
 
 
@@ -47,7 +53,7 @@ for key, dataset in part.datasets.items():
                 pulser_files=[
                     file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -55,7 +61,7 @@ for key, dataset in part.datasets.items():
                     )
                 ],
                 check_files=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -64,7 +70,7 @@ for key, dataset in part.datasets.items():
                 overwrite_files=get_overwrite_file(
                     "pht",
                     timestamp=part.get_timestamp(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -76,13 +82,13 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
-                    f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
+                    pht_par_catalog, partition, key, tier="pht"
                 ),
             output:
                 hit_pars=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -92,7 +98,7 @@ for key, dataset in part.datasets.items():
                 plot_file=[
                     temp(file)
                     for file in part.get_plt_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -101,7 +107,7 @@ for key, dataset in part.datasets.items():
                 ],
             log:
                 part.get_log_file(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     "pht",
@@ -255,7 +261,7 @@ for key, dataset in part.datasets.items():
                 pulser_files=[
                     file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -263,14 +269,14 @@ for key, dataset in part.datasets.items():
                     )
                 ],
                 ecal_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
                     name="energy_cal",
                 ),
                 eres_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -278,7 +284,7 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -290,13 +296,13 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
-                    f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
+                    pht_par_catalog, partition, key, tier="pht"
                 ),
             output:
                 hit_pars=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -306,7 +312,7 @@ for key, dataset in part.datasets.items():
                 partcal_results=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -317,7 +323,7 @@ for key, dataset in part.datasets.items():
                 plot_file=[
                     temp(file)
                     for file in part.get_plt_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -326,7 +332,7 @@ for key, dataset in part.datasets.items():
                 ],
             log:
                 part.get_log_file(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     "pht",
@@ -437,7 +443,7 @@ for key, dataset in part.datasets.items():
                 pulser_files=[
                     file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -445,14 +451,14 @@ for key, dataset in part.datasets.items():
                     )
                 ],
                 ecal_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
                     name="partcal",
                 ),
                 eres_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -460,7 +466,7 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -472,13 +478,13 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
-                    f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
+                    pht_par_catalog, partition, key, tier="pht"
                 ),
             output:
                 hit_pars=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -488,7 +494,7 @@ for key, dataset in part.datasets.items():
                 aoe_results=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -499,7 +505,7 @@ for key, dataset in part.datasets.items():
                 plot_file=[
                     temp(file)
                     for file in part.get_plt_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -508,7 +514,7 @@ for key, dataset in part.datasets.items():
                 ],
             log:
                 part.get_log_file(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     "pht",
@@ -617,7 +623,7 @@ for key, dataset in part.datasets.items():
                 pulser_files=[
                     file.replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -625,14 +631,14 @@ for key, dataset in part.datasets.items():
                     )
                 ],
                 ecal_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
                     name="aoecal",
                 ),
                 eres_file=part.get_par_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -640,7 +646,7 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 inplots=part.get_plt_files(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     tier="pht",
@@ -652,13 +658,13 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
-                    f"{par_pht_path(setup)}/validity.jsonl", partition, key, tier="pht"
+                    pht_par_catalog, partition, key, tier="pht"
                 ),
             output:
                 hit_pars=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -667,7 +673,7 @@ for key, dataset in part.datasets.items():
                 lq_results=[
                     temp(file)
                     for file in part.get_par_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -678,7 +684,7 @@ for key, dataset in part.datasets.items():
                 plot_file=[
                     temp(file)
                     for file in part.get_plt_files(
-                        f"{par_pht_path(setup)}/validity.jsonl",
+                        pht_par_catalog,
                         partition,
                         key,
                         tier="pht",
@@ -686,7 +692,7 @@ for key, dataset in part.datasets.items():
                 ],
             log:
                 part.get_log_file(
-                    f"{par_pht_path(setup)}/validity.jsonl",
+                    pht_par_catalog,
                     partition,
                     key,
                     "pht",

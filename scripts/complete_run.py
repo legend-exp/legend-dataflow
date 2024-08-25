@@ -2,14 +2,9 @@
 
 import datetime
 import glob
-import json
 import os
-import subprocess
-import time
-from datetime import timedelta
 from pathlib import Path
 
-import util.patterns as pat
 import util.utils as ut
 from util.FileKey import FileKey
 
