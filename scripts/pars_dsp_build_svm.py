@@ -21,7 +21,7 @@ logging.getLogger("h5py").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 
 # Load files
-tb, _ = lh5.read("ml_train/dsp", args.train_data)
+tb = lh5.read("ml_train/dsp", args.train_data)
 log.debug("loaded data")
 
 hyperpars = Props.read_from(args.train_hyperpars)
