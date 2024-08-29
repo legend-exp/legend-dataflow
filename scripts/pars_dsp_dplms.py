@@ -138,7 +138,7 @@ sto.write(
 )
 
 pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
-Props.write_to(args.dsp_pars, dplms_dict)
+Props.write_to(args.dsp_pars, db_dict)
 
 if args.plot_path:
     pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
