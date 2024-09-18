@@ -10,7 +10,7 @@ from scripts.util.patterns import (
     get_pattern_log_channel,
     get_pattern_par_raw,
     get_pattern_plts,
-    get_pattern_pars
+    get_pattern_pars,
 )
 
 
@@ -21,8 +21,8 @@ rule build_blinding_check:
     """
     input:
         files=os.path.join(
-                filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-            ),
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
         par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",

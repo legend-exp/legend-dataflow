@@ -20,8 +20,8 @@ rule build_blinding_calibration:
     """
     input:
         files=os.path.join(
-                filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-            ),
+            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",

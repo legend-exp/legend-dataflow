@@ -1,5 +1,5 @@
 import argparse
-import os, json
+import os
 import pathlib
 import pickle as pkl
 import shelve
@@ -43,10 +43,7 @@ args = argparser.parse_args()
 # change to only have 1 output file for multiple inputs
 # don't care about processing step, check if extension matches
 
-if hasattr(args.input, 'infiles'):
-    channel_files = args.input.infiles
-else:
-    channel_files = args.input
+channel_files = args.input.infiles if hasattr(args.input, "infiles") else args.input
 
 file_extension = pathlib.Path(args.output).suffix
 
@@ -72,7 +69,7 @@ if file_extension == ".json" or file_extension == ".yaml" or file_extension == "
         else:
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)
-    print(temp_output)
+
     Props.write_to(temp_output, out_dict)
 
     os.rename(temp_output, out_file)
