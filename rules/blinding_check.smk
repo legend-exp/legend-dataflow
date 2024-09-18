@@ -23,7 +23,6 @@ rule build_blinding_check:
         files=os.path.join(
                 filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
             ),
-        files=lambda wildcards: read_filelist_cal(wildcards, "raw"),
         par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
