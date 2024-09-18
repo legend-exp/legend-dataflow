@@ -76,6 +76,7 @@ onsuccess:
 
 
 include: "rules/common.smk"
+include: "rules/filelist_gen.smk"
 include: "rules/main.smk"
 include: "rules/raw.smk"
 include: "rules/blinding_check.smk"
@@ -89,7 +90,7 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern(wildcards.tier),
+            get_tier_pattern(wildcards.tier),
             ignore_keys_file=os.path.join(configs, "empty_keys.keylist"),
             analysis_runs_file=None,
         ),

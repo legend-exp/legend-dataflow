@@ -105,7 +105,7 @@ def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
         return out_files
 
 
-def get_pattern(tier):
+def get_tier_pattern(tier):
     """
     This func gets the search pattern for the relevant tier passed.
     """
