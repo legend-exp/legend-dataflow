@@ -19,7 +19,9 @@ rule build_blinding_calibration:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=lambda wildcards: read_filelist_cal(wildcards, "raw"),
+        files=os.path.join(
+                filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+            ),
     params:
         timestamp="{timestamp}",
         datatype="cal",
