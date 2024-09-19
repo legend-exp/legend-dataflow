@@ -132,4 +132,5 @@ class pars_key_resolve:
             msg = "No Keys found"
             warnings.warn(msg, stacklevel=0)
             entrylist = [pars_key_resolve("00000000T000000Z", "all", [])]
+            pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
             pars_key_resolve.write_to_jsonl(entrylist, filename)
