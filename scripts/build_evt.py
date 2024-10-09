@@ -35,6 +35,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
 argparser.add_argument("--tcm_file", help="tcm file", type=str)
+argparser.add_argument("--ann_file", help="ann file")
 argparser.add_argument("--xtc_file", help="xtc file", type=str)
 argparser.add_argument("--par_files", help="par files", nargs="*")
 
@@ -125,13 +126,18 @@ rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
 
+file_table = {
+    "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
+    "dsp": (args.dsp_file, "dsp", "ch{}"),
+    "hit": (args.hit_file, "hit", "ch{}"),
+    "evt": (None, "evt"),
+}
+
+if args.ann_file is not None:
+    file_table["ann"] = (args.ann_file, "dsp", "ch{}")
+
 table = build_evt(
-    {
-        "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
-        "dsp": (args.dsp_file, "dsp", "ch{}"),
-        "hit": (args.hit_file, "hit", "ch{}"),
-        "evt": (None, "evt"),
-    },
+    file_table,
     evt_config,
 )
 

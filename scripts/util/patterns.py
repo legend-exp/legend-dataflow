@@ -16,10 +16,12 @@ from .utils import (
     pars_path,
     plts_path,
     sandbox_path,
+    tier_ann_path,
     tier_daq_path,
     tier_dsp_path,
     tier_evt_path,
     tier_hit_path,
+    tier_pan_path,
     tier_path,
     tier_pet_path,
     tier_pht_path,
@@ -137,6 +139,16 @@ def get_pattern_tier_hit(setup):
     )
 
 
+def get_pattern_tier_ann(setup):
+    return os.path.join(
+        f"{tier_ann_path(setup)}",
+        "{datatype}",
+        "{period}",
+        "{run}",
+        "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_ann.lh5",
+    )
+
+
 def get_pattern_tier_evt(setup):
     return os.path.join(
         f"{tier_evt_path(setup)}",
@@ -172,6 +184,16 @@ def get_pattern_tier_pht(setup):
         "{period}",
         "{run}",
         "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_pht.lh5",
+    )
+
+
+def get_pattern_tier_pan(setup):
+    return os.path.join(
+        f"{tier_pan_path(setup)}",
+        "{datatype}",
+        "{period}",
+        "{run}",
+        "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_pan.lh5",
     )
 
 
@@ -212,6 +234,8 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         file_pattern = get_pattern_tier_dsp(setup)
     elif tier == "hit":
         file_pattern = get_pattern_tier_hit(setup)
+    elif tier == "ann":
+        file_pattern = get_pattern_tier_ann(setup)
     elif tier == "evt":
         file_pattern = get_pattern_tier_evt(setup)
     elif tier == "evt_concat":
@@ -220,6 +244,8 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         file_pattern = get_pattern_tier_psp(setup)
     elif tier == "pht":
         file_pattern = get_pattern_tier_pht(setup)
+    elif tier == "pan":
+        file_pattern = get_pattern_tier_pan(setup)
     elif tier == "pet":
         file_pattern = get_pattern_tier_pet(setup)
     elif tier == "pet_concat":

@@ -19,9 +19,11 @@
         "tier_tcm": "$_/generated/tier/tcm",
         "tier_dsp": "$_/generated/tier/dsp",
         "tier_hit": "$_/generated/tier/hit",
+        "tier_ann": "$_/generated/tier/ann",
         "tier_evt": "$_/generated/tier/evt",
         "tier_psp": "$_/generated/tier/psp",
         "tier_pht": "$_/generated/tier/pht",
+        "tier_pan": "$_/generated/tier/pan",
         "tier_pet": "$_/generated/tier/pet",
         "tier_skm": "$_/generated/tier/skm",
 
