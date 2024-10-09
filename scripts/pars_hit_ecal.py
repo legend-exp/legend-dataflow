@@ -9,9 +9,6 @@ import pickle as pkl
 import warnings
 from datetime import datetime
 
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 import lgdo.lh5 as lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt

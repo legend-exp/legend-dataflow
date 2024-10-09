@@ -70,7 +70,7 @@ if file_extension == ".json" or file_extension == ".yaml" or file_extension == "
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)
 
-    Props.write_to(temp_output, out_dict)
+    Props.write_to(temp_output, out_dict, "json")
 
     os.rename(temp_output, out_file)
 
