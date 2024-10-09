@@ -6,7 +6,6 @@ and deriving a simple scaling relation from adc to keV.
 
 import argparse
 import logging
-import os
 import pickle as pkl
 
 import matplotlib as mpl
@@ -17,9 +16,6 @@ from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.math.histogram import better_int_binning, get_hist
 from pygama.pargen.energy_cal import hpge_find_E_peaks
-
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
 
 mpl.use("agg")
 

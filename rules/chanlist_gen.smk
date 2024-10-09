@@ -21,8 +21,10 @@ def get_par_chanlist(
 
     key = ChannelProcKey.parse_keypart(keypart)
 
+    flist_path = filelist_path(setup)
+    os.makedirs(flist_path, exist_ok=True)
     output_file = os.path.join(
-        filelist_path(setup),
+        flist_path,
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 

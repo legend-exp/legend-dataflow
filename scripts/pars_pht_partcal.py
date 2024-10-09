@@ -9,9 +9,6 @@ import pickle as pkl
 import re
 import warnings
 
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 import numpy as np
 import pandas as pd
 import pygama.math.distributions as pgf

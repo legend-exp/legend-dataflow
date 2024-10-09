@@ -8,9 +8,6 @@ from daq2lh5 import build_raw
 from legendmeta import TextDB
 from legendmeta.catalog import Props
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
 argparser.add_argument("output", help="output file", type=str)

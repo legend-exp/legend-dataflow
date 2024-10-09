@@ -12,11 +12,6 @@ from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 
-os.environ["LGDO_CACHE"] = "false"
-os.environ["LGDO_BOUNDSCHECK"] = "false"
-os.environ["DSPEED_CACHE"] = "false"
-os.environ["DSPEED_BOUNDSCHECK"] = "false"
-
 
 def replace_list_with_array(dic):
     for key, value in dic.items():

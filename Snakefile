@@ -80,25 +80,33 @@ localrules:
 onstart:
     print("INFO: starting workflow")
 
-    if os.path.isfile(os.path.join(pars_path(setup), "hit", "validity.jsonl")):
+    # Make sure numba processors are compiled before we begin
+    shell('{swenv} python3 -B -c "import dspeed; import lgdo"')
+
+    # Log parameter catalogs in validity.jsonl files
+    hit_par_cat_file = os.path.join(pars_path(setup), "hit", "validity.jsonl")
+    if os.path.isfile(hit_par_cat_file):
         os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
+    pathlib.Path(os.path.dirname(hit_par_cat_file)).mkdir(parents=True, exist_ok=True)
+    ds.pars_key_resolve.write_to_jsonl(hit_par_catalog, hit_par_cat_file)
 
-    ds.pars_key_resolve.write_par_catalog(
-        ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "hit", "validity.jsonl"),
-        get_pattern_tier_raw(setup),
-        {"cal": ["par_hit"], "lar": ["par_hit"]},
-    )
+    pht_par_cat_file = os.path.join(pars_path(setup), "pht", "validity.jsonl")
+    if os.path.isfile(pht_par_cat_file):
+        os.remove(os.path.join(pars_path(setup), "pht", "validity.jsonl"))
+    pathlib.Path(os.path.dirname(pht_par_cat_file)).mkdir(parents=True, exist_ok=True)
+    ds.pars_key_resolve.write_to_jsonl(pht_par_catalog, pht_par_cat_file)
 
-    if os.path.isfile(os.path.join(pars_path(setup), "dsp", "validity.jsonl")):
-        os.remove(os.path.join(pars_path(setup), "dsp", "validity.jsonl"))
+    dsp_par_cat_file = os.path.join(pars_path(setup), "dsp", "validity.jsonl")
+    if os.path.isfile(dsp_par_cat_file):
+        os.remove(dsp_par_cat_file)
+    pathlib.Path(os.path.dirname(dsp_par_cat_file)).mkdir(parents=True, exist_ok=True)
+    ds.pars_key_resolve.write_to_jsonl(dsp_par_catalog, dsp_par_cat_file)
 
-    ds.pars_key_resolve.write_par_catalog(
-        ["-*-*-*-cal"],
-        os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
-        get_pattern_tier_raw(setup),
-        {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-    )
+    psp_par_cat_file = os.path.join(pars_path(setup), "psp", "validity.jsonl")
+    if os.path.isfile(psp_par_cat_file):
+        os.remove(psp_par_cat_file)
+    pathlib.Path(os.path.dirname(psp_par_cat_file)).mkdir(parents=True, exist_ok=True)
+    ds.pars_key_resolve.write_to_jsonl(psp_par_catalog, psp_par_cat_file)
 
 
 onsuccess:
