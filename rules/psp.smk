@@ -20,16 +20,14 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-pars_key_resolve.write_par_catalog(
+dsp_par_catalog = pars_key_resolve.get_par_catalog(
     ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "dsp", "validity.jsonl"),
     get_pattern_tier_raw(setup),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
-pars_key_resolve.write_par_catalog(
+psp_par_catalog = pars_key_resolve.get_par_catalog(
     ["-*-*-*-cal"],
-    os.path.join(pars_path(setup), "psp", "validity.jsonl"),
     get_pattern_tier_raw(setup),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
@@ -41,14 +39,14 @@ for key, dataset in part.datasets.items():
         rule:
             input:
                 dsp_pars=part.get_par_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl",
+                    dsp_par_catalog,
                     partition,
                     key,
                     tier="dsp",
                     name="eopt",
                 ),
                 dsp_objs=part.get_par_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl",
+                    dsp_par_catalog,
                     partition,
                     key,
                     tier="dsp",
@@ -56,7 +54,7 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 dsp_plots=part.get_plt_files(
-                    f"{par_dsp_path(setup)}/validity.jsonl", partition, key, tier="dsp"
+                    dsp_par_catalog, partition, key, tier="dsp"
                 ),
             wildcard_constraints:
                 channel=part.get_wildcard_constraints(partition, key),
@@ -64,12 +62,12 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=part.get_timestamp(
-                    f"{par_psp_path(setup)}/validity.jsonl", partition, key, tier="psp"
+                    psp_par_catalog, partition, key, tier="psp"
                 ),
             output:
                 psp_pars=temp(
                     part.get_par_files(
-                        f"{par_psp_path(setup)}/validity.jsonl",
+                        psp_par_catalog,
                         partition,
                         key,
                         tier="psp",
@@ -78,7 +76,7 @@ for key, dataset in part.datasets.items():
                 ),
                 psp_objs=temp(
                     part.get_par_files(
-                        f"{par_psp_path(setup)}/validity.jsonl",
+                        psp_par_catalog,
                         partition,
                         key,
                         tier="psp",
@@ -88,7 +86,7 @@ for key, dataset in part.datasets.items():
                 ),
                 psp_plots=temp(
                     part.get_plt_files(
-                        f"{par_psp_path(setup)}/validity.jsonl",
+                        psp_par_catalog,
                         partition,
                         key,
                         tier="psp",
@@ -96,7 +94,7 @@ for key, dataset in part.datasets.items():
                 ),
             log:
                 part.get_log_file(
-                    f"{par_psp_path(setup)}/validity.jsonl",
+                    psp_par_catalog,
                     partition,
                     key,
                     "psp",

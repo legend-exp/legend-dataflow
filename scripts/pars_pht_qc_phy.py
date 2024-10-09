@@ -9,9 +9,6 @@ import pickle as pkl
 import re
 import warnings
 
-os.environ["PYGAMA_PARALLEL"] = "false"
-os.environ["PYGAMA_FASTMATH"] = "false"
-
 import lgdo.lh5 as lh5
 import numpy as np
 from legendmeta import LegendMetadata

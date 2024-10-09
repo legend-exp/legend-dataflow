@@ -20,6 +20,12 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
+hit_par_catalog = ds.pars_key_resolve.get_par_catalog(
+    ["-*-*-*-cal"],
+    get_pattern_tier_raw(setup),
+    {"cal": ["par_hit"], "lar": ["par_hit"]},
+)
+
 
 # This rule builds the qc using the calibration dsp files and fft files
 rule build_qc:

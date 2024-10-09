@@ -4,8 +4,6 @@ This module creates the validity files used for determining the time validity of
 
 import glob
 import json
-import os
-import pathlib
 import re
 import warnings
 from typing import ClassVar
@@ -112,7 +110,7 @@ class pars_key_resolve:
         return keys
 
     @staticmethod
-    def write_par_catalog(keypart, filename, search_patterns, name_dict):
+    def get_par_catalog(keypart, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
         if isinstance(search_patterns, str):
@@ -126,11 +124,8 @@ class pars_key_resolve:
             keylist = pars_key_resolve.generate_par_keylist(keys)
 
             entrylist = pars_key_resolve.match_all_entries(keylist, name_dict)
-            pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-            pars_key_resolve.write_to_jsonl(entrylist, filename)
         else:
             msg = "No Keys found"
             warnings.warn(msg, stacklevel=0)
             entrylist = [pars_key_resolve("00000000T000000Z", "all", [])]
-            pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-            pars_key_resolve.write_to_jsonl(entrylist, filename)
+        return entrylist

@@ -2,14 +2,9 @@
 
 import datetime
 import glob
-import json
 import os
-import subprocess
-import time
-from datetime import timedelta
 from pathlib import Path
 
-import util.patterns as pat
 import util.utils as ut
 from util.FileKey import FileKey
 
@@ -190,9 +185,9 @@ def build_file_dbs(gen_tier_path, outdir):
         logfile = Path(ut.tmp_log_path(snakemake.params.setup)) / outfile.with_suffix(".log").name
         print(f"INFO: ......building {outfile}")
 
-        cmdline, cmdenv = ut.runcmd_popen(snakemake.params.setup)
-
-        cmdenv["PRODENV"] = as_ro(os.getenv("PRODENV"))
+        cmdline = ut.runcmd(snakemake.params.setup, aslist=True)
+        prodenv = as_ro(os.getenv("PRODENV"))
+        cmdline += [f"--env=PRODENV={prodenv}"]
 
         # TODO: forward stdout to log file
         processes.add(
@@ -212,7 +207,6 @@ def build_file_dbs(gen_tier_path, outdir):
                     str(logfile),
                     "--assume-nonsparse" if speck[0] == "phy" else "",
                 ],
-                env=cmdenv,
             )
         )
 
