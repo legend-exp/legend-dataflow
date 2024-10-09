@@ -42,7 +42,8 @@ args = argparser.parse_args()
 
 # change to only have 1 output file for multiple inputs
 # don't care about processing step, check if extension matches
-channel_files = args.input
+
+channel_files = args.input.infiles if hasattr(args.input, "infiles") else args.input
 
 file_extension = pathlib.Path(args.output).suffix
 
@@ -111,7 +112,7 @@ elif file_extension == ".lh5":
             fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
             channel_name = fkey.channel
 
-            tb_in = lh5.read(f"{channel_name}", channel)[0]
+            tb_in = lh5.read(f"{channel_name}", channel)
 
             lh5.write(
                 tb_in,
