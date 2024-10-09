@@ -26,7 +26,7 @@ from util.FileKey import ChannelProcKey, ProcessingFileKey
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.RankWarning)
+warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
 
 
 def run_splitter(files):

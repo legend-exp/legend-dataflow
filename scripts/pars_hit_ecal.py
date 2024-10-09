@@ -32,7 +32,7 @@ mpl.use("agg")
 sto = lh5.LH5Store()
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.RankWarning)
+warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
 
 
 def plot_2614_timemap(
