@@ -21,7 +21,7 @@ from pygama.pargen.dsp_optimize import (
 )
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
+warnings.filterwarnings(action="ignore", category=np.RankWarning)
 
 
 argparser = argparse.ArgumentParser()

@@ -32,6 +32,7 @@ lint.extend-ignore = [
   "PT004",  # Use underscore for non-returning fixture (use usefixture instead)
   "RET505", # Unnecessary `else` after `return` statement
   "E402", # Module level imports at top of file need disable for numba default imports
+  "NPY201", # Numpy 2 warnings ignore for the moment
 ]
 target-version = "py37"
 src = ["src"]
