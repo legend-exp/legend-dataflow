@@ -34,7 +34,7 @@ for tier in ["ann", "pan"]:
             "tier-ann"
         resources:
             runtime=300,
-            mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
+            mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
         shell:
             "{swenv} python3 -B "
             f"{workflow.source_path('../scripts/build_ann.py')} "
