@@ -90,7 +90,7 @@ os.rename(temp_output, args.output)
 
 if "ann" in args.output:
     key = os.path.basename(args.output).replace("-tier_ann.lh5", "")
-else: 
+else:
     key = os.path.basename(args.output).replace("-tier_pan.lh5", "")
 
 raw_channels = [channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)]

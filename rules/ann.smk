@@ -20,7 +20,11 @@ for tier in ["ann", "pan"]:
 
     rule:
         input:
-            dsp_file=get_pattern_tier_dsp(setup) if tier == "ann" else get_pattern_tier_psp(setup),
+            dsp_file=(
+                get_pattern_tier_dsp(setup)
+                if tier == "ann"
+                else get_pattern_tier_psp(setup)
+            ),
             pars_file=lambda wildcards: get_svm_file(wildcards, "ann", "cuts"),
         params:
             timestamp="{timestamp}",
@@ -46,5 +50,5 @@ for tier in ["ann", "pan"]:
             "--output {output.tier_file} "
             "--db_file {output.db_file} "
             "--pars_file {input.pars_file} "
-    
+
     set_last_rule_name(workflow, f"build_{tier}")
