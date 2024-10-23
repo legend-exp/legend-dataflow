@@ -1,11 +1,14 @@
 # ruff: noqa: F821, T201
 
 import datetime
+import time
 import glob
 import os
+import json
 from pathlib import Path
 
 import util.utils as ut
+from util import patterns
 from util.FileKey import FileKey
 
 print("INFO: dataflow ran successfully, now few final checks and scripts")
@@ -225,7 +228,7 @@ def build_file_dbs(gen_tier_path, outdir):
             raise RuntimeError(msg)
 
     toc = time.time()
-    dt = timedelta(seconds=toc - tic)
+    dt = datetime.timedelta(seconds=toc - tic)
     print(f"INFO: ...took {dt}")
 
 
@@ -252,7 +255,7 @@ file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["tabl
 
 
 def fformat(tier):
-    return as_ro(pat.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)).replace(
+    return as_ro(patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)).replace(
         as_ro(ut.get_tier_path(snakemake.params.setup, tier)), ""
     )
 
