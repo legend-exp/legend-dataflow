@@ -80,10 +80,11 @@ localrules:
 onstart:
     print("INFO: starting workflow")
 
-    # Make sure numba processors are compiled before we begin
-    shell('{swenv} python3 -B -c "import dspeed; import lgdo"')
+    # Make sure some packages are initialized before we begin to avoid race conditions
+    for pkg in ["dspeed", "lgdo", "matplotlib"]:
+        shell('{swenv} python3 -B -c "import ' + pkg + '"')
 
-    # Log parameter catalogs in validity.jsonl files
+        # Log parameter catalogs in validity.jsonl files
     hit_par_cat_file = os.path.join(pars_path(setup), "hit", "validity.jsonl")
     if os.path.isfile(hit_par_cat_file):
         os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
