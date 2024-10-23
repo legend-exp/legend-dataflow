@@ -1,10 +1,10 @@
 # ruff: noqa: F821, T201
 
 import datetime
-import time
 import glob
-import os
 import json
+import os
+import time
 from pathlib import Path
 
 import util.utils as ut
@@ -255,9 +255,9 @@ file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["tabl
 
 
 def fformat(tier):
-    return as_ro(patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)).replace(
-        as_ro(ut.get_tier_path(snakemake.params.setup, tier)), ""
-    )
+    return as_ro(
+        patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
+    ).replace(as_ro(ut.get_tier_path(snakemake.params.setup, tier)), "")
 
 
 file_db_config |= {
