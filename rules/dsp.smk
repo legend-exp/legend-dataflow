@@ -7,6 +7,7 @@ Snakemake rules for processing dsp tier. This is done in 4 steps:
 """
 
 from scripts.util.pars_loading import pars_catalog
+from scripts.util.create_pars_keylist import pars_key_resolve
 from scripts.util.utils import par_dsp_path
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
@@ -22,6 +23,12 @@ from scripts.util.patterns import (
     get_pattern_pars,
     get_pattern_pars_overwrite,
     get_pattern_pars_svm,
+)
+
+dsp_par_catalog = pars_key_resolve.get_par_catalog(
+    ["-*-*-*-cal"],
+    get_pattern_tier_raw(setup),
+    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
 

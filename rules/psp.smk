@@ -20,12 +20,6 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-dsp_par_catalog = pars_key_resolve.get_par_catalog(
-    ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
-    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-)
-
 psp_par_catalog = pars_key_resolve.get_par_catalog(
     ["-*-*-*-cal"],
     get_pattern_tier_raw(setup),
