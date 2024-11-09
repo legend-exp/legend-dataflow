@@ -66,7 +66,7 @@ log = logging.getLogger(__name__)
 
 # load in config
 configs = TextDB(args.configs, lazy=True)
-if args.tier == "evt" or args.tier == "pet":
+if args.tier in ("evt", "pet"):
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
         "inputs"
     ]
@@ -80,7 +80,7 @@ chmap = meta.channelmap(args.timestamp)
 
 evt_config = Props.read_from(evt_config_file)
 
-if args.datatype == "phy":
+if args.datatype in ("phy", "xtc"):
     exp_string = evt_config["operations"]["geds___energy"]["expression"]
     exp_string = exp_string.replace(
         'xtalk_matrix_filename=""', f'xtalk_matrix_filename="{args.xtc_file}"'
