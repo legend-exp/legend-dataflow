@@ -3,7 +3,7 @@ This module uses the time validity resolving in calibcatalog
 to determine the par and par overwrite for a particular timestamp
 """
 
-import os
+from pathlib import Path
 
 from .catalog import Catalog
 from .FileKey import ProcessingFileKey
@@ -29,19 +29,18 @@ class pars_catalog(Catalog):
 
     @staticmethod
     def get_par_file(setup, timestamp, tier):
-        par_file = os.path.join(get_pars_path(setup, tier), "validity.yaml")
+        par_file = Path(get_pars_path(setup, tier)) / "validity.yaml"
         pars_files = pars_catalog.get_calib_files(par_file, timestamp)
-        par_overwrite_file = os.path.join(par_overwrite_path(setup), tier, "validity.yaml")
+        par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
         pars_files_overwrite = pars_catalog.get_calib_files(par_overwrite_file, timestamp)
         if len(pars_files_overwrite) > 0:
             pars_files, pars_files_overwrite = pars_catalog.match_pars_files(
                 pars_files, pars_files_overwrite
             )
-        pars_files = [os.path.join(get_pars_path(setup, tier), file) for file in pars_files]
+        pars_files = [Path(get_pars_path(setup, tier)) / file for file in pars_files]
         if len(pars_files_overwrite) > 0:
             pars_overwrite_files = [
-                os.path.join(par_overwrite_path(setup), tier, file)
-                for file in pars_files_overwrite
+                Path(par_overwrite_path(setup)) / tier / file for file in pars_files_overwrite
             ]
             pars_files += pars_overwrite_files
         return pars_files

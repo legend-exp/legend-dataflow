@@ -1,7 +1,7 @@
 import argparse
-import os
 import pickle as pkl
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -44,7 +44,7 @@ ave_fields = merge_config["average_fields"]
 # partitions could be different for different channels - do separately for each channel
 in_dicts = {}
 for file in args.input:
-    tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
+    tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
     in_dicts[tstamp] = Props.read_from(file)
 
 plot_dict = {}
@@ -109,36 +109,36 @@ for field in ave_fields:
     plt.close()
 
 for file in args.output:
-    tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
+    tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
     Props.write_to(file, in_dicts[tstamp])
 
 if args.out_plots:
     for file in args.out_plots:
-        tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
+        tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
         if args.in_plots:
             for infile in args.in_plots:
                 if tstamp in infile:
-                    with open(infile, "rb") as f:
+                    with Path(infile).open("rb") as f:
                         old_plot_dict = pkl.load(f)
                     break
             old_plot_dict.update({"psp": plot_dict})
             new_plot_dict = old_plot_dict
         else:
             new_plot_dict = {"psp": plot_dict}
-        with open(file, "wb") as f:
+        with Path(file).open("wb") as f:
             pkl.dump(new_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 if args.out_obj:
     for file in args.out_obj:
-        tstamp = ChannelProcKey.get_filekey_from_pattern(os.path.basename(file)).timestamp
+        tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
         if args.in_obj:
             for infile in args.in_obj:
                 if tstamp in infile:
-                    with open(infile, "rb") as f:
+                    with Path(infile).open("rb") as f:
                         old_obj_dict = pkl.load(f)
                     break
             new_obj_dict = old_obj_dict
         else:
             new_obj_dict = {}
-        with open(file, "wb") as f:
+        with Path(file).open("wb") as f:
             pkl.dump(new_obj_dict, f, protocol=pkl.HIGHEST_PROTOCOL)

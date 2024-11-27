@@ -1,7 +1,6 @@
 import argparse
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -21,7 +20,7 @@ args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 channel_dict = configs["snakemake_rules"]["tier_tcm"]["inputs"]
@@ -50,4 +49,4 @@ for fcid in fcid_channels:
         **settings,
     )
 
-os.rename(temp_output, args.output)
+Path(temp_output).rename(args.output)

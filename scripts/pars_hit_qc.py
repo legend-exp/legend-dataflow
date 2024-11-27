@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
-import pathlib
 import pickle as pkl
 import re
 import warnings
+from pathlib import Path
 
 import numpy as np
 from legendmeta import LegendMetadata
@@ -160,7 +159,7 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
@@ -226,10 +225,10 @@ if __name__ == "__main__":
     hit_dict = {**hit_dict_fft, **hit_dict_init_cal, **hit_dict_cal}
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
 
-    pathlib.Path(os.path.dirname(args.save_path)).mkdir(parents=True, exist_ok=True)
+    Path(args.save_path).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(args.save_path, hit_dict)
 
     if args.plot_path:
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path, "wb") as f:
+        Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+        with Path(args.plot_path).open("wb") as f:
             pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)

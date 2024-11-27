@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -51,7 +50,7 @@ argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
 if args.log is not None:
-    Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 else:
     logging.basicConfig(level=logging.DEBUG)
@@ -118,7 +117,7 @@ for field, dic in evt_config["channels"].items():
 log.debug(json.dumps(evt_config["channels"], indent=2))
 
 t_start = time.time()
-Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 table = build_evt(
     {

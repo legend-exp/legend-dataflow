@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -160,7 +159,7 @@ ecal_dict = Props.read_from(args.ecal_file)
 cal_dict = ecal_dict["pars"]["operations"]
 eres_dict = ecal_dict["results"]["ecal"]
 
-with open(args.eres_file, "rb") as o:
+with Path(args.eres_file).open("rb") as o:
     object_dict = pkl.load(o)
 
 if kwarg_dict["run_lq"] is True:
@@ -172,7 +171,7 @@ if kwarg_dict["run_lq"] is True:
         for field, item in kwarg_dict["plot_options"].items():
             kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
 
-    with open(args.files[0]) as f:
+    with Path(args.files[0]).open() as f:
         files = f.read().splitlines()
     files = sorted(files)
 
@@ -213,7 +212,7 @@ if kwarg_dict["run_lq"] is True:
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
@@ -247,7 +246,7 @@ else:
 if args.plot_file:
     common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             out_plot_dict = pkl.load(r)
         out_plot_dict.update({"lq": plot_dict})
     else:
@@ -258,24 +257,24 @@ if args.plot_file:
     elif common_dict is not None:
         out_plot_dict["common"] = common_dict
 
-    pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_file, "wb") as w:
+    Path(args.plot_file).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_file).open("wb") as w:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 
 results_dict = dict(**eres_dict, lq=out_dict)
-pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
 final_hit_dict = {
     "pars": {"operations": cal_dict},
     "results": results_dict,
 }
 Props.write_to(args.hit_pars, final_hit_dict)
 
-pathlib.Path(os.path.dirname(args.lq_results)).mkdir(parents=True, exist_ok=True)
+Path(args.lq_results).parent.mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
     **object_dict,
     lq=obj,
 )
 Props.write_to(args.lq_results, final_object_dict)
-with open(args.lq_results, "wb") as w:
+with Path(args.lq_results).open("wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

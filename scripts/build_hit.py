@@ -1,8 +1,7 @@
 import argparse
 import logging
-import os
-import pathlib
 import time
+from pathlib import Path
 
 from legendmeta import TextDB
 from legendmeta.catalog import Props
@@ -24,7 +23,7 @@ argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
 
-pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+Path(args.log).parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
@@ -59,7 +58,7 @@ for channel in pars_dict:
         hit_dict[f"{channel}/dsp"] = chan_pars
 
 t_start = time.time()
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 build_hit(args.input, lh5_tables_config=hit_dict, outfile=args.output)
 t_elap = time.time() - t_start
 log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
@@ -80,12 +79,12 @@ for channel, file in channel_dict.items():
         }
     hit_channels.append(channel)
 
-key = os.path.basename(args.output).replace(f"-tier_{args.tier}.lh5", "")
+key = Path(args.output).replace(f"-tier_{args.tier}.lh5", "")
 
 full_dict = {
     "valid_fields": {args.tier: hit_outputs},
     "valid_keys": {key: {"valid_channels": {args.tier: hit_channels}}},
 }
 
-pathlib.Path(os.path.dirname(args.db_file)).mkdir(parents=True, exist_ok=True)
+Path(args.db_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.db_file, full_dict)

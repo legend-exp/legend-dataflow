@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import copy
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
 from datetime import datetime
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import matplotlib as mpl
@@ -462,9 +461,7 @@ if __name__ == "__main__":
     db_files = [
         par_file
         for par_file in args.ctc_dict
-        if os.path.splitext(par_file)[1] == ".json"
-        or os.path.splitext(par_file)[1] == ".yml"
-        or os.path.splitext(par_file)[1] == ".yaml"
+        if Path(par_file).suffix in (".json", ".yml", ".yaml")
     ]
 
     database_dic = Props.read_from(db_files)
@@ -493,7 +490,7 @@ if __name__ == "__main__":
         bl_plots[field]["function"] = eval(item["function"])
     common_plots = kwarg_dict.pop("common_plots")
 
-    with open(args.files[0]) as f:
+    with Path(args.files[0]).open() as f:
         files = f.read().splitlines()
     files = sorted(files)
 
@@ -514,7 +511,7 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
@@ -725,7 +722,7 @@ if __name__ == "__main__":
                 common_dict.update({key: param_dict})
 
         if args.inplot_dict:
-            with open(args.inplot_dict, "rb") as f:
+            with Path(args.inplot_dict).open("rb") as f:
                 total_plot_dict = pkl.load(f)
         else:
             total_plot_dict = {}
@@ -737,8 +734,8 @@ if __name__ == "__main__":
 
         total_plot_dict.update({"ecal": plot_dict})
 
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path, "wb") as f:
+        Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+        with Path(args.plot_path).open("wb") as f:
             pkl.dump(total_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # save output dictionary
@@ -746,6 +743,6 @@ if __name__ == "__main__":
     Props.write_to(args.save_path, output_dict)
 
     # save calibration objects
-    with open(args.results_path, "wb") as fp:
-        pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
+    with Path(args.results_path).open("wb") as fp:
+        Path(args.results_path).parent.mkdir(parents=True, exist_ok=True)
         pkl.dump({"ecal": full_object_dict}, fp, protocol=pkl.HIGHEST_PROTOCOL)

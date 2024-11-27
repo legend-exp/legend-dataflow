@@ -43,7 +43,7 @@ class Props:
                     with file_name.open() as file:
                         return yaml.safe_load(file)
                 elif file_name.suffix == ".json":
-                    with open(file_name) as file:
+                    with file_name.open() as file:
                         return json.load(file)
                 else:
                     msg = f"Can't run Props.read_from on file with suffix {file_name.suffix}"

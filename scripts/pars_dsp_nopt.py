@@ -1,9 +1,8 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import time
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -57,7 +56,7 @@ opt_dict = Props.read_from(opt_json)
 db_dict = Props.read_from(args.database)
 
 if opt_dict.pop("run_nopt") is True:
-    with open(args.raw_filelist) as f:
+    with Path(args.raw_filelist).open() as f:
         files = f.read().splitlines()
 
     raw_files = sorted(files)
@@ -96,15 +95,15 @@ else:
     plot_dict = {}
 
 if args.plot_path:
-    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+    Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             old_plot_dict = pkl.load(r)
         plot_dict = dict(noise_optimisation=plot_dict, **old_plot_dict)
     else:
         plot_dict = {"noise_optimisation": plot_dict}
-    with open(args.plot_path, "wb") as f:
+    with Path(args.plot_path).open("wb") as f:
         pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.dsp_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.dsp_pars, dict(nopt_pars=out_dict, **db_dict))

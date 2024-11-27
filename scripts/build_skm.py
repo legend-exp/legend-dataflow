@@ -1,7 +1,6 @@
 import argparse
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 import awkward as ak
 from legendmeta import TextDB
@@ -32,7 +31,7 @@ argparser.add_argument("--output", help="output file", required=True)
 args = argparser.parse_args()
 
 if args.log is not None:
-    pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(args.log).parent.makedir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 

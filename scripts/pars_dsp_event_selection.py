@@ -1,11 +1,10 @@
 import argparse
 import json
 import logging
-import os
-import pathlib
 import time
 import warnings
 from bisect import bisect_left
+from pathlib import Path
 
 import lgdo
 import lgdo.lh5 as lh5
@@ -121,14 +120,14 @@ if __name__ == "__main__":
     peak_dict = Props.read_from(peak_json)
     db_dict = Props.read_from(args.decay_const)
 
-    pathlib.Path(os.path.dirname(args.peak_file)).mkdir(parents=True, exist_ok=True)
+    Path(args.peak_file).parent.mkdir(parents=True, exist_ok=True)
     if peak_dict.pop("run_selection") is True:
         log.debug("Starting peak selection")
         rng = np.random.default_rng()
         rand_num = f"{rng.integers(0,99999):05d}"
         temp_output = f"{args.peak_file}.{rand_num}"
 
-        with open(args.raw_filelist) as f:
+        with Path(args.raw_filelist).open() as f:
             files = f.read().splitlines()
         raw_files = sorted(files)
 
@@ -138,7 +137,7 @@ if __name__ == "__main__":
 
         elif args.tcm_filelist:
             # get pulser mask from tcm files
-            with open(args.tcm_filelist) as f:
+            with Path(args.tcm_filelist).open() as f:
                 tcm_files = f.read().splitlines()
             tcm_files = sorted(np.unique(tcm_files))
             ids, mask = get_tcm_pulser_ids(
@@ -225,7 +224,7 @@ if __name__ == "__main__":
             }
 
         for file in raw_files:
-            log.debug(os.path.basename(file))
+            log.debug(Path(file).name)
             for peak, peak_dict in pk_dicts.items():
                 if peak_dict["idxs"] is not None:
                     # idx is a long continuous array
@@ -358,7 +357,7 @@ if __name__ == "__main__":
                                     log.debug(f"{peak} has reached the required number of events")
 
     else:
-        pathlib.Path(temp_output).touch()
+        Path(temp_output).touch()
 
     log.debug(f"event selection completed in {time.time()-t0} seconds")
-    os.rename(temp_output, args.peak_file)
+    Path(temp_output).rename(args.peak_file)

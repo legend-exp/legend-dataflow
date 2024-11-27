@@ -1,9 +1,8 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import time
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -52,7 +51,7 @@ dplms_dict = Props.read_from(dplms_json)
 db_dict = Props.read_from(args.database)
 
 if dplms_dict["run_dplms"] is True:
-    with open(args.fft_raw_filelist) as f:
+    with Path(args.fft_raw_filelist).open() as f:
         fft_files = sorted(f.read().splitlines())
 
     t0 = time.time()
@@ -91,7 +90,7 @@ if dplms_dict["run_dplms"] is True:
             display=1,
         )
         if args.inplots:
-            with open(args.inplots, "rb") as r:
+            with Path(args.inplots).open("rb") as r:
                 inplot_dict = pkl.load(r)
             inplot_dict.update({"dplms": plot_dict})
 
@@ -115,14 +114,14 @@ else:
     out_dict = {}
     dplms_pars = Table(col_dict={"coefficients": Array([])})
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             inplot_dict = pkl.load(r)
     else:
         inplot_dict = {}
 
 db_dict.update(out_dict)
 
-pathlib.Path(os.path.dirname(args.lh5_path)).mkdir(parents=True, exist_ok=True)
+Path(args.lh5_path).parent.mkdir(parents=True, exist_ok=True)
 sto.write(
     Table(col_dict={"dplms": dplms_pars}),
     name=args.channel,
@@ -130,10 +129,10 @@ sto.write(
     wo_mode="overwrite",
 )
 
-pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.dsp_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.dsp_pars, db_dict)
 
 if args.plot_path:
-    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_path, "wb") as f:
+    Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_path).open("wb") as f:
         pkl.dump(inplot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)

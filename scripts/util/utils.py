@@ -189,7 +189,7 @@ def subst_vars_in_snakemake_config(workflow, config):
     config_filename = workflow.overwrite_configfiles[0]  # ToDo: Better way of handling this?
     subst_vars(
         config,
-        var_values={"_": os.path.dirname(config_filename)},
+        var_values={"_": Path(config_filename).parent},
         use_env=True,
         ignore_missing=False,
     )
@@ -203,8 +203,8 @@ def run_splitter(files):
     runs = []
     run_files = []
     for file in files:
-        base = os.path.basename(file)
-        file_name = os.path.splitext(base)[0]
+        base = Path(file).name
+        file_name = Path(base).name
         parts = file_name.split("-")
         run_no = parts[3]
         if run_no not in runs:

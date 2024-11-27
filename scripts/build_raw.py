@@ -1,7 +1,6 @@
 import argparse
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 import numpy as np
 from daq2lh5 import build_raw
@@ -18,10 +17,10 @@ argparser.add_argument("--chan_maps", help="chan map", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
-os.makedirs(os.path.dirname(args.log), exist_ok=True)
+Path(args.log).parent.makedir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
@@ -83,4 +82,5 @@ temp_output = f"{args.output}.{rand_num}"
 
 build_raw(args.input, out_spec=all_config, filekey=temp_output, **settings)
 
-os.rename(temp_output, args.output)
+# rename the temp file
+Path(temp_output).rename(args.output)

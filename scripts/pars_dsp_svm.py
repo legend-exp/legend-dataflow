@@ -1,7 +1,6 @@
 import argparse
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 from legendmeta.catalog import Props
 
@@ -14,7 +13,7 @@ args = argparser.parse_args()
 
 
 if args.log is not None:
-    pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 else:
     logging.basicConfig(level=logging.DEBUG)
@@ -27,9 +26,9 @@ log = logging.getLogger(__name__)
 
 par_data = Props.read_from(args.input_file)
 
-file = f"'$_/{os.path.basename(args.svm_file)}'"
+file = f"'$_/{Path(args.svm_file).name}'"
 
 par_data["svm"] = {"model_file": file}
 
-pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
+Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.output_file, par_data)

@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
-import pathlib
 import pickle as pkl
 import re
 import warnings
+from pathlib import Path
 
 import numpy as np
 from legendmeta import LegendMetadata
@@ -72,10 +71,10 @@ if __name__ == "__main__":
     if isinstance(args.cal_files, list):
         cal_files = []
         for file in args.cal_files:
-            with open(file) as f:
+            with Path(file).open() as f:
                 cal_files += f.read().splitlines()
     else:
-        with open(args.cal_files) as f:
+        with Path(args.cal_files).open() as f:
             cal_files = f.read().splitlines()
 
     cal_files = sorted(
@@ -99,10 +98,10 @@ if __name__ == "__main__":
         if isinstance(args.fft_files, list):
             fft_files = []
             for file in args.fft_files:
-                with open(file) as f:
+                with Path(file).open() as f:
                     fft_files += f.read().splitlines()
         else:
-            with open(args.fft_files) as f:
+            with Path(args.fft_files).open() as f:
                 fft_files = f.read().splitlines()
 
         fft_files = sorted(
@@ -223,7 +222,7 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, total_mask = get_tcm_pulser_ids(
@@ -305,11 +304,11 @@ if __name__ == "__main__":
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
 
     for file in args.save_path:
-        pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
+        Path(file).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(file, hit_dict)
 
     if args.plot_path:
         for file in args.plot_path:
-            pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
-            with open(file, "wb") as f:
+            Path(file).parent.mkdir(parents=True, exist_ok=True)
+            with Path(file).open("wb") as f:
                 pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)

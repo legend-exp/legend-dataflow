@@ -1,6 +1,7 @@
 import argparse
 import logging
 import pickle as pkl
+from pathlib import Path
 
 from legendmeta.catalog import Props
 from lgdo import lh5
@@ -45,5 +46,5 @@ svm.fit(dwts_norm, labels)
 log.debug("trained model")
 
 # Save trained model with pickle
-with open(args.output_file, "wb") as svm_file:
+with Path(args.output_file).open("wb") as svm_file:
     pkl.dump(svm, svm_file, protocol=pkl.HIGHEST_PROTOCOL)

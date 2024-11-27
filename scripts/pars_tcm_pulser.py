@@ -1,7 +1,6 @@
 import argparse
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -41,7 +40,7 @@ kwarg_dict = Props.read_from(kwarg_dict)
 
 if isinstance(args.tcm_files, list) and args.tcm_files[0].split(".")[-1] == "filelist":
     tcm_files = args.tcm_files[0]
-    with open(tcm_files) as f:
+    with Path(tcm_files).open() as f:
         tcm_files = f.read().splitlines()
 else:
     tcm_files = args.tcm_files
@@ -51,5 +50,5 @@ ids, mask = get_tcm_pulser_ids(
     tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
 )
 
-pathlib.Path(os.path.dirname(args.pulser_file)).mkdir(parents=True, exist_ok=True)
+Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

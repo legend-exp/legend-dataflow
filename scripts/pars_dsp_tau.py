@@ -1,8 +1,7 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -52,7 +51,7 @@ if kwarg_dict["run_tau"] is True:
     kwarg_dict.pop("run_tau")
     if isinstance(args.raw_files, list) and args.raw_files[0].split(".")[-1] == "filelist":
         input_file = args.raw_files[0]
-        with open(input_file) as f:
+        with Path(input_file).open() as f:
             input_file = f.read().splitlines()
     else:
         input_file = args.raw_files
@@ -63,7 +62,7 @@ if kwarg_dict["run_tau"] is True:
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
@@ -113,17 +112,17 @@ if kwarg_dict["run_tau"] is True:
     tau.get_decay_constant(slopes[idxs], tb_data[kwarg_dict["wf_field"]])
 
     if args.plot_path:
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+        Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
 
         plot_dict = tau.plot_waveforms_after_correction(
             tb_data, "wf_pz", norm_param=kwarg_dict.get("norm_param", "pz_mean")
         )
         plot_dict.update(tau.plot_slopes(slopes[idxs]))
 
-        with open(args.plot_path, "wb") as f:
+        with Path(args.plot_path).open("wb") as f:
             pkl.dump({"tau": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
 else:
     out_dict = {}
 
-pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
+Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.output_file, tau.output_dict)

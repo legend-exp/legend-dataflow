@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
-import pathlib
 import pickle as pkl
 import re
 import warnings
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -64,7 +63,7 @@ if __name__ == "__main__":
     if isinstance(args.phy_files, list):
         phy_files = []
         for file in sorted(args.phy_files):
-            with open(file) as f:
+            with Path(file).open() as f:
                 run_files = f.read().splitlines()
             if len(run_files) == 0:
                 continue
@@ -78,7 +77,7 @@ if __name__ == "__main__":
                 )
                 bl_mask = np.append(bl_mask, bl_idxs)
     else:
-        with open(args.phy_files) as f:
+        with Path(args.phy_files).open() as f:
             phy_files = f.read().splitlines()
         phy_files = sorted(np.unique(phy_files))
         bls = sto.read("ch1027200/dsp/", phy_files, field_mask=["wf_max", "bl_mean"])[0]
@@ -147,11 +146,11 @@ if __name__ == "__main__":
     log.debug(f"cut_dict is: {json.dumps(hit_dict, indent=2)}")
 
     for file in args.save_path:
-        pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
+        Path(file).name.mkdir(parents=True, exist_ok=True)
         Props.write_to(file, {"pars": {"operations": hit_dict}})
 
     if args.plot_path:
         for file in args.plot_path:
-            pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
-            with open(file, "wb") as f:
+            Path(file).parent.mkdir(parents=True, exist_ok=True)
+            with Path(file).open("wb") as f:
                 pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)

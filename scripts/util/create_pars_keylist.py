@@ -2,10 +2,10 @@
 This module creates the validity files used for determining the time validity of data
 """
 
-import glob
 import json
 import re
 import warnings
+from pathlib import Path
 
 import snakemake as smk
 import yaml
@@ -40,13 +40,13 @@ class pars_key_resolve:
 
     @staticmethod
     def write_to_jsonl(file_names, path):
-        with open(path, "w") as of:
+        with Path(path).open("w") as of:
             for file_name in file_names:
                 of.write(f"{file_name.get_json()}\n")
 
     @staticmethod
     def write_to_yaml(file_names, path):
-        with open(path, "w") as of:
+        with Path(path).open("w") as of:
             yaml.dump([file_name.__dict__ for file_name in file_names], of, sort_keys=False)
 
     @staticmethod
@@ -104,7 +104,7 @@ class pars_key_resolve:
         except AttributeError:
             tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
         fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]
-        files = glob.glob(fn_glob_pattern)
+        files = Path(fn_glob_pattern).glob()
         keys = []
         for f in files:
             m = tier_pattern_rx.match(f)

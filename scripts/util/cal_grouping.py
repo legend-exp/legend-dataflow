@@ -3,7 +3,7 @@ This module uses the partition database files to the necessary inputs for partit
 """
 
 import json
-import os
+from pathlib import Path
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .patterns import (
@@ -16,7 +16,7 @@ from .utils import filelist_path
 
 class cal_grouping:
     def __init__(self, setup, input_file):
-        with open(input_file) as r:
+        with Path(input_file).open() as r:
             self.datasets = json.load(r)
         self.expand_runs()
         self.setup = setup
@@ -43,18 +43,13 @@ class cal_grouping:
         for per in dataset:
             if dataset[per] == "all":
                 files += [
-                    os.path.join(
-                        filelist_path(self.setup),
-                        f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist",
-                    )
+                    Path(filelist_path(self.setup))
+                    / f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist"
                 ]
             else:
                 files += [
-                    os.path.join(
-                        filelist_path(self.setup),
-                        f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist",
-                    )
-                    for run in dataset[per]
+                    Path(filelist_path(self.setup))
+                    / "all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist"
                 ]
         return files
 
@@ -80,7 +75,7 @@ class cal_grouping:
             channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
+            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
             if (
                 fk.datatype == datatype
                 and fk.experiment == experiment
@@ -128,7 +123,7 @@ class cal_grouping:
             channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
+            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
             if (
                 fk.datatype == datatype
                 and fk.experiment == experiment
@@ -170,7 +165,7 @@ class cal_grouping:
             datatype=datatype,
             name=name,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
         if channel == "default":
             fk.channel = "{channel}"
         else:
@@ -187,7 +182,7 @@ class cal_grouping:
             datatype=datatype,
             name=None,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
         return fk.timestamp
 
     def get_wildcard_constraints(self, dataset, channel):

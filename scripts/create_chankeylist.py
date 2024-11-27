@@ -1,6 +1,5 @@
 import argparse
-import os
-import pathlib
+from pathlib import Path
 
 from legendmeta import LegendMetadata, TextDB
 
@@ -25,7 +24,7 @@ channels = [
     if status_map[chan]["processable"] is True and chmap[chan].system == "geds"
 ]
 
-pathlib.Path(os.path.dirname(args.output_file)).mkdir(parents=True, exist_ok=True)
-with open(args.output_file, "w") as f:
+Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
+with Path(args.output_file).open("w") as f:
     for chan in channels:
         f.write(f"{chan}\n")

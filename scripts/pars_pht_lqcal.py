@@ -4,10 +4,9 @@ import argparse
 import copy
 import json
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -32,7 +31,7 @@ def run_splitter(files):
     runs = []
     run_files = []
     for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
         if f"{fk.period}-{fk.run}" not in runs:
             runs.append(f"{fk.period}-{fk.run}")
             run_files.append([])
@@ -285,33 +284,33 @@ if __name__ == "__main__":
     for ecal in args.ecal_file:
         cal = Props.read_from(ecal)
 
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
         cal_dict[fk.timestamp] = cal["pars"]
         results_dicts[fk.timestamp] = cal["results"]
 
     object_dict = {}
     for ecal in args.eres_file:
-        with open(ecal, "rb") as o:
+        with Path(ecal).open("rb") as o:
             cal = pkl.load(o)
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
         object_dict[fk.timestamp] = cal
 
     inplots_dict = {}
     if args.inplots:
         for ecal in args.inplots:
-            with open(ecal, "rb") as o:
+            with Path(ecal).open("rb") as o:
                 cal = pkl.load(o)
-            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+            fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
             inplots_dict[fk.timestamp] = cal
 
     # sort files in dictionary where keys are first timestamp from run
     if isinstance(args.input_files, list):
         files = []
         for file in args.input_files:
-            with open(file) as f:
+            with Path(file).open() as f:
                 files += f.read().splitlines()
     else:
-        with open(args.input_files) as f:
+        with Path(args.input_files).open() as f:
             files = f.read().splitlines()
 
     files = sorted(
@@ -321,7 +320,7 @@ if __name__ == "__main__":
     final_dict = {}
     all_file = run_splitter(sorted(files))
     for filelist in all_file:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(sorted(filelist)[0]))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(sorted(filelist)[0]).name)
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
 
@@ -348,7 +347,7 @@ if __name__ == "__main__":
         if args.pulser_files:
             mask = np.array([], dtype=bool)
             for file in args.pulser_files:
-                with open(file) as f:
+                with Path(file).open() as f:
                     pulser_dict = json.load(f)
                 pulser_mask = np.array(pulser_dict["mask"])
                 mask = np.append(mask, pulser_mask)
@@ -357,7 +356,7 @@ if __name__ == "__main__":
 
         elif args.tcm_filelist:
             # get pulser mask from tcm files
-            with open(args.tcm_filelist) as f:
+            with Path(args.tcm_filelist).open() as f:
                 tcm_files = f.read().splitlines()
             tcm_files = sorted(np.unique(tcm_files))
             ids, mask = get_tcm_pulser_ids(
@@ -391,22 +390,22 @@ if __name__ == "__main__":
 
     if args.plot_file:
         for plot_file in args.plot_file:
-            pathlib.Path(os.path.dirname(plot_file)).mkdir(parents=True, exist_ok=True)
-            with open(plot_file, "wb") as w:
+            Path(plot_file).parent.mkdir(parents=True, exist_ok=True)
+            with Path(plot_file).open("wb") as w:
                 pkl.dump(plot_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
 
     for out in sorted(args.hit_pars):
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
         final_hit_dict = {
             "pars": {"operations": cal_dict[fk.timestamp]},
             "results": results_dicts[fk.timestamp],
         }
-        pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
-        with open(out, "w") as w:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        with Path(out).open("w") as w:
             json.dump(final_hit_dict, w, indent=4)
 
     for out in args.lq_results:
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
-        pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
-        with open(out, "wb") as w:
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        with Path(out).open("wb") as w:
             pkl.dump(object_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)

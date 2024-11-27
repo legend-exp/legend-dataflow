@@ -8,9 +8,8 @@ then it will skip the check.
 
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -40,7 +39,7 @@ argparser.add_argument("--metadata", help="channel", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
-os.makedirs(os.path.dirname(args.log), exist_ok=True)
+Path(args.log).parent.makedir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
@@ -85,7 +84,7 @@ ax2.hist(
 ax2.set_xlabel("energy (keV)")
 ax2.set_ylabel("counts")
 plt.suptitle(args.channel)
-with open(args.plot_file, "wb") as w:
+with Path(args.plot_file).open("wb") as w:
     pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
 plt.close()
 
@@ -93,7 +92,7 @@ plt.close()
 # valid and if so create file else raise error.  if detector is in ac mode it
 # will always pass this check
 if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status is False:
-    pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(args.output, {})
 else:
     msg = "peaks not found in daqenergy"

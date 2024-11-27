@@ -1,8 +1,7 @@
 import argparse
-import os
-import pathlib
 import pickle as pkl
 import shelve
+from pathlib import Path
 
 import numpy as np
 from legendmeta.catalog import Props
@@ -19,7 +18,7 @@ def replace_path(d, old_path, new_path):
             d[i] = replace_path(d[i], old_path, new_path)
     elif isinstance(d, str) and old_path in d:
         d = d.replace(old_path, new_path)
-        d = d.replace(new_path, f"$_/{os.path.basename(new_path)}")
+        d = d.replace(new_path, f"$_/{Path(new_path).name}")
     return d
 
 
@@ -45,25 +44,25 @@ args = argparser.parse_args()
 
 channel_files = args.input.infiles if hasattr(args.input, "infiles") else args.input
 
-file_extension = pathlib.Path(args.output).suffix
+file_extension = Path(args.output).suffix
 
 if file_extension == ".dat" or file_extension == ".dir":
-    out_file = os.path.splitext(args.output)[0]
+    out_file = Path(args.output).with_suffix("")
 else:
     out_file = args.output
 
 rng = np.random.default_rng()
 temp_output = f"{out_file}.{rng.integers(0, 99999):05d}"
 
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 if file_extension == ".json" or file_extension == ".yaml" or file_extension == ".yml":
     out_dict = {}
     for channel in channel_files:
-        if pathlib.Path(channel).suffix == file_extension:
+        if Path(channel).suffix == file_extension:
             channel_dict = Props.read_from(channel)
 
-            fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
+            fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
             channel_name = fkey.channel
             out_dict[channel_name] = channel_dict
         else:
@@ -72,29 +71,29 @@ if file_extension == ".json" or file_extension == ".yaml" or file_extension == "
 
     Props.write_to(temp_output, out_dict, "json")
 
-    os.rename(temp_output, out_file)
+    Path(temp_output).rename(out_file)
 
 elif file_extension == ".pkl":
     out_dict = {}
     for channel in channel_files:
-        with open(channel, "rb") as r:
+        with Path(channel).open("rb") as r:
             channel_dict = pkl.load(r)
-        fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
+        fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
         channel_name = fkey.channel
         out_dict[channel_name] = channel_dict
 
-    with open(temp_output, "wb") as w:
+    with Path(temp_output).open("wb") as w:
         pkl.dump(out_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
-    os.rename(temp_output, out_file)
+    Path(temp_output).rename(out_file)
 
 elif file_extension == ".dat" or file_extension == ".dir":
     common_dict = {}
     with shelve.open(out_file, "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
         for channel in channel_files:
-            with open(channel, "rb") as r:
+            with Path(channel).open("rb") as r:
                 channel_dict = pkl.load(r)
-            fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
+            fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
             channel_name = fkey.channel
             if isinstance(channel_dict, dict) and "common" in list(channel_dict):
                 chan_common_dict = channel_dict.pop("common")
@@ -108,8 +107,8 @@ elif file_extension == ".lh5":
     if args.in_db:
         db_dict = Props.read_from(args.in_db)
     for channel in channel_files:
-        if pathlib.Path(channel).suffix == file_extension:
-            fkey = ChannelProcKey.get_filekey_from_pattern(os.path.basename(channel))
+        if Path(channel).suffix == file_extension:
+            fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
             channel_name = fkey.channel
 
             tb_in = lh5.read(f"{channel_name}", channel)
@@ -128,4 +127,4 @@ elif file_extension == ".lh5":
     if args.out_db:
         Props.write_to(args.out_db, db_dict)
 
-    os.rename(temp_output, out_file)
+    Path(temp_output).rename(out_file)

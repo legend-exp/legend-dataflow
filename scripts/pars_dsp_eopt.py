@@ -1,10 +1,9 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import time
 import warnings
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -351,19 +350,19 @@ if opt_dict.pop("run_eopt") is True:
     else:
         db_dict.update({"ctc_params": out_alpha_dict})
 
-    pathlib.Path(os.path.dirname(args.qbb_grid_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.qbb_grid_path, "wb") as f:
+    Path(args.qbb_grid_path).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.qbb_grid_path).open("wb") as f:
         pkl.dump(optimisers, f)
 
 else:
-    pathlib.Path(args.qbb_grid_path).touch()
+    Path(args.qbb_grid_path).touch()
 
-pathlib.Path(os.path.dirname(args.final_dsp_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.final_dsp_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.final_dsp_pars, db_dict)
 
 if args.plot_path:
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             plot_dict = pkl.load(r)
     else:
         plot_dict = {}
@@ -383,6 +382,6 @@ if args.plot_path:
         "acq_space": bopt_zac.plot_acq(init_samples=sample_x),
     }
 
-    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_path, "wb") as w:
+    Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_path).open("wb") as w:
         pkl.dump(plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import pathlib
 import re
 import time
@@ -37,7 +36,7 @@ argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
 
-pathlib.Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+pathlib.Path(args.log).parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
@@ -51,13 +50,13 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
 
 channel_dict = {chan: Props.read_from(file) for chan, file in channel_dict.items()}
 db_files = [
-    par_file for par_file in args.pars_file if os.path.splitext(par_file)[1] in (".json", ".yaml")
+    par_file for par_file in args.pars_file if pathlib.Path(par_file).suffix in (".json", ".yaml")
 ]
 
 database_dic = Props.read_from(db_files, subst_pathvar=True)
 database_dic = replace_list_with_array(database_dic)
 
-pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+pathlib.Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 rng = np.random.default_rng()
 rand_num = f"{rng.integers(0, 99999):05d}"
@@ -78,9 +77,9 @@ build_dsp(
 
 log.info(f"build_dsp finished in {time.time()-start}")
 
-os.rename(temp_output, args.output)
+pathlib.Path(temp_output).rename(args.output)
 
-key = os.path.basename(args.output).replace("-tier_dsp.lh5", "")
+key = pathlib.Path(args.output).name.replace("-tier_dsp.lh5", "")
 
 raw_channels = [channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)]
 
@@ -109,5 +108,5 @@ full_dict = {
     },
     "valid_keys": {key: {"valid_channels": {"raw": raw_channels, "dsp": channels}}},
 }
-pathlib.Path(os.path.dirname(args.db_file)).mkdir(parents=True, exist_ok=True)
+pathlib.Path(args.db_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.db_file, full_dict)
