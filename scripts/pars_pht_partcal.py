@@ -218,7 +218,11 @@ def calibrate_partition(
     for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
         energy = data.query(selection_string)[energy_param].to_numpy()
         full_object_dict[cal_energy_param] = HPGeCalibration(
-            energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
+            energy_param,
+            glines,
+            1,
+            kwarg_dict.get("deg", 0),
+            debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             energy,
@@ -426,6 +430,8 @@ if __name__ == "__main__":
     argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--fit_results", help="fit_results", nargs="*", type=str)
+
+    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")

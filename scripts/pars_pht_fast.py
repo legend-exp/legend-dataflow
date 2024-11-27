@@ -66,6 +66,8 @@ if __name__ == "__main__":
     argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--fit_results", help="fit_results", nargs="*", type=str)
+
+    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")

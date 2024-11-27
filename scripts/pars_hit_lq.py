@@ -54,6 +54,7 @@ def lq_calibration(
     cdf: callable = gaussian,
     selection_string: str = "",
     plot_options: dict | None = None,
+    debug_mode: bool = False,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 
@@ -99,6 +100,7 @@ def lq_calibration(
         eres_func,
         cdf,
         selection_string,
+        debug_mode=debug_mode | args.debug,
     )
 
     data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
@@ -136,6 +138,8 @@ argparser.add_argument("--log", help="log_file", type=str)
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
 argparser.add_argument("--lq_results", help="lq_results", type=str)
+
+argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")

@@ -66,6 +66,7 @@ def aoe_calibration(
     dt_param: str = "dt_eff",
     comptBands_width: int = 20,
     plot_options: dict | None = None,
+    debug_mode: bool = False,
 ):
     data["AoE_Uncorr"] = data[current_param] / data[energy_param]
     aoe = CalAoE(
@@ -82,6 +83,7 @@ def aoe_calibration(
         mean_func=mean_func,
         sigma_func=sigma_func,
         compt_bands_width=comptBands_width,
+        debug_mode=debug_mode | args.debug,
     )
 
     aoe.update_cal_dicts(
@@ -116,6 +118,8 @@ argparser.add_argument("--log", help="log_file", type=str)
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
 argparser.add_argument("--aoe_results", help="aoe_results", type=str)
+
+argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")

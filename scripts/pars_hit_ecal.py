@@ -439,6 +439,8 @@ if __name__ == "__main__":
     argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
     argparser.add_argument("--save_path", help="save_path", type=str)
     argparser.add_argument("--results_path", help="results_path", type=str)
+
+    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -565,6 +567,7 @@ if __name__ == "__main__":
             glines,
             guess,
             kwarg_dict.get("deg", 0),
+            debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             e_uncal, etol_kev=5 if det_status == "on" else 20
@@ -575,6 +578,7 @@ if __name__ == "__main__":
                 glines,
                 guess,
                 kwarg_dict.get("deg", 0),
+                debug_mode=kwarg_dict.get("debug_mode", False),
             )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
                 e_uncal, etol_kev=5 if det_status == "on" else 30, n_sigma=2
