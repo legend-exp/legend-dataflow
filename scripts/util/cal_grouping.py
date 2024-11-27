@@ -14,11 +14,22 @@ from .patterns import (
 from .utils import filelist_path
 
 
-class dataset_file:
+class cal_grouping:
     def __init__(self, setup, input_file):
         with open(input_file) as r:
             self.datasets = json.load(r)
+        self.expand_runs()
         self.setup = setup
+
+    def expand_runs(self):
+        for channel, chan_dict in self.datasets.items():
+            for part, part_dict in chan_dict.items():
+                for per, runs in part_dict.items():
+                    if isinstance(runs, str) and ".." in runs:
+                        start, end = runs.split("..")
+                        self.datasets[channel][part][per] = [
+                            f"r{x:02}" for x in range(int(start[2:]), int(end) + 1)
+                        ]
 
     def get_dataset(self, dataset, channel):
         partition_dict = self.datasets["default"].copy()

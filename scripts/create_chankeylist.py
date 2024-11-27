@@ -20,7 +20,7 @@ channel_map = LegendMetadata(args.channelmap, lazy=True)
 chmap = channel_map.channelmaps.on(args.timestamp)
 
 channels = [
-    f"ch{chmap[chan].daq.rawid:03}"
+    chan
     for chan in status_map
     if status_map[chan]["processable"] is True and chmap[chan].system == "geds"
 ]

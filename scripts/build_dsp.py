@@ -51,9 +51,7 @@ channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules
 
 channel_dict = {chan: Props.read_from(file) for chan, file in channel_dict.items()}
 db_files = [
-    par_file
-    for par_file in args.pars_file
-    if os.path.splitext(par_file)[1] == ".json" or os.path.splitext(par_file)[1] == ".yaml"
+    par_file for par_file in args.pars_file if os.path.splitext(par_file)[1] in (".json", ".yaml")
 ]
 
 database_dic = Props.read_from(db_files, subst_pathvar=True)

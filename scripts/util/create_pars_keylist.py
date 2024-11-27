@@ -6,20 +6,20 @@ import glob
 import json
 import re
 import warnings
-from typing import ClassVar
 
 import snakemake as smk
+import yaml
 
 from .FileKey import FileKey, ProcessingFileKey
 from .patterns import par_validity_pattern
 
 
 class pars_key_resolve:
-    name_dict: ClassVar[dict] = {"cal": ["par_dsp", "par_hit"], "lar": ["par_dsp", "par_hit"]}
 
     def __init__(self, valid_from, category, apply):
         self.valid_from = valid_from
         self.category = category
+        self.mode = "reset"
         self.apply = apply
 
     def __str__(self):
@@ -34,7 +34,7 @@ class pars_key_resolve:
             filekey.timestamp,
             "all",
             filekey.get_path_from_filekey(
-                par_validity_pattern(), processing_step=name_dict, ext="json"
+                par_validity_pattern(), processing_step=name_dict, ext="yaml"
             ),
         )
 
@@ -43,6 +43,11 @@ class pars_key_resolve:
         with open(path, "w") as of:
             for file_name in file_names:
                 of.write(f"{file_name.get_json()}\n")
+
+    @staticmethod
+    def write_to_yaml(file_names, path):
+        with open(path, "w") as of:
+            yaml.dump([file_name.__dict__ for file_name in file_names], of, sort_keys=False)
 
     @staticmethod
     def match_keys(key1, key2):
