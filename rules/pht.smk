@@ -13,7 +13,6 @@ from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_pht,
     get_pattern_plts,
     get_pattern_tier,
     get_pattern_pars_tmp,

@@ -44,7 +44,7 @@ configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 meta = metadata_path(setup)
 swenv = runcmd(setup)
-part = ds.dataset_file(setup, os.path.join(configs, "partitions.json"))
+part = ds.cal_grouping(setup, os.path.join(configs, "partitions.json"))
 basedir = workflow.basedir
 
 

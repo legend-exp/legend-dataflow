@@ -5,7 +5,7 @@ Snakemake rules for calibrating daq energy for blinding. Two steps:
 """
 
 from scripts.util.patterns import (
-    get_pattern_par_raw,
+    get_pattern_pars,
     get_pattern_plts,
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,

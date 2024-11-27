@@ -21,16 +21,16 @@ for tier in ("evt", "pet"):
     rule:
         input:
             dsp_file=(
-                get_pattern_tier_dsp(setup)
+                get_pattern_tier(setup, "dsp", check_in_cycle=False)
                 if tier == "evt"
-                else get_pattern_tier_psp(setup)
+                else get_pattern_tier(setup, "psp", check_in_cycle=False)
             ),
             hit_file=(
-                get_pattern_tier_hit(setup)
+                get_pattern_tier(setup, "hit", check_in_cycle=False)
                 if tier == "evt"
-                else get_pattern_tier_pht(setup)
+                else get_pattern_tier(setup, "pht", check_in_cycle=False)
             ),
-            tcm_file=get_pattern_tier_tcm(setup),
+            tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
             xtalk_matrix=lambda wildcards: get_svm_file(
                 tier=tier, wildcards=wildcards, name="xtc"
             ),

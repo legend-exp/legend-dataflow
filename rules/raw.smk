@@ -43,7 +43,9 @@ rule build_raw_blind:
     and runs only if the blinding check file is on disk. Output is just the blinded raw file.
     """
     input:
-        tier_file=get_pattern_tier_raw(setup).replace("{datatype}", "phy"),
+        tier_file=get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
+            "{datatype}", "phy"
+        ),
         blind_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",

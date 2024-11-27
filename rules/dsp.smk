@@ -13,10 +13,7 @@ from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_dsp,
     get_pattern_plts,
-    get_pattern_tier_raw,
-    get_pattern_tier_tcm,
     get_pattern_tier,
     get_pattern_pars_tmp,
     get_pattern_log,
@@ -386,7 +383,7 @@ rule build_pars_dsp:
 
 rule build_dsp:
     input:
-        raw_file=get_pattern_tier_raw(setup),
+        raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: pars_catalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"

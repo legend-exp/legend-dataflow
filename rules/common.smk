@@ -8,7 +8,7 @@ from scripts.util.patterns import (
     par_raw_path,
     get_pattern_unsorted_data,
     get_pattern_tier_daq,
-    get_pattern_tier_raw,
+    get_pattern_tier,
     get_pattern_plts_tmp_channel,
 )
 from scripts.util import ProcessingFileKey
@@ -114,4 +114,4 @@ def get_tier_pattern(tier):
     elif tier == "raw":
         return get_pattern_tier_daq(setup)
     else:
-        return get_pattern_tier_raw(setup)
+        return get_pattern_tier(setup, "raw", check_in_cycle=False)
