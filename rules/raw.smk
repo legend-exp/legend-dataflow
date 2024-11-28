@@ -1,6 +1,5 @@
 from scripts.util.patterns import (
     get_pattern_tier_daq,
-    get_pattern_tier_raw,
     get_pattern_tier,
     get_pattern_log,
     get_pattern_tier_raw_blind,

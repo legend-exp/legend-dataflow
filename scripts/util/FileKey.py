@@ -57,6 +57,8 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
             except AttributeError:
                 key_pattern_rx = re.compile(smk.io.regex(cls.key_pattern))
         else:
+            if isinstance(pattern, Path):
+                pattern = pattern.as_posix()
             try:
                 key_pattern_rx = re.compile(smk.io.regex_from_filepattern(pattern))
             except AttributeError:
@@ -92,6 +94,8 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
         return cls(**d)
 
     def get_path_from_filekey(self, pattern, **kwargs):
+        if isinstance(pattern, Path):
+            pattern = pattern.as_posix()
         if kwargs is None:
             return smk.io.expand(pattern, **self._asdict())
         else:
@@ -163,6 +167,8 @@ class ProcessingFileKey(FileKey):
         return f"{super().name}-{self.processing_step}"
 
     def get_path_from_filekey(self, pattern, **kwargs):
+        if isinstance(pattern, Path):
+            pattern = pattern.as_posix()
         if not isinstance(pattern, str):
             pattern = pattern(self.tier, self.identifier)
         if kwargs is None:
@@ -198,6 +204,8 @@ class ChannelProcKey(FileKey):
 
     @staticmethod
     def get_channel_files(keypart, par_pattern, chan_list):
+        if isinstance(par_pattern, Path):
+            par_pattern = par_pattern.as_posix()
         d = ChannelProcKey.parse_keypart(keypart)
         filenames = []
         for chan in chan_list:

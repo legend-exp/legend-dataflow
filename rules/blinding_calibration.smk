@@ -11,6 +11,7 @@ from scripts.util.patterns import (
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
 )
+from pathlib import Path
 
 
 rule build_blinding_calibration:
@@ -19,9 +20,8 @@ rule build_blinding_calibration:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-        ),
+        files=Path(filelist_path(setup))
+        / "all-{experiment}-{period}-{run}-cal-raw.filelist",
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -57,7 +57,7 @@ rule build_plts_blinding:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="blindcal",
         ),
@@ -79,7 +79,7 @@ rule build_pars_blinding:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="blindcal",
         ),

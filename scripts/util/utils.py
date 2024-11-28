@@ -114,6 +114,10 @@ def chan_map_path(setup):
     return setup["paths"]["chan_map"]
 
 
+def det_status_path(setup):
+    return setup["paths"]["detector_status"]
+
+
 def metadata_path(setup):
     return setup["paths"]["metadata"]
 

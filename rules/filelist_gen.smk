@@ -1,6 +1,6 @@
 import glob
-import json
-import os
+import json, yaml
+from pathlib import Path
 
 from scripts.util.FileKey import FileKey, run_grouper
 from scripts.util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
@@ -9,9 +9,20 @@ from scripts.util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
 def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
     ignore_keys = []
     if ignore_keys_file is not None:
-        if os.path.isfile(ignore_keys_file):
-            with open(ignore_keys_file) as f:
-                ignore_keys = f.read().splitlines()
+        if Path(ignore_keys_file).is_file():
+            if Path(ignore_keys_file).suffix == ".json":
+                with Path(ignore_keys_file).open() as f:
+                    ignore_keys = json.load(f)
+            elif Path(ignore_keys_file).suffix == ".keylist":
+                with Path(ignore_keys_file).open() as f:
+                    ignore_keys = f.read().splitlines()
+            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
+                with Path(ignore_keys_file).open() as f:
+                    ignore_keys = yaml.safe_load(f)
+            else:
+                raise Warning(
+                    "ignore_keys_file file not in json, yaml or keylist format"
+                )
             ignore_keys = [
                 key.split("#")[0].strip() if "#" in key else key.strip()
                 for key in ignore_keys
@@ -23,9 +34,16 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
         ignore_keys = []
 
     if analysis_runs_file is not None:
-        if os.path.isfile(analysis_runs_file):
-            with open(analysis_runs_file) as f:
-                analysis_runs = json.load(f)
+        if Path(analysis_runs_file).is_file():
+            if Path(ignore_keys_file).suffix == ".json":
+                with Path(analysis_runs_file).open() as f:
+                    analysis_runs = json.load(f)
+            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
+                with Path(analysis_runs_file).open() as f:
+                    analysis_runs = yaml.safe_load(f)
+            else:
+                raise Warning("analysis_runs file not in json or yaml format")
+                analysis_runs = []
         else:
             analysis_runs = []
             print("no analysis_runs file found")

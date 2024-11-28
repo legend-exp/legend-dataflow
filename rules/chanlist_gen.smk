@@ -13,7 +13,7 @@ from scripts.util.utils import filelist_path, runcmd
 
 
 def get_par_chanlist(
-    setup, keypart, tier, basedir, configs, chan_maps, name=None, extension="json"
+    setup, keypart, tier, basedir, det_status, chan_maps, name=None, extension="yaml"
 ):
     tier_pattern = "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
     keypart_rx = re.compile(tier_pattern)
@@ -28,7 +28,7 @@ def get_par_chanlist(
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 
-    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
+    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --det_status {det_status}"
     cmd += f" --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
     os.system(cmd)
 
@@ -42,7 +42,7 @@ def get_par_chanlist(
     return filenames
 
 
-def get_plt_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=None):
+def get_plt_chanlist(setup, keypart, tier, basedir, det_status, chan_maps, name=None):
     key = ChannelProcKey.parse_keypart(keypart)
 
     output_file = os.path.join(
@@ -50,7 +50,7 @@ def get_plt_chanlist(setup, keypart, tier, basedir, configs, chan_maps, name=Non
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 
-    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --configs {configs}"
+    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --det_status {det_status}"
     cmd += f" --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
     os.system(cmd)
 

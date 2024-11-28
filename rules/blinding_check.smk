@@ -12,6 +12,7 @@ from scripts.util.patterns import (
     get_pattern_plts,
     get_pattern_pars,
 )
+from pathlib import Path
 
 
 rule build_blinding_check:
@@ -20,9 +21,8 @@ rule build_blinding_check:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
-        ),
+        files=Path(filelist_path(setup))
+        / "all-{experiment}-{period}-{run}-cal-raw.filelist",
         par_file=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
@@ -59,7 +59,7 @@ rule build_plts_raw:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -80,7 +80,7 @@ rule build_pars_raw:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
         plts=get_pattern_plts(

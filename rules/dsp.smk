@@ -6,9 +6,10 @@ Snakemake rules for processing dsp tier. This is done in 4 steps:
 - running dsp over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import par_dsp_path
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
+from scripts.util.create_pars_keylist import ParsKeyResolve
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -18,15 +19,19 @@ from scripts.util.patterns import (
     get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
-    get_pattern_pars_overwrite,
-    get_pattern_pars_svm,
 )
 
-dsp_par_catalog = pars_key_resolve.get_par_catalog(
+dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
+
+dsp_par_cat_file = Path(pars_path(setup)) / "dsp" / "validity.yaml"
+if dsp_par_cat_file.is_file():
+    dsp_par_cat_file.unlink()
+Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
 
 
 rule build_pars_dsp_tau:
@@ -218,14 +223,16 @@ rule build_pars_dsp_eopt:
 
 rule build_svm_dsp:
     input:
-        hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(
+        hyperpars=lambda wildcards: get_input_par_file(
+            wildcards, "dsp", "svm_hyperpars"
+        ),
+        train_data=lambda wildcards: get_input_par_file(
             wildcards, "dsp", "svm_hyperpars"
         ).replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal"),
+        str(get_pattern_log(setup, "pars_dsp_svm")).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
@@ -288,7 +295,7 @@ rule build_pars_dsp_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
@@ -344,7 +351,7 @@ rule build_pars_dsp:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="dplms",
             extension="lh5",
@@ -385,7 +392,7 @@ rule build_dsp:
     input:
         raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
         pars_file=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
+            lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),

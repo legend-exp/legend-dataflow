@@ -79,7 +79,7 @@ class PropsStream:
 
     @staticmethod
     def get(value):
-        if isinstance(value, str):
+        if isinstance(value, (str, Path)):
             return PropsStream.read_from(value)
 
         if isinstance(value, (collections.abc.Sequence, types.GeneratorType)):

@@ -5,19 +5,26 @@ This module uses the partition database files to the necessary inputs for partit
 import json
 from pathlib import Path
 
+import yaml
+
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .patterns import (
     get_pattern_log_channel,
+    get_pattern_pars,
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
 from .utils import filelist_path
 
 
-class cal_grouping:
+class CalGrouping:
     def __init__(self, setup, input_file):
-        with Path(input_file).open() as r:
-            self.datasets = json.load(r)
+        if Path(input_file).suffix == ".json":
+            with Path(input_file).open() as r:
+                self.datasets = json.load(r)
+        elif Path(input_file).suffix in (".yaml", ".yml"):
+            with Path(input_file).open() as r:
+                self.datasets = yaml.safe_load(r)
         self.expand_runs()
         self.setup = setup
 
@@ -28,7 +35,7 @@ class cal_grouping:
                     if isinstance(runs, str) and ".." in runs:
                         start, end = runs.split("..")
                         self.datasets[channel][part][per] = [
-                            f"r{x:02}" for x in range(int(start[2:]), int(end) + 1)
+                            f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
                         ]
 
     def get_dataset(self, dataset, channel):
@@ -49,7 +56,8 @@ class cal_grouping:
             else:
                 files += [
                     Path(filelist_path(self.setup))
-                    / "all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist"
+                    / f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist"
+                    for run in dataset[per]
                 ]
         return files
 
@@ -62,14 +70,19 @@ class cal_grouping:
         experiment="l200",
         datatype="cal",
         name=None,
-        extension="json",
+        extension="yaml",
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
         for item in catalog:
             par_files = item.apply
             for par_file in par_files:
-                if par_file.split("-")[-1] == f"par_{tier}.json":
+                if (
+                    par_file.split("-")[-1]
+                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
+                        "-"
+                    )[-1]
+                ):
                     all_par_files.append(par_file)
         if channel == "default":
             channel = "{channel}"
@@ -117,7 +130,12 @@ class cal_grouping:
         for item in catalog:
             par_files = item.apply
             for par_file in par_files:
-                if par_file.split("-")[-1] == f"par_{tier}.json":
+                if (
+                    par_file.split("-")[-1]
+                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
+                        "-"
+                    )[-1]
+                ):
                     all_par_files.append(par_file)
         if channel == "default":
             channel = "{channel}"
@@ -201,6 +219,6 @@ class cal_grouping:
             out_string = ""
             for channel in exclude_chans:
                 out_string += f"(?!{channel})"
-            return out_string + r"ch\d{7}"
+            return out_string + r"^[VPCB]\d{1}\w{5}$"
         else:
-            return r"ch\d{7}"
+            return r"^[VPCB]\d{1}\w{5}$"

@@ -10,7 +10,7 @@ This includes:
 - the same for partition level tiers
 """
 
-import pathlib
+from pathlib import Path
 import os
 import json
 import sys
@@ -20,8 +20,8 @@ from collections import OrderedDict
 import logging
 
 import scripts.util as ds
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.patterns import get_pattern_tier_raw
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.patterns import get_pattern_tier
 from scripts.util.utils import (
     subst_vars_in_snakemake_config,
     runcmd,
@@ -31,6 +31,7 @@ from scripts.util.utils import (
     metadata_path,
     tmp_log_path,
     pars_path,
+    det_status_path,
 )
 
 # Set with `snakemake --configfile=/path/to/your/config.json`
@@ -43,8 +44,9 @@ setup = config["setups"]["l200"]
 configs = config_path(setup)
 chan_maps = chan_map_path(setup)
 meta = metadata_path(setup)
+det_status = det_status_path(setup)
 swenv = runcmd(setup)
-part = ds.cal_grouping(setup, os.path.join(configs, "partitions.json"))
+part = ds.CalGrouping(setup, Path(det_status) / "cal_partitions.yaml")
 basedir = workflow.basedir
 
 
@@ -72,32 +74,6 @@ include: "rules/blinding_calibration.smk"
 include: "rules/qc_phy.smk"
 
 
-# Log parameter catalogs in validity.jsonl files
-hit_par_cat_file = os.path.join(pars_path(setup), "hit", "validity.jsonl")
-if os.path.isfile(hit_par_cat_file):
-    os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
-pathlib.Path(os.path.dirname(hit_par_cat_file)).mkdir(parents=True, exist_ok=True)
-ds.pars_key_resolve.write_to_jsonl(hit_par_catalog, hit_par_cat_file)
-
-pht_par_cat_file = os.path.join(pars_path(setup), "pht", "validity.jsonl")
-if os.path.isfile(pht_par_cat_file):
-    os.remove(os.path.join(pars_path(setup), "pht", "validity.jsonl"))
-pathlib.Path(os.path.dirname(pht_par_cat_file)).mkdir(parents=True, exist_ok=True)
-ds.pars_key_resolve.write_to_jsonl(pht_par_catalog, pht_par_cat_file)
-
-dsp_par_cat_file = os.path.join(pars_path(setup), "dsp", "validity.jsonl")
-if os.path.isfile(dsp_par_cat_file):
-    os.remove(dsp_par_cat_file)
-pathlib.Path(os.path.dirname(dsp_par_cat_file)).mkdir(parents=True, exist_ok=True)
-ds.pars_key_resolve.write_to_jsonl(dsp_par_catalog, dsp_par_cat_file)
-
-psp_par_cat_file = os.path.join(pars_path(setup), "psp", "validity.jsonl")
-if os.path.isfile(psp_par_cat_file):
-    os.remove(psp_par_cat_file)
-pathlib.Path(os.path.dirname(psp_par_cat_file)).mkdir(parents=True, exist_ok=True)
-ds.pars_key_resolve.write_to_jsonl(psp_par_catalog, psp_par_cat_file)
-
-
 localrules:
     gen_filelist,
     autogen_output,
@@ -111,36 +87,36 @@ onstart:
         shell('{swenv} python3 -B -c "import ' + pkg + '"')
 
         # Log parameter catalogs in validity.jsonl files
-    hit_par_cat_file = os.path.join(pars_path(setup), "hit", "validity.jsonl")
-    if os.path.isfile(hit_par_cat_file):
-        os.remove(os.path.join(pars_path(setup), "hit", "validity.jsonl"))
-    pathlib.Path(os.path.dirname(hit_par_cat_file)).mkdir(parents=True, exist_ok=True)
-    ds.pars_key_resolve.write_to_jsonl(hit_par_catalog, hit_par_cat_file)
+    hit_par_cat_file = Path(pars_path(setup)) / "hit" / "validity.yaml"
+    if hit_par_cat_file.is_file():
+        hit_par_cat_file.unlink()
+    Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+    ds.ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
 
-    pht_par_cat_file = os.path.join(pars_path(setup), "pht", "validity.jsonl")
-    if os.path.isfile(pht_par_cat_file):
-        os.remove(os.path.join(pars_path(setup), "pht", "validity.jsonl"))
-    pathlib.Path(os.path.dirname(pht_par_cat_file)).mkdir(parents=True, exist_ok=True)
-    ds.pars_key_resolve.write_to_jsonl(pht_par_catalog, pht_par_cat_file)
+    pht_par_cat_file = Path(pars_path(setup)) / "pht" / "validity.yaml"
+    if pht_par_cat_file.is_file():
+        pht_par_cat_file.unlink()
+    Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+    ds.ParsKeyResolve.write_to_yaml(pht_par_catalog, pht_par_cat_file)
 
-    dsp_par_cat_file = os.path.join(pars_path(setup), "dsp", "validity.jsonl")
-    if os.path.isfile(dsp_par_cat_file):
-        os.remove(dsp_par_cat_file)
-    pathlib.Path(os.path.dirname(dsp_par_cat_file)).mkdir(parents=True, exist_ok=True)
-    ds.pars_key_resolve.write_to_jsonl(dsp_par_catalog, dsp_par_cat_file)
+    dsp_par_cat_file = Path(pars_path(setup)) / "dsp" / "validity.yaml"
+    if dsp_par_cat_file.is_file():
+        dsp_par_cat_file.unlink()
+    Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+    ds.ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
 
-    psp_par_cat_file = os.path.join(pars_path(setup), "psp", "validity.jsonl")
-    if os.path.isfile(psp_par_cat_file):
-        os.remove(psp_par_cat_file)
-    pathlib.Path(os.path.dirname(psp_par_cat_file)).mkdir(parents=True, exist_ok=True)
-    ds.pars_key_resolve.write_to_jsonl(psp_par_catalog, psp_par_cat_file)
+    psp_par_cat_file = Path(pars_path(setup)) / "psp" / "validity.yaml"
+    if psp_par_cat_file.is_file():
+        psp_par_cat_file.unlink()
+    Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+    ds.ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
 
 
 onsuccess:
     from snakemake.report import auto_report
 
     rep_dir = f"{log_path(setup)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
-    pathlib.Path(rep_dir).mkdir(parents=True, exist_ok=True)
+    Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
 
     with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
@@ -190,12 +166,12 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern_tier_raw(setup),
-            ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
-            analysis_runs_file=os.path.join(configs, "analysis_runs.json"),
+            get_pattern_tier(setup, "raw", check_in_cycle=False),
+            ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
+            analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
-        os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
+        Path(filelist_path(setup)) / "{label}-{tier}.filelist",
     run:
         if len(input) == 0:
             print(

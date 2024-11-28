@@ -6,9 +6,10 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 - running build hit over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import filelist_path, par_pht_path, set_last_rule_name
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
+from scripts.util.utils import filelist_path, set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -20,11 +21,17 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-pht_par_catalog = ds.pars_key_resolve.get_par_catalog(
+pht_par_catalog = ds.ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
+
+pht_par_cat_file = Path(pars_path(setup)) / "pht" / "validity.yaml"
+if pht_par_cat_file.is_file():
+    pht_par_cat_file.unlink()
+Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(pht_par_catalog, pht_par_cat_file)
 
 intier = "psp"
 
@@ -50,7 +57,7 @@ for key, dataset in part.datasets.items():
                 cal_files=part.get_filelists(partition, key, intier),
                 fft_files=part.get_filelists(partition, key, intier, datatype="fft"),
                 pulser_files=[
-                    file.replace("par_pht", "par_tcm")
+                    str(file).replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         pht_par_catalog,
                         partition,
@@ -207,7 +214,7 @@ rule build_per_energy_calibration:
         pht_dict=get_pattern_pars_tmp_channel(setup, "pht", "qc"),
         inplots=get_pattern_plts_tmp_channel(setup, "pht", "qc"),
         ctc_dict=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
+            lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, intier
             )
         ),
@@ -258,7 +265,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("par_pht", "par_tcm")
+                    str(file).replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         pht_par_catalog,
                         partition,
@@ -440,7 +447,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("par_pht", "par_tcm")
+                    str(file).replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         pht_par_catalog,
                         partition,
@@ -620,7 +627,7 @@ for key, dataset in part.datasets.items():
             input:
                 files=part.get_filelists(partition, key, intier),
                 pulser_files=[
-                    file.replace("par_pht", "par_tcm")
+                    str(file).replace("par_pht", "par_tcm")
                     for file in part.get_par_files(
                         pht_par_catalog,
                         partition,
@@ -793,7 +800,7 @@ rule build_pars_pht_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
@@ -822,7 +829,7 @@ rule build_plts_pht:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -843,7 +850,7 @@ rule build_pars_pht:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
         plts=get_pattern_plts(setup, "pht"),
@@ -868,7 +875,7 @@ rule build_pars_pht:
 rule build_pht:
     input:
         dsp_file=get_pattern_tier(setup, intier, check_in_cycle=False),
-        pars_file=lambda wildcards: pars_catalog.get_par_file(
+        pars_file=lambda wildcards: ParsCatalog.get_par_file(
             setup, wildcards.timestamp, "pht"
         ),
     output:

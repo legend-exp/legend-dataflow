@@ -14,7 +14,6 @@ from .utils import (
     tier_daq_path,
     tier_path,
     tier_raw_blind_path,
-    tier_skm_path,
     tmp_log_path,
     tmp_par_path,
     tmp_plts_path,
@@ -91,28 +90,26 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
             / "{datatype}"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_"
-            + f"{tier}.lh5"
+            / ("{experiment}-{period}-{run}-{datatype}-{timestamp}-tier_" + f"{tier}.lh5")
         )
     elif tier in ["evt_concat", "pet_concat"]:
         file_pattern = (
             Path(get_tier_path(setup, tier[:3]))
             / "{datatype}"
-            / "{experiment}-{period}-{run}-{datatype}-tier_"
-            + f"{tier[:3]}.lh5"
+            / ("{experiment}-{period}-{run}-{datatype}-tier_" + f"{tier[:3]}.lh5")
         )
 
     elif tier == "skm":
         file_pattern = (
-            Path(f"{tier_skm_path(setup)}")
+            Path(f"{get_tier_path(setup, tier)}")
             / "phy"
             / "{experiment}-{period}-{run}-{datatype}-tier_skm.lh5"
         )
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if tier_path(setup) not in Path(file_pattern).resolve(strict=False) and check_in_cycle is True:
-        return "/tmp/" + Path(file_pattern).name
+    if tier_path(setup) not in str(file_pattern.resolve(strict=False)) and check_in_cycle is True:
+        return "/tmp/" + file_pattern.name
     else:
         return file_pattern
 
@@ -125,8 +122,10 @@ def get_pattern_pars(setup, tier, name=None, extension="yaml", check_in_cycle=Tr
                 / "cal"
                 / "{period}"
                 / "{run}"
-                / "{experiment}-{period}-{run}-cal-{timestamp}-par_"
-                + f"{tier}_{name}.{extension}"
+                / (
+                    "{experiment}-{period}-{run}-cal-{timestamp}-par_"
+                    + f"{tier}_{name}.{extension}"
+                )
             )
         else:
             file_pattern = (
@@ -134,19 +133,21 @@ def get_pattern_pars(setup, tier, name=None, extension="yaml", check_in_cycle=Tr
                 / "cal"
                 / "{period}"
                 / "{run}"
-                / "{experiment}-{period}-{run}-cal-{timestamp}-par_"
-                + f"{tier}.{extension}"
+                / ("{experiment}-{period}-{run}-cal-{timestamp}-par_" + f"{tier}.{extension}")
             )
     else:
         msg = "invalid tier"
         raise Exception(msg)
-    if pars_path(setup) not in Path(file_pattern).resolve(strict=False) and check_in_cycle is True:
+    if (
+        pars_path(setup) not in str(Path(file_pattern).resolve(strict=False))
+        and check_in_cycle is True
+    ):
         if name is None:
             return "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{extension}"
         else:
             return (
                 "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-"
-                + f"par_{tier}_{name}.{extension}"
+                f"par_{tier}_{name}.{extension}"
             )
     else:
         return file_pattern
@@ -160,8 +161,7 @@ def get_pattern_pars_inputs(setup, tier, name=None, ext="yaml"):
             / "cal"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-cal-{timestamp}-"
-            + f"par_{tier}_{name}.{ext}"
+            / ("{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}_{name}.{ext}")
         )
     else:
         return (
@@ -170,8 +170,7 @@ def get_pattern_pars_inputs(setup, tier, name=None, ext="yaml"):
             / "cal"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-cal-{timestamp}-"
-            + f"par_{tier}.{ext}"
+            / ("{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{ext}")
         )
 
 
@@ -183,8 +182,10 @@ def get_pattern_pars_overwrite(setup, tier, name=None, extension="yaml"):
             / "{datatype}"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
-            f"{tier}_{name}-overwrite.{extension}"
+            / (
+                "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
+                f"{tier}_{name}-overwrite.{extension}"
+            )
         )
     else:
         return (
@@ -193,9 +194,11 @@ def get_pattern_pars_overwrite(setup, tier, name=None, extension="yaml"):
             / "{datatype}"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
-            + tier
-            + f"-overwrite.{extension}"
+            / (
+                "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
+                + tier
+                + f"-overwrite.{extension}"
+            )
         )
 
 
@@ -203,15 +206,12 @@ def get_pattern_pars_tmp(setup, tier, name=None, datatype=None, extension="yaml"
     if datatype is None:
         datatype = "{datatype}"
     if name is None:
-        return (
-            Path(f"{tmp_par_path(setup)}") / "{experiment}-{period}-{run}-"
-            + datatype
-            + "-{timestamp}-par_"
-            + f"{tier}.{extension}"
+        return Path(f"{tmp_par_path(setup)}") / (
+            "{experiment}-{period}-{run}-" + datatype + "-{timestamp}-par_" + f"{tier}.{extension}"
         )
     else:
-        return (
-            Path(f"{tmp_par_path(setup)}") / "{experiment}-{period}-{run}-"
+        return Path(f"{tmp_par_path(setup)}") / (
+            "{experiment}-{period}-{run}-"
             + datatype
             + "-{timestamp}"
             + f"par_{tier}_{name}.{extension}"
@@ -220,32 +220,24 @@ def get_pattern_pars_tmp(setup, tier, name=None, datatype=None, extension="yaml"
 
 def get_pattern_pars_tmp_channel(setup, tier, name=None, extension="yaml"):
     if name is None:
-        return (
-            Path(f"{tmp_par_path(setup)}")
-            / "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
-            + f"{tier}.{extension}"
+        return Path(f"{tmp_par_path(setup)}") / (
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_" + f"{tier}.{extension}"
         )
     else:
-        return (
-            Path(f"{tmp_par_path(setup)}")
-            / "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
+        return Path(f"{tmp_par_path(setup)}") / (
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
             + f"{tier}_{name}.{extension}"
         )
 
 
 def get_pattern_plts_tmp_channel(setup, tier, name=None):
     if name is None:
-        return (
-            Path(f"{tmp_plts_path(setup)}")
-            / "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
-            + tier
-            + ".pkl"
+        return Path(f"{tmp_plts_path(setup)}") / (
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_" + tier + ".pkl"
         )
     else:
-        return (
-            Path(f"{tmp_plts_path(setup)}")
-            / "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
-            + f"{tier}_{name}.pkl"
+        return Path(f"{tmp_plts_path(setup)}") / (
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_" + f"{tier}_{name}.pkl"
         )
 
 
@@ -257,9 +249,7 @@ def get_pattern_plts(setup, tier, name=None):
             / "cal"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-cal-{timestamp}-plt_"
-            + tier
-            + ".dir"
+            / ("{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir")
         )
     else:
         return (
@@ -268,11 +258,7 @@ def get_pattern_plts(setup, tier, name=None):
             / "cal"
             / "{period}"
             / "{run}"
-            / "{experiment}-{period}-{run}-cal-{timestamp}-plt_"
-            + tier
-            + "_"
-            + name
-            + ".dir"
+            / ("{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + "_" + name + ".dir")
         )
 
 
@@ -280,9 +266,7 @@ def get_pattern_log(setup, processing_step):
     return (
         Path(f"{tmp_log_path(setup)}")
         / processing_step
-        / "{experiment}-{period}-{run}-{datatype}-{timestamp}-"
-        + processing_step
-        + ".log"
+        / ("{experiment}-{period}-{run}-{datatype}-{timestamp}-" + processing_step + ".log")
     )
 
 
@@ -290,9 +274,7 @@ def get_pattern_log_channel(setup, processing_step):
     return (
         Path(f"{tmp_log_path(setup)}")
         / processing_step
-        / "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"
-        + processing_step
-        + ".log"
+        / ("{experiment}-{period}-{run}-cal-{timestamp}-{channel}-" + processing_step + ".log")
     )
 
 
@@ -300,7 +282,5 @@ def get_pattern_log_concat(setup, processing_step):
     return (
         Path(f"{tmp_log_path(setup)}")
         / processing_step
-        / "{experiment}-{period}-{run}-{datatype}-"
-        + processing_step
-        + ".log"
+        / ("{experiment}-{period}-{run}-{datatype}-" + processing_step + ".log")
     )

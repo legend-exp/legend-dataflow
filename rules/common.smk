@@ -2,16 +2,17 @@
 Helper functions for running data production
 """
 
-import pathlib, os
+from pathlib import Path
 from scripts.util.patterns import (
     par_overwrite_path,
-    par_raw_path,
+    get_pars_path,
     get_pattern_unsorted_data,
     get_pattern_tier_daq,
     get_pattern_tier,
     get_pattern_plts_tmp_channel,
 )
 from scripts.util import ProcessingFileKey
+from scripts.util.catalog import Catalog
 from scripts.util import utils
 
 
@@ -21,8 +22,8 @@ def ro(path):
 
 def get_blinding_curve_file(wildcards):
     """func to get the blinding calibration curves from the overrides"""
-    par_files = pars_catalog.get_calib_files(
-        Path(par_overwrite_path(setup)) / "raw" / "validity.jsonl",
+    par_files = Catalog.get_files(
+        Path(par_overwrite_path(setup)) / "raw" / "validity.yaml",
         wildcards.timestamp,
     )
     if isinstance(par_files, str):
@@ -36,13 +37,13 @@ def get_blinding_curve_file(wildcards):
 
 def get_blinding_check_file(wildcards):
     """func to get the right blinding check file"""
-    par_files = pars_catalog.get_calib_files(
-        Path(par_raw_path(setup)) / "validity.jsonl", wildcards.timestamp
+    par_files = Catalog.get_files(
+        Path(get_pars_path(setup, "raw")) / "validity.yaml", wildcards.timestamp
     )
     if isinstance(par_files, str):
-        return str(Path(par_raw_path(setup)) / par_files)
+        return Path(get_pars_path(setup, "raw")) / par_files
     else:
-        return [str(Path(par_raw_path(setup)) / par_file) for par_file in par_files]
+        return [Path(get_pars_path(setup, "raw")) / par_file for par_file in par_files]
 
 
 def set_last_rule_name(workflow, new_name):
@@ -70,35 +71,38 @@ def set_last_rule_name(workflow, new_name):
     workflow.check_localrules()
 
 
-def get_svm_file(wildcards, tier, name):
-    par_overwrite_file = os.path.join(par_overwrite_path(setup), tier, "validity.jsonl")
-    pars_files_overwrite = pars_catalog.get_calib_files(
-        par_overwrite_file, wildcards.timestamp
+def get_input_par_file(wildcards, tier, name):
+    par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
+    pars_files_overwrite = Catalog.get_files(
+        par_overwrite_file,
+        wildcards.timestamp,
     )
     for pars_file in pars_files_overwrite:
-        if name in pars_file:
-            return os.path.join(par_overwrite_path(setup), tier, pars_file)
+        if name in str(pars_file):
+            return Path(par_overwrite_path(setup)) / tier / pars_file
     raise ValueError(f"Could not find model in {pars_files_overwrite}")
 
 
 def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
-    par_overwrite_file = os.path.join(par_overwrite_path(setup), tier, "validity.jsonl")
+    par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
     if timestamp is not None:
-        pars_files_overwrite = pars_catalog.get_calib_files(
-            par_overwrite_file, timestamp
+        pars_files_overwrite = Catalog.get_files(
+            par_overwrite_file,
+            timestamp,
         )
     else:
-        pars_files_overwrite = pars_catalog.get_calib_files(
-            par_overwrite_file, wildcards.timestamp
+        pars_files_overwrite = Catalog.get_files(
+            par_overwrite_file,
+            wildcards.timestamp,
         )
     if name is None:
-        fullname = f"{tier}-overwrite.json"
+        fullname = f"{tier}-overwrite.yaml"
     else:
-        fullname = f"{tier}_{name}-overwrite.json"
+        fullname = f"{tier}_{name}-overwrite.yaml"
     out_files = []
     for pars_file in pars_files_overwrite:
-        if fullname in pars_file:
-            out_files.append(os.path.join(par_overwrite_path(setup), tier, pars_file))
+        if fullname in str(pars_file):
+            out_files.append(Path(par_overwrite_path(setup)) / tier / pars_file)
     if len(out_files) == 0:
         raise ValueError(f"Could not find name in {pars_files_overwrite}")
     else:

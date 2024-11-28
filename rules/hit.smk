@@ -6,7 +6,9 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -19,11 +21,17 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-hit_par_catalog = ds.pars_key_resolve.get_par_catalog(
+hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_hit"], "lar": ["par_hit"]},
 )
+
+hit_par_cat_file = Path(pars_path(setup)) / "hit" / "validity.yaml"
+if hit_par_cat_file.is_file():
+    hit_par_cat_file.unlink()
+Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
 
 
 # This rule builds the qc using the calibration dsp files and fft files
@@ -72,7 +80,7 @@ rule build_energy_calibration:
         ),
         pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         ctc_dict=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
+            lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),
@@ -216,7 +224,7 @@ rule build_pars_hit_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
@@ -247,7 +255,7 @@ rule build_plts_hit:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -270,7 +278,7 @@ rule build_pars_hit:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
         plts=get_pattern_plts(setup, "hit"),
@@ -297,7 +305,7 @@ rule build_pars_hit:
 rule build_hit:
     input:
         dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
-        pars_file=lambda wildcards: pars_catalog.get_par_file(
+        pars_file=lambda wildcards: ParsCatalog.get_par_file(
             setup, wildcards.timestamp, "hit"
         ),
     output:
