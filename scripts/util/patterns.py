@@ -84,7 +84,7 @@ def get_pattern_tier_raw_blind(setup):
 
 
 def get_pattern_tier(setup, tier, check_in_cycle=True):
-    if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
+    if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet"]:
         file_pattern = (
             Path(get_tier_path(setup, tier))
             / "{datatype}"
@@ -115,7 +115,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
 
 
 def get_pattern_pars(setup, tier, name=None, extension="yaml", check_in_cycle=True):
-    if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
+    if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet"]:
         if name is not None:
             return (
                 Path(get_pars_path(setup, tier))

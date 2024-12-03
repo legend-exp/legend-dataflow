@@ -41,24 +41,8 @@ def tier_path(setup):
 
 
 def get_tier_path(setup, tier):
-    if tier == "raw":
-        return setup["paths"]["tier_raw"]
-    elif tier == "tcm":
-        return setup["paths"]["tier_tcm"]
-    elif tier == "dsp":
-        return setup["paths"]["tier_dsp"]
-    elif tier == "hit":
-        return setup["paths"]["tier_hit"]
-    elif tier == "evt":
-        return setup["paths"]["tier_evt"]
-    elif tier == "psp":
-        return setup["paths"]["tier_psp"]
-    elif tier == "pht":
-        return setup["paths"]["tier_pht"]
-    elif tier == "pet":
-        return setup["paths"]["tier_pet"]
-    elif tier == "skm":
-        return setup["paths"]["tier_skm"]
+    if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet", "skm"]:
+        return setup["paths"][f"tier_{tier}"]
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)
@@ -69,22 +53,8 @@ def pars_path(setup):
 
 
 def get_pars_path(setup, tier):
-    if tier == "raw":
-        return setup["paths"]["par_raw"]
-    elif tier == "tcm":
-        return setup["paths"]["par_tcm"]
-    elif tier == "dsp":
-        return setup["paths"]["par_dsp"]
-    elif tier == "hit":
-        return setup["paths"]["par_hit"]
-    elif tier == "evt":
-        return setup["paths"]["par_evt"]
-    elif tier == "psp":
-        return setup["paths"]["par_psp"]
-    elif tier == "pht":
-        return setup["paths"]["par_pht"]
-    elif tier == "pet":
-        return setup["paths"]["par_pet"]
+    if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
+        return setup["paths"][f"par_{tier}"]
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)

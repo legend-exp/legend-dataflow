@@ -29,6 +29,14 @@ for tier in ("evt", "pet"):
             xtalk_matrix=lambda wildcards: get_input_par_file(
                 tier=tier, wildcards=wildcards, name="xtc"
             ),
+            ann_file=branch(
+                lambda wildcards: tier if wildcards["period"][1:] <= 11 else "none",
+                cases={
+                    "evt": get_pattern_tier(setup, "ann", check_in_cycle=False),
+                    "pet": get_pattern_tier(setup, "pan", check_in_cycle=False),
+                    "none": None,
+                },
+            ),
             par_files=lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, "pht"
             ),
@@ -60,6 +68,7 @@ for tier in ("evt", "pet"):
             "--hit_file {params.ro_input[hit_file]} "
             "--tcm_file {params.ro_input[tcm_file]} "
             "--dsp_file {params.ro_input[dsp_file]} "
+            "--ann_file {params.ro_input[ann_file]} "
             "--output {output} "
 
     set_last_rule_name(workflow, f"build_{tier}")
