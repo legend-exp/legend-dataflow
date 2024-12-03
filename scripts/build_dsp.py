@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 from dspeed import build_dsp
-from legendmeta import TextDB
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 
@@ -27,11 +27,15 @@ warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+argparser.add_argument("--log", help="log file", type=str)
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+
 argparser.add_argument("--pars_file", help="database file for detector", nargs="*", default=[])
-argparser.add_argument("--log", help="log file", type=str)
 argparser.add_argument("--input", help="input file", type=str)
+
 argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
@@ -41,14 +45,22 @@ logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 logging.getLogger("numba").setLevel(logging.INFO)
 logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
+logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
+
+meta = LegendMetadata(path=args.metadata)
+chan_map = meta.channelmap(args.timestamp, system=args.datatype)
+
 
 configs = TextDB(args.configs, lazy=True)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_dsp"][
     "inputs"
 ]["processing_chain"]
 
-channel_dict = {chan: Props.read_from(file) for chan, file in channel_dict.items()}
+channel_dict = {
+    f"ch{chan_map[chan].daq.rawid:07}/raw": Props.read_from(file)
+    for chan, file in channel_dict.items()
+}
 db_files = [
     par_file for par_file in args.pars_file if pathlib.Path(par_file).suffix in (".json", ".yaml")
 ]

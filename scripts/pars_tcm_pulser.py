@@ -10,6 +10,7 @@ from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 argparser.add_argument("--log", help="log file", type=str)
 
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -36,6 +37,10 @@ configs = LegendMetadata(path=args.configs)
 config_dict = configs.on(args.timestamp, system=args.datatype)
 kwarg_dict = config_dict["snakemake_rules"]["pars_tcm_pulser"]["inputs"]["pulser_config"]
 
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid}"
+
 kwarg_dict = Props.read_from(kwarg_dict)
 
 if isinstance(args.tcm_files, list) and args.tcm_files[0].split(".")[-1] == "filelist":
@@ -46,9 +51,7 @@ else:
     tcm_files = args.tcm_files
 # get pulser mask from tcm files
 tcm_files = sorted(np.unique(tcm_files))
-ids, mask = get_tcm_pulser_ids(
-    tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
-)
+ids, mask = get_tcm_pulser_ids(tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold"))
 
 Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

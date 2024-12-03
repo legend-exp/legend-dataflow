@@ -4,6 +4,7 @@ import shelve
 from pathlib import Path
 
 import numpy as np
+from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo import lh5
 from util.FileKey import ChannelProcKey
@@ -37,6 +38,19 @@ argparser.add_argument(
     type=str,
     required=False,
 )
+argparser.add_argument(
+    "--channelmap",
+    help="channelmap",
+    type=str,
+    required=False,
+    default=None,
+)
+argparser.add_argument(
+    "--timestamp",
+    help="timestamp",
+    type=str,
+    required=False,
+)
 args = argparser.parse_args()
 
 # change to only have 1 output file for multiple inputs
@@ -45,6 +59,12 @@ args = argparser.parse_args()
 channel_files = args.input.infiles if hasattr(args.input, "infiles") else args.input
 
 file_extension = Path(args.output).suffix
+
+if args.channelmap is not None:
+    channel_map = LegendMetadata(args.channelmap, lazy=True)
+    chmap = channel_map.channelmap(args.timestamp)
+else:
+    chmap = None
 
 if file_extension == ".dat" or file_extension == ".dir":
     out_file = Path(args.output).with_suffix("")
@@ -61,9 +81,12 @@ if file_extension == ".json" or file_extension == ".yaml" or file_extension == "
     for channel in channel_files:
         if Path(channel).suffix == file_extension:
             channel_dict = Props.read_from(channel)
-
             fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
-            channel_name = fkey.channel
+            if chmap is not None:
+                channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
+            else:
+
+                channel_name = fkey.channel
             out_dict[channel_name] = channel_dict
         else:
             msg = "Output file extension does not match input file extension"
@@ -79,7 +102,11 @@ elif file_extension == ".pkl":
         with Path(channel).open("rb") as r:
             channel_dict = pkl.load(r)
         fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
-        channel_name = fkey.channel
+        if chmap is not None:
+            channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
+        else:
+
+            channel_name = fkey.channel
         out_dict[channel_name] = channel_dict
 
     with Path(temp_output).open("wb") as w:
@@ -89,12 +116,16 @@ elif file_extension == ".pkl":
 
 elif file_extension == ".dat" or file_extension == ".dir":
     common_dict = {}
-    with shelve.open(out_file, "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
+    with shelve.open(str(out_file), "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
         for channel in channel_files:
             with Path(channel).open("rb") as r:
                 channel_dict = pkl.load(r)
-            fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
-            channel_name = fkey.channel
+            fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel_files[0]).name)
+            if chmap is not None:
+                channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
+            else:
+
+                channel_name = fkey.channel
             if isinstance(channel_dict, dict) and "common" in list(channel_dict):
                 chan_common_dict = channel_dict.pop("common")
                 common_dict[channel_name] = chan_common_dict
@@ -109,8 +140,11 @@ elif file_extension == ".lh5":
     for channel in channel_files:
         if Path(channel).suffix == file_extension:
             fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
-            channel_name = fkey.channel
+            if chmap is not None:
+                channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
+            else:
 
+                channel_name = fkey.channel
             tb_in = lh5.read(f"{channel_name}", channel)
 
             lh5.write(

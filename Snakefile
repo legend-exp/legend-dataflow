@@ -133,15 +133,15 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-            # remove filelists
-    files = glob.glob(os.path.join(filelist_path(setup), "*"))
-    for file in files:
-        if os.path.isfile(file):
-            os.remove(file)
-    if os.path.exists(filelist_path(setup)):
-        os.rmdir(filelist_path(setup))
+            #     # remove filelists
+            # files = glob.glob(os.path.join(filelist_path(setup), "*"))
+            # for file in files:
+            #     if os.path.isfile(file):
+            #         os.remove(file)
+            # if os.path.exists(filelist_path(setup)):
+            #     os.rmdir(filelist_path(setup))
 
-        # remove logs
+            # remove logs
     files = glob.glob(os.path.join(tmp_log_path(setup), "*", "*.log"))
     for file in files:
         if os.path.isfile(file):
@@ -171,11 +171,12 @@ rule gen_filelist:
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
-        Path(filelist_path(setup)) / "{label}-{tier}.filelist",
+        temp(Path(filelist_path(setup)) / "{label}-{tier}.filelist"),
     run:
         if len(input) == 0:
             print(
-                "WARNING: No files found for the given pattern\nmake sure pattern follows the format: all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
+                f"WARNING: No files found for the given pattern:{wildcards.label}",
+                "\nmake sure pattern follows the format: all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen",
             )
         with open(output[0], "w") as f:
             for fn in input:

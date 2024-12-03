@@ -15,10 +15,11 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
 argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
+argparser.add_argument("--database", help="database", type=str, required=True)
 
 argparser.add_argument("--log", help="log_file", type=str)
-argparser.add_argument("--database", help="database", type=str, required=True)
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
@@ -42,6 +43,10 @@ logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
 
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+
 configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
 
@@ -56,11 +61,9 @@ if dplms_dict["run_dplms"] is True:
 
     t0 = time.time()
     log.info("\nLoad fft data")
-    energies = sto.read(f"{args.channel}/raw/daqenergy", fft_files)[0]
+    energies = sto.read(f"{channel}/raw/daqenergy", fft_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    raw_fft = sto.read(
-        f"{args.channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs
-    )[0]
+    raw_fft = sto.read(f"{channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs)[0]
     t1 = time.time()
     log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
 
@@ -69,12 +72,12 @@ if dplms_dict["run_dplms"] is True:
     kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
     ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-    raw_cal = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
+    raw_cal = sto.read(f"{channel}/raw", args.peak_file, idx=ids)[0]
     log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
 
     if isinstance(dsp_config, (str, list)):
@@ -107,7 +110,7 @@ if dplms_dict["run_dplms"] is True:
     dplms_pars = Table(col_dict={"coefficients": Array(coeffs)})
     out_dict["dplms"][
         "coefficients"
-    ] = f"loadlh5('{args.lh5_path}', '{args.channel}/dplms/coefficients')"
+    ] = f"loadlh5('{args.lh5_path}', '{channel}/dplms/coefficients')"
 
     log.info(f"DPLMS creation finished in {(time.time()-t0)/60} minutes")
 else:
@@ -124,7 +127,7 @@ db_dict.update(out_dict)
 Path(args.lh5_path).parent.mkdir(parents=True, exist_ok=True)
 sto.write(
     Table(col_dict={"dplms": dplms_pars}),
-    name=args.channel,
+    name=channel,
     lh5_file=args.lh5_path,
     wo_mode="overwrite",
 )

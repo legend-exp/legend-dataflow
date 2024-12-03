@@ -22,6 +22,7 @@ from pygama.pargen.data_cleaning import get_mode_stdev, get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 mpl.use("agg")
@@ -452,8 +453,9 @@ if __name__ == "__main__":
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
-    det_status = chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["usability"]
+    det_status = chmap[args.channel]["analysis"]["usability"]
 
     if args.in_hit_dict:
         hit_dict = Props.read_from(args.in_hit_dict)
@@ -466,7 +468,7 @@ if __name__ == "__main__":
 
     database_dic = Props.read_from(db_files)
 
-    hit_dict.update(database_dic[args.channel]["ctc_params"])
+    hit_dict.update(database_dic[channel]["ctc_params"])
 
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
@@ -497,7 +499,7 @@ if __name__ == "__main__":
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         hit_dict,
         params=[*kwarg_dict["energy_params"], kwarg_dict["cut_param"], "timestamp", "trapTmax"],
         threshold=kwarg_dict["threshold"],
@@ -515,7 +517,7 @@ if __name__ == "__main__":
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -698,14 +700,14 @@ if __name__ == "__main__":
 
     if "monitoring_parameters" in kwarg_dict:
         monitor_dict = monitor_parameters(
-            files, f"{args.channel}/dsp", kwarg_dict["monitoring_parameters"]
+            files, f"{channel}/dsp", kwarg_dict["monitoring_parameters"]
         )
         results_dict.update({"monitoring_parameters": monitor_dict})
 
     # get baseline plots and save all plots to file
     if args.plot_path:
         common_dict = baseline_tracking_plots(
-            sorted(files), f"{args.channel}/dsp", plot_options=bl_plots
+            sorted(files), f"{channel}/dsp", plot_options=bl_plots
         )
 
         for plot in list(common_dict):
@@ -739,7 +741,7 @@ if __name__ == "__main__":
             pkl.dump(total_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # save output dictionary
-    output_dict = {"pars": hit_dict, "results": {"ecal": results_dict}}
+    output_dict = convert_dict_np_to_float({"pars": hit_dict, "results": {"ecal": results_dict}})
     Props.write_to(args.save_path, output_dict)
 
     # save calibration objects

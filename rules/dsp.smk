@@ -58,13 +58,14 @@ rule build_pars_dsp_tau:
         "{basedir}/../scripts/pars_dsp_tau.py "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--plot_path {output.plots} "
         "--output_file {output.decay_const} "
         "--pulser_file {input.pulser} "
-        "--raw_files {input.files}"
+        "--raw_files {input.files} "
 
 
 rule build_pars_event_selection:
@@ -93,6 +94,7 @@ rule build_pars_event_selection:
         "{basedir}/../scripts/pars_dsp_event_selection.py "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -132,6 +134,7 @@ rule build_pars_dsp_nopt:
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -175,6 +178,7 @@ rule build_pars_dsp_dplms:
         "--inplots {input.inplots} "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -210,6 +214,7 @@ rule build_pars_dsp_eopt:
         "{basedir}/../scripts/pars_dsp_eopt.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -226,9 +231,9 @@ rule build_svm_dsp:
         hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "dsp", "svm_hyperpars"
         ),
-        train_data=lambda wildcards: get_input_par_file(
-            wildcards, "dsp", "svm_hyperpars"
-        ).replace("hyperpars.json", "train.lh5"),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "dsp", "svm_hyperpars")
+        ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
@@ -274,9 +279,12 @@ rule build_plts_dsp:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         get_pattern_plts(setup, "dsp"),
     group:
@@ -286,6 +294,7 @@ rule build_plts_dsp:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_dsp_objects:
@@ -300,6 +309,9 @@ rule build_pars_dsp_objects:
             name="objects",
             extension="pkl",
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         get_pattern_pars(
             setup,
@@ -315,6 +327,8 @@ rule build_pars_dsp_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--timestamp {params.timestamp} "
+        "--channelmap {meta} "
 
 
 rule build_pars_dsp_db:
@@ -324,9 +338,12 @@ rule build_pars_dsp_db:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         temp(
             get_pattern_pars_tmp(
@@ -342,6 +359,8 @@ rule build_pars_dsp_db:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--timestamp {params.timestamp} "
+        "--channelmap {meta} "
 
 
 rule build_pars_dsp:
@@ -369,6 +388,9 @@ rule build_pars_dsp:
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         out_file=get_pattern_pars(
             setup,
@@ -386,6 +408,8 @@ rule build_pars_dsp:
         "--in_db {input.in_db} "
         "--out_db {output.out_db} "
         "--input {input.in_files} "
+        "--timestamp {params.timestamp} "
+        "--channelmap {meta} "
 
 
 rule build_dsp:
@@ -415,6 +439,7 @@ rule build_dsp:
         "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         f"--configs {ro(configs)} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "

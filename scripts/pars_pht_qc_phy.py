@@ -17,6 +17,7 @@ from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
 )
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 
@@ -28,11 +29,12 @@ if __name__ == "__main__":
     argparser.add_argument("--phy_files", help="cal_files", nargs="*", type=str)
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
+    argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
+
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-    argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
     argparser.add_argument(
@@ -50,6 +52,10 @@ if __name__ == "__main__":
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+    meta = LegendMetadata(path=args.metadata)
+    chmap = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
@@ -88,15 +94,12 @@ if __name__ == "__main__":
     kwarg_dict_fft = kwarg_dict["fft_fields"]
 
     cut_fields = get_keys(
-        [
-            key.replace(f"{args.channel}/dsp/", "")
-            for key in ls(phy_files[0], f"{args.channel}/dsp/")
-        ],
+        [key.replace(f"{channel}/dsp/", "") for key in ls(phy_files[0], f"{channel}/dsp/")],
         kwarg_dict_fft["cut_parameters"],
     )
 
     data = sto.read(
-        f"{args.channel}/dsp/",
+        f"{channel}/dsp/",
         phy_files,
         field_mask=[*cut_fields, "daqenergy", "t_sat_lo", "timestamp"],
         idx=np.where(bl_mask)[0],
@@ -144,6 +147,8 @@ if __name__ == "__main__":
 
     log.debug("fft cuts applied")
     log.debug(f"cut_dict is: {json.dumps(hit_dict, indent=2)}")
+
+    hit_dict = convert_dict_np_to_float(hit_dict)
 
     for file in args.save_path:
         Path(file).name.mkdir(parents=True, exist_ok=True)

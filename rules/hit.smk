@@ -44,6 +44,7 @@ rule build_qc:
             filelist_path(setup), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        overwrite_files=lambda wildcards: get_overwrite_file("hit", wildcards),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -65,11 +66,13 @@ rule build_qc:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--plot_path {output.plot_file} "
         "--save_path {output.qc_file} "
         "--pulser_file {input.pulser} "
         "--cal_files {input.files} "
         "--fft_files {input.fft_files} "
+        "--overwrite_files {input.overwrite_files} "
 
 
 # This rule builds the energy calibration using the calibration dsp files
@@ -158,6 +161,7 @@ rule build_aoe_calibration:
         "{basedir}/../scripts/pars_hit_aoe.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
@@ -204,6 +208,7 @@ rule build_lq_calibration:
         "{basedir}/../scripts/pars_hit_lq.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
@@ -246,6 +251,7 @@ rule build_pars_hit_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_plts_hit:
@@ -269,6 +275,7 @@ rule build_plts_hit:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_hit:
@@ -300,6 +307,7 @@ rule build_pars_hit:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input[infiles]} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_hit:
@@ -326,6 +334,7 @@ rule build_hit:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_hit.py "
         f"--configs {ro(configs)} "
+        "--metadata {meta} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "

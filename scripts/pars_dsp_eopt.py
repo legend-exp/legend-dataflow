@@ -26,12 +26,12 @@ warnings.filterwarnings(action="ignore", category=np.RankWarning)
 argparser = argparse.ArgumentParser()
 
 argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
-
 argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
-argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
 argparser.add_argument("--log", help="log_file", type=str)
+argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
@@ -57,6 +57,10 @@ logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
 t0 = time.time()
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
@@ -108,12 +112,12 @@ if opt_dict.pop("run_eopt") is True:
         )
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
     ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-    tb_data = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
+    tb_data = sto.read(f"{channel}/raw", args.peak_file, idx=ids)[0]
 
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
@@ -318,32 +322,32 @@ if opt_dict.pop("run_eopt") is True:
     out_alpha_dict = {}
     out_alpha_dict["cuspEmax_ctc"] = {
         "expression": "cuspEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_cusp.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["cuspEftp_ctc"] = {
         "expression": "cuspEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_cusp.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["zacEmax_ctc"] = {
         "expression": "zacEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_zac.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["zacEftp_ctc"] = {
         "expression": "zacEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_zac.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["trapEmax_ctc"] = {
         "expression": "trapEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["trapEftp_ctc"] = {
         "expression": "trapEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
     }
     if "ctc_params" in db_dict:
         db_dict["ctc_params"].update(out_alpha_dict)

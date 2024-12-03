@@ -66,3 +66,4 @@ rule build_pulser_ids:
         "--channel {params.channel} "
         "--tcm_files {params.input} "
         "--pulser_file {output.pulser} "
+        "--metadata {meta} "

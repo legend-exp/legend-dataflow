@@ -18,6 +18,7 @@ from pygama.pargen.data_cleaning import (
     get_tcm_pulser_ids,
 )
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
     argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
+
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False
     )
@@ -39,11 +41,12 @@ if __name__ == "__main__":
     )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
+    argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
+
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-    argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
     argparser.add_argument(
@@ -61,6 +64,10 @@ if __name__ == "__main__":
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+    meta = LegendMetadata(path=args.metadata)
+    chmap = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
@@ -85,8 +92,8 @@ if __name__ == "__main__":
 
     if args.overwrite_files:
         overwrite = Props.read_from(args.overwrite_files)
-        if args.channel in overwrite:
-            overwrite = overwrite[args.channel]["pars"]["operations"]
+        if channel in overwrite:
+            overwrite = overwrite[channel]["pars"]["operations"]
         else:
             overwrite = None
     else:
@@ -111,15 +118,15 @@ if __name__ == "__main__":
         if len(fft_files) > 0:
             fft_fields = get_keys(
                 [
-                    key.replace(f"{args.channel}/dsp/", "")
-                    for key in ls(fft_files[0], f"{args.channel}/dsp/")
+                    key.replace(f"{channel}/dsp/", "")
+                    for key in ls(fft_files[0], f"{channel}/dsp/")
                 ],
                 kwarg_dict_fft["cut_parameters"],
             )
 
             fft_data = load_data(
                 fft_files,
-                f"{args.channel}/dsp",
+                f"{channel}/dsp",
                 {},
                 [*fft_fields, "timestamp", "trapTmax", "t_sat_lo"],
             )
@@ -184,26 +191,20 @@ if __name__ == "__main__":
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
-        [
-            key.replace(f"{args.channel}/dsp/", "")
-            for key in ls(cal_files[0], f"{args.channel}/dsp/")
-        ],
+        [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
         kwarg_dict_cal["cut_parameters"],
     )
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         cut_fields += get_keys(
-            [
-                key.replace(f"{args.channel}/dsp/", "")
-                for key in ls(cal_files[0], f"{args.channel}/dsp/")
-            ],
+            [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
             init_cal["cut_parameters"],
         )
 
     # load data in
     data, threshold_mask = load_data(
         cal_files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         {},
         [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
@@ -226,7 +227,7 @@ if __name__ == "__main__":
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, total_mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -302,6 +303,8 @@ if __name__ == "__main__":
 
     hit_dict = {**hit_dict_fft, **hit_dict_init_cal, **hit_dict_cal}
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
+
+    hit_dict = convert_dict_np_to_float(hit_dict)
 
     for file in args.save_path:
         Path(file).parent.mkdir(parents=True, exist_ok=True)

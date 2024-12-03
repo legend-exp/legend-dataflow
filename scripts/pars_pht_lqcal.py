@@ -13,6 +13,7 @@ import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.math.distributions import gaussian
+from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
@@ -251,11 +252,12 @@ if __name__ == "__main__":
     argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
+    argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
+
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-    argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
@@ -271,6 +273,10 @@ if __name__ == "__main__":
     logging.getLogger("h5py").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+    meta = LegendMetadata(path=args.metadata)
+    chmap = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
@@ -337,7 +343,7 @@ if __name__ == "__main__":
         # load data in
         data, threshold_mask = load_data(
             final_dict,
-            f"{args.channel}/dsp",
+            f"{channel}/dsp",
             cal_dict,
             params=params,
             threshold=kwarg_dict.pop("threshold"),
@@ -360,7 +366,7 @@ if __name__ == "__main__":
                 tcm_files = f.read().splitlines()
             tcm_files = sorted(np.unique(tcm_files))
             ids, mask = get_tcm_pulser_ids(
-                tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+                tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
             )
         else:
             msg = "No pulser file or tcm filelist provided"

@@ -182,11 +182,9 @@ rule build_svm_psp:
         hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "psp", "svm_hyperpars"
         ),
-        train_data=lambda wildcards: get_input_par_file(
-            wildcards, "psp", "svm_hyperpars"
-        )
-        .as_posix()
-        .replace("hyperpars.json", "train.lh5"),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "psp", "svm_hyperpars")
+        ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:
@@ -252,6 +250,7 @@ rule build_pars_psp_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_plts_psp:
@@ -273,6 +272,7 @@ rule build_plts_psp:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_psp_db:
@@ -300,6 +300,7 @@ rule build_pars_psp_db:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_psp:
@@ -344,6 +345,7 @@ rule build_pars_psp:
         "--in_db {input.in_db} "
         "--out_db {output.out_db} "
         "--input {input.in_files} "
+        "--channelmap {meta} "
 
 
 rule build_psp:
@@ -373,6 +375,7 @@ rule build_psp:
         "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         f"--configs {ro(configs)} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "

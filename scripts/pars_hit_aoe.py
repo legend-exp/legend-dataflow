@@ -15,6 +15,7 @@ from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -103,16 +104,19 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs="*", type=str)
 argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
 argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
+
 argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
 argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--log", help="log_file", type=str)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
@@ -128,6 +132,10 @@ logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
 logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
@@ -194,7 +202,7 @@ if kwarg_dict["run_aoe"] is True:
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         cal_dict,
         params=params,
         threshold=kwarg_dict.pop("threshold"),
@@ -213,7 +221,7 @@ if kwarg_dict["run_aoe"] is True:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+            tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -231,6 +239,7 @@ if kwarg_dict["run_aoe"] is True:
         sigma_func=sigma_func,
         **kwarg_dict,
     )
+    obj.pdf = obj.pdf.name
 
     # need to change eres func as can't pickle lambdas
     try:
@@ -266,6 +275,9 @@ final_hit_dict = {
     "pars": {"operations": cal_dict},
     "results": results_dict,
 }
+
+final_hit_dict = convert_dict_np_to_float(final_hit_dict)
+
 Props.write_to(args.hit_pars, final_hit_dict)
 
 Path(args.aoe_results).parent.mkdir(parents=True, exist_ok=True)

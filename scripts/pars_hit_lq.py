@@ -11,10 +11,12 @@ import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.math.distributions import gaussian
+from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -128,11 +130,12 @@ argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+argparser.add_argument("--log", help="log_file", type=str)
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
@@ -147,6 +150,10 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
@@ -197,7 +204,7 @@ if kwarg_dict["run_lq"] is True:
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         cal_dict,
         params=params,
         threshold=kwarg_dict.pop("threshold"),
@@ -216,7 +223,7 @@ if kwarg_dict["run_lq"] is True:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+            tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -262,19 +269,19 @@ if args.plot_file:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 
-results_dict = dict(**eres_dict, lq=out_dict)
+final_hit_dict = convert_dict_np_to_float(
+    {
+        "pars": {"operations": cal_dict},
+        "results": dict(**eres_dict, lq=out_dict),
+    }
+)
 Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
-final_hit_dict = {
-    "pars": {"operations": cal_dict},
-    "results": results_dict,
-}
 Props.write_to(args.hit_pars, final_hit_dict)
 
-Path(args.lq_results).parent.mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
     **object_dict,
     lq=obj,
 )
-Props.write_to(args.lq_results, final_object_dict)
+Path(args.lq_results).parent.mkdir(parents=True, exist_ok=True)
 with Path(args.lq_results).open("wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
