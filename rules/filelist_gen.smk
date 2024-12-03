@@ -5,9 +5,34 @@ from pathlib import Path
 from scripts.util.FileKey import FileKey, run_grouper
 from scripts.util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
 
+concat_datatypes = ["phy"]
+concat_tiers = ["skm", "pet_concat", "evt_concat"]
+blind_datatypes = ["phy"]
 
-def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
+
+def expand_runs(in_dict):
+    """
+    This function expands out the runs if a range is specified in the dictionary
+    e.g.
+    {
+        "p01": "r001..r005"
+    }
+    """
+    for per, run_list in in_dict.items():
+        if isinstance(run_list, str) and ".." in runs:
+            start, end = runs.split("..")
+            in_dict[per] = [f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)]
+    return in_dict
+
+
+def get_analysis_runs(
+    ignore_keys_file=None, analysis_runs_file=None, file_selection="all"
+):
+    """
+    This function reads in the ignore_keys and analysis_runs files and returns the dictionaries
+    """
     ignore_keys = []
+    analysis_runs = {}
     if ignore_keys_file is not None:
         if Path(ignore_keys_file).is_file():
             if Path(ignore_keys_file).suffix == ".json":
@@ -20,20 +45,18 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = yaml.safe_load(f)
             else:
-                raise Warning(
+                raise ValueError(
                     "ignore_keys_file file not in json, yaml or keylist format"
                 )
-            ignore_keys = [
+            ignore_keys = [  # remove any comments in the keylist
                 key.split("#")[0].strip() if "#" in key else key.strip()
                 for key in ignore_keys
             ]
         else:
-            print("no ignore_keys.keylist file found")
-            ignore_keys = []
-    else:
-        ignore_keys = []
+            msg = f"no ignore_keys file found: {ignore_keys_file}"
+            raise ValueError(msg)
 
-    if analysis_runs_file is not None:
+    if analysis_runs_file is not None and file_selection != "all":
         if Path(analysis_runs_file).is_file():
             if Path(ignore_keys_file).suffix == ".json":
                 with Path(analysis_runs_file).open() as f:
@@ -42,13 +65,18 @@ def get_analysis_runs(ignore_keys_file=None, analysis_runs_file=None):
                 with Path(analysis_runs_file).open() as f:
                     analysis_runs = yaml.safe_load(f)
             else:
-                raise Warning("analysis_runs file not in json or yaml format")
-                analysis_runs = []
+                msg = f"analysis_runs file not in json or yaml format: {analysis_runs_file}"
+                raise ValueError(msg)
+            if file_selection in analysis_runs:
+                analysis_runs = expand_runs(
+                    analysis_runs[file_selection]
+                )  # select the file_selection and expand out the runs
+            else:
+                msg = f"Unknown file selection: {file_selection} not in {list(analysis_runs)}"
+                raise ValueError(msg)
         else:
-            analysis_runs = []
-            print("no analysis_runs file found")
-    else:
-        analysis_runs = []
+            msg = f"no analysis_runs file found: {analysis_runs_file}"
+            raise ValueError(msg)
     return analysis_runs, ignore_keys
 
 
@@ -75,9 +103,14 @@ def get_keys(keypart):
 
 
 def get_pattern(setup, tier):
+    """
+    Helper function to get the search pattern for the given tier,
+    some tiers such as skm need to refer to a different pattern when looking for files
+    as only phy files are taken to skm others are only taken to pet
+    """
     if tier == "blind":
         fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
-    elif tier == "skm" or tier == "pet_concat":
+    elif tier in ("skm", "pet_concat"):
         fn_pattern = get_pattern_tier(setup, "pet", check_in_cycle=False)
     elif tier == "evt_concat":
         fn_pattern = get_pattern_tier(setup, "evt", check_in_cycle=False)
@@ -87,6 +120,9 @@ def get_pattern(setup, tier):
 
 
 def concat_phy_filenames(setup, phy_filenames, tier):
+    """
+    This function concatenates the files from the same run together
+    """
     fn_pattern = get_pattern(setup, tier)
     # group files by run
     sorted_phy_filenames = run_grouper(phy_filenames)
@@ -110,18 +146,20 @@ def build_filelist(
     tier,
     ignore_keys=None,
     analysis_runs=None,
-    file_selection="all",
 ):
+    """
+    This function builds the filelist for the given filekeys, search pattern and tier.
+    It will ignore any keys in the ignore_keys list and only include the keys specified in the analysis_runs dict
+    """
     fn_pattern = get_pattern(setup, tier)
 
     if ignore_keys is None:
         ignore_keys = []
     if analysis_runs is None:
-        analysis_runs = []
+        analysis_runs = {}
 
     phy_filenames = []
     other_filenames = []
-
     for key in filekeys:
         fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
         files = glob.glob(fn_glob_pattern)
@@ -131,7 +169,7 @@ def build_filelist(
             if _key.name in ignore_keys:
                 pass
             else:
-                if tier == "blind" and _key.datatype == "phy":
+                if tier == "blind" and _key.datatype in blind_datatypes:
                     filename = FileKey.get_path_from_filekey(
                         _key, get_pattern_tier_raw_blind(setup)
                     )
@@ -142,32 +180,38 @@ def build_filelist(
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
 
-                if file_selection == "all":
-                    if _key.datatype == "phy":
+                if analysis_runs == {}:
+                    if (
+                        _key.datatype in concat_datatypes
+                    ):  # separate out phy files as some tiers these are concatenated
                         phy_filenames += filename
                     else:
                         other_filenames += filename
-                elif file_selection == "sel":
-                    if analysis_runs == "all" or (
-                        _key.period in analysis_runs
+                else:
+                    if (
+                        _key.period
+                        in analysis_runs  # check if period in analysis_runs dicts
                         and (
-                            _key.run in analysis_runs[_key.period]
-                            or analysis_runs[_key.period] == "all"
+                            _key.run
+                            in analysis_runs[
+                                _key.period
+                            ]  # check if run in analysis_runs dicts
+                            or analysis_runs[_key.period]
+                            == "all"  # or if runs is just specified as "all"
                         )
                     ):
-                        if _key.datatype == "phy":
-                            phy_filenames += filename
+                        if _key.datatype in concat_datatypes:
+                            phy_filenames += filename  # separate out phy files as some tiers these are concatenated
                         else:
                             other_filenames += filename
-                else:
-                    msg = "unknown file selection"
-                    raise ValueError(msg)
 
     phy_filenames = sorted(phy_filenames)
     other_filenames = sorted(other_filenames)
 
-    if tier == "skm" or tier == "pet_concat" or tier == "evt_concat":
-        phy_filenames = concat_phy_filenames(setup, phy_filenames, tier)
+    if tier in concat_tiers:
+        phy_filenames = concat_phy_filenames(
+            setup, phy_filenames, tier
+        )  # concat phy files
 
     return phy_filenames + other_filenames
 
@@ -175,10 +219,11 @@ def build_filelist(
 def get_filelist(
     wildcards, setup, search_pattern, ignore_keys_file=None, analysis_runs_file=None
 ):
-    file_selection = wildcards.label[:3]
-    keypart = wildcards.label[3:]
-
-    analysis_runs, ignore_keys = get_analysis_runs(ignore_keys_file, analysis_runs_file)
+    file_selection = wildcards.label.split("-", 1)[0]
+    keypart = f'-{wildcards.label.split("-", 1)[1]}'  # remove the file selection from the keypart
+    analysis_runs, ignore_keys = get_analysis_runs(
+        ignore_keys_file, analysis_runs_file, file_selection
+    )
 
     filekeys = get_keys(keypart)
 
@@ -189,7 +234,6 @@ def get_filelist(
         wildcards.tier,
         ignore_keys,
         analysis_runs,
-        file_selection,
     )
 
 
@@ -204,7 +248,9 @@ def get_filelist_full_wildcards(
 ):
     keypart = f"-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}"
 
-    analysis_runs, ignore_keys = get_analysis_runs(ignore_keys_file, analysis_runs_file)
+    analysis_runs, ignore_keys = get_analysis_runs(
+        ignore_keys_file, analysis_runs_file, file_selection
+    )
 
     filekeys = get_keys(keypart)
     return build_filelist(
@@ -214,5 +260,4 @@ def get_filelist_full_wildcards(
         tier,
         ignore_keys,
         analysis_runs,
-        file_selection,
     )
