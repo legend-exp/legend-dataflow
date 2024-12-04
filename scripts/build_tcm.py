@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.config
 from pathlib import Path
 
 import lgdo.lh5 as lh5
@@ -18,13 +19,20 @@ argparser.add_argument("--configs", help="config file", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+config_dict = configs["snakemake_rules"]["tier_tcm"]
+log_config = config_dict["options"]["logging"]
+
+Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+log_config = Props.read_from(log_config)
+log_config["handlers"]["file"]["filename"] = args.log
+logging.config.dictConfig(log_config)
+log = logging.getLogger("test")
 
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
-configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-channel_dict = configs["snakemake_rules"]["tier_tcm"]["inputs"]
-settings = Props.read_from(channel_dict["config"])
+
+settings = Props.read_from(config_dict["inputs"]["config"])
 
 rng = np.random.default_rng()
 temp_output = f"{args.output}.{rng.integers(0, 99999):05d}"

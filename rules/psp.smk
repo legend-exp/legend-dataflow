@@ -374,6 +374,7 @@ rule build_psp:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
+        "--tier psp "
         f"--configs {ro(configs)} "
         "--metadata {meta} "
         "--datatype {params.datatype} "

@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.config
 import pickle as pkl
 from pathlib import Path
 
@@ -29,27 +30,24 @@ argparser.add_argument("--raw_files", help="input files", nargs="*", type=str)
 argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str, required=False)
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py").setLevel(logging.INFO)
-logging.getLogger("matplotlib").setLevel(logging.INFO)
-logging.getLogger("legendmeta").setLevel(logging.INFO)
-
 sto = lh5.LH5Store()
-log = logging.getLogger(__name__)
+
+configs = LegendMetadata(path=args.configs)
+config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["pars_dsp_tau"]
+log_config = config_dict["options"]["logging"]
+
+Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+log_config = Props.read_from(log_config)
+log_config["handlers"]["file"]["filename"] = args.log
+logging.config.dictConfig(log_config)
+log = logging.getLogger("test")
 
 meta = LegendMetadata(path=args.metadata)
 channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
 channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
-configs = LegendMetadata(path=args.configs)
-config_dict = configs.on(args.timestamp, system=args.datatype)
-channel_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["processing_chain"][
-    args.channel
-]
-kwarg_dict = config_dict["snakemake_rules"]["pars_dsp_tau"]["inputs"]["tau_config"][args.channel]
+channel_dict = config_dict["inputs"]["processing_chain"][args.channel]
+kwarg_dict = config_dict["inputs"]["tau_config"][args.channel]
 
 kwarg_dict = Props.read_from(kwarg_dict)
 

@@ -76,7 +76,7 @@ temp_output = f"{out_file}.{rng.integers(0, 99999):05d}"
 
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
-if file_extension == ".json" or file_extension == ".yaml" or file_extension == ".yml":
+if file_extension in (".json", ".yaml", ".yml"):
     out_dict = {}
     for channel in channel_files:
         if Path(channel).suffix == file_extension:
@@ -92,9 +92,7 @@ if file_extension == ".json" or file_extension == ".yaml" or file_extension == "
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)
 
-    Props.write_to(temp_output, out_dict, "json")
-
-    Path(temp_output).rename(out_file)
+    Props.write_to(out_file, out_dict)
 
 elif file_extension == ".pkl":
     out_dict = {}

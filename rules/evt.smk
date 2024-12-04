@@ -11,50 +11,38 @@ from scripts.util.patterns import (
 )
 
 
-for tier in ("evt", "pet"):
-
-    rule:
-        input:
-            dsp_file=(
-                get_pattern_tier(setup, "dsp", check_in_cycle=False)
-                if tier == "evt"
-                else get_pattern_tier(setup, "psp", check_in_cycle=False)
-            ),
-            hit_file=(
-                get_pattern_tier(setup, "hit", check_in_cycle=False)
-                if tier == "evt"
-                else get_pattern_tier(setup, "pht", check_in_cycle=False)
-            ),
-            tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
-            xtalk_matrix=lambda wildcards: get_input_par_file(
-                tier=tier, wildcards=wildcards, name="xtc"
-            ),
-            ann_file=branch(
-                lambda wildcards: tier if wildcards["period"][1:] <= 11 else "none",
-                cases={
-                    "evt": get_pattern_tier(setup, "ann", check_in_cycle=False),
-                    "pet": get_pattern_tier(setup, "pan", check_in_cycle=False),
-                    "none": None,
-                },
-            ),
-            par_files=lambda wildcards: ParsCatalog.get_par_file(
-                setup, wildcards.timestamp, "pht"
-            ),
-        output:
-            get_pattern_tier(setup, tier, check_in_cycle=check_in_cycle),
-        params:
-            timestamp="{timestamp}",
-            datatype="{datatype}",
-            tier=tier,
-            ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-        log:
-            get_pattern_log(setup, f"tier_{tier}"),
-        group:
-            "tier-evt"
-        resources:
-            runtime=300,
-            mem_swap=50,
-        shell:
+rule build_evt:
+    input:
+        dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
+        hit_file=get_pattern_tier(setup, "hit", check_in_cycle=False),
+        tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
+        ann_file=lambda wildcards: (
+            None
+            if int(wildcards["period"][1:]) > 11
+            else get_pattern_tier(setup, "ann", check_in_cycle=False)
+        ),
+        par_files=lambda wildcards: ParsCatalog.get_par_file(
+            setup, wildcards.timestamp, "hit"
+        ),
+        xtalk_matrix=lambda wildcards: get_input_par_file(
+            tier="evt", wildcards=wildcards, name="xtc"
+        ),
+    output:
+        get_pattern_tier(setup, "evt", check_in_cycle=check_in_cycle),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        tier="evt",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+    log:
+        get_pattern_log(setup, f"tier_evt"),
+    group:
+        "tier-evt"
+    resources:
+        runtime=300,
+        mem_swap=50,
+    run:
+        shell_string = (
             f"{swenv} python3 -B "
             f"{basedir}/../scripts/build_evt.py "
             f"--configs {ro(configs)} "
@@ -68,10 +56,68 @@ for tier in ("evt", "pet"):
             "--hit_file {params.ro_input[hit_file]} "
             "--tcm_file {params.ro_input[tcm_file]} "
             "--dsp_file {params.ro_input[dsp_file]} "
-            "--ann_file {params.ro_input[ann_file]} "
             "--output {output} "
+        )
+        if input.ann_file is not None:
+            shell_string += "--ann_file {params.ro_input[ann_file]} "
 
-    set_last_rule_name(workflow, f"build_{tier}")
+        shell(shell_string)
+
+
+rule build_pet:
+    input:
+        dsp_file=get_pattern_tier(setup, "psp", check_in_cycle=False),
+        hit_file=get_pattern_tier(setup, "pht", check_in_cycle=False),
+        tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
+        ann_file=lambda wildcards: (
+            None
+            if int(wildcards["period"][1:]) > 11
+            else get_pattern_tier(setup, "pan", check_in_cycle=False)
+        ),
+        par_files=lambda wildcards: ParsCatalog.get_par_file(
+            setup, wildcards.timestamp, "pht"
+        ),
+        xtalk_matrix=lambda wildcards: get_input_par_file(
+            tier="pet", wildcards=wildcards, name="xtc"
+        ),
+    output:
+        get_pattern_tier(setup, "pet", check_in_cycle=check_in_cycle),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        tier="pet",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+    log:
+        get_pattern_log(setup, f"tier_pet"),
+    group:
+        "tier-evt"
+    resources:
+        runtime=300,
+        mem_swap=50,
+    run:
+        shell_string = (
+            f"{swenv} python3 -B "
+            f"{basedir}/../scripts/build_evt.py "
+            f"--configs {ro(configs)} "
+            f"--metadata {ro(meta)} "
+            "--log {log} "
+            "--tier {params.tier} "
+            "--datatype {params.datatype} "
+            "--timestamp {params.timestamp} "
+            "--xtc_file {params.ro_input[xtalk_matrix]} "
+            "--par_files {params.ro_input[par_files]} "
+            "--hit_file {params.ro_input[hit_file]} "
+            "--tcm_file {params.ro_input[tcm_file]} "
+            "--dsp_file {params.ro_input[dsp_file]} "
+            "--output {output} "
+        )
+        if input.ann_file is not None:
+            shell_string += "--ann_file {params.ro_input[ann_file]} "
+
+        shell(shell_string)
+
+
+for evt_tier in ("evt", "pet"):
 
     rule:
         wildcard_constraints:
@@ -87,14 +133,14 @@ for tier in ("evt", "pet"):
                 )
             ),
         output:
-            get_pattern_tier(setup, f"{tier}_concat", check_in_cycle=check_in_cycle),
+            get_pattern_tier(setup, f"{evt_tier}_concat", check_in_cycle=check_in_cycle),
         params:
             timestamp="all",
             datatype="{datatype}",
             lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat",
             ro_input=lambda _, input: utils.as_ro(setup, input),
         log:
-            get_pattern_log_concat(setup, f"tier_{tier}_concat"),
+            get_pattern_log_concat(setup, f"tier_{evt_tier}_concat"),
         group:
             "tier-evt"
         shell:
@@ -102,4 +148,4 @@ for tier in ("evt", "pet"):
             "--output {output} "
             "-- {params.ro_input} &> {log}"
 
-    set_last_rule_name(workflow, f"concat_{tier}")
+    set_last_rule_name(workflow, f"concat_{evt_tier}")

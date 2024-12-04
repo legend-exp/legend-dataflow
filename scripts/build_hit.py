@@ -3,7 +3,7 @@ import logging
 import time
 from pathlib import Path
 
-from legendmeta import TextDB
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
@@ -13,11 +13,12 @@ argparser.add_argument("--input", help="input file", type=str)
 argparser.add_argument("--pars_file", help="hit pars file", nargs="*")
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+argparser.add_argument("--log", help="log_file", type=str)
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--tier", help="Tier", type=str, required=True)
-
-argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
@@ -41,21 +42,27 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-pars_dict = Props.read_from(args.pars_file)
+meta = LegendMetadata(path=args.metadata)
+chan_map = meta.channelmap(args.timestamp, system=args.datatype)
 
+pars_dict = Props.read_from(args.pars_file)
 pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
 
 hit_dict = {}
 channels_present = lh5.ls(args.input)
 for channel in pars_dict:
     chan_pars = pars_dict[channel].copy()
-    if channel in channel_dict:
-        cfg_dict = Props.read_from(channel_dict[channel])
-        Props.add_to(cfg_dict, chan_pars)
-        chan_pars = cfg_dict
+    try:
+        detector = chan_map.map("daq.rawid")[int(channel[2:])].name
+        if detector in channel_dict:
+            cfg_dict = Props.read_from(channel_dict[detector])
+            Props.add_to(cfg_dict, chan_pars)
+            chan_pars = cfg_dict
 
-    if channel in channels_present:
-        hit_dict[f"{channel}/dsp"] = chan_pars
+        if channel in channels_present:
+            hit_dict[f"{channel}/dsp"] = chan_pars
+    except KeyError:
+        pass
 
 t_start = time.time()
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)
@@ -79,7 +86,7 @@ for channel, file in channel_dict.items():
         }
     hit_channels.append(channel)
 
-key = Path(args.output).replace(f"-tier_{args.tier}.lh5", "")
+key = args.output.replace(f"-tier_{args.tier}.lh5", "")
 
 full_dict = {
     "valid_fields": {args.tier: hit_outputs},
