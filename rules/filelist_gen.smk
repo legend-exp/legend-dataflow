@@ -220,7 +220,7 @@ def get_filelist(
     wildcards, setup, search_pattern, ignore_keys_file=None, analysis_runs_file=None
 ):
     file_selection = wildcards.label.split("-", 1)[0]
-    keypart = f'-{wildcards.label.split("-", 1)[1]}'  # remove the file selection from the keypart
+    keypart = f'-{wildcards.label.split("-",1)[1]}'  # remove the file selection from the keypart
     analysis_runs, ignore_keys = get_analysis_runs(
         ignore_keys_file, analysis_runs_file, file_selection
     )
