@@ -166,34 +166,34 @@ def calibrate_partition(
 
     # calibrate
     pk_pars = [
-        # (238.632, (10, 10), pgf.gauss_on_step), #double line
-        # (241.0, (10, 10), pgf.gauss_on_step), #double line
-        (277.371, (10, 7), pgf.gauss_on_linear),
-        (288.2, (7, 10), pgf.gauss_on_linear),
-        (300.1, (10, 10), pgf.gauss_on_linear),
-        (453.0, (10, 10), pgf.gauss_on_linear),
-        # (511, (20, 20), pgf.gauss_on_step), double line
-        (549.8, (10, 10), pgf.gauss_on_linear),
-        (583.187, (20, 20), pgf.hpge_peak),
-        (727.330, (20, 20), pgf.hpge_peak),
-        (763.13, (20, 10), pgf.gauss_on_linear),
-        (785.37, (10, 20), pgf.gauss_on_linear),
-        (860.557, (20, 20), pgf.hpge_peak),
-        (893.408, (20, 20), pgf.gauss_on_linear),
-        (927.6, (20, 20), pgf.gauss_on_linear),
-        (952.120, (20, 20), pgf.gauss_on_linear),
-        (982.7, (20, 20), pgf.gauss_on_linear),
-        (1078.62, (20, 7), pgf.gauss_on_linear),
-        (1093.9, (7, 20), pgf.gauss_on_linear),
-        (1512.7, (20, 20), pgf.gauss_on_linear),
-        (1592.511, (20, 20), pgf.hpge_peak),
-        (1620.50, (20, 20), pgf.hpge_peak),
-        (1679.7, (20, 20), pgf.gauss_on_linear),
-        (1806.0, (20, 20), pgf.gauss_on_linear),
-        (2103.511, (20, 20), pgf.hpge_peak),
-        (2614.511, (40, 20), pgf.hpge_peak),
-        (3125.511, (20, 20), pgf.gauss_on_linear),
-        (3197.7, (20, 20), pgf.gauss_on_linear),
+        # (238.632, (10, 10), pgf.gauss_on_step), #double line, Pb-212
+        # (240.986, (10, 10), pgf.gauss_on_step), #double line, Ra-224
+        (277.371, (10, 7), pgf.gauss_on_linear),  # Tl-208
+        (288.2, (7, 10), pgf.gauss_on_linear),  # Bi-212
+        (300.087, (10, 10), pgf.gauss_on_linear),  # Pb-212
+        (452.98, (10, 10), pgf.gauss_on_linear),  # Bi-212
+        # (511, (20, 20), pgf.gauss_on_step), double line, #e+e-
+        (549.73, (10, 10), pgf.gauss_on_linear),  # Rn-220
+        (583.187, (20, 20), pgf.hpge_peak),  # Tl-208
+        (727.330, (20, 20), pgf.hpge_peak),  # Bi-212
+        (763.13, (20, 10), pgf.gauss_on_linear),  # Tl-208
+        (785.37, (10, 20), pgf.gauss_on_linear),  # Bi-212
+        (860.557, (20, 20), pgf.hpge_peak),  # Tl-208
+        (893.408, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (927.6, (20, 20), pgf.gauss_on_linear),  # Tl-208
+        (952.120, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (982.7, (20, 20), pgf.gauss_on_linear),  # Tl-208
+        (1078.62, (20, 7), pgf.gauss_on_linear),  # Bi-212
+        (1093.9, (7, 20), pgf.gauss_on_linear),  # Tl-208
+        (1512.7, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (1592.511, (20, 20), pgf.hpge_peak),  # Tl-208 DEP
+        (1620.50, (20, 20), pgf.hpge_peak),  # Bi-212
+        (1679.7, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (1806.0, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (2103.511, (20, 20), pgf.hpge_peak),  # Tl-208 SEP
+        (2614.511, (40, 20), pgf.hpge_peak),  # Tl-208
+        (3125.511, (20, 20), pgf.gauss_on_linear),  # Summation
+        (3197.7, (20, 20), pgf.gauss_on_linear),  # Summation
         (3475.1, (20, 20), pgf.gauss_on_linear),
     ]
 
