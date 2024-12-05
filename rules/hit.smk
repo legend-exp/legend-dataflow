@@ -6,25 +6,32 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_hit,
+    get_pattern_pars,
     get_pattern_plts,
-    get_pattern_tier_dsp,
     get_pattern_tier,
     get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
 )
 
-hit_par_catalog = ds.pars_key_resolve.get_par_catalog(
+hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_hit"], "lar": ["par_hit"]},
 )
+
+hit_par_cat_file = Path(pars_path(setup)) / "hit" / "validity.yaml"
+if hit_par_cat_file.is_file():
+    hit_par_cat_file.unlink()
+Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
 
 
 # This rule builds the qc using the calibration dsp files and fft files
@@ -37,6 +44,7 @@ rule build_qc:
             filelist_path(setup), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        overwrite_files=lambda wildcards: get_overwrite_file("hit", wildcards),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -58,11 +66,13 @@ rule build_qc:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--plot_path {output.plot_file} "
         "--save_path {output.qc_file} "
         "--pulser_file {input.pulser} "
         "--cal_files {input.files} "
         "--fft_files {input.fft_files} "
+        "--overwrite_files {input.overwrite_files} "
 
 
 # This rule builds the energy calibration using the calibration dsp files
@@ -73,7 +83,7 @@ rule build_energy_calibration:
         ),
         pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
         ctc_dict=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
+            lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, "dsp"
             )
         ),
@@ -151,6 +161,7 @@ rule build_aoe_calibration:
         "{basedir}/../scripts/pars_hit_aoe.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
@@ -197,6 +208,7 @@ rule build_lq_calibration:
         "{basedir}/../scripts/pars_hit_lq.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
@@ -217,7 +229,7 @@ rule build_pars_hit_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
@@ -239,6 +251,7 @@ rule build_pars_hit_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_plts_hit:
@@ -248,7 +261,7 @@ rule build_plts_hit:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -262,6 +275,7 @@ rule build_plts_hit:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_hit:
@@ -271,7 +285,7 @@ rule build_pars_hit:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
         plts=get_pattern_plts(setup, "hit"),
@@ -293,12 +307,13 @@ rule build_pars_hit:
         "{basedir}/../scripts/merge_channels.py "
         "--input {params.ro_input[infiles]} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_hit:
     input:
-        dsp_file=get_pattern_tier_dsp(setup),
-        pars_file=lambda wildcards: pars_catalog.get_par_file(
+        dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
+        pars_file=lambda wildcards: ParsCatalog.get_par_file(
             setup, wildcards.timestamp, "hit"
         ),
     output:
@@ -319,6 +334,7 @@ rule build_hit:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_hit.py "
         f"--configs {ro(configs)} "
+        "--metadata {meta} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "

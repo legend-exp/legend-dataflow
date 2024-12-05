@@ -2,9 +2,9 @@
 This module contains classes to convert between keys and files using the patterns defined in patterns.py
 """
 
-import os
 import re
 from collections import namedtuple
+from pathlib import Path
 
 import snakemake as smk
 
@@ -57,6 +57,8 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
             except AttributeError:
                 key_pattern_rx = re.compile(smk.io.regex(cls.key_pattern))
         else:
+            if isinstance(pattern, Path):
+                pattern = pattern.as_posix()
             try:
                 key_pattern_rx = re.compile(smk.io.regex_from_filepattern(pattern))
             except AttributeError:
@@ -92,6 +94,8 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
         return cls(**d)
 
     def get_path_from_filekey(self, pattern, **kwargs):
+        if isinstance(pattern, Path):
+            pattern = pattern.as_posix()
         if kwargs is None:
             return smk.io.expand(pattern, **self._asdict())
         else:
@@ -163,6 +167,8 @@ class ProcessingFileKey(FileKey):
         return f"{super().name}-{self.processing_step}"
 
     def get_path_from_filekey(self, pattern, **kwargs):
+        if isinstance(pattern, Path):
+            pattern = pattern.as_posix()
         if not isinstance(pattern, str):
             pattern = pattern(self.tier, self.identifier)
         if kwargs is None:
@@ -198,6 +204,8 @@ class ChannelProcKey(FileKey):
 
     @staticmethod
     def get_channel_files(keypart, par_pattern, chan_list):
+        if isinstance(par_pattern, Path):
+            par_pattern = par_pattern.as_posix()
         d = ChannelProcKey.parse_keypart(keypart)
         filenames = []
         for chan in chan_list:
@@ -216,7 +224,7 @@ def per_grouper(files):
     pers = []
     per_files = []
     for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
         if f"{fk.experiment}-{fk.period}" not in pers:
             pers.append(f"{fk.experiment}-{fk.period}")
             per_files.append([])
@@ -231,7 +239,7 @@ def run_grouper(files):
     runs = []
     run_files = []
     for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
         if f"{fk.experiment}-{fk.period}-{fk.run}" not in runs:
             runs.append(f"{fk.experiment}-{fk.period}-{fk.run}")
             run_files.append([])

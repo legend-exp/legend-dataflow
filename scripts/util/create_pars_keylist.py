@@ -2,24 +2,24 @@
 This module creates the validity files used for determining the time validity of data
 """
 
-import glob
 import json
 import re
 import warnings
-from typing import ClassVar
+from pathlib import Path
 
 import snakemake as smk
+import yaml
 
 from .FileKey import FileKey, ProcessingFileKey
 from .patterns import par_validity_pattern
 
 
-class pars_key_resolve:
-    name_dict: ClassVar[dict] = {"cal": ["par_dsp", "par_hit"], "lar": ["par_dsp", "par_hit"]}
+class ParsKeyResolve:
 
     def __init__(self, valid_from, category, apply):
         self.valid_from = valid_from
         self.category = category
+        self.mode = "reset"
         self.apply = apply
 
     def __str__(self):
@@ -34,15 +34,20 @@ class pars_key_resolve:
             filekey.timestamp,
             "all",
             filekey.get_path_from_filekey(
-                par_validity_pattern(), processing_step=name_dict, ext="json"
+                par_validity_pattern(), processing_step=name_dict, ext="yaml"
             ),
         )
 
     @staticmethod
     def write_to_jsonl(file_names, path):
-        with open(path, "w") as of:
+        with Path(path).open("w") as of:
             for file_name in file_names:
                 of.write(f"{file_name.get_json()}\n")
+
+    @staticmethod
+    def write_to_yaml(file_names, path):
+        with Path(path).open("w") as of:
+            yaml.dump([file_name.__dict__ for file_name in file_names], of, sort_keys=False)
 
     @staticmethod
     def match_keys(key1, key2):
@@ -65,7 +70,7 @@ class pars_key_resolve:
         keys = sorted(keys, key=FileKey.get_unix_timestamp)
         keylist.append(keys[0])
         for key in keys[1:]:
-            matched_key = pars_key_resolve.match_keys(keylist[-1], key)
+            matched_key = ParsKeyResolve.match_keys(keylist[-1], key)
             if matched_key not in keylist:
                 keylist.append(matched_key)
             else:
@@ -84,10 +89,10 @@ class pars_key_resolve:
     @staticmethod
     def match_all_entries(entrylist, name_dict):
         out_list = []
-        out_list.append(pars_key_resolve.from_filekey(entrylist[0], name_dict))
+        out_list.append(ParsKeyResolve.from_filekey(entrylist[0], name_dict))
         for entry in entrylist[1:]:
-            new_entry = pars_key_resolve.from_filekey(entry, name_dict)
-            pars_key_resolve.match_entries(out_list[-1], new_entry)
+            new_entry = ParsKeyResolve.from_filekey(entry, name_dict)
+            ParsKeyResolve.match_entries(out_list[-1], new_entry)
             out_list.append(new_entry)
         return out_list
 
@@ -95,14 +100,17 @@ class pars_key_resolve:
     def get_keys(keypart, search_pattern):
         d = FileKey.parse_keypart(keypart)
         try:
-            tier_pattern_rx = re.compile(smk.io.regex_from_filepattern(search_pattern))
+            tier_pattern_rx = re.compile(smk.io.regex_from_filepattern(str(search_pattern)))
+
         except AttributeError:
-            tier_pattern_rx = re.compile(smk.io.regex(search_pattern))
+            tier_pattern_rx = re.compile(smk.io.regex(str(search_pattern)))
         fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]
-        files = glob.glob(fn_glob_pattern)
+        p = Path(fn_glob_pattern)
+        parts = p.parts[p.is_absolute() :]
+        files = Path(p.root).glob(str(Path(*parts)))
         keys = []
         for f in files:
-            m = tier_pattern_rx.match(f)
+            m = tier_pattern_rx.match(str(f))
             if m is not None:
                 d = m.groupdict()
                 key = FileKey(**d)
@@ -113,19 +121,19 @@ class pars_key_resolve:
     def get_par_catalog(keypart, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
-        if isinstance(search_patterns, str):
+        if isinstance(search_patterns, (str, Path)):
             search_patterns = [search_patterns]
         keylist = []
         for search_pattern in search_patterns:
             for keypar in keypart:
-                keylist += pars_key_resolve.get_keys(keypar, search_pattern)
+                keylist += ParsKeyResolve.get_keys(keypar, search_pattern)
         if len(keylist) != 0:
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)
-            keylist = pars_key_resolve.generate_par_keylist(keys)
+            keylist = ParsKeyResolve.generate_par_keylist(keys)
 
-            entrylist = pars_key_resolve.match_all_entries(keylist, name_dict)
+            entrylist = ParsKeyResolve.match_all_entries(keylist, name_dict)
         else:
             msg = "No Keys found"
             warnings.warn(msg, stacklevel=0)
-            entrylist = [pars_key_resolve("00000000T000000Z", "all", [])]
+            entrylist = [ParsKeyResolve("00000000T000000Z", "all", [])]
         return entrylist

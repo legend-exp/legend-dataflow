@@ -1,9 +1,8 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import time
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -21,6 +20,7 @@ argparser.add_argument("--database", help="database", type=str, required=True)
 argparser.add_argument("--inplots", help="inplots", type=str)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -45,6 +45,10 @@ log = logging.getLogger(__name__)
 
 t0 = time.time()
 
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
 dsp_config = configs["snakemake_rules"]["pars_dsp_nopt"]["inputs"]["processing_chain"][
@@ -57,14 +61,14 @@ opt_dict = Props.read_from(opt_json)
 db_dict = Props.read_from(args.database)
 
 if opt_dict.pop("run_nopt") is True:
-    with open(args.raw_filelist) as f:
+    with Path(args.raw_filelist).open() as f:
         files = f.read().splitlines()
 
     raw_files = sorted(files)
 
-    energies = sto.read(f"{args.channel}/raw/daqenergy", raw_files)[0]
+    energies = sto.read(f"{channel}/raw/daqenergy", raw_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    tb_data = sto.read(f"{args.channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs)[0]
+    tb_data = sto.read(f"{channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs)[0]
     t1 = time.time()
     log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
 
@@ -73,7 +77,7 @@ if opt_dict.pop("run_nopt") is True:
     cut_dict = generate_cuts(dsp_data, cut_dict=opt_dict.pop("cut_pars"))
     cut_idxs = get_cut_indexes(dsp_data, cut_dict)
     tb_data = sto.read(
-        f"{args.channel}/raw", raw_files, n_rows=opt_dict.pop("n_events"), idx=idxs[cut_idxs]
+        f"{channel}/raw", raw_files, n_rows=opt_dict.pop("n_events"), idx=idxs[cut_idxs]
     )[0]
     log.info(f"... {len(tb_data)} baselines after cuts")
 
@@ -82,12 +86,10 @@ if opt_dict.pop("run_nopt") is True:
 
     if args.plot_path:
         out_dict, plot_dict = pno.noise_optimization(
-            tb_data, dsp_config, db_dict.copy(), opt_dict, args.channel, display=1
+            tb_data, dsp_config, db_dict.copy(), opt_dict, channel, display=1
         )
     else:
-        out_dict = pno.noise_optimization(
-            raw_files, dsp_config, db_dict.copy(), opt_dict, args.channel
-        )
+        out_dict = pno.noise_optimization(raw_files, dsp_config, db_dict.copy(), opt_dict, channel)
 
     t2 = time.time()
     log.info(f"Optimiser finished in {(t2-t0)/60} minutes")
@@ -96,15 +98,15 @@ else:
     plot_dict = {}
 
 if args.plot_path:
-    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
+    Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             old_plot_dict = pkl.load(r)
         plot_dict = dict(noise_optimisation=plot_dict, **old_plot_dict)
     else:
         plot_dict = {"noise_optimisation": plot_dict}
-    with open(args.plot_path, "wb") as f:
+    with Path(args.plot_path).open("wb") as f:
         pkl.dump(plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-pathlib.Path(os.path.dirname(args.dsp_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.dsp_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.dsp_pars, dict(nopt_pars=out_dict, **db_dict))

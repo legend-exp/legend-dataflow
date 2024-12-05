@@ -6,9 +6,10 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 - running build hit over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import par_psp_path, par_dsp_path, set_last_rule_name
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
+from scripts.util.utils import set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -20,11 +21,17 @@ from scripts.util.patterns import (
     get_pattern_pars,
 )
 
-psp_par_catalog = pars_key_resolve.get_par_catalog(
+psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
+
+psp_par_cat_file = Path(pars_path(setup)) / "psp" / "validity.yaml"
+if psp_par_cat_file.is_file():
+    psp_par_cat_file.unlink()
+Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
 
 psp_rules = {}
 for key, dataset in part.datasets.items():
@@ -172,14 +179,16 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_svm_psp:
     input:
-        hyperpars=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(
+        hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "psp", "svm_hyperpars"
-        ).replace("hyperpars.json", "train.lh5"),
+        ),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "psp", "svm_hyperpars")
+        ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_psp_svm").replace("{datatype}", "cal"),
+        get_pattern_log(setup, "pars_psp_svm").as_posix().replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
@@ -221,7 +230,7 @@ rule build_pars_psp_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
@@ -241,6 +250,7 @@ rule build_pars_psp_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_plts_psp:
@@ -250,7 +260,7 @@ rule build_plts_psp:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -262,6 +272,7 @@ rule build_plts_psp:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_psp_db:
@@ -271,7 +282,7 @@ rule build_pars_psp_db:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
     output:
@@ -289,6 +300,7 @@ rule build_pars_psp_db:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_psp:
@@ -298,7 +310,7 @@ rule build_pars_psp:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="dplms",
             extension="lh5",
@@ -333,13 +345,14 @@ rule build_pars_psp:
         "--in_db {input.in_db} "
         "--out_db {output.out_db} "
         "--input {input.in_files} "
+        "--channelmap {meta} "
 
 
 rule build_psp:
     input:
-        raw_file=get_pattern_tier_raw(setup),
+        raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
         pars_file=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
+            lambda wildcards: ParsCatalog.get_par_file(
                 setup, wildcards.timestamp, "psp"
             )
         ),
@@ -361,7 +374,9 @@ rule build_psp:
         "{swenv} python3 -B "
         "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
+        "--tier psp "
         f"--configs {ro(configs)} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "

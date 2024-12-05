@@ -1,11 +1,10 @@
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import filelist_path, par_pht_path, set_last_rule_name
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from scripts.util.utils import filelist_path, set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_pht,
     get_pattern_plts,
     get_pattern_tier,
     get_pattern_pars_tmp,
@@ -138,7 +137,7 @@ rule build_plts_pht_phy:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="qcphy",
         ),
@@ -160,7 +159,7 @@ rule build_pars_pht_phy:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="qcphy",
         ),

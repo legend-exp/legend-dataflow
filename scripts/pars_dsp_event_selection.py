@@ -1,11 +1,10 @@
 import argparse
 import json
 import logging
-import os
-import pathlib
 import time
 import warnings
 from bisect import bisect_left
+from pathlib import Path
 
 import lgdo
 import lgdo.lh5 as lh5
@@ -84,10 +83,11 @@ if __name__ == "__main__":
     argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
 
     argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
-    argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--raw_cal", help="raw_cal", type=str, nargs="*", required=True)
 
     argparser.add_argument("--log", help="log_file", type=str)
+    argparser.add_argument("--configs", help="configs", type=str, required=True)
+    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
@@ -109,6 +109,10 @@ if __name__ == "__main__":
     sto = lh5.LH5Store()
     t0 = time.time()
 
+    meta = LegendMetadata(path=args.metadata)
+    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+
     conf = LegendMetadata(path=args.configs)
     configs = conf.on(args.timestamp, system=args.datatype)
     dsp_config = configs["snakemake_rules"]["pars_dsp_peak_selection"]["inputs"][
@@ -121,14 +125,14 @@ if __name__ == "__main__":
     peak_dict = Props.read_from(peak_json)
     db_dict = Props.read_from(args.decay_const)
 
-    pathlib.Path(os.path.dirname(args.peak_file)).mkdir(parents=True, exist_ok=True)
+    Path(args.peak_file).parent.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng()
+    rand_num = f"{rng.integers(0,99999):05d}"
+    temp_output = f"{args.peak_file}.{rand_num}"
     if peak_dict.pop("run_selection") is True:
         log.debug("Starting peak selection")
-        rng = np.random.default_rng()
-        rand_num = f"{rng.integers(0,99999):05d}"
-        temp_output = f"{args.peak_file}.{rand_num}"
 
-        with open(args.raw_filelist) as f:
+        with Path(args.raw_filelist).open() as f:
             files = f.read().splitlines()
         raw_files = sorted(files)
 
@@ -138,17 +142,17 @@ if __name__ == "__main__":
 
         elif args.tcm_filelist:
             # get pulser mask from tcm files
-            with open(args.tcm_filelist) as f:
+            with Path(args.tcm_filelist).open() as f:
                 tcm_files = f.read().splitlines()
             tcm_files = sorted(np.unique(tcm_files))
             ids, mask = get_tcm_pulser_ids(
-                tcm_files, args.channel, peak_dict["pulser_multiplicity_threshold"]
+                tcm_files, channel, peak_dict["pulser_multiplicity_threshold"]
             )
         else:
             msg = "No pulser file or tcm filelist provided"
             raise ValueError(msg)
 
-        raw_dict = Props.read_from(args.raw_cal)[args.channel]["pars"]["operations"]
+        raw_dict = Props.read_from(args.raw_cal)[channel]["pars"]["operations"]
 
         peaks_kev = peak_dict["peaks"]
         kev_widths = peak_dict["kev_widths"]
@@ -157,7 +161,7 @@ if __name__ == "__main__":
         final_cut_field = peak_dict["final_cut_field"]
         energy_parameter = peak_dict.get("energy_parameter", "trapTmax")
 
-        lh5_path = f"{args.channel}/raw"
+        lh5_path = f"{channel}/raw"
 
         if not isinstance(kev_widths, list):
             kev_widths = [kev_widths]
@@ -225,7 +229,7 @@ if __name__ == "__main__":
             }
 
         for file in raw_files:
-            log.debug(os.path.basename(file))
+            log.debug(Path(file).name)
             for peak, peak_dict in pk_dicts.items():
                 if peak_dict["idxs"] is not None:
                     # idx is a long continuous array
@@ -358,7 +362,7 @@ if __name__ == "__main__":
                                     log.debug(f"{peak} has reached the required number of events")
 
     else:
-        pathlib.Path(temp_output).touch()
+        Path(temp_output).touch()
 
     log.debug(f"event selection completed in {time.time()-t0} seconds")
-    os.rename(temp_output, args.peak_file)
+    Path(temp_output).rename(args.peak_file)

@@ -7,6 +7,7 @@ and deriving a simple scaling relation from adc to keV.
 import argparse
 import logging
 import pickle as pkl
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -93,7 +94,7 @@ ax2.hist(E_uncal * roughpars[0], bins=np.arange(2600, 2630, 1 * roughpars[0]), h
 ax2.set_xlabel("energy (keV)")
 ax2.set_ylabel("counts")
 plt.suptitle(args.channel)
-with open(args.plot_file, "wb") as w:
+with Path(args.plot_file).open("wb") as w:
     pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
 plt.close()
 

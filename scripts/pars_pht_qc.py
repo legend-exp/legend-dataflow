@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
-import pathlib
 import pickle as pkl
 import re
 import warnings
+from pathlib import Path
 
 import numpy as np
 from legendmeta import LegendMetadata
@@ -19,6 +18,7 @@ from pygama.pargen.data_cleaning import (
     get_tcm_pulser_ids,
 )
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
     argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
+
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False
     )
@@ -40,11 +41,12 @@ if __name__ == "__main__":
     )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
+    argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
+
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-
-    argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
     argparser.add_argument(
@@ -63,6 +65,10 @@ if __name__ == "__main__":
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
 
+    meta = LegendMetadata(path=args.metadata)
+    chmap = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
     channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
@@ -72,10 +78,10 @@ if __name__ == "__main__":
     if isinstance(args.cal_files, list):
         cal_files = []
         for file in args.cal_files:
-            with open(file) as f:
+            with Path(file).open() as f:
                 cal_files += f.read().splitlines()
     else:
-        with open(args.cal_files) as f:
+        with Path(args.cal_files).open() as f:
             cal_files = f.read().splitlines()
 
     cal_files = sorted(
@@ -86,8 +92,8 @@ if __name__ == "__main__":
 
     if args.overwrite_files:
         overwrite = Props.read_from(args.overwrite_files)
-        if args.channel in overwrite:
-            overwrite = overwrite[args.channel]["pars"]["operations"]
+        if channel in overwrite:
+            overwrite = overwrite[channel]["pars"]["operations"]
         else:
             overwrite = None
     else:
@@ -99,10 +105,10 @@ if __name__ == "__main__":
         if isinstance(args.fft_files, list):
             fft_files = []
             for file in args.fft_files:
-                with open(file) as f:
+                with Path(file).open() as f:
                     fft_files += f.read().splitlines()
         else:
-            with open(args.fft_files) as f:
+            with Path(args.fft_files).open() as f:
                 fft_files = f.read().splitlines()
 
         fft_files = sorted(
@@ -112,15 +118,15 @@ if __name__ == "__main__":
         if len(fft_files) > 0:
             fft_fields = get_keys(
                 [
-                    key.replace(f"{args.channel}/dsp/", "")
-                    for key in ls(fft_files[0], f"{args.channel}/dsp/")
+                    key.replace(f"{channel}/dsp/", "")
+                    for key in ls(fft_files[0], f"{channel}/dsp/")
                 ],
                 kwarg_dict_fft["cut_parameters"],
             )
 
             fft_data = load_data(
                 fft_files,
-                f"{args.channel}/dsp",
+                f"{channel}/dsp",
                 {},
                 [*fft_fields, "timestamp", "trapTmax", "t_sat_lo"],
             )
@@ -185,26 +191,20 @@ if __name__ == "__main__":
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
-        [
-            key.replace(f"{args.channel}/dsp/", "")
-            for key in ls(cal_files[0], f"{args.channel}/dsp/")
-        ],
+        [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
         kwarg_dict_cal["cut_parameters"],
     )
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         cut_fields += get_keys(
-            [
-                key.replace(f"{args.channel}/dsp/", "")
-                for key in ls(cal_files[0], f"{args.channel}/dsp/")
-            ],
+            [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
             init_cal["cut_parameters"],
         )
 
     # load data in
     data, threshold_mask = load_data(
         cal_files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         {},
         [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
@@ -223,11 +223,11 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, total_mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -304,12 +304,14 @@ if __name__ == "__main__":
     hit_dict = {**hit_dict_fft, **hit_dict_init_cal, **hit_dict_cal}
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
 
+    hit_dict = convert_dict_np_to_float(hit_dict)
+
     for file in args.save_path:
-        pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
+        Path(file).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(file, hit_dict)
 
     if args.plot_path:
         for file in args.plot_path:
-            pathlib.Path(os.path.dirname(file)).mkdir(parents=True, exist_ok=True)
-            with open(file, "wb") as f:
+            Path(file).parent.mkdir(parents=True, exist_ok=True)
+            with Path(file).open("wb") as f:
                 pkl.dump({"qc": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)

@@ -3,22 +3,40 @@ This module uses the partition database files to the necessary inputs for partit
 """
 
 import json
-import os
+from pathlib import Path
+
+import yaml
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .patterns import (
     get_pattern_log_channel,
+    get_pattern_pars,
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
 from .utils import filelist_path
 
 
-class dataset_file:
+class CalGrouping:
     def __init__(self, setup, input_file):
-        with open(input_file) as r:
-            self.datasets = json.load(r)
+        if Path(input_file).suffix == ".json":
+            with Path(input_file).open() as r:
+                self.datasets = json.load(r)
+        elif Path(input_file).suffix in (".yaml", ".yml"):
+            with Path(input_file).open() as r:
+                self.datasets = yaml.safe_load(r)
+        self.expand_runs()
         self.setup = setup
+
+    def expand_runs(self):
+        for channel, chan_dict in self.datasets.items():
+            for part, part_dict in chan_dict.items():
+                for per, runs in part_dict.items():
+                    if isinstance(runs, str) and ".." in runs:
+                        start, end = runs.split("..")
+                        self.datasets[channel][part][per] = [
+                            f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
+                        ]
 
     def get_dataset(self, dataset, channel):
         partition_dict = self.datasets["default"].copy()
@@ -32,17 +50,13 @@ class dataset_file:
         for per in dataset:
             if dataset[per] == "all":
                 files += [
-                    os.path.join(
-                        filelist_path(self.setup),
-                        f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist",
-                    )
+                    Path(filelist_path(self.setup))
+                    / f"all-{experiment}-{per}-*-{datatype}-{tier}.filelist"
                 ]
             else:
                 files += [
-                    os.path.join(
-                        filelist_path(self.setup),
-                        f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist",
-                    )
+                    Path(filelist_path(self.setup))
+                    / f"all-{experiment}-{per}-{run}-{datatype}-{tier}.filelist"
                     for run in dataset[per]
                 ]
         return files
@@ -56,20 +70,25 @@ class dataset_file:
         experiment="l200",
         datatype="cal",
         name=None,
-        extension="json",
+        extension="yaml",
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
         for item in catalog:
             par_files = item.apply
             for par_file in par_files:
-                if par_file.split("-")[-1] == f"par_{tier}.json":
+                if (
+                    par_file.split("-")[-1]
+                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
+                        "-"
+                    )[-1]
+                ):
                     all_par_files.append(par_file)
         if channel == "default":
             channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
+            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
             if (
                 fk.datatype == datatype
                 and fk.experiment == experiment
@@ -111,13 +130,18 @@ class dataset_file:
         for item in catalog:
             par_files = item.apply
             for par_file in par_files:
-                if par_file.split("-")[-1] == f"par_{tier}.json":
+                if (
+                    par_file.split("-")[-1]
+                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
+                        "-"
+                    )[-1]
+                ):
                     all_par_files.append(par_file)
         if channel == "default":
             channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(par_file))
+            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
             if (
                 fk.datatype == datatype
                 and fk.experiment == experiment
@@ -159,7 +183,7 @@ class dataset_file:
             datatype=datatype,
             name=name,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
         if channel == "default":
             fk.channel = "{channel}"
         else:
@@ -176,7 +200,7 @@ class dataset_file:
             datatype=datatype,
             name=None,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(par_files[0]))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
         return fk.timestamp
 
     def get_wildcard_constraints(self, dataset, channel):
@@ -195,6 +219,6 @@ class dataset_file:
             out_string = ""
             for channel in exclude_chans:
                 out_string += f"(?!{channel})"
-            return out_string + r"ch\d{7}"
+            return out_string + r"^[VPCB]\d{1}\w{5}$"
         else:
-            return r"ch\d{7}"
+            return r"^[VPCB]\d{1}\w{5}$"

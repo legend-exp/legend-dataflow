@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 from scripts.util import (
@@ -20,7 +19,7 @@ from scripts.util.utils import (
 
 testprod = Path(__file__).parent / "dummy_cycle"
 
-with open(str(testprod / "config.json")) as r:
+with testprod.open() as r:
     setup = json.load(r)
 subst_vars(setup, var_values={"_": str(testprod)})
 setup = setup["setups"]["test"]
@@ -107,12 +106,12 @@ def test_create_pars_keylist():
 
 def test_pars_loading():
     pars_files = CalibCatalog.get_calib_files(
-        os.path.join(par_dsp_path(setup), "validity.jsonl"), "20230101T123456Z"
+        Path(par_dsp_path(setup)) / "validity.jsonl", "20230101T123456Z"
     )
     assert pars_files == ["cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]
 
     par_override_files = CalibCatalog.get_calib_files(
-        os.path.join(par_overwrite_path(setup), "dsp", "validity.jsonl"), "20230101T123456Z"
+        Path(par_overwrite_path(setup)) / "dsp" / "validity.jsonl", "20230101T123456Z"
     )
 
     pars_files, pars_files_overwrite = pars_catalog.match_pars_files(
@@ -122,12 +121,12 @@ def test_pars_loading():
     assert pars_files == ["cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json"]
 
     assert set(pars_catalog.get_par_file(setup, "20230101T123456Z", "dsp")) == {
-        os.path.join(
-            par_dsp_path(setup),
-            "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json",
+        (
+            Path(par_dsp_path(setup))
+            / "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json",
         ),
-        os.path.join(
-            par_overwrite_path(setup),
-            "dsp/cal/p00/r000/l200-p00-r000-cal-T%-par_dsp_energy-overwrite.json",
+        (
+            Path(par_overwrite_path(setup))
+            / "dsp/cal/p00/r000/l200-p00-r000-cal-T%-par_dsp_energy-overwrite.json",
         ),
     }

@@ -2,20 +2,21 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from pygama.math.distributions import gaussian
+from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -26,7 +27,7 @@ def get_results_dict(lq_class):
         "cal_energy_param": lq_class.cal_energy_param,
         "DEP_means": lq_class.timecorr_df.to_dict("index"),
         "rt_correction": lq_class.dt_fit_pars,
-        "cut_fit_pars": lq_class.cut_fit_pars,
+        "cut_fit_pars": lq_class.cut_fit_pars.to_dict(),
         "cut_value": lq_class.cut_val,
         "sfs": lq_class.low_side_sf.to_dict("index"),
     }
@@ -54,6 +55,7 @@ def lq_calibration(
     cdf: callable = gaussian,
     selection_string: str = "",
     plot_options: dict | None = None,
+    debug_mode: bool = False,
 ):
     """Loads in data from the provided files and runs the LQ calibration on said files
 
@@ -99,6 +101,7 @@ def lq_calibration(
         eres_func,
         cdf,
         selection_string,
+        debug_mode=debug_mode | args.debug,
     )
 
     data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
@@ -127,15 +130,18 @@ argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+argparser.add_argument("--log", help="log_file", type=str)
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-argparser.add_argument("--log", help="log_file", type=str)
-
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
 argparser.add_argument("--lq_results", help="lq_results", type=str)
+
+argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -144,6 +150,10 @@ logging.getLogger("parse").setLevel(logging.INFO)
 logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
@@ -156,7 +166,7 @@ ecal_dict = Props.read_from(args.ecal_file)
 cal_dict = ecal_dict["pars"]["operations"]
 eres_dict = ecal_dict["results"]["ecal"]
 
-with open(args.eres_file, "rb") as o:
+with Path(args.eres_file).open("rb") as o:
     object_dict = pkl.load(o)
 
 if kwarg_dict["run_lq"] is True:
@@ -168,7 +178,7 @@ if kwarg_dict["run_lq"] is True:
         for field, item in kwarg_dict["plot_options"].items():
             kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
 
-    with open(args.files[0]) as f:
+    with Path(args.files[0]).open() as f:
         files = f.read().splitlines()
     files = sorted(files)
 
@@ -194,7 +204,7 @@ if kwarg_dict["run_lq"] is True:
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         cal_dict,
         params=params,
         threshold=kwarg_dict.pop("threshold"),
@@ -209,11 +219,11 @@ if kwarg_dict["run_lq"] is True:
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+            tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -243,7 +253,7 @@ else:
 if args.plot_file:
     common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             out_plot_dict = pkl.load(r)
         out_plot_dict.update({"lq": plot_dict})
     else:
@@ -254,24 +264,24 @@ if args.plot_file:
     elif common_dict is not None:
         out_plot_dict["common"] = common_dict
 
-    pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_file, "wb") as w:
+    Path(args.plot_file).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_file).open("wb") as w:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
 
-results_dict = dict(**eres_dict, lq=out_dict)
-pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
-final_hit_dict = {
-    "pars": {"operations": cal_dict},
-    "results": results_dict,
-}
+final_hit_dict = convert_dict_np_to_float(
+    {
+        "pars": {"operations": cal_dict},
+        "results": dict(**eres_dict, lq=out_dict),
+    }
+)
+Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.hit_pars, final_hit_dict)
 
-pathlib.Path(os.path.dirname(args.lq_results)).mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
     **object_dict,
     lq=obj,
 )
-Props.write_to(args.lq_results, final_object_dict)
-with open(args.lq_results, "wb") as w:
+Path(args.lq_results).parent.mkdir(parents=True, exist_ok=True)
+with Path(args.lq_results).open("wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

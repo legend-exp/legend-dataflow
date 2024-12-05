@@ -6,30 +6,32 @@ Snakemake rules for processing dsp tier. This is done in 4 steps:
 - running dsp over all channels using par file
 """
 
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import par_dsp_path
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from pathlib import Path
+from scripts.util.create_pars_keylist import ParsKeyResolve
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_dsp,
     get_pattern_plts,
-    get_pattern_tier_raw,
-    get_pattern_tier_tcm,
     get_pattern_tier,
     get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
-    get_pattern_pars_overwrite,
-    get_pattern_pars_svm,
 )
 
-dsp_par_catalog = pars_key_resolve.get_par_catalog(
+dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(setup, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
+
+dsp_par_cat_file = Path(pars_path(setup)) / "dsp" / "validity.yaml"
+if dsp_par_cat_file.is_file():
+    dsp_par_cat_file.unlink()
+Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
 
 
 rule build_pars_dsp_tau:
@@ -56,13 +58,14 @@ rule build_pars_dsp_tau:
         "{basedir}/../scripts/pars_dsp_tau.py "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--plot_path {output.plots} "
         "--output_file {output.decay_const} "
         "--pulser_file {input.pulser} "
-        "--raw_files {input.files}"
+        "--raw_files {input.files} "
 
 
 rule build_pars_event_selection:
@@ -91,6 +94,7 @@ rule build_pars_event_selection:
         "{basedir}/../scripts/pars_dsp_event_selection.py "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -130,6 +134,7 @@ rule build_pars_dsp_nopt:
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -173,6 +178,7 @@ rule build_pars_dsp_dplms:
         "--inplots {input.inplots} "
         "--configs {configs} "
         "--log {log} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -208,6 +214,7 @@ rule build_pars_dsp_eopt:
         "{basedir}/../scripts/pars_dsp_eopt.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -221,14 +228,16 @@ rule build_pars_dsp_eopt:
 
 rule build_svm_dsp:
     input:
-        hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(
+        hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "dsp", "svm_hyperpars"
-        ).replace("hyperpars.json", "train.lh5"),
+        ),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "dsp", "svm_hyperpars")
+        ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal"),
+        str(get_pattern_log(setup, "pars_dsp_svm")).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
@@ -270,9 +279,12 @@ rule build_plts_dsp:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         get_pattern_plts(setup, "dsp"),
     group:
@@ -282,6 +294,7 @@ rule build_plts_dsp:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--channelmap {meta} "
 
 
 rule build_pars_dsp_objects:
@@ -291,11 +304,14 @@ rule build_pars_dsp_objects:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
             name="objects",
             extension="pkl",
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         get_pattern_pars(
             setup,
@@ -311,6 +327,8 @@ rule build_pars_dsp_objects:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
+        "--timestamp {params.timestamp} "
+        "--channelmap {meta} "
 
 
 rule build_pars_dsp_db:
@@ -320,9 +338,12 @@ rule build_pars_dsp_db:
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
-            configs,
+            det_status,
             chan_maps,
         ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         temp(
             get_pattern_pars_tmp(
@@ -338,82 +359,89 @@ rule build_pars_dsp_db:
         "{basedir}/../scripts/merge_channels.py "
         "--input {input} "
         "--output {output} "
-
-
-rule build_pars_dsp:
-    input:
-        in_files=lambda wildcards: get_par_chanlist(
-            setup,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "dsp",
-            basedir,
-            configs,
-            chan_maps,
-            name="dplms",
-            extension="lh5",
-        ),
-        in_db=get_pattern_pars_tmp(
-            setup,
-            "dsp",
-            datatype="cal",
-        ),
-        plts=get_pattern_plts(setup, "dsp"),
-        objects=get_pattern_pars(
-            setup,
-            "dsp",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    output:
-        out_file=get_pattern_pars(
-            setup,
-            "dsp",
-            extension="lh5",
-            check_in_cycle=check_in_cycle,
-        ),
-        out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
-    group:
-        "merge-dsp"
-    shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
-        "--output {output.out_file} "
-        "--in_db {input.in_db} "
-        "--out_db {output.out_db} "
-        "--input {input.in_files} "
-
-
-rule build_dsp:
-    input:
-        raw_file=get_pattern_tier_raw(setup),
-        pars_file=ancient(
-            lambda wildcards: pars_catalog.get_par_file(
-                setup, wildcards.timestamp, "dsp"
-            )
-        ),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-    output:
-        tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "dsp_db"),
-    log:
-        get_pattern_log(setup, "tier_dsp"),
-    group:
-        "tier-dsp"
-    resources:
-        runtime=300,
-        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
-    shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_dsp.py "
-        "--log {log} "
-        f"--configs {ro(configs)} "
-        "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--input {params.ro_input[raw_file]} "
-        "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {params.ro_input[pars_file]} "
+        "--channelmap {meta} "
+
+
+# rule build_pars_dsp:
+#     input:
+#         in_files=lambda wildcards: get_par_chanlist(
+#             setup,
+#             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+#             "dsp",
+#             basedir,
+#             det_status,
+#             chan_maps,
+#             name="dplms",
+#             extension="lh5",
+#         ),
+#         in_db=get_pattern_pars_tmp(
+#             setup,
+#             "dsp",
+#             datatype="cal",
+#         ),
+#         plts=get_pattern_plts(setup, "dsp"),
+#         objects=get_pattern_pars(
+#             setup,
+#             "dsp",
+#             name="objects",
+#             extension="dir",
+#             check_in_cycle=check_in_cycle,
+#         ),
+#     params:
+#         timestamp="{timestamp}",
+#         datatype="cal",
+#     output:
+#         out_file=get_pattern_pars(
+#             setup,
+#             "dsp",
+#             extension="lh5",
+#             check_in_cycle=check_in_cycle,
+#         ),
+#         out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
+#     group:
+#         "merge-dsp"
+#     shell:
+#         "{swenv} python3 -B "
+#         "{basedir}/../scripts/merge_channels.py "
+#         "--output {output.out_file} "
+#         "--in_db {input.in_db} "
+#         "--out_db {output.out_db} "
+#         "--input {input.in_files} "
+#         "--timestamp {params.timestamp} "
+#         "--channelmap {meta} "
+# rule build_dsp:
+#     input:
+#         raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
+#         pars_file=ancient(
+#             lambda wildcards: ParsCatalog.get_par_file(
+#                 setup, wildcards.timestamp, "dsp"
+#             )
+#         ),
+#     params:
+#         timestamp="{timestamp}",
+#         datatype="{datatype}",
+#         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+#     output:
+#         tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
+#         db_file=get_pattern_pars_tmp(setup, "dsp_db"),
+#     log:
+#         get_pattern_log(setup, "tier_dsp"),
+#     group:
+#         "tier-dsp"
+#     resources:
+#         runtime=300,
+#         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
+#     shell:
+#         "{swenv} python3 -B "
+#         "{basedir}/../scripts/build_dsp.py "
+#         "--log {log} "
+#         "--tier dsp "
+#         f"--configs {ro(configs)} "
+#         "--metadata {meta} "
+#         "--datatype {params.datatype} "
+#         "--timestamp {params.timestamp} "
+#         "--input {params.ro_input[raw_file]} "
+#         "--output {output.tier_file} "
+#         "--db_file {output.db_file} "
+#         "--pars_file {params.ro_input[pars_file]} "

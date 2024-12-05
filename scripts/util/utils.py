@@ -40,112 +40,12 @@ def tier_path(setup):
     return setup["paths"]["tier"]
 
 
-def tier_tcm_path(setup):
-    return setup["paths"]["tier_tcm"]
-
-
-def tier_raw_path(setup):
-    return setup["paths"]["tier_raw"]
-
-
-def tier_dsp_path(setup):
-    return setup["paths"]["tier_dsp"]
-
-
-def tier_hit_path(setup):
-    return setup["paths"]["tier_hit"]
-
-
-def tier_evt_path(setup):
-    return setup["paths"]["tier_evt"]
-
-
-def tier_psp_path(setup):
-    return setup["paths"]["tier_psp"]
-
-
-def tier_pht_path(setup):
-    return setup["paths"]["tier_pht"]
-
-
-def tier_pet_path(setup):
-    return setup["paths"]["tier_pet"]
-
-
-def tier_skm_path(setup):
-    return setup["paths"]["tier_skm"]
-
-
 def get_tier_path(setup, tier):
-    if tier == "raw":
-        return tier_raw_path(setup)
-    elif tier == "tcm":
-        return tier_tcm_path(setup)
-    elif tier == "dsp":
-        return tier_dsp_path(setup)
-    elif tier == "hit":
-        return tier_hit_path(setup)
-    elif tier == "evt":
-        return tier_evt_path(setup)
-    elif tier == "psp":
-        return tier_psp_path(setup)
-    elif tier == "pht":
-        return tier_pht_path(setup)
-    elif tier == "pet":
-        return tier_pet_path(setup)
-    elif tier == "skm":
-        return tier_skm_path(setup)
+    if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet", "skm"]:
+        return setup["paths"][f"tier_{tier}"]
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)
-
-
-def config_path(setup):
-    return setup["paths"]["config"]
-
-
-def chan_map_path(setup):
-    return setup["paths"]["chan_map"]
-
-
-def metadata_path(setup):
-    return setup["paths"]["metadata"]
-
-
-def detector_db_path(setup):
-    return setup["paths"]["detector_db"]
-
-
-def par_raw_path(setup):
-    return setup["paths"]["par_raw"]
-
-
-def par_tcm_path(setup):
-    return setup["paths"]["par_tcm"]
-
-
-def par_dsp_path(setup):
-    return setup["paths"]["par_dsp"]
-
-
-def par_hit_path(setup):
-    return setup["paths"]["par_hit"]
-
-
-def par_evt_path(setup):
-    return setup["paths"]["par_evt"]
-
-
-def par_psp_path(setup):
-    return setup["paths"]["par_psp"]
-
-
-def par_pht_path(setup):
-    return setup["paths"]["par_pht"]
-
-
-def par_pet_path(setup):
-    return setup["paths"]["par_pet"]
 
 
 def pars_path(setup):
@@ -153,22 +53,8 @@ def pars_path(setup):
 
 
 def get_pars_path(setup, tier):
-    if tier == "raw":
-        return par_raw_path(setup)
-    elif tier == "tcm":
-        return par_tcm_path(setup)
-    elif tier == "dsp":
-        return par_dsp_path(setup)
-    elif tier == "hit":
-        return par_hit_path(setup)
-    elif tier == "evt":
-        return par_evt_path(setup)
-    elif tier == "psp":
-        return par_psp_path(setup)
-    elif tier == "pht":
-        return par_pht_path(setup)
-    elif tier == "pet":
-        return par_pet_path(setup)
+    if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
+        return setup["paths"][f"par_{tier}"]
     else:
         msg = f"no tier matching:{tier}"
         raise ValueError(msg)
@@ -188,6 +74,26 @@ def plts_path(setup):
 
 def par_overwrite_path(setup):
     return setup["paths"]["par_overwrite"]
+
+
+def config_path(setup):
+    return setup["paths"]["config"]
+
+
+def chan_map_path(setup):
+    return setup["paths"]["chan_map"]
+
+
+def det_status_path(setup):
+    return setup["paths"]["detector_status"]
+
+
+def metadata_path(setup):
+    return setup["paths"]["metadata"]
+
+
+def detector_db_path(setup):
+    return setup["paths"]["detector_db"]
 
 
 def log_path(setup):
@@ -257,7 +163,7 @@ def subst_vars_in_snakemake_config(workflow, config):
     config_filename = workflow.overwrite_configfiles[0]  # ToDo: Better way of handling this?
     subst_vars(
         config,
-        var_values={"_": os.path.dirname(config_filename)},
+        var_values={"_": Path(config_filename).parent},
         use_env=True,
         ignore_missing=False,
     )
@@ -271,8 +177,8 @@ def run_splitter(files):
     runs = []
     run_files = []
     for file in files:
-        base = os.path.basename(file)
-        file_name = os.path.splitext(base)[0]
+        base = Path(file).name
+        file_name = Path(base).name
         parts = file_name.split("-")
         run_no = parts[3]
         if run_no not in runs:

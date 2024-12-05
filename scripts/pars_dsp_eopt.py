@@ -1,10 +1,9 @@
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import time
 import warnings
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
@@ -27,12 +26,12 @@ warnings.filterwarnings(action="ignore", category=np.RankWarning)
 argparser = argparse.ArgumentParser()
 
 argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
-
 argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
-argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
 argparser.add_argument("--log", help="log_file", type=str)
+argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
@@ -58,6 +57,10 @@ logging.getLogger("legendmeta").setLevel(logging.INFO)
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
 t0 = time.time()
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 conf = LegendMetadata(path=args.configs)
 configs = conf.on(args.timestamp, system=args.datatype)
@@ -109,12 +112,12 @@ if opt_dict.pop("run_eopt") is True:
         )
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{args.channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
     ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-    tb_data = sto.read(f"{args.channel}/raw", args.peak_file, idx=ids)[0]
+    tb_data = sto.read(f"{channel}/raw", args.peak_file, idx=ids)[0]
 
     t1 = time.time()
     log.info(f"Data Loaded in {(t1-t0)/60} minutes")
@@ -319,51 +322,51 @@ if opt_dict.pop("run_eopt") is True:
     out_alpha_dict = {}
     out_alpha_dict["cuspEmax_ctc"] = {
         "expression": "cuspEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_cusp.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["cuspEftp_ctc"] = {
         "expression": "cuspEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_cusp.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["zacEmax_ctc"] = {
         "expression": "zacEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_zac.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["zacEftp_ctc"] = {
         "expression": "zacEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_zac.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["trapEmax_ctc"] = {
         "expression": "trapEmax*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
     }
 
     out_alpha_dict["trapEftp_ctc"] = {
         "expression": "trapEftp*(1+dt_eff*a)",
-        "parameters": {"a": round(bopt_trap.optimal_results["alpha"], 9)},
+        "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
     }
     if "ctc_params" in db_dict:
         db_dict["ctc_params"].update(out_alpha_dict)
     else:
         db_dict.update({"ctc_params": out_alpha_dict})
 
-    pathlib.Path(os.path.dirname(args.qbb_grid_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.qbb_grid_path, "wb") as f:
+    Path(args.qbb_grid_path).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.qbb_grid_path).open("wb") as f:
         pkl.dump(optimisers, f)
 
 else:
-    pathlib.Path(args.qbb_grid_path).touch()
+    Path(args.qbb_grid_path).touch()
 
-pathlib.Path(os.path.dirname(args.final_dsp_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.final_dsp_pars).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.final_dsp_pars, db_dict)
 
 if args.plot_path:
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             plot_dict = pkl.load(r)
     else:
         plot_dict = {}
@@ -383,6 +386,6 @@ if args.plot_path:
         "acq_space": bopt_zac.plot_acq(init_samples=sample_x),
     }
 
-    pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_path, "wb") as w:
+    Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_path).open("wb") as w:
         pkl.dump(plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

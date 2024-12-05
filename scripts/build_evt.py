@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -35,6 +34,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--hit_file", help="hit file", type=str)
 argparser.add_argument("--dsp_file", help="dsp file", type=str)
 argparser.add_argument("--tcm_file", help="tcm file", type=str)
+argparser.add_argument("--ann_file", help="ann file")
 argparser.add_argument("--xtc_file", help="xtc file", type=str)
 argparser.add_argument("--par_files", help="par files", nargs="*")
 
@@ -51,7 +51,7 @@ argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
 if args.log is not None:
-    Path(os.path.dirname(args.log)).mkdir(parents=True, exist_ok=True)
+    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
 else:
     logging.basicConfig(level=logging.DEBUG)
@@ -118,15 +118,20 @@ for field, dic in evt_config["channels"].items():
 log.debug(json.dumps(evt_config["channels"], indent=2))
 
 t_start = time.time()
-Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+
+file_table = {
+    "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
+    "dsp": (args.dsp_file, "dsp", "ch{}"),
+    "hit": (args.hit_file, "hit", "ch{}"),
+    "evt": (None, "evt"),
+}
+
+if args.ann_file is not None:
+    file_table["ann"] = (args.ann_file, "dsp", "ch{}")
 
 table = build_evt(
-    {
-        "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
-        "dsp": (args.dsp_file, "dsp", "ch{}"),
-        "hit": (args.hit_file, "hit", "ch{}"),
-        "evt": (None, "evt"),
-    },
+    file_table,
     evt_config,
 )
 

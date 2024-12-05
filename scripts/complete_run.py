@@ -1,7 +1,6 @@
 # ruff: noqa: F821, T201
 
 import datetime
-import glob
 import json
 import os
 import time
@@ -20,14 +19,14 @@ def as_ro(path):
 
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
     now = datetime.datetime.now(datetime.UTC).strftime("%d/%m/%y %H:%M")
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     if warning_file is not None:
-        os.makedirs(os.path.dirname(warning_file), exist_ok=True)
-        with open(warning_file, "w") as w, open(output_file, "w") as f:
+        Path(warning_file).parent.mkdir(parents=True, exist_ok=True)
+        with Path(warning_file).open("w") as w, Path(output_file).open("w") as f:
             n_errors = 0
             n_warnings = 0
             for file in Path(log_path).rglob("*.log"):
-                with open(file) as r:
+                with Path(file).open() as r:
                     text = r.read()
                     if "ERROR" in text or "WARNING" in text:
                         for line in text.splitlines():
@@ -40,24 +39,24 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                                     w.write(
                                         f"{gen_output} successfully generated at {now} with warnings \n"
                                     )
-                                f.write(f"{os.path.basename(file)} : {line}\n")
+                                f.write(f"{Path(file).name} : {line}\n")
                                 n_errors += 1
                             elif "WARNING" in line:
-                                w.write(f"{os.path.basename(file)} : {line}\n")
+                                w.write(f"{Path(file).name} : {line}\n")
                                 n_warnings += 1
                     else:
                         pass
-                os.remove(file)
+                Path(file).unlink()
                 text = None
             if n_errors == 0:
                 f.write(f"{gen_output} successfully generated at {now} with no errors \n")
             if n_warnings == 0:
                 w.write(f"{gen_output} successfully generated at {now} with no warnings \n")
     else:
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             n_errors = 0
             for file in Path(log_path).rglob("*.log"):
-                with open(file) as r:
+                with Path(file).open() as r:
                     text = r.read()
                     if "ERROR" in text:
                         for line in text.splitlines():
@@ -66,18 +65,18 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                                     f.write(
                                         f"{gen_output} successfully generated at {now} with errors \n"
                                     )
-                                f.write(f"{os.path.basename(file)} : {line}\n")
+                                f.write(f"{Path(file).name} : {line}\n")
                                 n_errors += 1
                     else:
                         pass
-                os.remove(file)
+                Path(file).unlink()
                 text = None
             if n_errors == 0:
                 f.write(f"{gen_output} successfully generated at {now} with no errors \n")
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
         if len(os.listdir(path)) == 0:
-            os.rmdir(path)
+            Path(path).rmdir()
 
 
 def add_spaces(n):
@@ -124,7 +123,7 @@ def get_keys(files):
 
     key_dict = {}
     for file in files:
-        key = FileKey.get_filekey_from_filename(os.path.basename(file))
+        key = FileKey.get_filekey_from_filename(Path(file).name)
         if get_run(key) in key_dict:
             key_dict[get_run(key)].append(file)
         else:
@@ -133,24 +132,24 @@ def get_keys(files):
 
 
 def build_valid_keys(input_files, output_dir):
-    infiles = glob.glob(as_ro(input_files))
+    infiles = Path(as_ro(input_files)).glob()
     key_dict = get_keys(infiles)
 
     for key in list(key_dict):
         dtype = key.split("-")[-1]
-        out_file = os.path.join(output_dir, f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json')
-        Path(os.path.dirname(out_file)).mkdir(parents=True, exist_ok=True)
-        if os.path.isfile(out_file):
+        out_file = Path(output_dir) / f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json'
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        if Path(out_file).is_file():
             out_dict = Props.read_from([out_file] + key_dict[key])
         else:
             out_dict = Props.read_from(key_dict[key])
         out_string = readable_json(out_dict)
-        with open(out_file, "w") as w:
+        with Path(out_file).open("w") as w:
             w.write(out_string)
 
     for input_file in infiles:
-        if os.path.isfile(input_file):
-            os.remove(input_file)
+        if Path(input_file).is_file():
+            Path(input_file).unlink()
 
 
 def find_gen_runs(gen_tier_path):
@@ -268,16 +267,16 @@ file_db_config |= {
 if snakemake.wildcards.tier != "daq":
     print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
 
-    os.makedirs(snakemake.params.filedb_path, exist_ok=True)
+    Path(snakemake.params.filedb_path).parent.makedirs(parents=True, exist_ok=True)
 
-    with open(os.path.join(snakemake.params.filedb_path, "file_db_config.json"), "w") as f:
+    with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
         json.dump(file_db_config, f, indent=2)
 
     build_file_dbs(ut.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
-    os.remove(os.path.join(snakemake.params.filedb_path, "file_db_config.json"))
+    (Path(snakemake.params.filedb_path) / "file_db_config.json").unlink()
 
     build_valid_keys(
-        os.path.join(ut.tmp_par_path(snakemake.params.setup), "*_db.json"),
+        Path(ut.tmp_par_path(snakemake.params.setup)) / "*_db.json",
         snakemake.params.valid_keys_path,
     )
 

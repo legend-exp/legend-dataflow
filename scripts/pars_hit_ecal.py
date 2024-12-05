@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import copy
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
 from datetime import datetime
+from pathlib import Path
 
 import lgdo.lh5 as lh5
 import matplotlib as mpl
@@ -23,6 +22,7 @@ from pygama.pargen.data_cleaning import get_mode_stdev, get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 mpl.use("agg")
@@ -439,6 +439,8 @@ if __name__ == "__main__":
     argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
     argparser.add_argument("--save_path", help="save_path", type=str)
     argparser.add_argument("--results_path", help="results_path", type=str)
+
+    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -451,8 +453,9 @@ if __name__ == "__main__":
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
-    det_status = chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["usability"]
+    det_status = chmap[args.channel]["analysis"]["usability"]
 
     if args.in_hit_dict:
         hit_dict = Props.read_from(args.in_hit_dict)
@@ -460,14 +463,12 @@ if __name__ == "__main__":
     db_files = [
         par_file
         for par_file in args.ctc_dict
-        if os.path.splitext(par_file)[1] == ".json"
-        or os.path.splitext(par_file)[1] == ".yml"
-        or os.path.splitext(par_file)[1] == ".yaml"
+        if Path(par_file).suffix in (".json", ".yml", ".yaml")
     ]
 
     database_dic = Props.read_from(db_files)
 
-    hit_dict.update(database_dic[args.channel]["ctc_params"])
+    hit_dict.update(database_dic[channel]["ctc_params"])
 
     # get metadata dictionary
     configs = LegendMetadata(path=args.configs)
@@ -491,14 +492,14 @@ if __name__ == "__main__":
         bl_plots[field]["function"] = eval(item["function"])
     common_plots = kwarg_dict.pop("common_plots")
 
-    with open(args.files[0]) as f:
+    with Path(args.files[0]).open() as f:
         files = f.read().splitlines()
     files = sorted(files)
 
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         hit_dict,
         params=[*kwarg_dict["energy_params"], kwarg_dict["cut_param"], "timestamp", "trapTmax"],
         threshold=kwarg_dict["threshold"],
@@ -512,11 +513,11 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -565,6 +566,7 @@ if __name__ == "__main__":
             glines,
             guess,
             kwarg_dict.get("deg", 0),
+            debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             e_uncal, etol_kev=5 if det_status == "on" else 20
@@ -575,6 +577,7 @@ if __name__ == "__main__":
                 glines,
                 guess,
                 kwarg_dict.get("deg", 0),
+                debug_mode=kwarg_dict.get("debug_mode", False),
             )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
                 e_uncal, etol_kev=5 if det_status == "on" else 30, n_sigma=2
@@ -633,7 +636,7 @@ if __name__ == "__main__":
             hit_dict.update(
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "expression": f"where({cal_energy_param.replace('ctc','noctc')}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
                         "parameters": {},
                     }
                 }
@@ -697,14 +700,14 @@ if __name__ == "__main__":
 
     if "monitoring_parameters" in kwarg_dict:
         monitor_dict = monitor_parameters(
-            files, f"{args.channel}/dsp", kwarg_dict["monitoring_parameters"]
+            files, f"{channel}/dsp", kwarg_dict["monitoring_parameters"]
         )
         results_dict.update({"monitoring_parameters": monitor_dict})
 
     # get baseline plots and save all plots to file
     if args.plot_path:
         common_dict = baseline_tracking_plots(
-            sorted(files), f"{args.channel}/dsp", plot_options=bl_plots
+            sorted(files), f"{channel}/dsp", plot_options=bl_plots
         )
 
         for plot in list(common_dict):
@@ -721,7 +724,7 @@ if __name__ == "__main__":
                 common_dict.update({key: param_dict})
 
         if args.inplot_dict:
-            with open(args.inplot_dict, "rb") as f:
+            with Path(args.inplot_dict).open("rb") as f:
                 total_plot_dict = pkl.load(f)
         else:
             total_plot_dict = {}
@@ -733,15 +736,15 @@ if __name__ == "__main__":
 
         total_plot_dict.update({"ecal": plot_dict})
 
-        pathlib.Path(os.path.dirname(args.plot_path)).mkdir(parents=True, exist_ok=True)
-        with open(args.plot_path, "wb") as f:
+        Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
+        with Path(args.plot_path).open("wb") as f:
             pkl.dump(total_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # save output dictionary
-    output_dict = {"pars": hit_dict, "results": {"ecal": results_dict}}
+    output_dict = convert_dict_np_to_float({"pars": hit_dict, "results": {"ecal": results_dict}})
     Props.write_to(args.save_path, output_dict)
 
     # save calibration objects
-    with open(args.results_path, "wb") as fp:
-        pathlib.Path(os.path.dirname(args.results_path)).mkdir(parents=True, exist_ok=True)
+    with Path(args.results_path).open("wb") as fp:
+        Path(args.results_path).parent.mkdir(parents=True, exist_ok=True)
         pkl.dump({"ecal": full_object_dict}, fp, protocol=pkl.HIGHEST_PROTOCOL)

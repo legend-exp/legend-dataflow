@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
-import pathlib
 import pickle as pkl
 import warnings
+from pathlib import Path
 from typing import Callable
 
 import numpy as np
@@ -16,6 +15,7 @@ from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
+from util.convert_np import convert_dict_np_to_float
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -66,6 +66,7 @@ def aoe_calibration(
     dt_param: str = "dt_eff",
     comptBands_width: int = 20,
     plot_options: dict | None = None,
+    debug_mode: bool = False,
 ):
     data["AoE_Uncorr"] = data[current_param] / data[energy_param]
     aoe = CalAoE(
@@ -82,6 +83,7 @@ def aoe_calibration(
         mean_func=mean_func,
         sigma_func=sigma_func,
         compt_bands_width=comptBands_width,
+        debug_mode=debug_mode | args.debug,
     )
 
     aoe.update_cal_dicts(
@@ -102,20 +104,25 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("files", help="files", nargs="*", type=str)
 argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
 argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
+
 argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
 argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
 argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
 argparser.add_argument("--configs", help="configs", type=str, required=True)
+argparser.add_argument("--log", help="log_file", type=str)
+argparser.add_argument("--metadata", help="metadata", type=str, required=True)
+
+
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-argparser.add_argument("--log", help="log_file", type=str)
-
 argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
 argparser.add_argument("--hit_pars", help="hit_pars", type=str)
 argparser.add_argument("--aoe_results", help="aoe_results", type=str)
+
+argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -125,6 +132,10 @@ logging.getLogger("lgdo").setLevel(logging.INFO)
 logging.getLogger("h5py").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
 logging.getLogger("legendmeta").setLevel(logging.INFO)
+
+meta = LegendMetadata(path=args.metadata)
+channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 configs = LegendMetadata(path=args.configs)
 channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
@@ -138,7 +149,7 @@ ecal_dict = Props.read_from(args.ecal_file)
 cal_dict = ecal_dict["pars"]
 eres_dict = ecal_dict["results"]["ecal"]
 
-with open(args.eres_file, "rb") as o:
+with Path(args.eres_file).open("rb") as o:
     object_dict = pkl.load(o)
 
 if kwarg_dict["run_aoe"] is True:
@@ -154,7 +165,7 @@ if kwarg_dict["run_aoe"] is True:
         for field, item in kwarg_dict["plot_options"].items():
             kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
 
-    with open(args.files[0]) as f:
+    with Path(args.files[0]).open() as f:
         files = f.read().splitlines()
     files = sorted(files)
 
@@ -191,7 +202,7 @@ if kwarg_dict["run_aoe"] is True:
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         cal_dict,
         params=params,
         threshold=kwarg_dict.pop("threshold"),
@@ -206,11 +217,11 @@ if kwarg_dict["run_aoe"] is True:
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+            tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -228,6 +239,7 @@ if kwarg_dict["run_aoe"] is True:
         sigma_func=sigma_func,
         **kwarg_dict,
     )
+    obj.pdf = obj.pdf.name
 
     # need to change eres func as can't pickle lambdas
     try:
@@ -242,7 +254,7 @@ else:
 if args.plot_file:
     common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
     if args.inplots:
-        with open(args.inplots, "rb") as r:
+        with Path(args.inplots).open("rb") as r:
             out_plot_dict = pkl.load(r)
         out_plot_dict.update({"aoe": plot_dict})
     else:
@@ -253,22 +265,25 @@ if args.plot_file:
     elif common_dict is not None:
         out_plot_dict["common"] = common_dict
 
-    pathlib.Path(os.path.dirname(args.plot_file)).mkdir(parents=True, exist_ok=True)
-    with open(args.plot_file, "wb") as w:
+    Path(args.plot_file).parent.mkdir(parents=True, exist_ok=True)
+    with Path(args.plot_file).open("wb") as w:
         pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
-pathlib.Path(os.path.dirname(args.hit_pars)).mkdir(parents=True, exist_ok=True)
+Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
 results_dict = dict(**ecal_dict["results"], aoe=out_dict)
 final_hit_dict = {
     "pars": {"operations": cal_dict},
     "results": results_dict,
 }
+
+final_hit_dict = convert_dict_np_to_float(final_hit_dict)
+
 Props.write_to(args.hit_pars, final_hit_dict)
 
-pathlib.Path(os.path.dirname(args.aoe_results)).mkdir(parents=True, exist_ok=True)
+Path(args.aoe_results).parent.mkdir(parents=True, exist_ok=True)
 final_object_dict = dict(
     **object_dict,
     aoe=obj,
 )
-with open(args.aoe_results, "wb") as w:
+with Path(args.aoe_results).open("wb") as w:
     pkl.dump(final_object_dict, w, protocol=pkl.HIGHEST_PROTOCOL)

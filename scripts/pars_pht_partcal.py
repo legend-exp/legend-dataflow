@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import copy
 import logging
-import os
-import pathlib
 import pickle as pkl
 import re
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -34,7 +33,7 @@ def run_splitter(files):
     runs = []
     run_files = []
     for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(file))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
         if f"{fk.period}-{fk.run}" not in runs:
             runs.append(f"{fk.period}-{fk.run}")
             run_files.append([])
@@ -143,18 +142,14 @@ def calibrate_partition(
     object_dicts,
     plot_dicts,
     timestamp,
-    metadata_path,
+    chmap,
     configs,
     channel,
     datatype,
     gen_plots=True,
 ):
 
-    # load metadata
-    meta = LegendMetadata(path=metadata_path)
-    chmap = meta.channelmap(timestamp)
-
-    det_status = chmap.map("daq.rawid")[int(channel[2:])]["analysis"]["usability"]
+    det_status = chmap[channel]["analysis"]["usability"]
 
     configs = LegendMetadata(path=configs)
     channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"]["pars_pht_partcal"][
@@ -171,34 +166,34 @@ def calibrate_partition(
 
     # calibrate
     pk_pars = [
-        # (238.632, (10, 10), pgf.gauss_on_step), #double line
-        # (241.0, (10, 10), pgf.gauss_on_step), #double line
-        (277.371, (10, 7), pgf.gauss_on_linear),
-        (288.2, (7, 10), pgf.gauss_on_linear),
-        (300.1, (10, 10), pgf.gauss_on_linear),
-        (453.0, (10, 10), pgf.gauss_on_linear),
-        # (511, (20, 20), pgf.gauss_on_step), double line
-        (549.8, (10, 10), pgf.gauss_on_linear),
-        (583.187, (20, 20), pgf.hpge_peak),
-        (727.330, (20, 20), pgf.hpge_peak),
-        (763.13, (20, 10), pgf.gauss_on_linear),
-        (785.37, (10, 20), pgf.gauss_on_linear),
-        (860.557, (20, 20), pgf.hpge_peak),
-        (893.408, (20, 20), pgf.gauss_on_linear),
-        (927.6, (20, 20), pgf.gauss_on_linear),
-        (952.120, (20, 20), pgf.gauss_on_linear),
-        (982.7, (20, 20), pgf.gauss_on_linear),
-        (1078.62, (20, 7), pgf.gauss_on_linear),
-        (1093.9, (7, 20), pgf.gauss_on_linear),
-        (1512.7, (20, 20), pgf.gauss_on_linear),
-        (1592.511, (20, 20), pgf.hpge_peak),
-        (1620.50, (20, 20), pgf.hpge_peak),
-        (1679.7, (20, 20), pgf.gauss_on_linear),
-        (1806.0, (20, 20), pgf.gauss_on_linear),
-        (2103.511, (20, 20), pgf.hpge_peak),
-        (2614.511, (40, 20), pgf.hpge_peak),
-        (3125.511, (20, 20), pgf.gauss_on_linear),
-        (3197.7, (20, 20), pgf.gauss_on_linear),
+        # (238.632, (10, 10), pgf.gauss_on_step), #double line, Pb-212
+        # (240.986, (10, 10), pgf.gauss_on_step), #double line, Ra-224
+        (277.371, (10, 7), pgf.gauss_on_linear),  # Tl-208
+        (288.2, (7, 10), pgf.gauss_on_linear),  # Bi-212
+        (300.087, (10, 10), pgf.gauss_on_linear),  # Pb-212
+        (452.98, (10, 10), pgf.gauss_on_linear),  # Bi-212
+        # (511, (20, 20), pgf.gauss_on_step), double line, #e+e-
+        (549.73, (10, 10), pgf.gauss_on_linear),  # Rn-220
+        (583.187, (20, 20), pgf.hpge_peak),  # Tl-208
+        (727.330, (20, 20), pgf.hpge_peak),  # Bi-212
+        (763.13, (20, 10), pgf.gauss_on_linear),  # Tl-208
+        (785.37, (10, 20), pgf.gauss_on_linear),  # Bi-212
+        (860.557, (20, 20), pgf.hpge_peak),  # Tl-208
+        (893.408, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (927.6, (20, 20), pgf.gauss_on_linear),  # Tl-208
+        (952.120, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (982.7, (20, 20), pgf.gauss_on_linear),  # Tl-208
+        (1078.62, (20, 7), pgf.gauss_on_linear),  # Bi-212
+        (1093.9, (7, 20), pgf.gauss_on_linear),  # Tl-208
+        (1512.7, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (1592.511, (20, 20), pgf.hpge_peak),  # Tl-208 DEP
+        (1620.50, (20, 20), pgf.hpge_peak),  # Bi-212
+        (1679.7, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (1806.0, (20, 20), pgf.gauss_on_linear),  # Bi-212
+        (2103.511, (20, 20), pgf.hpge_peak),  # Tl-208 SEP
+        (2614.511, (40, 20), pgf.hpge_peak),  # Tl-208
+        (3125.511, (20, 20), pgf.gauss_on_linear),  # Summation
+        (3197.7, (20, 20), pgf.gauss_on_linear),  # Summation
         (3475.1, (20, 20), pgf.gauss_on_linear),
     ]
 
@@ -218,7 +213,11 @@ def calibrate_partition(
     for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
         energy = data.query(selection_string)[energy_param].to_numpy()
         full_object_dict[cal_energy_param] = HPGeCalibration(
-            energy_param, glines, 1, kwarg_dict.get("deg", 0)  # , fixed={1: 1}
+            energy_param,
+            glines,
+            1,
+            kwarg_dict.get("deg", 0),
+            debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             energy,
@@ -309,7 +308,7 @@ def calibrate_partition(
                 cal_dicts,
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "expression": f"where({cal_energy_param.replace('ctc', 'noctc')}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
                         "parameters": {},
                     }
                 },
@@ -415,17 +414,19 @@ if __name__ == "__main__":
     argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
     argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
 
-    argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--log", help="log_file", type=str)
+    argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--fit_results", help="fit_results", nargs="*", type=str)
+
+    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -436,34 +437,38 @@ if __name__ == "__main__":
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.getLogger("legendmeta").setLevel(logging.INFO)
 
+    meta = LegendMetadata(path=args.metadata)
+    chmap = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+
     cal_dict = {}
     results_dicts = {}
     for ecal in args.ecal_file:
         cal = Props.read_from(ecal)
 
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
         cal_dict[fk.timestamp] = cal["pars"]
         results_dicts[fk.timestamp] = cal["results"]
 
     object_dict = {}
     for ecal in args.eres_file:
-        with open(ecal, "rb") as o:
+        with Path(ecal).open("rb") as o:
             cal = pkl.load(o)
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
         object_dict[fk.timestamp] = cal
 
     inplots_dict = {}
     if args.inplots:
         for ecal in args.inplots:
-            with open(ecal, "rb") as o:
+            with Path(ecal).open("rb") as o:
                 cal = pkl.load(o)
-            fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(ecal))
+            fk = ChannelProcKey.get_filekey_from_pattern(Path(ecal).name)
             inplots_dict[fk.timestamp] = cal
 
     # sort files in dictionary where keys are first timestamp from run
     files = []
     for file in args.input_files:
-        with open(file) as f:
+        with Path(file).open() as f:
             files += f.read().splitlines()
 
     files = sorted(
@@ -473,7 +478,7 @@ if __name__ == "__main__":
     final_dict = {}
     all_file = run_splitter(sorted(files))
     for filelist in all_file:
-        fk = ProcessingFileKey.get_filekey_from_pattern(os.path.basename(sorted(filelist)[0]))
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(sorted(filelist)[0]).name)
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
 
@@ -493,7 +498,7 @@ if __name__ == "__main__":
     # load data in
     data, threshold_mask = load_data(
         final_dict,
-        f"{args.channel}/dsp",
+        f"{channel}/dsp",
         cal_dict,
         params=params,
         threshold=kwarg_dict["threshold"],
@@ -512,11 +517,11 @@ if __name__ == "__main__":
 
     elif args.tcm_filelist:
         # get pulser mask from tcm files
-        with open(args.tcm_filelist) as f:
+        with Path(args.tcm_filelist).open() as f:
             tcm_files = f.read().splitlines()
         tcm_files = sorted(np.unique(tcm_files))
         ids, mask = get_tcm_pulser_ids(
-            tcm_files, args.channel, kwarg_dict["pulser_multiplicity_threshold"]
+            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
         )
     else:
         msg = "No pulser file or tcm filelist provided"
@@ -538,7 +543,7 @@ if __name__ == "__main__":
         object_dict,
         inplots_dict,
         timestamp,
-        args.metadata,
+        chmap,
         args.configs,
         args.channel,
         args.datatype,
@@ -547,21 +552,21 @@ if __name__ == "__main__":
 
     if args.plot_file:
         for plot_file in args.plot_file:
-            pathlib.Path(os.path.dirname(plot_file)).mkdir(parents=True, exist_ok=True)
-            with open(plot_file, "wb") as w:
+            Path(plot_file).parent.mkdir(parents=True, exist_ok=True)
+            with Path(plot_file).open("wb") as w:
                 pkl.dump(plot_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
 
     for out in sorted(args.hit_pars):
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
         final_hit_dict = {
             "pars": cal_dict[fk.timestamp],
             "results": results_dicts[fk.timestamp],
         }
-        pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(out, final_hit_dict)
 
     for out in args.fit_results:
-        fk = ChannelProcKey.get_filekey_from_pattern(os.path.basename(out))
-        pathlib.Path(os.path.dirname(out)).mkdir(parents=True, exist_ok=True)
-        with open(out, "wb") as w:
+        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        with Path(out).open("wb") as w:
             pkl.dump(object_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)

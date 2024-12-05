@@ -1,11 +1,10 @@
-from scripts.util.pars_loading import pars_catalog
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.utils import filelist_path, par_pht_path, set_last_rule_name
+from scripts.util.pars_loading import ParsCatalog
+from scripts.util.create_pars_keylist import ParsKeyResolve
+from scripts.util.utils import filelist_path, set_last_rule_name
 from scripts.util.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_par_pht,
     get_pattern_plts,
     get_pattern_tier,
     get_pattern_pars_tmp,
@@ -109,6 +108,7 @@ for key, dataset in part.datasets.items():
                 f"{basedir}/../scripts/pars_pht_fast.py "
                 "--log {log} "
                 "--configs {configs} "
+                "--metadata {meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
@@ -167,6 +167,7 @@ rule par_pht_fast:
         "{basedir}/../scripts/pars_pht_fast.py "
         "--log {log} "
         "--configs {configs} "
+        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
