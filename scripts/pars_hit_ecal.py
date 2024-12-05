@@ -636,7 +636,7 @@ if __name__ == "__main__":
             hit_dict.update(
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "expression": f"where({cal_energy_param.replace('ctc','noctc')}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
                         "parameters": {},
                     }
                 }
