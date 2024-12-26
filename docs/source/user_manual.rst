@@ -1,3 +1,6 @@
+User Manual
+-----------
+
 Configuration
 =============
 
@@ -13,33 +16,38 @@ the default path to the config file is ``./config.json``.
 Profiles
 ========
 
-A number of profiles are also included in the ``profiles`` directory. If none are specified,
-the default profile is used. The profile can be specified by using the ``--profile`` option
-when running Snakemake. These control how many jobs are run simultaneously, based on how many cores
-are specified and the memory constraints of the system. A full list of all the options
-that can be specified to snakemake can be found at `snakemake <https://snakemake.readthedocs.io/en/stable/executing/cli.html>`_.
+A number of profiles are also included in the ``profiles`` directory. If none
+are specified, the default profile is used. The profile can be specified by
+using the ``--profile`` option when running Snakemake. These control how many
+jobs are run simultaneously, based on how many cores are specified and the
+memory constraints of the system. A full list of all the options that can be
+specified to snakemake can be found at `snakemake
+<https://snakemake.readthedocs.io/en/stable/executing/cli.html>`_.
 
 
 Running the Dataflow
 ====================
 
-To run the dataflow at the most basic level all that is necassary is to tell snakemake the target file
-generation. In a simple case this may just be a single file e.g.
+To run the dataflow at the most basic level all that is necassary is to tell
+snakemake the target file generation. In a simple case this may just be a
+single file e.g.
 ```shell
 $ snakemake /data2/public/prodenv/prod-blind/ref-v1.0.0/generated/tier/dsp/p03/r000/l200-p03-r000-cal-20230401T000000Z-tier_dsp.lh5
 ```
-This would generate the file and all the files that are required to generate it.
-In general though we want to generate a large number of files, and we can do this using the ``gen`` target.
+This would generate the file and all the files that are required to generate
+it.  In general though we want to generate a large number of files, and we can
+do this using the ``gen`` target.
 
 Main output generation
 ======================
 
-Usually, the main output will be determined by a file-list.
-The special output target ``{label}-{tier}.gen`` is used to
-generate all files that follow the label up to the specified tier.
-The label is composed of the following parts:
-- the filelist designator: in most cases this will be ``all``, but other options are specified in the ``runlists.yaml`` file
-in the `legend-datasets <https://github.com/legend-exp/legend-datasets>`_ repository.
+Usually, the main output will be determined by a file-list.  The special output
+target ``{label}-{tier}.gen`` is used to generate all files that follow the
+label up to the specified tier.  The label is composed of the following parts:
+
+- the filelist designator: in most cases this will be ``all``, but other
+  options are specified in the ``runlists.yaml`` file in the `legend-datasets
+  <https://github.com/legend-exp/legend-datasets>`_ repository.
 - experiment: the experiment name i.e. l200
 - period: the period of the data e.g. p03
 - run: the run number e.g. r000
@@ -47,19 +55,20 @@ in the `legend-datasets <https://github.com/legend-exp/legend-datasets>`_ reposi
 - timestamp: the timestamp of the data e.g. 20230401T000000Z
 
 Example:
+
 ```shell
 $ snakemake all-l200-p03-r001-cal-20230401T000000Z-dsp.gen
 ```
 
-You can specify as many or as few of these as they like e.g. ``all-l200-p03-dsp.gen``
-If you want to specify a lower part of the label but leave a higher part free,
-you can use the ``*``` character e.g. ``all-l200-p03-*-cal-dsp.gen`` .
-Additionally if you want to specify multiple options for a part of the label you can use the ``_`` character between
-e.g. ``all-l200-p03-r000_r001-dsp.gen``.
+You can specify as many or as few of these as they like e.g.
+``all-l200-p03-dsp.gen`` If you want to specify a lower part of the label but
+leave a higher part free, you can use the ``*``` character e.g.
+``all-l200-p03-*-cal-dsp.gen`` .  Additionally if you want to specify multiple
+options for a part of the label you can use the ``_`` character between e.g.
+``all-l200-p03-r000_r001-dsp.gen``.
 
-After the files
-are created, the empty file ``{label}-{tier}.gen```` will be created to
-mark the successful data production.
+After the files are created, the empty file ``{label}-{tier}.gen```` will be
+created to mark the successful data production.
 
 
 Monitoring
