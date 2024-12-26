@@ -15,21 +15,25 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo import lh5
-from pygama.math.histogram import better_int_binning, get_hist
-from pygama.pargen.energy_cal import hpge_find_E_peaks
+from pygama.pargen.energy_cal import HPGeCalibration
 
 mpl.use("agg")
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--files", help="files", nargs="*", type=str)
+
 argparser.add_argument("--blind_curve", help="blind_curve", type=str)
 argparser.add_argument("--plot_file", help="out plot path", type=str)
+
 argparser.add_argument("--meta", help="meta", type=str)
+argparser.add_argument("--configs", help="configs", type=str)
+argparser.add_argument("--log", help="log", type=str)
+
 argparser.add_argument("--timestamp", help="timestamp", type=str)
 argparser.add_argument("--datatype", help="datatype", type=str)
 argparser.add_argument("--channel", help="channel", type=str)
-argparser.add_argument("--configs", help="configs", type=str)
-argparser.add_argument("--log", help="log", type=str)
+
+argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
 logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
@@ -56,15 +60,19 @@ Euc_max = peaks_keV[-1] / guess_keV * 1.1
 dEuc = 1 / guess_keV
 
 # daqenergy is an int so use integer binning (dx used to be bugged as output so switched to nbins)
-Euc_min, Euc_max, nbins = better_int_binning(
-    x_lo=Euc_min, x_hi=Euc_max, n_bins=(Euc_max - Euc_min) / dEuc
+
+
+hpge_cal = HPGeCalibration(
+    "daqenergy",
+    peaks_keV,
+    guess_keV,
+    0,
+    uncal_is_int=True,
+    debug_mode=args.debug,
 )
-hist, bins, var = get_hist(E_uncal, range=(Euc_min, Euc_max), bins=nbins)
 
 # Run the rough peak search
-detected_peaks_locs, detected_peaks_keV, roughpars = hpge_find_E_peaks(
-    hist, bins, var, peaks_keV, n_sigma=5, deg=0
-)
+detected_peaks_locs, detected_peaks_keV, roughpars = hpge_cal.hpge_find_E_peaks(E_uncal)
 
 log.info(f"{len(detected_peaks_locs)} peaks found:")
 log.info("\t   Energy   | Position  ")
@@ -98,20 +106,4 @@ with Path(args.plot_file).open("wb") as w:
     pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
 plt.close()
 
-# else:
-#     out_dict = {
-#         "pars": {
-#             "operations": {
-#                 "daqenergy_cal": {
-#                     "expression": "daqenergy*a",
-#                     "parameters": {"a": np.nan},
-#                 }
-#             }
-#         }
-#     }
-#     fig = plt.figure(figsize=(8, 10))
-#     plt.suptitle(f"{args.channel}-blind_off")
-#     with open(args.plot_file, "wb") as w:
-#         pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
-#     plt.close()
 Props.write_to_file(args.blind_curve, out_dict)
