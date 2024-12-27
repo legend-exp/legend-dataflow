@@ -17,7 +17,6 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_inline_tabs",
     "myst_parser",
-    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 source_suffix = {
