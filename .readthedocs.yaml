@@ -1,19 +1,23 @@
 version: 2
 
-sphinx:
-  configuration: docs/source/conf.py
-
 build:
   os: "ubuntu-22.04"
   tools:
     python: "3.12"
   commands:
     # FIXME: dependencies should not be explicitly listed here!
-    - pip install snakemake pygama pylegendmeta sphinx-inline-tabs sphinx-copybutton furo myst-parser
+    - asdf plugin add uv
+    - asdf install uv latest
+    - asdf global uv latest
+    - uv venv
+    - uv pip install
+      snakemake pygama pylegendmeta sphinx-inline-tabs sphinx-copybutton furo myst-parser
     - rm -rf docs/source/api
-    - sphinx-apidoc
+    - .venv/bin/python -m sphinx.ext.apidoc
       --private
       --module-first
       --force
       --output-dir docs/source/api
       scripts
+    - .venv/bin/python -m sphinx -T -b html -d docs/_build/doctrees -D
+      language=en docs/source $READTHEDOCS_OUTPUT/html
