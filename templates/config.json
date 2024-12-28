@@ -50,6 +50,18 @@
         "cache": "$_/software/python/cache"
       },
 
+      "table_format": {
+        "raw": "ch{ch:07d}/raw",
+        "dsp": "ch{ch:07d}/dsp",
+        "psp": "ch{ch:07d}/dsp",
+        "hit": "ch{ch:07d}/hit",
+        "pht": "ch{ch:07d}/hit",
+        "evt": "{grp}/evt",
+        "pet": "{grp}/evt",
+        "skm": "{grp}/skm",
+        "tcm": "hardware_tcm_1"
+      },
+
       "execenv": {
         "cmd": "apptainer run",
         "arg": "/data2/public/prodenv/containers/legendexp_legend-base_latest_20221021210158.sif",
