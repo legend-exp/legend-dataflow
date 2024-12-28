@@ -46,7 +46,7 @@ chan_maps = chan_map_path(setup)
 meta = metadata_path(setup)
 det_status = det_status_path(setup)
 swenv = runcmd(setup)
-part = ds.CalGrouping(setup, Path(det_status) / "cal_partitions.yaml")
+part = ds.CalGrouping(setup, Path(det_status) / "cal_groupings.yaml")
 basedir = workflow.basedir
 
 
