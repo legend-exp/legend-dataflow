@@ -1,0 +1,67 @@
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+exclude = ["rules", "templates", "scripts", "generated", "inputs", "software", "workflow"]
+
+[tool.setuptools]
+py-modules = []
+
+[project]
+name = "legend-dataflow"
+description = "Python package for processing L200 data"
+authors = [
+    {name = "George Marshall", email = "george.marshall.20@ucl.ac.uk"},
+    {name = "Luigi Pertoldi", email = "gipert@pm.me"},
+    {name = "The Legend Collaboration"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT Expat License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dbetto>=1.0.5",
+    "snakemake>=8",
+]
+dynamic = [
+    "version",
+]
+
+[project.optional-dependencies]
+no_container = [
+  "pygama",
+  "dspeed",
+  "pylegendmeta",
+  "legend-pydataobj",
+  "legend-daq2lh5",
+]
+test = [
+ "legend-dataflow[no_container]",
+  "pytest >=6",
+  "pytest-cov >=3",
+]
+dev = [
+ "legend-dataflow[no_container]",
+  "pytest >=6",
+  "pytest-cov >=3",
+]
+docs = [
+  "legend-dataflow[no_container]",
+  "sphinx>=7.0",
+  "myst_parser>=0.13",
+  "sphinx_inline_tabs",
+  "sphinx_copybutton",
+  "sphinx_autodoc_typehints",
+  "furo>=2023.08.17",
+]

@@ -10,8 +10,7 @@ build:
     - asdf install uv latest
     - asdf global uv latest
     - uv venv
-    - uv pip install
-      snakemake pygama pylegendmeta sphinx-inline-tabs sphinx-copybutton furo myst-parser
+    - uv pip install .[docs]
     - rm -rf docs/source/api
     - .venv/bin/python -m sphinx.ext.apidoc
       --private
