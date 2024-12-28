@@ -1,4 +1,5 @@
 cores: all
 configfile: config.json
+snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true
