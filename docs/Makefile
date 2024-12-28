@@ -3,7 +3,13 @@ SOURCEDIR = source
 BUILDDIR = build
 
 all: apidoc
-	sphinx-build -M html "$(SOURCEDIR)" "$(BUILDDIR)" -W --keep-going
+	sphinx-build \
+      -T \
+      -b html \
+      -d "$(BUILDDIR)"/doctrees \
+      -D language=en \
+       -W --keep-going \
+      "$(SOURCEDIR)" "$(BUILDDIR)"
 
 apidoc: clean-apidoc
 	sphinx-apidoc \
