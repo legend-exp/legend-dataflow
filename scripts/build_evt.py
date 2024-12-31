@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import logging.config
 import time
 from pathlib import Path
 
@@ -38,42 +39,42 @@ argparser.add_argument("--ann_file", help="ann file")
 argparser.add_argument("--xtc_file", help="xtc file", type=str)
 argparser.add_argument("--par_files", help="par files", nargs="*")
 
-argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--tier", help="Tier", type=str, required=True)
 
+argparser.add_argument("--configs", help="configs", type=str, required=True)
 argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
-
 argparser.add_argument("--log", help="log_file", type=str)
 
 argparser.add_argument("--output", help="output file", type=str)
 args = argparser.parse_args()
 
-if args.log is not None:
-    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-else:
-    logging.basicConfig(level=logging.DEBUG)
-
-logging.getLogger("legendmeta").setLevel(logging.INFO)
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py._conv").setLevel(logging.INFO)
-
-log = logging.getLogger(__name__)
-
 # load in config
 configs = TextDB(args.configs, lazy=True)
 if args.tier in ("evt", "pet"):
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"][
-        "inputs"
-    ]
-    evt_config_file = config_dict["evt_config"]
+    rule_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"]
+
 else:
     msg = "unknown tier"
     raise ValueError(msg)
+
+config_dict = rule_dict["inputs"]
+evt_config_file = config_dict["evt_config"]
+
+if "logging" in rule_dict["options"]:
+    log_config = rule_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(rule_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
 
 meta = LegendMetadata(args.metadata, lazy=True)
 chmap = meta.channelmap(args.timestamp)

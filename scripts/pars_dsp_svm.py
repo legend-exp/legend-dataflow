@@ -1,5 +1,4 @@
 import argparse
-import logging
 from pathlib import Path
 
 from legendmeta.catalog import Props
@@ -10,19 +9,6 @@ argparser.add_argument("--output_file", help="output par file", type=str, requir
 argparser.add_argument("--input_file", help="input par file", type=str, required=True)
 argparser.add_argument("--svm_file", help="svm file", required=True)
 args = argparser.parse_args()
-
-
-if args.log is not None:
-    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-else:
-    logging.basicConfig(level=logging.DEBUG)
-
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py").setLevel(logging.INFO)
-
-log = logging.getLogger(__name__)
 
 par_data = Props.read_from(args.input_file)
 

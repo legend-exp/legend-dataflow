@@ -34,21 +34,26 @@ argparser.add_argument("--metadata", help="metadata", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
-Path(args.log).parent.makedir(parents=True, exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-logging.getLogger("lgdo").setLevel(logging.INFO)
-
-Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-
 configs = TextDB(args.configs, lazy=True)
-channel_dict = configs.on(args.timestamp, system=args.datatype)
+config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"]
 
-hdf_settings = Props.read_from(channel_dict["snakemake_rules"]["tier_raw"]["inputs"]["settings"])[
-    "hdf5_settings"
-]
-blinding_settings = Props.read_from(
-    channel_dict["snakemake_rules"]["tier_raw_blind"]["inputs"]["config"]
-)
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
+
+channel_dict = config_dict["inputs"]
+hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]
+blinding_settings = Props.read_from(config_dict["config"])
 
 centroid = blinding_settings["centroid_in_keV"]  # keV
 width = blinding_settings["width_in_keV"]  # keV
@@ -115,6 +120,7 @@ tokeep = allind[np.logical_not(np.isin(allind, toblind))]
 rng = np.random.default_rng()
 rand_num = f"{rng.integers(0,99999):05d}"
 temp_output = f"{args.output}.{rand_num}"
+Path(temp_output).parent.mkdir(parents=True, exist_ok=True)
 
 for channel in all_channels:
     try:
@@ -166,4 +172,5 @@ for channel in all_channels:
     )
 
 # rename the temp file
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 Path(temp_output).rename(args.output)

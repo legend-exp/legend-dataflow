@@ -6,7 +6,7 @@ from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
@@ -31,14 +31,21 @@ argparser.add_argument("--plot_path", help="plot_path", type=str)
 
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py").setLevel(logging.INFO)
-logging.getLogger("matplotlib").setLevel(logging.INFO)
-logging.getLogger("dspeed.processing_chain").setLevel(logging.INFO)
-logging.getLogger("legendmeta").setLevel(logging.INFO)
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+config_dict = configs["snakemake_rules"]["pars_dsp_build_svm"]
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
 
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()

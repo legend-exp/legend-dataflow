@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from matplotlib.colors import LogNorm
 from pygama.math.distributions import nb_poly
@@ -443,13 +443,28 @@ if __name__ == "__main__":
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-    logging.getLogger("numba").setLevel(logging.INFO)
-    logging.getLogger("parse").setLevel(logging.INFO)
-    logging.getLogger("lgdo").setLevel(logging.INFO)
-    logging.getLogger("h5py").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
-    logging.getLogger("legendmeta").setLevel(logging.INFO)
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
+    if args.tier == "hit":
+        config_dict = config_dict["pars_hit_ecal"]
+    elif args.tier == "pht":
+        config_dict = config_dict["pars_pht_ecal"]
+    else:
+        msg = "invalid tier"
+        raise ValueError(msg)
+    if "logging" in config_dict["options"]:
+        log_config = config_dict["options"]["logging"]
+        log_config = Props.read_from(log_config)
+        if args.log is not None:
+            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+            log_config["handlers"]["file"]["filename"] = args.log
+        logging.config.dictConfig(log_config)
+        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+    else:
+        if args.log is not None:
+            Path(args.log).parent.makedir(parents=True, exist_ok=True)
+            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+        log = logging.getLogger(__name__)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp)
@@ -470,17 +485,7 @@ if __name__ == "__main__":
 
     hit_dict.update(database_dic[channel]["ctc_params"])
 
-    # get metadata dictionary
-    configs = LegendMetadata(path=args.configs)
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
-    if args.tier == "hit":
-        channel_dict = channel_dict["pars_hit_ecal"]["inputs"]["ecal_config"][args.channel]
-    elif args.tier == "pht":
-        channel_dict = channel_dict["pars_pht_ecal"]["inputs"]["ecal_config"][args.channel]
-    else:
-        msg = "invalid tier"
-        raise ValueError(msg)
-
+    channel_dict = config_dict["inputs"]["ecal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
 
     # convert plot functions from strings to functions and split off baseline and common plots

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pars_pht_aoecal import run_aoe_calibration
 from pars_pht_lqcal import run_lq_calibration
@@ -18,7 +18,6 @@ from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
 
-log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
 
@@ -69,13 +68,21 @@ if __name__ == "__main__":
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-    logging.getLogger("numba").setLevel(logging.INFO)
-    logging.getLogger("parse").setLevel(logging.INFO)
-    logging.getLogger("lgdo").setLevel(logging.INFO)
-    logging.getLogger("h5py").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
-    logging.getLogger("legendmeta").setLevel(logging.INFO)
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs["snakemake_rules"]
+    if "logging" in config_dict["pars_pht_partcal"]["options"]:
+        log_config = config_dict["pars_pht_partcal"]["options"]["logging"]
+        log_config = Props.read_from(log_config)
+        if args.log is not None:
+            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+            log_config["handlers"]["file"]["filename"] = args.log
+        logging.config.dictConfig(log_config)
+        log = logging.getLogger(config_dict["pars_pht_partcal"]["options"].get("logger", "prod"))
+    else:
+        if args.log is not None:
+            Path(args.log).parent.makedir(parents=True, exist_ok=True)
+            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+        log = logging.getLogger(__name__)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp, system=args.datatype)
@@ -122,17 +129,14 @@ if __name__ == "__main__":
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
 
-    configs = LegendMetadata(path=args.configs)
-    channel_dict = configs.on(timestamp, system=args.datatype)["snakemake_rules"]
-
     kwarg_dict = Props.read_from(
-        channel_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][args.channel]
+        config_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][args.channel]
     )
     aoe_kwarg_dict = Props.read_from(
-        channel_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel]
+        config_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel]
     )
     lq_kwarg_dict = Props.read_from(
-        channel_dict["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel]
+        config_dict["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel]
     )
 
     params = [

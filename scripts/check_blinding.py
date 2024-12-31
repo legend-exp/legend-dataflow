@@ -15,16 +15,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
-from lgdo.utils import numba_defaults
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 
 mpl.use("Agg")
-numba_defaults.cache = False
-numba_defaults.boundscheck = False
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--files", help="files", nargs="*", type=str)
@@ -39,14 +36,21 @@ argparser.add_argument("--metadata", help="channel", type=str)
 argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
-Path(args.log).parent.makedir(parents=True, exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py").setLevel(logging.INFO)
-logging.getLogger("matplotlib").setLevel(logging.INFO)
-log = logging.getLogger(__name__)
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+config_dict = configs["snakemake_rules"]["tier_raw_blindcheck"]
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
 
 # get the usability status for this channel
 chmap = LegendMetadata(args.metadata, lazy=True).channelmap(args.timestamp).map("daq.rawid")

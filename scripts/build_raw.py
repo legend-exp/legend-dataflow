@@ -23,9 +23,23 @@ logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
 configs = TextDB(args.configs, lazy=True)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"][
-    "inputs"
-]
+config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"]
+
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
+
+channel_dict = config_dict["inputs"]
 settings = Props.read_from(channel_dict["settings"])
 channel_dict = channel_dict["out_spec"]
 all_config = Props.read_from(channel_dict["gen_config"])

@@ -30,22 +30,27 @@ argparser.add_argument("--log", help="log file", default=None)
 argparser.add_argument("--output", help="output file", required=True)
 args = argparser.parse_args()
 
-if args.log is not None:
-    Path(args.log).parent.makedir(parents=True, exist_ok=True)
-
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py._conv").setLevel(logging.INFO)
-
-log = logging.getLogger(__name__)
-
 # load in config
-configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-skm_config_file = configs["snakemake_rules"]["tier_skm"]["inputs"]["skm_config"]
+config_dict = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)[
+    "snakemake_rules"
+]["tier_skm"]
 
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
+
+
+skm_config_file = config_dict["inputs"]["skm_config"]
 evt_filter = Props.read_from(skm_config_file)["evt_filter"]
 out_fields = Props.read_from(skm_config_file)["keep_fields"]
 

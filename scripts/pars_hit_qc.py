@@ -9,7 +9,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
@@ -53,23 +53,28 @@ if __name__ == "__main__":
     argparser.add_argument("--save_path", help="save_path", type=str)
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-    logging.getLogger("numba").setLevel(logging.INFO)
-    logging.getLogger("parse").setLevel(logging.INFO)
-    logging.getLogger("lgdo").setLevel(logging.INFO)
-    logging.getLogger("h5py").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
-    logging.getLogger("legendmeta").setLevel(logging.INFO)
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs["snakemake_rules"]["pars_hit_qc"]
+    if "logging" in config_dict["options"]:
+        log_config = config_dict["options"]["logging"]
+        log_config = Props.read_from(log_config)
+        if args.log is not None:
+            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+            log_config["handlers"]["file"]["filename"] = args.log
+        logging.config.dictConfig(log_config)
+        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+    else:
+        if args.log is not None:
+            Path(args.log).parent.makedir(parents=True, exist_ok=True)
+            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+        log = logging.getLogger(__name__)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp, system=args.datatype)
     channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
     # get metadata dictionary
-    configs = LegendMetadata(path=args.configs)
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
-    channel_dict = channel_dict["pars_hit_qc"]["inputs"]["qc_config"][args.channel]
-
+    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
 
     if args.overwrite_files:

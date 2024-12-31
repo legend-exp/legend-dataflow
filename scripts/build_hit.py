@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.config
 import time
 from pathlib import Path
 
@@ -24,23 +25,31 @@ argparser.add_argument("--output", help="output file", type=str)
 argparser.add_argument("--db_file", help="db file", type=str)
 args = argparser.parse_args()
 
-Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py._conv").setLevel(logging.INFO)
-
-log = logging.getLogger(__name__)
-
 configs = TextDB(args.configs, lazy=True)
 if args.tier == "hit" or args.tier == "pht":
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"][
-        "inputs"
-    ]["hit_config"]
+    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"]
 else:
     msg = "unknown tier"
     raise ValueError(msg)
+
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
+
+channel_dict = config_dict["inputs"]["hit_config"]
+settings_dict = config_dict["options"].get("settings", {})
+if isinstance(settings_dict, str):
+    settings_dict = Props.read_from(settings_dict)
 
 meta = LegendMetadata(path=args.metadata)
 chan_map = meta.channelmap(args.timestamp, system=args.datatype)

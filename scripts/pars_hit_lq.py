@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.math.distributions import gaussian
 from pygama.pargen.AoE_cal import *  # noqa: F403
@@ -18,7 +18,6 @@ from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 from util.convert_np import convert_dict_np_to_float
 
-log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
@@ -144,22 +143,28 @@ argparser.add_argument("--lq_results", help="lq_results", type=str)
 argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
 args = argparser.parse_args()
 
-logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-logging.getLogger("numba").setLevel(logging.INFO)
-logging.getLogger("parse").setLevel(logging.INFO)
-logging.getLogger("lgdo").setLevel(logging.INFO)
-logging.getLogger("h5py").setLevel(logging.INFO)
-logging.getLogger("matplotlib").setLevel(logging.INFO)
+configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+config_dict = configs["snakemake_rules"]["pars_hit_lqcal"]
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
 
 meta = LegendMetadata(path=args.metadata)
 channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
 channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
-configs = LegendMetadata(path=args.configs)
-channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-    "pars_hit_lqcal"
-]["inputs"]["lqcal_config"][args.channel]
 
+channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
 kwarg_dict = Props.read_from(channel_dict)
 
 ecal_dict = Props.read_from(args.ecal_file)

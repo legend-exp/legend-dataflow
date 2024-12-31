@@ -52,17 +52,25 @@ else:
     msg = f"Tier {args.tier} not supported"
     raise ValueError(msg)
 
+
+if "logging" in config_dict["options"]:
+    log_config = config_dict["options"]["logging"]
+    log_config = Props.read_from(log_config)
+    if args.log is not None:
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        log_config["handlers"]["file"]["filename"] = args.log
+    logging.config.dictConfig(log_config)
+    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+else:
+    if args.log is not None:
+        Path(args.log).parent.makedir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+    log = logging.getLogger(__name__)
+
 channel_dict = config_dict["inputs"]["processing_chain"]
 settings_dict = config_dict["options"].get("settings", {})
 if isinstance(settings_dict, str):
     settings_dict = Props.read_from(settings_dict)
-log_config = config_dict["options"]["logging"]
-
-Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-log_config = Props.read_from(log_config)
-log_config["handlers"]["file"]["filename"] = args.log
-logging.config.dictConfig(log_config)
-log = logging.getLogger("test")
 
 meta = LegendMetadata(path=args.metadata)
 chan_map = meta.channelmap(args.timestamp, system=args.datatype)

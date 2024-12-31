@@ -11,7 +11,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
-from legendmeta import LegendMetadata
+from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
@@ -269,23 +269,27 @@ if __name__ == "__main__":
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-    logging.getLogger("numba").setLevel(logging.INFO)
-    logging.getLogger("parse").setLevel(logging.INFO)
-    logging.getLogger("lgdo").setLevel(logging.INFO)
-    logging.getLogger("h5py").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
-    logging.getLogger("legendmeta").setLevel(logging.INFO)
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs["snakemake_rules"]["pars_pht_aoecal"]
+    if "logging" in config_dict["options"]:
+        log_config = config_dict["options"]["logging"]
+        log_config = Props.read_from(log_config)
+        if args.log is not None:
+            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+            log_config["handlers"]["file"]["filename"] = args.log
+        logging.config.dictConfig(log_config)
+        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
+    else:
+        if args.log is not None:
+            Path(args.log).parent.makedir(parents=True, exist_ok=True)
+            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
+        log = logging.getLogger(__name__)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp, system=args.datatype)
     channel = f"ch{chmap[args.channel].daq.rawid:07}"
 
-    configs = LegendMetadata(path=args.configs)
-    channel_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "pars_pht_aoecal"
-    ]["inputs"]["par_pht_aoecal_config"][args.channel]
-
+    channel_dict = config_dict["inputs"]["par_pht_aoecal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
 
     cal_dict = {}
