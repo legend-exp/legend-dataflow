@@ -12,7 +12,7 @@ from scripts.util.patterns import (
     get_pattern_plts_tmp_channel,
 )
 from scripts.util import ProcessingFileKey
-from scripts.util.catalog import Catalog
+from dbetto.catalog import Catalog
 from scripts.util import utils
 
 
