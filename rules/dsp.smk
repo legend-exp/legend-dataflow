@@ -234,6 +234,10 @@ rule build_svm_dsp:
         train_data=lambda wildcards: str(
             get_input_par_file(wildcards, "dsp", "svm_hyperpars")
         ).replace("hyperpars.yaml", "train.lh5"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
@@ -246,6 +250,10 @@ rule build_svm_dsp:
         "{swenv} python3 -B "
         "{basedir}/../scripts/pars_dsp_build_svm.py "
         "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
         "--output_file {output.dsp_pars}"
@@ -363,85 +371,87 @@ rule build_pars_dsp_db:
         "--channelmap {meta} "
 
 
-# rule build_pars_dsp:
-#     input:
-#         in_files=lambda wildcards: get_par_chanlist(
-#             setup,
-#             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-#             "dsp",
-#             basedir,
-#             det_status,
-#             chan_maps,
-#             name="dplms",
-#             extension="lh5",
-#         ),
-#         in_db=get_pattern_pars_tmp(
-#             setup,
-#             "dsp",
-#             datatype="cal",
-#         ),
-#         plts=get_pattern_plts(setup, "dsp"),
-#         objects=get_pattern_pars(
-#             setup,
-#             "dsp",
-#             name="objects",
-#             extension="dir",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#     params:
-#         timestamp="{timestamp}",
-#         datatype="cal",
-#     output:
-#         out_file=get_pattern_pars(
-#             setup,
-#             "dsp",
-#             extension="lh5",
-#             check_in_cycle=check_in_cycle,
-#         ),
-#         out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
-#     group:
-#         "merge-dsp"
-#     shell:
-#         "{swenv} python3 -B "
-#         "{basedir}/../scripts/merge_channels.py "
-#         "--output {output.out_file} "
-#         "--in_db {input.in_db} "
-#         "--out_db {output.out_db} "
-#         "--input {input.in_files} "
-#         "--timestamp {params.timestamp} "
-#         "--channelmap {meta} "
-# rule build_dsp:
-#     input:
-#         raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
-#         pars_file=ancient(
-#             lambda wildcards: ParsCatalog.get_par_file(
-#                 setup, wildcards.timestamp, "dsp"
-#             )
-#         ),
-#     params:
-#         timestamp="{timestamp}",
-#         datatype="{datatype}",
-#         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-#     output:
-#         tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
-#         db_file=get_pattern_pars_tmp(setup, "dsp_db"),
-#     log:
-#         get_pattern_log(setup, "tier_dsp"),
-#     group:
-#         "tier-dsp"
-#     resources:
-#         runtime=300,
-#         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
-#     shell:
-#         "{swenv} python3 -B "
-#         "{basedir}/../scripts/build_dsp.py "
-#         "--log {log} "
-#         "--tier dsp "
-#         f"--configs {ro(configs)} "
-#         "--metadata {meta} "
-#         "--datatype {params.datatype} "
-#         "--timestamp {params.timestamp} "
-#         "--input {params.ro_input[raw_file]} "
-#         "--output {output.tier_file} "
-#         "--db_file {output.db_file} "
-#         "--pars_file {params.ro_input[pars_file]} "
+rule build_pars_dsp:
+    input:
+        in_files=lambda wildcards: get_par_chanlist(
+            setup,
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+            "dsp",
+            basedir,
+            det_status,
+            chan_maps,
+            name="dplms",
+            extension="lh5",
+        ),
+        in_db=get_pattern_pars_tmp(
+            setup,
+            "dsp",
+            datatype="cal",
+        ),
+        plts=get_pattern_plts(setup, "dsp"),
+        objects=get_pattern_pars(
+            setup,
+            "dsp",
+            name="objects",
+            extension="dir",
+            check_in_cycle=check_in_cycle,
+        ),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+    output:
+        out_file=get_pattern_pars(
+            setup,
+            "dsp",
+            extension="lh5",
+            check_in_cycle=check_in_cycle,
+        ),
+        out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
+    group:
+        "merge-dsp"
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/merge_channels.py "
+        "--output {output.out_file} "
+        "--in_db {input.in_db} "
+        "--out_db {output.out_db} "
+        "--input {input.in_files} "
+        "--timestamp {params.timestamp} "
+        "--channelmap {meta} "
+
+
+rule build_dsp:
+    input:
+        raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
+        pars_file=ancient(
+            lambda wildcards: ParsCatalog.get_par_file(
+                setup, wildcards.timestamp, "dsp"
+            )
+        ),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+    output:
+        tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(setup, "dsp_db"),
+    log:
+        get_pattern_log(setup, "tier_dsp"),
+    group:
+        "tier-dsp"
+    resources:
+        runtime=300,
+        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
+    shell:
+        "{swenv} python3 -B "
+        "{basedir}/../scripts/build_dsp.py "
+        "--log {log} "
+        "--tier dsp "
+        f"--configs {ro(configs)} "
+        "--metadata {meta} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--input {params.ro_input[raw_file]} "
+        "--output {output.tier_file} "
+        "--db_file {output.db_file} "
+        "--pars_file {params.ro_input[pars_file]} "

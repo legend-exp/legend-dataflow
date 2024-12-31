@@ -185,6 +185,10 @@ rule build_svm_psp:
         train_data=lambda wildcards: str(
             get_input_par_file(wildcards, "psp", "svm_hyperpars")
         ).replace("hyperpars.yaml", "train.lh5"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        channel="{channel}",
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:
@@ -197,6 +201,10 @@ rule build_svm_psp:
         "{swenv} python3 -B "
         "{basedir}/../scripts/pars_dsp_build_svm.py "
         "--log {log} "
+        "--configs {configs} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--channel {params.channel} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
         "--output_file {output.dsp_pars}"
