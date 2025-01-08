@@ -76,6 +76,7 @@
       "pkg_versions": {
         "pygama": "pygama==2.0.3",
         "pylegendmeta": "pylegendmeta==1.1.0",
+        "dbetto": "dbetto==1.0.6",
         "dspeed": "dspeed==1.6.1",
         "legend-pydataobj": "legend-pydataobj==1.9.0",
         "legend-daq2lh5": "legend-daq2lh5==1.2.2",
