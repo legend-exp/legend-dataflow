@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
 import pickle as pkl
 import warnings
 from pathlib import Path
@@ -17,6 +16,7 @@ from pars_pht_partcal import calibrate_partition
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
+from utils.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
@@ -70,19 +70,8 @@ if __name__ == "__main__":
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]
-    if "logging" in config_dict["pars_pht_partcal"]["options"]:
-        log_config = config_dict["pars_pht_partcal"]["options"]["logging"]
-        log_config = Props.read_from(log_config)
-        if args.log is not None:
-            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-            log_config["handlers"]["file"]["filename"] = args.log
-        logging.config.dictConfig(log_config)
-        log = logging.getLogger(config_dict["pars_pht_partcal"]["options"].get("logger", "prod"))
-    else:
-        if args.log is not None:
-            Path(args.log).parent.makedir(parents=True, exist_ok=True)
-            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-        log = logging.getLogger(__name__)
+
+    log = build_log(config_dict["pars_pht_partcal"], args.log)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp, system=args.datatype)

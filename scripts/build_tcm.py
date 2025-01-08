@@ -1,6 +1,4 @@
 import argparse
-import logging
-import logging.config
 from pathlib import Path
 
 import lgdo.lh5 as lh5
@@ -9,6 +7,7 @@ from daq2lh5.orca import orca_flashcam
 from legendmeta import TextDB
 from legendmeta.catalog import Props
 from pygama.evt.build_tcm import build_tcm
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -21,19 +20,8 @@ args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 config_dict = configs["snakemake_rules"]["tier_tcm"]
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+
+log = build_log(config_dict, args.log)
 
 settings = Props.read_from(config_dict["inputs"]["config"])
 

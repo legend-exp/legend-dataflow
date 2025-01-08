@@ -1,16 +1,15 @@
 import argparse
 import json
-import logging
-import logging.config
 import time
 from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import Props, TextDB
+from legendmeta import LegendMetadata
 from lgdo.types import Array
 from pygama.evt import build_evt
+from util.log import build_log
 
 sto = lh5.LH5Store()
 
@@ -62,19 +61,7 @@ else:
 config_dict = rule_dict["inputs"]
 evt_config_file = config_dict["evt_config"]
 
-if "logging" in rule_dict["options"]:
-    log_config = rule_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(rule_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+log = build_log(rule_dict, args.log)
 
 meta = LegendMetadata(args.metadata, lazy=True)
 chmap = meta.channelmap(args.timestamp)

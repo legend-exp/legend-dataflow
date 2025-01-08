@@ -10,6 +10,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
@@ -32,20 +33,9 @@ argparser.add_argument("--plot_path", help="plot_path", type=str)
 args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-config_dict = configs["snakemake_rules"]["pars_dsp_build_svm"]
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+config_dict = configs["snakemake_rules"]["pars_dsp_dplms"]
+
+log = build_log(config_dict, args.log)
 
 log = logging.getLogger(__name__)
 sto = lh5.LH5Store()
@@ -55,9 +45,9 @@ channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
 channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
 configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-dsp_config = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["proc_chain"][args.channel]
+dsp_config = config_dict["inputs"]["proc_chain"][args.channel]
 
-dplms_json = configs["snakemake_rules"]["pars_dsp_dplms"]["inputs"]["dplms_pars"][args.channel]
+dplms_json = config_dict["inputs"]["dplms_pars"][args.channel]
 dplms_dict = Props.read_from(dplms_json)
 
 db_dict = Props.read_from(args.database)

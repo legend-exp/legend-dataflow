@@ -1,6 +1,5 @@
 import argparse
 import json
-import logging
 import time
 import warnings
 from bisect import bisect_left
@@ -15,6 +14,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
+from utils.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -98,19 +98,8 @@ if __name__ == "__main__":
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_dsp_peak_selection"]
-    if "logging" in config_dict["options"]:
-        log_config = config_dict["options"]["logging"]
-        log_config = Props.read_from(log_config)
-        if args.log is not None:
-            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-            log_config["handlers"]["file"]["filename"] = args.log
-        logging.config.dictConfig(log_config)
-        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-    else:
-        if args.log is not None:
-            Path(args.log).parent.makedir(parents=True, exist_ok=True)
-            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-        log = logging.getLogger(__name__)
+
+    log = build_log(config_dict, args.log)
 
     sto = lh5.LH5Store()
     t0 = time.time()

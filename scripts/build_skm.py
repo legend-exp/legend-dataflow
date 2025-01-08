@@ -1,12 +1,11 @@
 import argparse
-import logging
-from pathlib import Path
 
 import awkward as ak
 from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
+from utils.log import build_log
 
 
 def get_all_out_fields(input_table, out_fields, current_field=""):
@@ -35,19 +34,7 @@ config_dict = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.dat
     "snakemake_rules"
 ]["tier_skm"]
 
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+log = build_log(config_dict, args.log)
 
 
 skm_config_file = config_dict["inputs"]["skm_config"]

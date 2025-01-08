@@ -7,7 +7,6 @@ then it will skip the check.
 """
 
 import argparse
-import logging
 import pickle as pkl
 from pathlib import Path
 
@@ -20,6 +19,7 @@ from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
+from utils.log import build_log
 
 mpl.use("Agg")
 
@@ -38,19 +38,8 @@ args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 config_dict = configs["snakemake_rules"]["tier_raw_blindcheck"]
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+
+log = build_log(config_dict, args.log)
 
 # get the usability status for this channel
 chmap = LegendMetadata(args.metadata, lazy=True).channelmap(args.timestamp).map("daq.rawid")

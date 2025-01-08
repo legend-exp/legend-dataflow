@@ -6,6 +6,7 @@ import numpy as np
 from daq2lh5 import build_raw
 from legendmeta import TextDB
 from legendmeta.catalog import Props
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
@@ -25,19 +26,7 @@ Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 configs = TextDB(args.configs, lazy=True)
 config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"]
 
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+log = build_log(config_dict, args.log)
 
 channel_dict = config_dict["inputs"]
 settings = Props.read_from(channel_dict["settings"])

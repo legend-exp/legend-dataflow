@@ -23,6 +23,7 @@ from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
 from util.convert_np import convert_dict_np_to_float
+from utils.log import build_log
 
 log = logging.getLogger(__name__)
 mpl.use("agg")
@@ -452,19 +453,8 @@ if __name__ == "__main__":
     else:
         msg = "invalid tier"
         raise ValueError(msg)
-    if "logging" in config_dict["options"]:
-        log_config = config_dict["options"]["logging"]
-        log_config = Props.read_from(log_config)
-        if args.log is not None:
-            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-            log_config["handlers"]["file"]["filename"] = args.log
-        logging.config.dictConfig(log_config)
-        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-    else:
-        if args.log is not None:
-            Path(args.log).parent.makedir(parents=True, exist_ok=True)
-            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-        log = logging.getLogger(__name__)
+
+    log = build_log(config_dict, args.log)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp)

@@ -11,7 +11,6 @@ is not found). This script itself does not check for the existence of such a fil
 """
 
 import argparse
-import logging
 from pathlib import Path
 
 import numexpr as ne
@@ -19,6 +18,7 @@ import numpy as np
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)
@@ -37,19 +37,7 @@ args = argparser.parse_args()
 configs = TextDB(args.configs, lazy=True)
 config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"]
 
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+log = build_log(config_dict, args.log)
 
 channel_dict = config_dict["inputs"]
 hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]

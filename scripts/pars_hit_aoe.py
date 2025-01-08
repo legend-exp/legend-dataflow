@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import pickle as pkl
 import warnings
 from pathlib import Path
@@ -16,6 +15,7 @@ from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.convert_np import convert_dict_np_to_float
+from utils.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -126,19 +126,8 @@ args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 config_dict = configs["snakemake_rules"]["pars_hit_aoecal"]
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+
+log = build_log(config_dict, args.log)
 
 meta = LegendMetadata(path=args.metadata)
 channel_dict = meta.channelmap(args.timestamp, system=args.datatype)

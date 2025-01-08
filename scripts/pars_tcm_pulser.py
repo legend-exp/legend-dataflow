@@ -7,6 +7,7 @@ import numpy as np
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -24,19 +25,8 @@ args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
 config_dict = configs["snakemake_rules"]["pars_tcm_pulser"]
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+
+log = build_log(config_dict, args.log)
 
 sto = lh5.LH5Store()
 log = logging.getLogger(__name__)

@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import copy
 import json
-import logging
 import pickle as pkl
 import warnings
 from pathlib import Path
@@ -19,8 +18,8 @@ from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
+from utils.log import build_log
 
-log = logging.getLogger(__name__)
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
@@ -268,19 +267,8 @@ if __name__ == "__main__":
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_pht_lqcal"]
-    if "logging" in config_dict["options"]:
-        log_config = config_dict["options"]["logging"]
-        log_config = Props.read_from(log_config)
-        if args.log is not None:
-            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-            log_config["handlers"]["file"]["filename"] = args.log
-        logging.config.dictConfig(log_config)
-        log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-    else:
-        if args.log is not None:
-            Path(args.log).parent.makedir(parents=True, exist_ok=True)
-            logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-        log = logging.getLogger(__name__)
+
+    log = build_log(config_dict, args.log)
 
     meta = LegendMetadata(path=args.metadata)
     chmap = meta.channelmap(args.timestamp, system=args.datatype)

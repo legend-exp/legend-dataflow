@@ -1,6 +1,4 @@
 import argparse
-import logging
-import logging.config
 import time
 from pathlib import Path
 
@@ -8,6 +6,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
+from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)
@@ -32,19 +31,7 @@ else:
     msg = "unknown tier"
     raise ValueError(msg)
 
-if "logging" in config_dict["options"]:
-    log_config = config_dict["options"]["logging"]
-    log_config = Props.read_from(log_config)
-    if args.log is not None:
-        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-        log_config["handlers"]["file"]["filename"] = args.log
-    logging.config.dictConfig(log_config)
-    log = logging.getLogger(config_dict["options"].get("logger", "prod"))
-else:
-    if args.log is not None:
-        Path(args.log).parent.makedir(parents=True, exist_ok=True)
-        logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-    log = logging.getLogger(__name__)
+log = build_log(config_dict, args.log)
 
 channel_dict = config_dict["inputs"]["hit_config"]
 settings_dict = config_dict["options"].get("settings", {})
