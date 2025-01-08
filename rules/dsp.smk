@@ -237,7 +237,6 @@ rule build_svm_dsp:
     params:
         timestamp="{timestamp}",
         datatype="cal",
-        channel="{channel}",
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
@@ -253,7 +252,6 @@ rule build_svm_dsp:
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
         "--output_file {output.dsp_pars}"

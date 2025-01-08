@@ -134,15 +134,15 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-            #     # remove filelists
-            # files = glob.glob(os.path.join(filelist_path(setup), "*"))
-            # for file in files:
-            #     if os.path.isfile(file):
-            #         os.remove(file)
-            # if os.path.exists(filelist_path(setup)):
-            #     os.rmdir(filelist_path(setup))
+            # remove filelists
+    files = glob.glob(os.path.join(filelist_path(setup), "*"))
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+    if os.path.exists(filelist_path(setup)):
+        os.rmdir(filelist_path(setup))
 
-            # remove logs
+        # remove logs
     files = glob.glob(os.path.join(tmp_log_path(setup), "*", "*.log"))
     for file in files:
         if os.path.isfile(file):
