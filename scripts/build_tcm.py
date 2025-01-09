@@ -41,9 +41,9 @@ for ch in ch_list:
     fcid_channels[fcid].append(f"/{ch}/raw")
 
 # make a hardware_tcm_[fcid] for each fcid
-for fcid in fcid_channels:
+for fcid, fcid_dict in fcid_channels.items():
     build_tcm(
-        [(args.input, fcid_channels[fcid])],
+        [(args.input, fcid_dict)],
         out_file=temp_output,
         out_name=f"hardware_tcm_{fcid}",
         wo_mode="o",
