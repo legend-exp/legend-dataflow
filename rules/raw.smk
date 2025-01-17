@@ -4,36 +4,41 @@ from scripts.util.patterns import (
     get_pattern_log,
     get_pattern_tier_raw_blind,
 )
+from scripts.util.utils import set_last_rule_name
 
 
-rule build_raw:
-    """
-    This rule runs build raw, it takes in a daq file and outputs a raw file
-    """
-    input:
-        get_pattern_tier_daq(setup),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-        ro_input=lambda _, input: ro(input),
-    output:
-        get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
-    log:
-        get_pattern_log(setup, "tier_raw"),
-    group:
-        "tier-raw"
-    resources:
-        mem_swap=110,
-        runtime=300,
-    shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_raw.py "
-        "--log {log} "
-        f"--configs {ro(configs)} "
-        f"--chan_maps {ro(chan_maps)} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "{params.ro_input} {output}"
+for daq_ext in ("orca", "fcio"):
+
+    rule:
+        """
+        This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
+        """
+        input:
+            get_pattern_tier_daq(setup, extension=daq_ext),
+        params:
+            timestamp="{timestamp}",
+            datatype="{datatype}",
+            ro_input=lambda _, input: ro(input),
+        output:
+            get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
+        log:
+            get_pattern_log(setup, "tier_raw"),
+        group:
+            "tier-raw"
+        resources:
+            mem_swap=110,
+            runtime=300,
+        shell:
+            "{swenv} python3 -B "
+            "{basedir}" + f"/../scripts/build_raw_{daq_ext}.py "
+            "--log {log} "
+            f"--configs {ro(configs)} "
+            f"--chan_maps {ro(chan_maps)} "
+            "--datatype {params.datatype} "
+            "--timestamp {params.timestamp} "
+            "{params.ro_input} {output}"
+
+    set_last_rule_name(workflow, f"build_raw_{daq_ext}")
 
 
 rule build_raw_blind:
@@ -42,7 +47,7 @@ rule build_raw_blind:
     and runs only if the blinding check file is on disk. Output is just the blinded raw file.
     """
     input:
-        tier_file=get_pattern_tier(setup, "raw", check_in_cycle=False).replace(
+        tier_file=str(get_pattern_tier(setup, "raw", check_in_cycle=False)).replace(
             "{datatype}", "phy"
         ),
         blind_file=get_blinding_curve_file,
@@ -53,7 +58,7 @@ rule build_raw_blind:
     output:
         get_pattern_tier_raw_blind(setup),
     log:
-        get_pattern_log(setup, "tier_raw_blind").replace("{datatype}", "phy"),
+        str(get_pattern_log(setup, "tier_raw_blind")).replace("{datatype}", "phy"),
     group:
         "tier-raw"
     resources:

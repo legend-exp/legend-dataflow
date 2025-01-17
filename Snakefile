@@ -12,7 +12,6 @@ This includes:
 
 from pathlib import Path
 import os
-import json
 import sys
 import glob
 from datetime import datetime

@@ -114,8 +114,8 @@ def get_tier_pattern(tier):
     This func gets the search pattern for the relevant tier passed.
     """
     if tier == "daq":
-        return get_pattern_unsorted_data(setup)
+        return get_pattern_unsorted_data(setup, extension="*")
     elif tier == "raw":
-        return get_pattern_tier_daq(setup)
+        return get_pattern_tier_daq(setup, extension="*")
     else:
         return get_pattern_tier(setup, "raw", check_in_cycle=False)
