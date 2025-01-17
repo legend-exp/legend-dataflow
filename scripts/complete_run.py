@@ -131,8 +131,9 @@ def get_keys(files):
     return key_dict
 
 
-def build_valid_keys(input_files, output_dir):
-    infiles = Path(as_ro(input_files)).glob()
+def build_valid_keys(input_files_regex, output_dir):
+    in_regex = Path(as_ro(input_files_regex))
+    infiles = in_regex.parent.glob(in_regex.name)
     key_dict = get_keys(infiles)
 
     for key in list(key_dict):
@@ -254,9 +255,8 @@ file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["tabl
 
 
 def fformat(tier):
-    return as_ro(
-        patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
-    ).replace(as_ro(ut.get_tier_path(snakemake.params.setup, tier)), "")
+    abs_path = patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
+    return str(abs_path).replace(ut.get_tier_path(snakemake.params.setup, tier), "")
 
 
 file_db_config |= {
@@ -267,7 +267,7 @@ file_db_config |= {
 if snakemake.wildcards.tier != "daq":
     print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
 
-    Path(snakemake.params.filedb_path).parent.makedirs(parents=True, exist_ok=True)
+    Path(snakemake.params.filedb_path).mkdir(parents=True, exist_ok=True)
 
     with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
         json.dump(file_db_config, f, indent=2)
