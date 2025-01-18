@@ -7,10 +7,7 @@ to the blinded raw data. It handles:
 """
 
 import pathlib, os, sys
-from scripts.util.patterns import (
-    get_pattern_unsorted_data,
-    get_pattern_tier_daq,
-)
+from scripts.util import patterns as patt
 from scripts.util.utils import (
     subst_vars_in_snakemake_config,
     runcmd,
@@ -65,7 +62,10 @@ localrules:
 
 
 onstart:
-    print("Starting workflow")
+    print("INFO: starting workflow")
+
+    # Make sure some packages are initialized before we begin to avoid race conditions
+    shell('{swenv} python3 -B -c "import daq2lh5 "')
 
     # raw_par_cat_file = os.path.join(pars_path(setup), "raw", "validity.jsonl")
     # if os.path.isfile(raw_par_cat_file):
@@ -95,7 +95,7 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern_unsorted_data(setup, extension="fcio"),
+            patt.get_pattern_tier_daq(setup, extension="fcio"),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
@@ -120,9 +120,9 @@ rule sort_data:
     to the sorted dirs under generated
     """
     input:
-        get_pattern_unsorted_data(setup, extension="fcio"),
+        patt.get_pattern_tier_daq_unsorted(setup, extension="fcio"),
     output:
-        get_pattern_tier_daq(setup, extension="fcio"),
+        patt.get_pattern_tier_daq(setup, extension="fcio"),
     shell:
         "mv {input} {output}"
 

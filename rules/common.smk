@@ -6,10 +6,6 @@ from pathlib import Path
 from scripts.util.patterns import (
     par_overwrite_path,
     get_pars_path,
-    get_pattern_unsorted_data,
-    get_pattern_tier_daq,
-    get_pattern_tier,
-    get_pattern_plts_tmp_channel,
 )
 from scripts.util import ProcessingFileKey
 from scripts.util.catalog import Catalog
