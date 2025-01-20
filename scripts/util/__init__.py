@@ -12,18 +12,18 @@ from .utils import (
 )
 
 __all__ = [
+    "CalGrouping",
+    "Catalog",
+    "ChannelProcKey",
+    "FileKey",
+    "ParsCatalog",
+    "ParsKeyResolve",
+    "ProcessingFileKey",
     "Props",
     "PropsStream",
-    "Catalog",
-    "ParsKeyResolve",
-    "CalGrouping",
-    "FileKey",
-    "ProcessingFileKey",
-    "ChannelProcKey",
-    "ParsCatalog",
-    "unix_time",
     "runcmd",
-    "subst_vars_impl",
     "subst_vars",
+    "subst_vars_impl",
     "subst_vars_in_snakemake_config",
+    "unix_time",
 ]

@@ -4,12 +4,11 @@ Helper functions for running data production
 
 from pathlib import Path
 from scripts.util.patterns import (
-    par_overwrite_path,
-    get_pars_path,
-    get_pattern_unsorted_data,
+    get_pattern_tier_daq_unsorted,
     get_pattern_tier_daq,
     get_pattern_tier,
-    get_pattern_plts_tmp_channel,
+    par_overwrite_path,
+    get_pars_path,
 )
 from scripts.util import ProcessingFileKey
 from scripts.util.catalog import Catalog
@@ -109,13 +108,13 @@ def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
         return out_files
 
 
-def get_tier_pattern(tier):
+def get_search_pattern(tier):
     """
     This func gets the search pattern for the relevant tier passed.
     """
     if tier == "daq":
-        return get_pattern_unsorted_data(setup)
+        return get_pattern_tier_daq_unsorted(setup, extension="*")
     elif tier == "raw":
-        return get_pattern_tier_daq(setup)
+        return get_pattern_tier_daq(setup, extension="*")
     else:
         return get_pattern_tier(setup, "raw", check_in_cycle=False)

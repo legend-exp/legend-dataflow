@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -131,8 +132,9 @@ def get_keys(files):
     return key_dict
 
 
-def build_valid_keys(input_files, output_dir):
-    infiles = Path(as_ro(input_files)).glob()
+def build_valid_keys(input_files_regex, output_dir):
+    in_regex = Path(as_ro(input_files_regex))
+    infiles = in_regex.parent.glob(in_regex.name)
     key_dict = get_keys(infiles)
 
     for key in list(key_dict):
@@ -156,12 +158,12 @@ def find_gen_runs(gen_tier_path):
     # first look for non-concat tiers
     paths = gen_tier_path.glob("*/*/*/*")
     # use the directories to build a datatype/period/run string
-    runs = {"/".join(p.name.split("/")[-3:]) for p in paths}
+    runs = {"/".join(str(p).split("/")[-3:]) for p in paths}
 
     # then look for concat tiers (use filenames now)
     paths_concat = gen_tier_path.glob("*/*/*.lh5")
     # use the directories to build a datatype/period/run string
-    runs_concat = {"/".join([p.name.split("-")[3]] + p.name.split("-")[1:3]) for p in paths_concat}
+    runs_concat = {"/".join([str(p).split("-")[3]] + str(p).split("-")[1:3]) for p in paths_concat}
 
     return runs | runs_concat
 
@@ -187,30 +189,32 @@ def build_file_dbs(gen_tier_path, outdir):
         logfile = Path(ut.tmp_log_path(snakemake.params.setup)) / outfile.with_suffix(".log").name
         print(f"INFO: ......building {outfile}")
 
-        cmdline = ut.runcmd(snakemake.params.setup, aslist=True)
-        prodenv = as_ro(os.getenv("PRODENV"))
-        cmdline += [f"--env=PRODENV={prodenv}"]
+        cmdline = [
+            *ut.runcmd(snakemake.params.setup, aslist=True),
+            "--",
+            "python3",
+            "-B",
+            f"{snakemake.params.basedir}/scripts/build_fdb.py",
+            "--scan-path",
+            spec,
+            "--output",
+            str(outfile),
+            "--config",
+            str(outdir / "file_db_config.json"),
+            "--log",
+            str(logfile),
+        ]
+
+        if speck[0] == "phy":
+            cmdline += ["--assume-nonsparse"]
+
+        print(cmdline)
+        print(" ".join(cmdline))
+
+        cmdenv = {}
 
         # TODO: forward stdout to log file
-        processes.add(
-            subprocess.Popen(
-                [
-                    *cmdline,
-                    "python3",
-                    "-B",
-                    f"{snakemake.params.basedir}/scripts/build_fdb.py",
-                    "--scan-path",
-                    spec,
-                    "--output",
-                    str(outfile),
-                    "--config",
-                    str(outdir / "file_db_config.json"),
-                    "--log",
-                    str(logfile),
-                    "--assume-nonsparse" if speck[0] == "phy" else "",
-                ],
-            )
-        )
+        processes.add(subprocess.Popen(cmdline))
 
         if len(processes) >= snakemake.threads:
             os.wait()
@@ -254,9 +258,8 @@ file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["tabl
 
 
 def fformat(tier):
-    return as_ro(
-        patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
-    ).replace(as_ro(ut.get_tier_path(snakemake.params.setup, tier)), "")
+    abs_path = patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
+    return str(abs_path).replace(ut.get_tier_path(snakemake.params.setup, tier), "")
 
 
 file_db_config |= {
@@ -267,7 +270,7 @@ file_db_config |= {
 if snakemake.wildcards.tier != "daq":
     print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
 
-    Path(snakemake.params.filedb_path).parent.makedirs(parents=True, exist_ok=True)
+    Path(snakemake.params.filedb_path).mkdir(parents=True, exist_ok=True)
 
     with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
         json.dump(file_db_config, f, indent=2)

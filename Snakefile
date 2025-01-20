@@ -12,7 +12,6 @@ This includes:
 
 from pathlib import Path
 import os
-import json
 import sys
 import glob
 from datetime import datetime
@@ -158,26 +157,28 @@ onsuccess:
 rule gen_filelist:
     """Generate file list.
 
-    It is a checkpoint so when it is run it will update the dag passed on the
-    files it finds as an output. It does this by taking in the search pattern,
-    using this to find all the files that match this pattern, deriving the keys
-    from the files found and generating the list of new files needed.
+    This rule is used as a "checkpoint", so when it is run it will update the
+    DAG based on the files it finds. It does this by taking in the search
+    pattern, using this to find all the files that match this pattern, deriving
+    the keys from the files found and generating the list of new files needed.
     """
     input:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern_tier(setup, "raw", check_in_cycle=False),
+            get_search_pattern(wildcards.tier),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
         temp(Path(filelist_path(setup)) / "{label}-{tier}.filelist"),
     run:
+        print(f"INFO: found {len(input)} files")
         if len(input) == 0:
             print(
-                f"WARNING: No files found for the given pattern:{wildcards.label}",
-                "\nmake sure pattern follows the format: all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen",
+                f"WARNING: No files found for the given pattern:{wildcards.label}. "
+                "make sure pattern follows the format: "
+                "all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
             )
         with open(output[0], "w") as f:
             for fn in input:
