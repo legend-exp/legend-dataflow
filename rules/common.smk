@@ -103,3 +103,15 @@ def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
         raise ValueError(f"Could not find name in {pars_files_overwrite}")
     else:
         return out_files
+
+
+def get_search_pattern(tier):
+    """
+    This func gets the search pattern for the relevant tier passed.
+    """
+    if tier == "daq":
+        return get_pattern_unsorted_data(setup, extension="*")
+    elif tier == "raw":
+        return get_pattern_tier_daq(setup, extension="*")
+    else:
+        return get_pattern_tier(setup, "raw", check_in_cycle=False)

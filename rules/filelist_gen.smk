@@ -3,7 +3,11 @@ import json, yaml
 from pathlib import Path
 
 from scripts.util.FileKey import FileKey, run_grouper
-from scripts.util.patterns import get_pattern_tier, get_pattern_tier_raw_blind
+from scripts.util.patterns import (
+    get_pattern_tier,
+    get_pattern_tier_raw_blind,
+    get_pattern_tier_daq,
+)
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -114,6 +118,8 @@ def get_pattern(setup, tier):
         fn_pattern = get_pattern_tier(setup, "pet", check_in_cycle=False)
     elif tier == "evt_concat":
         fn_pattern = get_pattern_tier(setup, "evt", check_in_cycle=False)
+    elif tier == "daq":
+        fn_pattern = get_pattern_tier_daq(setup, extension="{ext}")
     else:
         fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
     return fn_pattern
@@ -158,13 +164,13 @@ def build_filelist(
         ignore_keys = []
     if analysis_runs is None:
         analysis_runs = {}
-
     phy_filenames = []
     other_filenames = []
     for key in filekeys:
-        fn_glob_pattern = key.get_path_from_filekey(search_pattern)[0]
+        if Path(search_pattern).suffix == ".*":
+            search_pattern = Path(str(search_pattern).replace(".*", ".{ext}"))
+        fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
         files = glob.glob(fn_glob_pattern)
-
         for f in files:
             _key = FileKey.get_filekey_from_pattern(f, search_pattern)
             if _key.name in ignore_keys:

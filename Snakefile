@@ -166,7 +166,7 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern_tier(setup, "raw", check_in_cycle=False),
+            get_search_pattern(wildcards.tier),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
