@@ -99,12 +99,16 @@ class ParsKeyResolve:
     @staticmethod
     def get_keys(keypart, search_pattern):
         d = FileKey.parse_keypart(keypart)
+        if Path(search_pattern).suffix == ".*":
+            search_pattern = Path(search_pattern).with_suffix(".{ext}")
+            wildcard_dict = dict(ext="*", **d._asdict())
+        else:
+            wildcard_dict = d._asdict()
         try:
             tier_pattern_rx = re.compile(smk.io.regex_from_filepattern(str(search_pattern)))
-
         except AttributeError:
             tier_pattern_rx = re.compile(smk.io.regex(str(search_pattern)))
-        fn_glob_pattern = smk.io.expand(search_pattern, **d._asdict())[0]
+        fn_glob_pattern = smk.io.expand(search_pattern, **wildcard_dict)[0]
         p = Path(fn_glob_pattern)
         parts = p.parts[p.is_absolute() :]
         files = Path(p.root).glob(str(Path(*parts)))
@@ -113,6 +117,8 @@ class ParsKeyResolve:
             m = tier_pattern_rx.match(str(f))
             if m is not None:
                 d = m.groupdict()
+                if "ext" in d:
+                    d.pop("ext")
                 key = FileKey(**d)
                 keys.append(key)
         return keys

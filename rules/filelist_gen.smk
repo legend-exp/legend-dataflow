@@ -168,7 +168,7 @@ def build_filelist(
     other_filenames = []
     for key in filekeys:
         if Path(search_pattern).suffix == ".*":
-            search_pattern = Path(str(search_pattern).replace(".*", ".{ext}"))
+            search_pattern = Path(search_pattern).with_suffix(".{ext}")
         fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
         files = glob.glob(fn_glob_pattern)
         for f in files:
