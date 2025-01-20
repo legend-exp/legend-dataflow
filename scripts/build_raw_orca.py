@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 from daq2lh5 import build_raw
-from legendmeta import TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
 from utils.log import build_log
 
 argparser = argparse.ArgumentParser()
@@ -15,10 +15,10 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--configs", help="config file", type=str)
 argparser.add_argument("--chan_maps", help="chan map", type=str)
-argparser.add_argument("--log", help="log file", type=str)
+argparser.add_argument("--log", help="log file")
 args = argparser.parse_args()
 
-Path(args.log).parent.makedir(parents=True, exist_ok=True)
+Path(args.log).parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)

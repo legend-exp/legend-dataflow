@@ -53,7 +53,7 @@ def full_channel_pattern_with_extension():
     return "{experiment}-{period}-{run}-{datatype}-{timestamp}-{channel}-{processing_step}.{ext}"
 
 
-def get_pattern_unsorted_data(setup, extension="orca"):
+def get_pattern_tier_daq_unsorted(setup, extension="orca"):
     if sandbox_path(setup) is not None:
         return Path(f"{sandbox_path(setup)}") / (
             "{experiment}-{period}-{run}-{datatype}-{timestamp}." + extension
