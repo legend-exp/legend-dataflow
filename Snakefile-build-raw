@@ -19,6 +19,7 @@ from scripts.util.utils import (
     det_status_path,
 )
 import scripts.util as ds
+from scripts.util.create_pars_keylist import ParsKeyResolve
 
 check_in_cycle = True
 
@@ -71,7 +72,7 @@ onstart:
         pathlib.Path(os.path.dirname(raw_par_cat_file)).mkdir(
             parents=True, exist_ok=True
         )
-        ds.pars_key_resolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
+        ParsKeyResolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
     except NameError:
         pass
 
