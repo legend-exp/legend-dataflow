@@ -32,7 +32,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "dbetto>=1.0.5",
-    "snakemake>=8",
+    "snakemake>=8.16",
 ]
 dynamic = [
     "version",

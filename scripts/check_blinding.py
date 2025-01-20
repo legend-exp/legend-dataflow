@@ -19,7 +19,7 @@ from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
-from utils.log import build_log
+from util.log import build_log
 
 mpl.use("Agg")
 
@@ -85,7 +85,7 @@ plt.close()
 # valid and if so create file else raise error.  if detector is in ac mode it
 # will always pass this check
 if (np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5)) or det_status is False:
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.output).mkdir(parents=True, exist_ok=True)
     Props.write_to(args.output, {})
 else:
     msg = "peaks not found in daqenergy"

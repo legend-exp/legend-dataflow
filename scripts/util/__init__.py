@@ -23,7 +23,9 @@ __all__ = [
     "PropsStream",
     "runcmd",
     "subst_vars",
+    "subst_vars",
     "subst_vars_impl",
     "subst_vars_in_snakemake_config",
+    "unix_time",
     "unix_time",
 ]
