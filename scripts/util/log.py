@@ -22,7 +22,7 @@ def build_log(config_dict, log_file=None):
         log = logging.getLogger(config_dict["options"].get("logger", "prod"))
     else:
         if log_file is not None:
-            Path(log_file).parent.makedir(parents=True, exist_ok=True)
+            Path(log_file).parent.mkdir(parents=True, exist_ok=True)
             logging.basicConfig(level=logging.INFO, filename=log_file, filemode="w")
         log = logging.getLogger(__name__)
     return log
