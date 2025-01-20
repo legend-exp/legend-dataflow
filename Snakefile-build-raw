@@ -88,14 +88,12 @@ include: "rules/raw.smk"
 include: "rules/blinding_check.smk"
 
 
-# FIXME: cannot put extension="*", otherwise it won't be possible to extract
-# keys (see FileKey.get_path_from_filekey())
 rule gen_filelist:
     input:
         lambda wildcards: get_filelist(
             wildcards,
             setup,
-            get_pattern_unsorted_data(setup, extension="fcio"),
+            get_search_pattern(wildcards.tier),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
