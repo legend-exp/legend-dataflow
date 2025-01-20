@@ -92,7 +92,7 @@ plt.close()
 # check for peaks within +- 5keV of  2614 and 583 to ensure blinding still
 # valid and if so create file else raise error.  if detector is in ac mode it
 # will always pass this check
-if np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5) or det_status is False:
+if (np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5)) or det_status is False:
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     Props.write_to(args.output, {})
 else:

@@ -51,16 +51,16 @@ plot_dict = {}
 for field in ave_fields:
     keys = field.split(".")
     vals = []
-    for tstamp in in_dicts:
-        val = in_dicts[tstamp]
+    for _tstamp, tstamp_dict in in_dicts.items():
+        val = tstamp_dict.copy()
         for key in keys:
             val = val[key]
         vals.append(val)
-        if "dsp" in in_dicts[tstamp]:
-            tmp_dict = in_dicts[tstamp]["dsp"]
+        if "dsp" in tstamp_dict:
+            tmp_dict = tstamp_dict["dsp"]
         else:
             tmp_dict = {}
-            in_dicts[tstamp]["dsp"] = tmp_dict
+            tstamp_dict["dsp"] = tmp_dict
         for i, key in enumerate(keys):
             if i == len(keys) - 1:
                 tmp_dict[key] = val
@@ -86,8 +86,8 @@ for field in ave_fields:
     mean_val = np.nan if len(vals[~np.isnan(vals)]) == 0 else np.nanmedian(vals)
     mean = f"{round(mean_val, rounding)}*{unit}" if unit is not None else mean_val
 
-    for tstamp in in_dicts:
-        val = in_dicts[tstamp]
+    for _tstamp, tstamp_dict in in_dicts.items():
+        val = tstamp_dict
         for i, key in enumerate(keys):
             if i == len(keys) - 1:
                 val[key] = mean

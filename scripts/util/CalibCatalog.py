@@ -99,8 +99,8 @@ class CalibCatalog(namedtuple("CalibCatalog", ["entries"])):
                 entries[system] = []
             entries[system].append(CalibCatalog.Entry(unix_time(timestamp), file_key))
 
-        for system in entries:
-            entries[system] = sorted(entries[system], key=lambda entry: entry.valid_from)
+        for system, system_dict in entries.items():
+            entries[system] = sorted(system_dict, key=lambda entry: entry.valid_from)
         return CalibCatalog(entries)
 
     def calib_for(self, timestamp, category="all", allow_none=False):
