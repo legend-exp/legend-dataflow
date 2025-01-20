@@ -184,6 +184,10 @@ def build_filelist(
                     filename = FileKey.get_path_from_filekey(
                         _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
                     )
+                elif tier == "daq":
+                    filename = FileKey.get_path_from_filekey(
+                        _key, fn_pattern.with_suffix(Path(f).suffix)
+                    )
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
 
