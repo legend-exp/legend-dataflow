@@ -48,6 +48,6 @@ rule autogen_output:
         filedb_path=os.path.join(pars_path(setup), "filedb"),
         setup=lambda wildcards: setup,
         basedir=basedir,
-    threads: workflow.cores
+    threads: min(workflow.cores, 64)
     script:
         "../scripts/complete_run.py"

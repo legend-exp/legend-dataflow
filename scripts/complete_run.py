@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -157,12 +158,12 @@ def find_gen_runs(gen_tier_path):
     # first look for non-concat tiers
     paths = gen_tier_path.glob("*/*/*/*")
     # use the directories to build a datatype/period/run string
-    runs = {"/".join(p.name.split("/")[-3:]) for p in paths}
+    runs = {"/".join(str(p).split("/")[-3:]) for p in paths}
 
     # then look for concat tiers (use filenames now)
     paths_concat = gen_tier_path.glob("*/*/*.lh5")
     # use the directories to build a datatype/period/run string
-    runs_concat = {"/".join([p.name.split("-")[3]] + p.name.split("-")[1:3]) for p in paths_concat}
+    runs_concat = {"/".join([str(p).split("-")[3]] + str(p).split("-")[1:3]) for p in paths_concat}
 
     return runs | runs_concat
 
@@ -188,30 +189,32 @@ def build_file_dbs(gen_tier_path, outdir):
         logfile = Path(ut.tmp_log_path(snakemake.params.setup)) / outfile.with_suffix(".log").name
         print(f"INFO: ......building {outfile}")
 
-        cmdline = ut.runcmd(snakemake.params.setup, aslist=True)
-        prodenv = as_ro(os.getenv("PRODENV"))
-        cmdline += [f"--env=PRODENV={prodenv}"]
+        cmdline = [
+            *ut.runcmd(snakemake.params.setup, aslist=True),
+            "--",
+            "python3",
+            "-B",
+            f"{snakemake.params.basedir}/scripts/build_fdb.py",
+            "--scan-path",
+            spec,
+            "--output",
+            str(outfile),
+            "--config",
+            str(outdir / "file_db_config.json"),
+            "--log",
+            str(logfile),
+        ]
+
+        if speck[0] == "phy":
+            cmdline += ["--assume-nonsparse"]
+
+        print(cmdline)
+        print(" ".join(cmdline))
+
+        cmdenv = {}
 
         # TODO: forward stdout to log file
-        processes.add(
-            subprocess.Popen(
-                [
-                    *cmdline,
-                    "python3",
-                    "-B",
-                    f"{snakemake.params.basedir}/scripts/build_fdb.py",
-                    "--scan-path",
-                    spec,
-                    "--output",
-                    str(outfile),
-                    "--config",
-                    str(outdir / "file_db_config.json"),
-                    "--log",
-                    str(logfile),
-                    "--assume-nonsparse" if speck[0] == "phy" else "",
-                ],
-            )
-        )
+        processes.add(subprocess.Popen(cmdline))
 
         if len(processes) >= snakemake.threads:
             os.wait()
