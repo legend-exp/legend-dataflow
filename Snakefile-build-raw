@@ -19,6 +19,7 @@ from scripts.util.utils import (
     det_status_path,
 )
 import scripts.util as ds
+from scripts.util.create_pars_keylist import ParsKeyResolve
 
 check_in_cycle = True
 
@@ -50,15 +51,11 @@ localrules:
     autogen_output,
 
 
-# raw_par_catalog = ds.pars_key_resolve.get_par_catalog(
-#     ["-*-*-*-cal"],
-#     [
-#         get_pattern_unsorted_data(setup),
-#         get_pattern_tier_daq(setup),
-#         get_pattern_tier(setup, "raw"),
-#     ],
-#     {"cal": ["par_raw"]},
-# )
+include: "rules/common.smk"
+include: "rules/filelist_gen.smk"
+include: "rules/main.smk"
+include: "rules/raw.smk"
+include: "rules/blinding_check.smk"
 
 
 onstart:
@@ -67,25 +64,23 @@ onstart:
     # Make sure some packages are initialized before we begin to avoid race conditions
     shell('{swenv} python3 -B -c "import daq2lh5 "')
 
-    # raw_par_cat_file = os.path.join(pars_path(setup), "raw", "validity.jsonl")
-    # if os.path.isfile(raw_par_cat_file):
-    #     os.remove(os.path.join(pars_path(setup), "raw", "validity.jsonl"))
-    # pathlib.Path(os.path.dirname(raw_par_cat_file)).mkdir(parents=True, exist_ok=True)
-    # ds.pars_key_resolve.write_to_jsonl(raw_par_catalog, raw_par_cat_file)
+    raw_par_cat_file = os.path.join(pars_path(setup), "raw", "validity.jsonl")
+    if os.path.isfile(raw_par_cat_file):
+        os.remove(os.path.join(pars_path(setup), "raw", "validity.jsonl"))
+    try:
 
+        pathlib.Path(os.path.dirname(raw_par_cat_file)).mkdir(
+            parents=True, exist_ok=True
+        )
+        ParsKeyResolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
+    except NameError:
+        pass
 
 
 onsuccess:
     print("Workflow finished, no error")
     shell("rm *.gen || true")
     shell(f"rm {filelist_path(setup)}/* || true")
-
-
-include: "rules/common.smk"
-include: "rules/filelist_gen.smk"
-include: "rules/main.smk"
-include: "rules/raw.smk"
-include: "rules/blinding_check.smk"
 
 
 rule gen_filelist:

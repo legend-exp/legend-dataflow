@@ -4,6 +4,9 @@ Helper functions for running data production
 
 from pathlib import Path
 from scripts.util.patterns import (
+    get_pattern_tier_daq_unsorted,
+    get_pattern_tier_daq,
+    get_pattern_tier,
     par_overwrite_path,
     get_pars_path,
 )
@@ -110,7 +113,7 @@ def get_search_pattern(tier):
     This func gets the search pattern for the relevant tier passed.
     """
     if tier == "daq":
-        return get_pattern_unsorted_data(setup, extension="*")
+        return get_pattern_tier_daq_unsorted(setup, extension="*")
     elif tier == "raw":
         return get_pattern_tier_daq(setup, extension="*")
     else:

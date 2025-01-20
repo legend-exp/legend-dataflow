@@ -168,7 +168,7 @@ def build_filelist(
     other_filenames = []
     for key in filekeys:
         if Path(search_pattern).suffix == ".*":
-            search_pattern = Path(str(search_pattern).replace(".*", ".{ext}"))
+            search_pattern = Path(search_pattern).with_suffix(".{ext}")
         fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
         files = glob.glob(fn_glob_pattern)
         for f in files:
@@ -183,6 +183,10 @@ def build_filelist(
                 elif tier == "skm":
                     filename = FileKey.get_path_from_filekey(
                         _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
+                    )
+                elif tier == "daq":
+                    filename = FileKey.get_path_from_filekey(
+                        _key, fn_pattern.with_suffix(Path(f).suffix)
                     )
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
