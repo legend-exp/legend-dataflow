@@ -18,7 +18,7 @@ from pygama.pargen.data_cleaning import (
     get_keys,
 )
 from util.convert_np import convert_dict_np_to_float
-from utils.log import build_log
+from util.log import build_log
 
 log = logging.getLogger(__name__)
 

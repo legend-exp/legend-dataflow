@@ -16,7 +16,7 @@ from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 from util.convert_np import convert_dict_np_to_float
-from utils.log import build_log
+from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

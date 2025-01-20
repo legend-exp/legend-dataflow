@@ -16,7 +16,7 @@ from pars_pht_partcal import calibrate_partition
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.FileKey import ChannelProcKey, ProcessingFileKey
-from utils.log import build_log
+from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

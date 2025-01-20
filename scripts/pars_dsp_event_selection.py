@@ -14,7 +14,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
-from utils.log import build_log
+from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

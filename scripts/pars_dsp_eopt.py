@@ -17,7 +17,7 @@ from pygama.pargen.dsp_optimize import (
     run_bayesian_optimisation,
     run_one_dsp,
 )
-from utils.log import build_log
+from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

@@ -15,7 +15,7 @@ from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
 from util.convert_np import convert_dict_np_to_float
-from utils.log import build_log
+from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

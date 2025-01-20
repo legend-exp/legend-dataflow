@@ -10,7 +10,7 @@ from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
-from utils.log import build_log
+from util.log import build_log
 
 sto = lh5.LH5Store()
 

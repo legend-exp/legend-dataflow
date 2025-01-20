@@ -7,7 +7,7 @@ from daq2lh5.orca import orca_flashcam
 from legendmeta import TextDB
 from legendmeta.catalog import Props
 from pygama.evt.build_tcm import build_tcm
-from utils.log import build_log
+from util.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
