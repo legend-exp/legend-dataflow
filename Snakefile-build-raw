@@ -94,17 +94,8 @@ rule gen_filelist:
         ),
     output:
         temp(Path(filelist_path(setup)) / "{label}-{tier}.filelist"),
-    run:
-        print(f"INFO: found {len(input)} files")
-        if len(input) == 0:
-            print(
-                f"WARNING: no DAQ files found for the given pattern: {wildcards.label}. "
-                "make sure patterns follows the format: "
-                "all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
-            )
-        with open(output[0], "w") as f:
-            for fn in input:
-                f.write(f"{fn}\n")
+    script:
+        "scripts/write_filelist.py"
 
 
 rule sort_data:
