@@ -21,7 +21,7 @@ raw_par_catalog = ParsKeyResolve.get_par_catalog(
 
 rule build_raw_orca:
     """
-    This rule runs build_raw(), it takes in a file.fcio and outputs a raw file
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
     """
     input:
         get_pattern_tier_daq(setup, extension="orca"),
@@ -51,7 +51,7 @@ rule build_raw_orca:
 
 rule build_raw_fcio:
     """
-    This rule runs build_raw(), it takes in a file.fcio and outputs a raw file
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
     """
     input:
         get_pattern_tier_daq(setup, extension="fcio"),

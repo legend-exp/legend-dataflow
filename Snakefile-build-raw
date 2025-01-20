@@ -6,7 +6,8 @@ to the blinded raw data. It handles:
 - blinding the physics data
 """
 
-import pathlib, os, sys
+import os, sys
+from pathlib import Path
 from scripts.util import patterns as patt
 from scripts.util.utils import (
     subst_vars_in_snakemake_config,
@@ -18,7 +19,6 @@ from scripts.util.utils import (
     metadata_path,
     det_status_path,
 )
-import scripts.util as ds
 from scripts.util.create_pars_keylist import ParsKeyResolve
 
 check_in_cycle = True
@@ -64,17 +64,15 @@ onstart:
     # Make sure some packages are initialized before we begin to avoid race conditions
     shell('{swenv} python3 -B -c "import daq2lh5 "')
 
-    raw_par_cat_file = os.path.join(pars_path(setup), "raw", "validity.jsonl")
-    if os.path.isfile(raw_par_cat_file):
-        os.remove(os.path.join(pars_path(setup), "raw", "validity.jsonl"))
-    try:
 
-        pathlib.Path(os.path.dirname(raw_par_cat_file)).mkdir(
-            parents=True, exist_ok=True
-        )
+    raw_par_cat_file = Path(pars_path(setup)) / "raw" / "validity.yaml"
+    if raw_par_cat_file.is_file():
+        raw_par_cat_file.unlink()
+    try:
+        Path(raw_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
         ParsKeyResolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
     except NameError:
-        pass
+        print("No raw parameter catalog found")
 
 
 onsuccess:
@@ -94,17 +92,8 @@ rule gen_filelist:
         ),
     output:
         temp(Path(filelist_path(setup)) / "{label}-{tier}.filelist"),
-    run:
-        print(f"INFO: found {len(input)} files")
-        if len(input) == 0:
-            print(
-                f"WARNING: no DAQ files found for the given pattern: {wildcards.label}. "
-                "make sure patterns follows the format: "
-                "all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
-            )
-        with open(output[0], "w") as f:
-            for fn in input:
-                f.write(f"{fn}\n")
+    script:
+        "scripts/write_filelist.py"
 
 
 rule sort_data:
@@ -118,6 +107,3 @@ rule sort_data:
         patt.get_pattern_tier_daq(setup, extension="fcio"),
     shell:
         "mv {input} {output}"
-
-
-# vim: ft=snakemake

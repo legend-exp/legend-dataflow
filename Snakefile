@@ -90,26 +90,38 @@ onstart:
     hit_par_cat_file = Path(pars_path(setup)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()
-    Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-    ds.ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
+    try:
+        Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+        ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
+    except NameError:
+        print("No hit parameter catalog found")
 
     pht_par_cat_file = Path(pars_path(setup)) / "pht" / "validity.yaml"
     if pht_par_cat_file.is_file():
         pht_par_cat_file.unlink()
-    Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-    ds.ParsKeyResolve.write_to_yaml(pht_par_catalog, pht_par_cat_file)
+    try:
+        Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+        ParsKeyResolve.write_to_yaml(pht_par_catalog, pht_par_cat_file)
+    except NameError:
+        print("No pht parameter catalog found")
 
     dsp_par_cat_file = Path(pars_path(setup)) / "dsp" / "validity.yaml"
     if dsp_par_cat_file.is_file():
         dsp_par_cat_file.unlink()
-    Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-    ds.ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
+    try:
+        Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+        ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
+    except NameError:
+        print("No dsp parameter catalog found")
 
     psp_par_cat_file = Path(pars_path(setup)) / "psp" / "validity.yaml"
     if psp_par_cat_file.is_file():
         psp_par_cat_file.unlink()
-    Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-    ds.ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
+    try:
+        Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+        ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
+    except NameError:
+        print("No psp parameter catalog found")
 
 
 onsuccess:
@@ -172,14 +184,5 @@ rule gen_filelist:
         ),
     output:
         temp(Path(filelist_path(setup)) / "{label}-{tier}.filelist"),
-    run:
-        print(f"INFO: found {len(input)} files")
-        if len(input) == 0:
-            print(
-                f"WARNING: No files found for the given pattern:{wildcards.label}. "
-                "make sure pattern follows the format: "
-                "all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
-            )
-        with open(output[0], "w") as f:
-            for fn in input:
-                f.write(f"{fn}\n")
+    script:
+        "scripts/write_filelist.py"

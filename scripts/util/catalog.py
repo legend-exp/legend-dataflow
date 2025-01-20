@@ -154,8 +154,8 @@ class Catalog(namedtuple("Catalog", ["entries"])):
                 raise ValueError(msg)
             entries[system].append(Catalog.Entry(unix_time(timestamp), new))
 
-        for system in entries:
-            entries[system] = sorted(entries[system], key=lambda entry: entry.valid_from)
+        for system, system_dict in entries.items():
+            entries[system] = sorted(system_dict, key=lambda entry: entry.valid_from)
         return Catalog(entries)
 
     def valid_for(self, timestamp, system="all", allow_none=False):
