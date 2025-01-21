@@ -4,12 +4,12 @@ import os
 import random
 import re
 
-from scripts.util.FileKey import ChannelProcKey
-from scripts.util.patterns import (
+from scripts.library.FileKey import ChannelProcKey
+from scripts.library.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from scripts.util.utils import filelist_path, runcmd
+from scripts.library.utils import filelist_path, runcmd
 
 
 def get_par_chanlist(

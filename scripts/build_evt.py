@@ -8,8 +8,8 @@ import numpy as np
 from dbetto import Props, TextDB
 from legendmeta import LegendMetadata
 from lgdo.types import Array
+from library.log import build_log
 from pygama.evt import build_evt
-from util.log import build_log
 
 sto = lh5.LH5Store()
 

@@ -6,10 +6,10 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
-from scripts.util.pars_loading import ParsCatalog
-from scripts.util.create_pars_keylist import ParsKeyResolve
+from scripts.library.pars_loading import ParsCatalog
+from scripts.library.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from scripts.util.patterns import (
+from scripts.library.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,

@@ -2,7 +2,7 @@
 Snakemake file containing the rules for generating the tcm
 """
 
-from scripts.util.patterns import (
+from scripts.library.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars_tmp_channel,

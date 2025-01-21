@@ -16,14 +16,14 @@ import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
+from library.convert_np import convert_dict_np_to_float
+from library.log import build_log
 from matplotlib.colors import LogNorm
 from pygama.math.distributions import nb_poly
 from pygama.pargen.data_cleaning import get_mode_stdev, get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
-from util.convert_np import convert_dict_np_to_float
-from util.log import build_log
 
 log = logging.getLogger(__name__)
 mpl.use("agg")

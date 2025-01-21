@@ -17,9 +17,9 @@ import numpy as np
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
+from library.log import build_log
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
-from util.log import build_log
 
 mpl.use("Agg")
 

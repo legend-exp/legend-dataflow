@@ -11,14 +11,14 @@ import numpy as np
 import pandas as pd
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
+from library.FileKey import ChannelProcKey, ProcessingFileKey
+from library.log import build_log
 from pygama.math.distributions import gaussian
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
-from util.FileKey import ChannelProcKey, ProcessingFileKey
-from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

@@ -3,16 +3,16 @@ Helper functions for running data production
 """
 
 from pathlib import Path
-from scripts.util.patterns import (
+from scripts.library.patterns import (
     get_pattern_tier_daq_unsorted,
     get_pattern_tier_daq,
     get_pattern_tier,
     par_overwrite_path,
     get_pars_path,
 )
-from scripts.util import ProcessingFileKey
-from scripts.util.catalog import Catalog
-from scripts.util import utils
+from scripts.library import ProcessingFileKey
+from scripts.library.catalog import Catalog
+from scripts.library import utils
 
 
 def ro(path):

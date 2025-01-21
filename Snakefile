@@ -18,10 +18,10 @@ from datetime import datetime
 from collections import OrderedDict
 import logging
 
-import scripts.util as ds
-from scripts.util.pars_loading import ParsCatalog
-from scripts.util.patterns import get_pattern_tier
-from scripts.util.utils import (
+import scripts.library as lib
+from scripts.library.pars_loading import ParsCatalog
+from scripts.library.patterns import get_pattern_tier
+from scripts.library.utils import (
     subst_vars_in_snakemake_config,
     runcmd,
     config_path,
@@ -45,7 +45,7 @@ chan_maps = chan_map_path(setup)
 meta = metadata_path(setup)
 det_status = det_status_path(setup)
 swenv = runcmd(setup)
-part = ds.CalGrouping(setup, Path(det_status) / "cal_groupings.yaml")
+part = lib.CalGrouping(setup, Path(det_status) / "cal_groupings.yaml")
 basedir = workflow.basedir
 
 

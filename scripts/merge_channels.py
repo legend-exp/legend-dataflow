@@ -7,7 +7,7 @@ import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
 from lgdo import lh5
-from util.FileKey import ChannelProcKey
+from library.FileKey import ChannelProcKey
 
 
 def replace_path(d, old_path, new_path):

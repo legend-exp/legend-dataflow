@@ -2,8 +2,8 @@ import glob
 import json, yaml
 from pathlib import Path
 
-from scripts.util.FileKey import FileKey, run_grouper
-from scripts.util.patterns import (
+from scripts.library.FileKey import FileKey, run_grouper
+from scripts.library.patterns import (
     get_pattern_tier,
     get_pattern_tier_raw_blind,
     get_pattern_tier_daq,

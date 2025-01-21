@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from legendmeta import LegendMetadata
 from legendmeta.catalog import Props
-from util.FileKey import ChannelProcKey
+from library.FileKey import ChannelProcKey
 
 mpl.use("Agg")
 

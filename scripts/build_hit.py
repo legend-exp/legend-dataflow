@@ -5,8 +5,8 @@ from pathlib import Path
 from legendmeta import LegendMetadata, TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
+from library.log import build_log
 from pygama.hit.build_hit import build_hit
-from util.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)

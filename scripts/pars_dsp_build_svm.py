@@ -5,8 +5,8 @@ from pathlib import Path
 from legendmeta import TextDB
 from legendmeta.catalog import Props
 from lgdo import lh5
+from library.log import build_log
 from sklearn.svm import SVC
-from util.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)
