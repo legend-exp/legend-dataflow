@@ -14,8 +14,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
 import numpy as np
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from lgdo import lh5
 from library.log import build_log
 from pygama.math.histogram import get_hist

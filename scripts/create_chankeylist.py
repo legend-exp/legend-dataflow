@@ -1,7 +1,8 @@
 import argparse
 from pathlib import Path
 
-from legendmeta import LegendMetadata, TextDB
+from dbetto import TextDB
+from legendmeta import LegendMetadata
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--det_status", help="det_status", type=str, required=True)

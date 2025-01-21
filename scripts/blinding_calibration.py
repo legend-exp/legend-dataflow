@@ -12,8 +12,8 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from dbetto.catalog import Props
 from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
 

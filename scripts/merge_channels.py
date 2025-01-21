@@ -4,8 +4,8 @@ import shelve
 from pathlib import Path
 
 import numpy as np
+from dbetto.catalog import Props
 from legendmeta import LegendMetadata
-from legendmeta.catalog import Props
 from lgdo import lh5
 from library.FileKey import ChannelProcKey
 

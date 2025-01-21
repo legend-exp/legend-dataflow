@@ -14,8 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from library.convert_np import convert_dict_np_to_float
 from library.log import build_log
 from matplotlib.colors import LogNorm

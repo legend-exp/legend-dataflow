@@ -8,8 +8,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from library.FileKey import ChannelProcKey, ProcessingFileKey
 from library.log import build_log
 from pars_pht_aoecal import run_aoe_calibration

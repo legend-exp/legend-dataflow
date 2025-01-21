@@ -8,8 +8,9 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from library.convert_np import convert_dict_np_to_float
 from library.log import build_log
 from pygama.pargen.AoE_cal import *  # noqa: F403

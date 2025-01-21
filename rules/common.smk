@@ -11,7 +11,7 @@ from scripts.library.patterns import (
     get_pars_path,
 )
 from scripts.library import ProcessingFileKey
-from scripts.library.catalog import Catalog
+from dbetto.catalog import Catalog
 from scripts.library import utils
 
 

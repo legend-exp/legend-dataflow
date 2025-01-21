@@ -10,8 +10,9 @@ from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from lgdo.lh5 import ls
 from library.convert_np import convert_dict_np_to_float
 from library.log import build_log

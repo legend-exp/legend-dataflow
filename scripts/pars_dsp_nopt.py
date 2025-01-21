@@ -6,8 +6,9 @@ from pathlib import Path
 import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.noise_optimization as pno
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from library.log import build_log
 from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp

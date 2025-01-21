@@ -2,8 +2,8 @@ import argparse
 import time
 from pathlib import Path
 
+from dbetto.catalog import Props
 from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
 from lgdo import lh5
 from library.log import build_log
 from pygama.hit.build_hit import build_hit

@@ -11,8 +11,9 @@ import numpy as np
 import pandas as pd
 import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from library.FileKey import ChannelProcKey, ProcessingFileKey
 from library.log import build_log
 from pygama.math.distributions import nb_poly

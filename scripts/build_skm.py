@@ -1,8 +1,8 @@
 import argparse
 
 import awkward as ak
-from legendmeta import TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
 from library.log import build_log
