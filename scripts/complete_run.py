@@ -208,9 +208,6 @@ def build_file_dbs(gen_tier_path, outdir):
         if speck[0] == "phy":
             cmdline += ["--assume-nonsparse"]
 
-        print(cmdline)
-        print(" ".join(cmdline))
-
         cmdenv = {}
 
         # TODO: forward stdout to log file
