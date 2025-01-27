@@ -4,12 +4,13 @@ from pathlib import Path
 
 import lgdo.lh5 as lh5
 import numpy as np
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
+from library.log import build_log
 from pygama.pargen.data_cleaning import get_cut_indexes, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
 from pygama.pargen.extract_tau import ExtractTau
-from util.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--configs", help="configs path", type=str, required=True)

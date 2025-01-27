@@ -5,7 +5,8 @@ to determine the par and par overwrite for a particular timestamp
 
 from pathlib import Path
 
-from .catalog import Catalog
+from dbetto.catalog import Catalog
+
 from .FileKey import ProcessingFileKey
 
 # from .patterns import

@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from legendmeta.catalog import Props
+from dbetto.catalog import Props
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)

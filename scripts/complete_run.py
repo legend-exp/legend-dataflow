@@ -7,9 +7,9 @@ import subprocess
 import time
 from pathlib import Path
 
-import util.utils as ut
-from util import patterns
-from util.FileKey import FileKey
+import library.utils as ut
+from library import patterns
+from library.FileKey import FileKey
 
 print("INFO: dataflow ran successfully, now few final checks and scripts")
 

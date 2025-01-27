@@ -8,16 +8,17 @@ import lgdo.lh5 as lh5
 import numpy as np
 import pygama.pargen.energy_optimisation as om  # noqa: F401
 import sklearn.gaussian_process.kernels as ker
+from dbetto import TextDB
+from dbetto.catalog import Props
 from dspeed.units import unit_registry as ureg
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from legendmeta import LegendMetadata
+from library.log import build_log
 from pygama.math.distributions import hpge_peak
 from pygama.pargen.dsp_optimize import (
     BayesianOptimizer,
     run_bayesian_optimisation,
     run_one_dsp,
 )
-from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

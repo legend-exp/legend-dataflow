@@ -4,7 +4,7 @@ Snakemake rules for checking blinding. Two steps:
 - combining all channel check files into single check file
 """
 
-from scripts.util.patterns import (
+from scripts.library.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,

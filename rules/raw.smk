@@ -1,12 +1,12 @@
-from scripts.util.patterns import (
+from scripts.library.patterns import (
     get_pattern_tier_daq_unsorted,
     get_pattern_tier_daq,
     get_pattern_tier,
     get_pattern_log,
     get_pattern_tier_raw_blind,
 )
-from scripts.util.utils import set_last_rule_name
-from scripts.util.create_pars_keylist import ParsKeyResolve
+from scripts.library.utils import set_last_rule_name
+from scripts.library.create_pars_keylist import ParsKeyResolve
 
 raw_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],

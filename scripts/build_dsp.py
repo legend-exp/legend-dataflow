@@ -5,11 +5,12 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+from dbetto import TextDB
+from dbetto.catalog import Props
 from dspeed import build_dsp
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from legendmeta import LegendMetadata
 from lgdo import lh5
-from util.log import build_log
+from library.log import build_log
 
 
 def replace_list_with_array(dic):

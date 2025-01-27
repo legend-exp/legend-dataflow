@@ -10,11 +10,12 @@ import lgdo.lh5 as lh5
 import numpy as np
 import pygama.math.histogram as pgh
 import pygama.pargen.energy_cal as pgc
-from legendmeta import LegendMetadata, TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from legendmeta import LegendMetadata
+from library.log import build_log
 from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids
 from pygama.pargen.dsp_optimize import run_one_dsp
-from util.log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

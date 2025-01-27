@@ -2,8 +2,8 @@ import glob
 import json, yaml
 from pathlib import Path
 
-from scripts.util.FileKey import FileKey, run_grouper
-from scripts.util.patterns import (
+from scripts.library.FileKey import FileKey, run_grouper
+from scripts.library.patterns import (
     get_pattern_tier,
     get_pattern_tier_raw_blind,
     get_pattern_tier_daq,
@@ -22,10 +22,13 @@ def expand_runs(in_dict):
         "p01": "r001..r005"
     }
     """
-    for per, run_list in in_dict.items():
-        if isinstance(run_list, str) and ".." in runs:
-            start, end = runs.split("..")
-            in_dict[per] = [f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)]
+    for per, datalist in in_dict.items():
+        for datatype, run_list in datalist.items():
+            if isinstance(run_list, str) and ".." in runs:
+                start, end = runs.split("..")
+                in_dict[per][datatype] = [
+                    f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
+                ]
     return in_dict
 
 
@@ -200,14 +203,17 @@ def build_filelist(
                         other_filenames += filename
                 else:
                     if (
-                        _key.period
-                        in analysis_runs  # check if period in analysis_runs dicts
+                        _key.datatype in analysis_runs
+                        and _key.period
+                        in analysis_runs[
+                            _key.datatype
+                        ]  # check if period in analysis_runs dicts
                         and (
                             _key.run
-                            in analysis_runs[
-                                _key.period
+                            in analysis_runs[_key.period][
+                                _key.datatype
                             ]  # check if run in analysis_runs dicts
-                            or analysis_runs[_key.period]
+                            or analysis_runs[_key.period][_key.datatype]
                             == "all"  # or if runs is just specified as "all"
                         )
                     ):

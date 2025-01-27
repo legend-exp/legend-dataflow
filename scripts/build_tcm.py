@@ -4,10 +4,10 @@ from pathlib import Path
 import lgdo.lh5 as lh5
 import numpy as np
 from daq2lh5.orca import orca_flashcam
-from legendmeta import TextDB
-from legendmeta.catalog import Props
+from dbetto import TextDB
+from dbetto.catalog import Props
+from library.log import build_log
 from pygama.evt.build_tcm import build_tcm
-from util.log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)
