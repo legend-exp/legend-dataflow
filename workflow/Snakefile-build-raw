@@ -34,8 +34,13 @@ chan_maps = chan_map_path(setup)
 swenv = runcmd(setup)
 meta = metadata_path(setup)
 det_status = det_status_path(setup)
-
 basedir = workflow.basedir
+
+# wait for new pylegendmeta release
+# if not Path(meta).exists():
+#     meta = LegendMetadata()
+#     meta.checkout(config["setups"]["l200"]["meta_version"])
+s
 
 
 wildcard_constraints:

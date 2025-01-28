@@ -46,8 +46,14 @@ chan_maps = chan_map_path(setup)
 meta = metadata_path(setup)
 det_status = det_status_path(setup)
 swenv = runcmd(setup)
-part = lib.CalGrouping(setup, Path(det_status) / "cal_groupings.yaml")
 basedir = workflow.basedir
+
+# wait for new pylegendmeta release
+# if not Path(meta).exists():
+#     meta = LegendMetadata()
+#     meta.checkout(config["setups"]["l200"]["meta_version"])
+
+part = lib.CalGrouping(setup, Path(det_status) / "cal_groupings.yaml")
 
 
 wildcard_constraints:
