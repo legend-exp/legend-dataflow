@@ -87,7 +87,10 @@ plt.close()
 # will always pass this check
 if (np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5)) or det_status is False:
     Path(args.output).mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.output, {})
+    Props.write_to(
+        args.output,
+        {"threshold_adc": np.nanmin(daqenergy), "threshold_kev": np.nanmin(daqenergy_cal)},
+    )
 else:
     msg = "peaks not found in daqenergy"
     raise RuntimeError(msg)
