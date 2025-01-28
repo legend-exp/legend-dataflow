@@ -17,6 +17,7 @@ import glob
 from datetime import datetime
 from collections import OrderedDict
 import logging
+from pylegendmeta import LegendMetadata
 
 import scripts.library as lib
 from scripts.library.pars_loading import ParsCatalog
