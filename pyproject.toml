@@ -1,14 +1,31 @@
-[tool.uv]
-package = false
-
 [tool.uv.workspace]
-exclude = ["rules", "templates", "scripts", "generated", "inputs", "software", "workflow"]
+exclude = ["generated", "inputs", "software", "workflow"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
+include-package-data = true
+zip-safe = false
+license-files = [
+    "LICENSE",
+]
 py-modules = []
 
+[tool.setuptools.package-dir]
+"" = "workflow"
+
+[tool.setuptools.packages.find]
+where = [
+    "workflow",
+]
+
+[tool.setuptools_scm]
+write_to = "workflow/_version.py"
+
 [project]
-name = "legend-dataflow"
+name = "legend_dataflow"
 description = "Python package for processing L200 data"
 authors = [
     {name = "George Marshall", email = "george.marshall.20@ucl.ac.uk"},
@@ -33,6 +50,7 @@ requires-python = ">=3.11"
 dependencies = [
     "dbetto>=1.0.5",
     "snakemake>=8.16",
+    #"pylegendmeta>=1.0.0", wait for new release
 ]
 dynamic = [
     "version",
@@ -47,17 +65,17 @@ no_container = [
   "legend-daq2lh5",
 ]
 test = [
- "legend-dataflow[no_container]",
+ "legend_dataflow[no_container]",
   "pytest >=6",
   "pytest-cov >=3",
 ]
 dev = [
- "legend-dataflow[no_container]",
+ "legend_dataflow[no_container]",
   "pytest >=6",
   "pytest-cov >=3",
 ]
 docs = [
-  "legend-dataflow[no_container]",
+  "legend_dataflow[no_container]",
   "sphinx>=7.0",
   "myst_parser>=0.13",
   "sphinx_inline_tabs",
@@ -65,3 +83,6 @@ docs = [
   "sphinx_autodoc_typehints",
   "furo>=2023.08.17",
 ]
+
+[project.scripts]
+dataprod = "scripts.library.execenv:dataprod"
