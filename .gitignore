@@ -10,6 +10,13 @@
 *~
 *.csv
 
+# uv
+uv.lock
+
+#prodenv_stuff
+inputs
+software
+generated
 
 # -------------------- github-generated stuff -------------------
 # Byte-compiled / optimized / DLL files
