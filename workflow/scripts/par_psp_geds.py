@@ -8,8 +8,8 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 from dbetto.catalog import Props
+from legenddataflow.FileKey import ChannelProcKey
 from legendmeta import LegendMetadata
-from library.FileKey import ChannelProcKey
 
 mpl.use("Agg")
 

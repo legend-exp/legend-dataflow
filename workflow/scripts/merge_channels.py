@@ -5,9 +5,9 @@ from pathlib import Path
 
 import numpy as np
 from dbetto.catalog import Props
+from legenddataflow.FileKey import ChannelProcKey
 from legendmeta import LegendMetadata
 from lgdo import lh5
-from library.FileKey import ChannelProcKey
 
 
 def replace_path(d, old_path, new_path):

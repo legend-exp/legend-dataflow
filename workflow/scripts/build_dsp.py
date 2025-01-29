@@ -8,9 +8,9 @@ import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
 from dspeed import build_dsp
+from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo import lh5
-from library.log import build_log
 
 
 def replace_list_with_array(dic):

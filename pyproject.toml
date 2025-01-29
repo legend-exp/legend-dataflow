@@ -9,34 +9,31 @@ build-backend = "setuptools.build_meta"
 include-package-data = true
 zip-safe = false
 license-files = [
-    "LICENSE",
+    "LICENSE.md",
 ]
 py-modules = []
 
 [tool.setuptools.package-dir]
-"" = "workflow"
-
-[tool.setuptools.packages.find]
-where = [
-    "workflow",
-]
+"" = "workflow/src"
 
 [tool.setuptools_scm]
-write_to = "workflow/_version.py"
+write_to = "workflow/src/legenddataflow_version.py"
 
 [project]
 name = "legend_dataflow"
-description = "Python package for processing L200 data"
+description = "Python package for processing LEGEND-200 data"
 authors = [
     {name = "George Marshall", email = "george.marshall.20@ucl.ac.uk"},
     {name = "Luigi Pertoldi", email = "gipert@pm.me"},
-    {name = "The Legend Collaboration"},
+]
+maintainers = [
+    {name = "The LEGEND Collaboration"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT Expat License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
     "Operating System :: POSIX",
     "Operating System :: Unix",
@@ -47,20 +44,19 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.11"
+dynamic = ["version"]
+
 dependencies = [
     "dbetto>=1.0.5",
     "snakemake>=8.16",
-    #"pylegendmeta>=1.0.0", wait for new release
-]
-dynamic = [
-    "version",
+    "pylegendmeta==1.2.0a2",
 ]
 
 [project.optional-dependencies]
 no_container = [
   "pygama",
   "dspeed",
-  "pylegendmeta",
+  "pylegendmeta==1.2.0a2",
   "legend-pydataobj",
   "legend-daq2lh5",
 ]
@@ -73,6 +69,7 @@ dev = [
  "legend_dataflow[no_container]",
   "pytest >=6",
   "pytest-cov >=3",
+  "pre-commit",
 ]
 docs = [
   "legend_dataflow[no_container]",
@@ -85,4 +82,4 @@ docs = [
 ]
 
 [project.scripts]
-dataprod = "scripts.library.execenv:dataprod"
+dataprod = "legenddataflow.execenv:dataprod"

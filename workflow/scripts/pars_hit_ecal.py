@@ -16,9 +16,9 @@ import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.convert_np import convert_dict_np_to_float
+from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
-from library.convert_np import convert_dict_np_to_float
-from library.log import build_log
 from matplotlib.colors import LogNorm
 from pygama.math.distributions import nb_poly
 from pygama.pargen.data_cleaning import get_mode_stdev, get_tcm_pulser_ids

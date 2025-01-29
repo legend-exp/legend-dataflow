@@ -3,9 +3,9 @@ import argparse
 import awkward as ak
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.log import build_log
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
-from library.log import build_log
 
 
 def get_all_out_fields(input_table, out_fields, current_field=""):

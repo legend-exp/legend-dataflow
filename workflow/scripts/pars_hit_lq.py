@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.convert_np import convert_dict_np_to_float
+from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
-from library.convert_np import convert_dict_np_to_float
-from library.log import build_log
 from pygama.math.distributions import gaussian
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids

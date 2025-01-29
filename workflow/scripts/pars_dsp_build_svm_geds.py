@@ -4,8 +4,8 @@ from pathlib import Path
 
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.log import build_log
 from lgdo import lh5
-from library.log import build_log
 from sklearn.svm import SVC
 
 argparser = argparse.ArgumentParser()

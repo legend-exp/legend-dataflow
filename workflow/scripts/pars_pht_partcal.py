@@ -13,9 +13,9 @@ import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.FileKey import ChannelProcKey, ProcessingFileKey
+from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
-from library.FileKey import ChannelProcKey, ProcessingFileKey
-from library.log import build_log
 from pygama.math.distributions import nb_poly
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
