@@ -11,6 +11,7 @@ setups:
       config: $_/inputs/dataprod/config
       par_overwrite: $_/inputs/dataprod/overrides
       chan_map: $_/inputs/hardware/configuration
+      detector_status: $_/inputs/datasets
       detector_db: $_/inputs/hardware/detectors
 
       tier: $_/generated/tier
@@ -78,4 +79,4 @@ setups:
       - legend-pydataobj>=1.11.4
       - legend-daq2lh5==1.4.*
 
-    meta_version: v0.5.7
+    legend_metadata_version: v0.5.7

@@ -1,3 +1,5 @@
+.snakemake
+
 # New additions go at the top!
 *.c
 .DS_Store
