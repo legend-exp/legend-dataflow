@@ -16,8 +16,11 @@ py-modules = []
 [tool.setuptools.package-dir]
 "" = "workflow/src"
 
+[tool.setuptools.packages.find]
+where = ["workflow/src"]
+
 [tool.setuptools_scm]
-write_to = "workflow/src/legenddataflow_version.py"
+write_to = "workflow/src/legenddataflow/_version.py"
 
 [project]
 name = "legend_dataflow"

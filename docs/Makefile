@@ -17,8 +17,9 @@ apidoc: clean-apidoc
       --module-first \
       --force \
       --output-dir "$(SOURCEDIR)/api" \
-      ../scripts \
-      ../rules
+      ../workflow/src/legenddataflow \
+      ../workflow/scripts \
+      ../workflow/rules
 
 clean-apidoc:
 	rm -rf "$(SOURCEDIR)/api"
