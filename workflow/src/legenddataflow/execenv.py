@@ -8,7 +8,8 @@ import string
 import subprocess
 from pathlib import Path
 
-import yaml
+import dbetto
+from packaging.requirements import Requirement
 
 
 def dataprod() -> None:
@@ -17,7 +18,7 @@ def dataprod() -> None:
     .. code-block:: console
 
       $ dataprod --help
-      $ dataprod load --help  # help section for a specific sub-command
+      $ dataprod exec --help  # help section for a specific sub-command
     """
 
     parser = argparse.ArgumentParser(
@@ -36,14 +37,14 @@ def dataprod() -> None:
     )
     parser_install.set_defaults(func=install)
 
-    parser_load = subparsers.add_parser(
-        "load", help="load data production environment and execute a given command"
+    parser_exec = subparsers.add_parser(
+        "exec", help="load data production environment and execute a given command"
     )
-    parser_load.add_argument("config_file", help="production cycle configuration file", type=str)
-    parser_load.add_argument(
+    parser_exec.add_argument("config_file", help="production cycle configuration file", type=str)
+    parser_exec.add_argument(
         "command", help="command to run within the container", type=str, nargs="+"
     )
-    parser_load.set_defaults(func=load)
+    parser_exec.set_defaults(func=cmdexec)
 
     args = parser.parse_args()
     args.func(args)
@@ -52,13 +53,14 @@ def dataprod() -> None:
 def install(args) -> None:
     """
     This function installs user software in the data production environment.
-    The software packages should be specified in the config.yaml file with the format:
+    The software packages should be specified in the config.yaml file with the
+    format:
 
     ```yaml
     setups:
-        l200:
-            pkg_versions:
-                package_name: package_version
+      l200:
+        pkg_versions:
+          - python_package_spec
     ```
     """
     print(args.config_file)
@@ -67,14 +69,13 @@ def install(args) -> None:
         raise RuntimeError(msg)
 
     config_file_dir = Path(args.config_file).resolve().parent
-    with Path(args.config_file).open() as r:
-        config_dic = yaml.safe_load(r)
+    config_dic = dbetto.AttrsDict(dbetto.utils.load_dict(args.config_file))
 
-    exec_cmd = config_dic["setups"]["l200"]["execenv"]["cmd"]
-    exec_arg = config_dic["setups"]["l200"]["execenv"]["arg"]
-    path_src = config_dic["setups"]["l200"]["paths"]["src"]
-    path_install = config_dic["setups"]["l200"]["paths"]["install"]
-    path_cache = config_dic["setups"]["l200"]["paths"]["cache"]
+    exec_cmd = config_dic.setups.l200.execenv.cmd
+    exec_arg = config_dic.setups.l200.execenv.arg
+    path_src = config_dic.setups.l200.paths.src
+    path_install = config_dic.setups.l200.paths.install
+    path_cache = config_dic.setups.l200.paths.cache
 
     exec_cmd = string.Template(exec_cmd).substitute({"_": config_file_dir})
     exec_arg = string.Template(exec_arg).substitute({"_": config_file_dir})
@@ -87,11 +88,12 @@ def install(args) -> None:
         shutil.rmtree(path_cache)
 
     pkg_list = ""
-    for pkg, pkg_version in config_dic["setups"]["l200"]["pkg_versions"].items():
+    for spec in config_dic.setups.l200.pkg_versions:
+        pkg = Requirement(spec).name
         if (path_src / pkg).exists():
             pkg_list += f" '{path_src / pkg}'"
         else:
-            pkg_list += f" '{pkg_version}'"
+            pkg_list += f" '{spec}'"
 
     cmd_expr = (
         f"PYTHONUSERBASE={path_install} PIP_CACHE_DIR={path_cache} "
@@ -101,23 +103,22 @@ def install(args) -> None:
     os.system(cmd_expr)
 
 
-def load(args) -> None:
+def cmdexec(args) -> None:
     """
     This function loads the data production environment and executes a given command.
     """
 
     if not Path(args.config_file).is_file():
-        print("Error: config file does not exist")
-        exit()
+        msg = "config file is not a regular file"
+        raise RuntimeError(msg)
 
     config_file_dir = Path(args.config_file).resolve().parent
-    with Path(args.config_file).open() as r:
-        config_dic = yaml.safe_load(r)
+    config_dic = dbetto.AttrsDict(dbetto.utils.load_dict(args.config_file))
 
-    exec_cmd = config_dic["setups"]["l200"]["execenv"]["cmd"]
-    exec_arg = config_dic["setups"]["l200"]["execenv"]["arg"]
-    env_vars = config_dic["setups"]["l200"]["execenv"]["env"]
-    path_install = config_dic["setups"]["l200"]["paths"]["install"]
+    exec_cmd = config_dic.setups.l200.execenv.cmd
+    exec_arg = config_dic.setups.l200.execenv.arg
+    env_vars = config_dic.setups.l200.execenv.env
+    path_install = config_dic.setups.l200.paths.install
 
     exec_cmd = string.Template(exec_cmd).substitute({"_": config_file_dir})
     exec_arg = string.Template(exec_arg).substitute({"_": config_file_dir})
