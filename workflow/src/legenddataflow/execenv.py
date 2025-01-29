@@ -87,20 +87,41 @@ def install(args) -> None:
         shutil.rmtree(path_install)
         shutil.rmtree(path_cache)
 
-    pkg_list = ""
+    pkg_list = []
     for spec in config_dic.setups.l200.pkg_versions:
         pkg = Requirement(spec).name
         if (path_src / pkg).exists():
-            pkg_list += f" '{path_src / pkg}'"
+            pkg_list.append(str(path_src / pkg))
         else:
-            pkg_list += f" '{spec}'"
+            pkg_list.append(spec)
 
-    cmd_expr = (
-        f"PYTHONUSERBASE={path_install} PIP_CACHE_DIR={path_cache} "
-        f"{exec_cmd} {exec_arg} python3 -B -m pip install --no-warn-script-location {pkg_list}"
+    cmd_base = [
+        *(exec_cmd.split()),
+        exec_arg,
+        "python3",
+        "-B",
+        "-m",
+        "pip",
+        "install",
+        "--no-warn-script-location",
+    ]
+
+    cmd_expr = cmd_base + pkg_list
+    cmdenv = {
+        "PYTHONUSERBASE": path_install,
+        "PIP_CACHE_DIR": path_cache,
+    }
+
+    print(
+        "INFO: running:",
+        " ".join([f"{k}={v}" for k, v in cmdenv.items()]) + " " + " ".join(cmd_expr),
     )
-    print("INFO: running:", cmd_expr)
-    os.system(cmd_expr)
+
+    subprocess.run(
+        cmd_expr,
+        env=cmdenv,
+        check=True,
+    )
 
 
 def cmdexec(args) -> None:
