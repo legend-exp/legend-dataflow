@@ -4,12 +4,12 @@ import os
 import random
 import re
 
-from scripts.library.FileKey import ChannelProcKey
-from scripts.library.patterns import (
+from legenddataflow.FileKey import ChannelProcKey
+from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from scripts.library.utils import filelist_path, runcmd
+from legenddataflow.utils import filelist_path, runcmd
 
 
 def get_par_chanlist(

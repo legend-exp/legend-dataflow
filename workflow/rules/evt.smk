@@ -2,8 +2,8 @@
 Snakemake rules for processing evt tier.
 """
 
-from scripts.library.pars_loading import ParsCatalog
-from scripts.library.patterns import (
+from legenddataflow.pars_loading import ParsCatalog
+from legenddataflow.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,

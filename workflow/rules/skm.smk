@@ -2,7 +2,7 @@
 Snakemake rules for processing skm tier.
 """
 
-from scripts.library.patterns import (
+from legenddataflow.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,

@@ -1,12 +1,12 @@
-from scripts.library.patterns import (
+from legenddataflow.patterns import (
     get_pattern_tier_daq_unsorted,
     get_pattern_tier_daq,
     get_pattern_tier,
     get_pattern_log,
     get_pattern_tier_raw_blind,
 )
-from scripts.library.utils import set_last_rule_name
-from scripts.library.create_pars_keylist import ParsKeyResolve
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 
 raw_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
