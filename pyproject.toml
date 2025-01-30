@@ -2,7 +2,10 @@
 exclude = ["generated", "inputs", "software", "workflow"]
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.2",
+    "setuptools_scm[toml]>=7"
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -49,42 +52,38 @@ readme = "README.md"
 requires-python = ">=3.11"
 dynamic = ["version"]
 
+# these are the dependencies strictly required by legend-dataflow
 dependencies = [
     "dbetto>=1.0.5",
     "pylegendmeta==1.2.0a2",
 ]
 
 [project.optional-dependencies]
-full = [
-"snakemake>=8.16",
-]
-no_container = [
-  "legend_dataflow[full]",
-  "pygama",
-  "dspeed",
-  "pylegendmeta==1.2.0a2",
-  "legend-pydataobj",
-  "legend-daq2lh5",
+# these are needed to run the data production
+dataprod = [
+    "snakemake>=8.16",
+    "pygama",
+    "dspeed",
+    "pylegendmeta==1.2.0a2",
+    "legend-pydataobj",
+    "legend-daq2lh5",
 ]
 test = [
- "legend_dataflow[no_container]",
-  "pytest >=6",
-  "pytest-cov >=3",
+    "legend_dataflow[dataprod]",
+    "pytest>=6",
+    "pytest-cov>=3",
 ]
 dev = [
- "legend_dataflow[no_container]",
-  "pytest >=6",
-  "pytest-cov >=3",
-  "pre-commit",
+    "legend_dataflow[dataprod,test]",
+    "pre-commit",
 ]
 docs = [
-  "legend_dataflow[no_container]",
-  "sphinx>=7.0",
-  "myst_parser>=0.13",
-  "sphinx_inline_tabs",
-  "sphinx_copybutton",
-  "sphinx_autodoc_typehints",
-  "furo>=2023.08.17",
+    "sphinx>=7.0",
+    "myst_parser>=0.13",
+    "sphinx_inline_tabs",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+    "furo>=2023.08.17",
 ]
 
 [project.scripts]

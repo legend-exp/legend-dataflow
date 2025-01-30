@@ -1,9 +1,13 @@
 from .cal_grouping import CalGrouping
 from .create_pars_keylist import ParsKeyResolve
+from .execenv import (
+    execenv_prefix,
+    execenv_python,
+    execenv_smk_py_script,
+)
 from .FileKey import ChannelProcKey, FileKey, ProcessingFileKey
 from .pars_loading import ParsCatalog
 from .utils import (
-    runcmd,
     subst_vars,
     subst_vars_impl,
     subst_vars_in_snakemake_config,
@@ -17,7 +21,9 @@ __all__ = [
     "ParsCatalog",
     "ParsKeyResolve",
     "ProcessingFileKey",
-    "runcmd",
+    "execenv_prefix",
+    "execenv_python",
+    "execenv_smk_py_script",
     "subst_vars",
     "subst_vars",
     "subst_vars_impl",

@@ -8,7 +8,6 @@ from timestamp to unix time
 import copy
 import os
 import re
-import shlex
 import string
 from datetime import datetime
 from pathlib import Path
@@ -106,20 +105,6 @@ def tmp_log_path(setup):
 
 def filelist_path(setup):
     return setup["paths"]["tmp_filelists"]
-
-
-def runcmd(setup, aslist=False):
-    cmdline = shlex.split(setup["execenv"]["cmd"])
-    cmdline += ["--env=" + "PYTHONUSERBASE=" + f"{setup['paths']['install']}"]
-    if "env" in setup["execenv"]:
-        cmdline += [f"--env={var}={val}" for var, val in setup["execenv"]["env"].items()]
-
-    cmdline += shlex.split(setup["execenv"]["arg"])
-
-    if aslist:
-        return cmdline
-
-    return " ".join(cmdline)
 
 
 def subst_vars_impl(x, var_values, ignore_missing=False):

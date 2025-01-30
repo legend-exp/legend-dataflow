@@ -1,15 +1,69 @@
-# ruff: noqa: T201
 from __future__ import annotations
 
 import argparse
+import logging
 import os
+import shlex
 import shutil
 import string
 import subprocess
 from pathlib import Path
 
 import dbetto
+from dbetto import AttrsDict
 from packaging.requirements import Requirement
+
+from . import utils
+
+log = logging.getLogger(__name__)
+
+
+def execenv_prefix(config, aslist=False):
+    """Returns the software environment command prefix.
+
+    For example: `apptainer run image.sif`
+    """
+    config = AttrsDict(config)
+
+    cmdline = shlex.split(config.execenv.cmd)
+    if "env" in config.execenv:
+        cmdline += [f"--env={var}={val}" for var, val in config.execenv.env.items()]
+
+    cmdline += shlex.split(config.execenv.arg)
+
+    if aslist:
+        return cmdline
+    return " ".join(cmdline)
+
+
+def execenv_python(config, aslist=False):
+    """Returns the Python interpreter command.
+
+    For example: `apptainer run image.sif python`
+    """
+    config = AttrsDict(config)
+
+    cmdline = execenv_prefix(config, aslist=True)
+    cmdline.append(f"{config.paths.install}/bin/python")
+
+    if aslist:
+        return cmdline
+    return " ".join(cmdline)
+
+
+def execenv_smk_py_script(workflow, config, scriptname, aslist=False):
+    """Returns the command used to run a Python script for a Snakemake rule.
+
+    For example: `apptainer run image.sif python path/to/script.py`
+    """
+    config = AttrsDict(config)
+
+    cmdline = execenv_python(config, aslist=True)
+    cmdline.append(f"{workflow.basedir}/scripts/{scriptname}")
+
+    if aslist:
+        return cmdline
+    return " ".join(cmdline)
 
 
 def dataprod() -> None:
@@ -57,38 +111,76 @@ def install(args) -> None:
     format:
 
     ```yaml
-    setups:
-      l200:
-        pkg_versions:
-          - python_package_spec
+    pkg_versions:
+      - python_package_spec
+      - ...
     ```
     """
-    print(args.config_file)
-    if not Path(args.config_file).is_file():
-        msg = "config file is not a regular file"
-        raise RuntimeError(msg)
+    config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
+    config_loc = Path(args.config_file).resolve().parent
+    path_install = config_dict.paths.install
 
-    config_file_dir = Path(args.config_file).resolve().parent
-    config_dic = dbetto.AttrsDict(dbetto.utils.load_dict(args.config_file))
-
-    exec_cmd = config_dic.setups.l200.execenv.cmd
-    exec_arg = config_dic.setups.l200.execenv.arg
-    path_src = config_dic.setups.l200.paths.src
-    path_install = config_dic.setups.l200.paths.install
-    path_cache = config_dic.setups.l200.paths.cache
-
-    exec_cmd = string.Template(exec_cmd).substitute({"_": config_file_dir})
-    exec_arg = string.Template(exec_arg).substitute({"_": config_file_dir})
-    path_src = Path(string.Template(path_src).substitute({"_": config_file_dir}))
-    path_install = Path(string.Template(path_install).substitute({"_": config_file_dir}))
-    path_cache = Path(string.Template(path_cache).substitute({"_": config_file_dir}))
-
-    if args.r:
+    if args.r and Path(path_install).exists():
         shutil.rmtree(path_install)
-        shutil.rmtree(path_cache)
 
+    utils.subst_vars(
+        config_dict,
+        var_values={"_": config_loc},
+        use_env=True,
+        ignore_missing=False,
+    )
+
+    cmd_env = {}
+
+    def _runcmd(cmd_env, cmd_expr):
+        msg = (
+            "running:"
+            + " ".join([f"{k}={v}" for k, v in cmd_env.items()])
+            + " "
+            + " ".join(cmd_expr),
+        )
+        log.debug(msg)
+
+        subprocess.run(cmd_expr, env=cmd_env, check=True)
+
+    # configure venv
+    cmd_expr = [*execenv_prefix(config_dict, aslist=True), "python3", "-m", "venv", path_install]
+
+    log.info(f"configuring virtual environment in {path_install}")
+    _runcmd(cmd_env, cmd_expr)
+
+    cmd_expr = [
+        *execenv_python(config_dict, aslist=True),
+        "-m",
+        "pip",
+        "--no-cache-dir",
+        "install",
+        "--upgrade",
+        "pip",
+    ]
+
+    log.info("upgrading pip")
+    _runcmd(cmd_env, cmd_expr)
+
+    # install uv
+    cmd_expr = [
+        *execenv_python(config_dict, aslist=True),
+        "-m",
+        "pip",
+        "--no-cache-dir",
+        "install",
+        "--no-warn-script-location",
+        "uv",
+    ]
+
+    log.info("installing uv")
+    _runcmd(cmd_env, cmd_expr)
+
+    # now packages
+
+    path_src = Path(config_dict.paths.src)
     pkg_list = []
-    for spec in config_dic.setups.l200.pkg_versions:
+    for spec in config_dict.pkg_versions:
         pkg = Requirement(spec).name
         if (path_src / pkg).exists():
             pkg_list.append(str(path_src / pkg))
@@ -96,50 +188,47 @@ def install(args) -> None:
             pkg_list.append(spec)
 
     cmd_base = [
-        *(exec_cmd.split()),
-        exec_arg,
-        "python3",
-        "-B",
+        *execenv_python(config_dict, aslist=True),
         "-m",
+        "uv",
         "pip",
+        "--no-cache",
         "install",
-        "--no-warn-script-location",
     ]
 
     cmd_expr = cmd_base + pkg_list
-    cmdenv = {
-        "PYTHONUSERBASE": path_install,
-        "PIP_CACHE_DIR": path_cache,
-    }
 
-    print(
-        "INFO: running:",
-        " ".join([f"{k}={v}" for k, v in cmdenv.items()]) + " " + " ".join(cmd_expr),
-    )
+    log.info("installing packages")
+    _runcmd(cmd_env, cmd_expr)
 
-    subprocess.run(
-        cmd_expr,
-        env=cmdenv,
-        check=True,
-    )
+    # and finally legenddataflow
+
+    cmd_expr = [
+        *execenv_python(config_dict, aslist=True),
+        "-m",
+        "uv",
+        "pip",
+        "--no-cache",
+        "install",
+        # "--editable",  # TODO do we really want this?
+        str(config_loc),
+    ]
+
+    log.info("installing packages")
+    _runcmd(cmd_env, cmd_expr)
 
 
 def cmdexec(args) -> None:
     """
     This function loads the data production environment and executes a given command.
     """
-
-    if not Path(args.config_file).is_file():
-        msg = "config file is not a regular file"
-        raise RuntimeError(msg)
-
     config_file_dir = Path(args.config_file).resolve().parent
-    config_dic = dbetto.AttrsDict(dbetto.utils.load_dict(args.config_file))
+    config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
 
-    exec_cmd = config_dic.setups.l200.execenv.cmd
-    exec_arg = config_dic.setups.l200.execenv.arg
-    env_vars = config_dic.setups.l200.execenv.env
-    path_install = config_dic.setups.l200.paths.install
+    exec_cmd = config_dict.execenv.cmd
+    exec_arg = config_dict.execenv.arg
+    env_vars = config_dict.execenv.env
+    path_install = config_dict.paths.install
 
     exec_cmd = string.Template(exec_cmd).substitute({"_": config_file_dir})
     exec_arg = string.Template(exec_arg).substitute({"_": config_file_dir})
