@@ -11,7 +11,6 @@ from pathlib import Path
 import colorlog
 import dbetto
 from dbetto import AttrsDict
-from packaging.requirements import Requirement
 
 from . import utils
 
@@ -100,6 +99,12 @@ def dataprod() -> None:
         "-r",
         "--remove",
         help="remove software directory before installing software",
+        action="store_true",
+    )
+    parser_install.add_argument(
+        "-e",
+        "--editable",
+        help="install software with pip's --editable flag",
         action="store_true",
     )
     parser_install.set_defaults(func=install)
@@ -218,25 +223,7 @@ def install(args) -> None:
         log.info("installing uv")
         _runcmd(cmd_expr, cmd_env)
 
-    # now packages
-
-    path_src = Path(config_dict.paths.src)
-    pkg_list = []
-    for spec in config_dict.pkg_versions:
-        pkg = Requirement(spec).name
-        if (path_src / pkg).exists():
-            pkg_list.append(str(path_src / pkg))
-        else:
-            pkg_list.append(spec)
-
-    cmd_base = [*python, "-m", "uv", "pip", "--no-cache", "install"]
-
-    cmd_expr = cmd_base + pkg_list
-
-    log.info("installing packages")
-    _runcmd(cmd_expr, cmd_env)
-
-    # and finally legenddataflow
+    # and finally install legenddataflow with all dependencies
 
     cmd_expr = [
         *python,
@@ -245,9 +232,11 @@ def install(args) -> None:
         "pip",
         "--no-cache",
         "install",
-        # "--editable",  # TODO do we really want this?
         str(config_loc),
     ]
+
+    if args.editable:
+        cmd_expr.insert(-1, "--editable")
 
     log.info("installing packages")
     _runcmd(cmd_expr, cmd_env)

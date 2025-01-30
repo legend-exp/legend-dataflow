@@ -69,11 +69,4 @@ execenv:
     PYGAMA_FASTMATH: "false"
     DISABLE_TQDM: "True"
 
-pkg_versions:
-  - pygama==2.0.*
-  - pylegendmeta==1.2.0a2
-  - dspeed==1.6.*
-  - legend-pydataobj>=1.11.4
-  - legend-daq2lh5==1.4.*
-
 legend_metadata_version: v0.5.7

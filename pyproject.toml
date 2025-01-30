@@ -52,30 +52,28 @@ readme = "README.md"
 requires-python = ">=3.11"
 dynamic = ["version"]
 
-# these are the dependencies strictly required by legend-dataflow
 dependencies = [
     "colorlog",
     "dbetto>=1.0.5",
+    "pygama>=2",
+    "dspeed>=1.6",
     "pylegendmeta==1.2.0a2",
+    "legend-pydataobj>=1.11.4",
+    "legend-daq2lh5>=1.4",
 ]
 
 [project.optional-dependencies]
 # these are needed to run the data production
-dataprod = [
+runprod = [
     "snakemake>=8.16",
-    "pygama",
-    "dspeed",
-    "pylegendmeta==1.2.0a2",
-    "legend-pydataobj",
-    "legend-daq2lh5",
 ]
 test = [
-    "legend_dataflow[dataprod]",
+    "legend_dataflow[runprod]",
     "pytest>=6",
     "pytest-cov>=3",
 ]
 dev = [
-    "legend_dataflow[dataprod,test]",
+    "legend_dataflow[runprod,test]",
     "pre-commit",
 ]
 docs = [
@@ -88,4 +86,4 @@ docs = [
 ]
 
 [project.scripts]
-dataprod = "legenddataflow.library.execenv:dataprod"
+dataprod = "legenddataflow.execenv:dataprod"
