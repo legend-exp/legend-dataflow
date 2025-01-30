@@ -1,0 +1,59 @@
+name: lgdo
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "releases/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  build-and-test:
+    name: Test lgdo with Python
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+        os: [ubuntu-latest, macos-13]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Get dependencies and install legend-dataflow
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade .[test]
+      - name: Run unit tests
+        run: |
+          python -m pytest
+
+  test-coverage:
+    name: Calculate and upload test coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Generate Report
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade .[test]
+          python -m pytest --cov=legenddataflow --cov-report=xml
+      - name: Upload Coverage to codecov.io
+        uses: codecov/codecov-action@v5
