@@ -6,11 +6,11 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 - running build hit over all channels using par file
 """
 
-from scripts.library.pars_loading import ParsCatalog
-from scripts.library.create_pars_keylist import ParsKeyResolve
+from legenddataflow.pars_loading import ParsCatalog
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from scripts.library.utils import filelist_path, set_last_rule_name
-from scripts.library.patterns import (
+from legenddataflow.utils import filelist_path, set_last_rule_name
+from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,

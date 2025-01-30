@@ -2,12 +2,8 @@ import glob
 import json, yaml
 from pathlib import Path
 
-from scripts.library.FileKey import FileKey, run_grouper
-from scripts.library.patterns import (
-    get_pattern_tier,
-    get_pattern_tier_raw_blind,
-    get_pattern_tier_daq,
-)
+from legenddataflow.FileKey import FileKey, run_grouper
+from legenddataflow import patterns as patt
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -116,15 +112,15 @@ def get_pattern(setup, tier):
     as only phy files are taken to skm others are only taken to pet
     """
     if tier == "blind":
-        fn_pattern = get_pattern_tier(setup, "raw", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(setup, "raw", check_in_cycle=False)
     elif tier in ("skm", "pet_concat"):
-        fn_pattern = get_pattern_tier(setup, "pet", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(setup, "pet", check_in_cycle=False)
     elif tier == "evt_concat":
-        fn_pattern = get_pattern_tier(setup, "evt", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(setup, "evt", check_in_cycle=False)
     elif tier == "daq":
-        fn_pattern = get_pattern_tier_daq(setup, extension="{ext}")
+        fn_pattern = patt.get_pattern_tier_daq(setup, extension="{ext}")
     else:
-        fn_pattern = get_pattern_tier(setup, tier, check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(setup, tier, check_in_cycle=False)
     return fn_pattern
 
 
@@ -132,15 +128,15 @@ def concat_phy_filenames(setup, phy_filenames, tier):
     """
     This function concatenates the files from the same run together
     """
-    fn_pattern = get_pattern(setup, tier)
+    fn_pattern = patt.get_pattern(setup, tier)
     # group files by run
-    sorted_phy_filenames = run_grouper(phy_filenames)
+    sorted_phy_filenames = patt.run_grouper(phy_filenames)
     phy_filenames = []
 
     for run in sorted_phy_filenames:
         key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
         out_key = FileKey.get_path_from_filekey(
-            key, get_pattern_tier(setup, tier, check_in_cycle=False)
+            key, patt.get_pattern_tier(setup, tier, check_in_cycle=False)
         )[0]
 
         phy_filenames.append(out_key)
@@ -181,11 +177,11 @@ def build_filelist(
             else:
                 if tier == "blind" and _key.datatype in blind_datatypes:
                     filename = FileKey.get_path_from_filekey(
-                        _key, get_pattern_tier_raw_blind(setup)
+                        _key, patt.get_pattern_tier_raw_blind(setup)
                     )
                 elif tier == "skm":
                     filename = FileKey.get_path_from_filekey(
-                        _key, get_pattern_tier(setup, "pet", check_in_cycle=False)
+                        _key, patt.get_pattern_tier(setup, "pet", check_in_cycle=False)
                     )
                 elif tier == "daq":
                     filename = FileKey.get_path_from_filekey(

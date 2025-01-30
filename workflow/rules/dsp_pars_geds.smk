@@ -4,8 +4,8 @@ Snakemake rules for building dsp pars for HPGes, before running build_dsp()
 - extraction of energy filter parameters and charge trapping correction for each channel from cal data
 """
 
-from scripts.util.create_pars_keylist import pars_key_resolve
-from scripts.util.patterns import (
+from legenddataflow.create_pars_keylist import pars_key_resolve
+from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,

@@ -1,0 +1,9 @@
+cores: 30
+restart-times: 2
+max-jobs-per-second: 1
+resources:
+  - mem_swap=3500
+configfile: config-lngs.yaml
+snakefile: ./workflow/Snakefile-build-raw
+keep-going: true
+rerun-incomplete: true

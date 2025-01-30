@@ -1,9 +1,9 @@
 setups:
   l200:
     paths:
-      sandbox_path: ''
+      sandbox_path: ""
       tier_daq: $_/generated/tier/daq
-      tier_raw_blind: ''
+      tier_raw_blind: ""
       workflow: $_/workflow
       metadata: $_/inputs
       config: $_/inputs/dataprod/config
@@ -44,19 +44,19 @@ setups:
       psp: ch{ch:07d}/dsp
       hit: ch{ch:07d}/hit
       pht: ch{ch:07d}/hit
-      evt: '{grp}/evt'
-      pet: '{grp}/evt'
-      skm: '{grp}/skm'
+      evt: "{grp}/evt"
+      pet: "{grp}/evt"
+      skm: "{grp}/skm"
       tcm: hardware_tcm_1
     execenv:
       cmd: shifter
-      arg: ' --image legendexp/legend-base:latest'
+      arg: " --image legendexp/legend-base:latest"
       env:
-        HDF5_USE_FILE_LOCKING: 'FALSE'
-        LGDO_BOUNDSCHECK: 'false'
-        DSPEED_BOUNDSCHECK: 'false'
-        PYGAMA_PARALLEL: 'false'
-        PYGAMA_FASTMATH: 'false'
+        HDF5_USE_FILE_LOCKING: "FALSE"
+        LGDO_BOUNDSCHECK: "false"
+        DSPEED_BOUNDSCHECK: "false"
+        PYGAMA_PARALLEL: "false"
+        PYGAMA_FASTMATH: "false"
     pkg_versions:
       pygama: pygama==2.0.3
       pylegendmeta: pylegendmeta==0.10.2

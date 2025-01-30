@@ -4,11 +4,11 @@ Snakemake rules for processing dsp tier.
 - running dsp over all channels using par file
 """
 
-from scripts.library.pars_loading import ParsCatalog
-from scripts.library.create_pars_keylist import ParsKeyResolve
+from legenddataflow.pars_loading import ParsCatalog
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from scripts.library.create_pars_keylist import ParsKeyResolve
-from scripts.library.patterns import (
+from legenddataflow.create_pars_keylist import ParsKeyResolve
+from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_tier,
     get_pattern_pars_tmp,

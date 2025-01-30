@@ -1,3 +1,6 @@
+.snakemake
+workflow/src/legenddataflow/_version.py
+
 # New additions go at the top!
 *.c
 .DS_Store
