@@ -25,17 +25,21 @@ def execenv_prefix(config, aslist=False):
     """
     config = AttrsDict(config)
 
-    cmdline = shlex.split(config.execenv.cmd)
-    if "env" in config.execenv:
-        # FIXME: this is not portable, only works with Apptainer and Docker
-        cmdline += [f"--env={var}={val}" for var, val in config.execenv.env.items()]
+    if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
+        cmdline = shlex.split(config.execenv.cmd)
+        if "env" in config.execenv:
+            # FIXME: this is not portable, only works with Apptainer and Docker
+            cmdline += [f"--env={var}={val}" for var, val in config.execenv.env.items()]
 
-    cmdenv = {}
-    xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
-    if xdg_runtime_dir:
-        cmdenv["APPTAINER_BINDPATH"] = xdg_runtime_dir
+        cmdenv = {}
+        xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+        if xdg_runtime_dir:
+            cmdenv["APPTAINER_BINDPATH"] = xdg_runtime_dir
 
-    cmdline += shlex.split(config.execenv.arg)
+        cmdline += shlex.split(config.execenv.arg)
+    else:
+        cmdenv = {}
+        cmdline = []
 
     if aslist:
         return cmdline, cmdenv
