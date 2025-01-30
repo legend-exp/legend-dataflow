@@ -17,7 +17,6 @@ build:
       --module-first
       --force
       --output-dir docs/source/api
-      workflow/scripts
       workflow/src
       workflow/rules
     - .venv/bin/python -m sphinx -T -b html -d docs/_build/doctrees -D
