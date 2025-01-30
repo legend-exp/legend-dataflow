@@ -8,10 +8,11 @@ import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
+
+from ..log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)

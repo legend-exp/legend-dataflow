@@ -11,8 +11,6 @@ from pathlib import Path
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.convert_np import convert_dict_np_to_float
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
@@ -21,6 +19,9 @@ from pygama.pargen.data_cleaning import (
     get_tcm_pulser_ids,
 )
 from pygama.pargen.utils import load_data
+
+from ..convert_np import convert_dict_np_to_float
+from ..log import build_log
 
 log = logging.getLogger(__name__)
 

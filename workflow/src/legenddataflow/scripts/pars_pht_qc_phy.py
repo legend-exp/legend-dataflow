@@ -12,14 +12,15 @@ import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.convert_np import convert_dict_np_to_float
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
 )
+
+from ..convert_np import convert_dict_np_to_float
+from ..log import build_log
 
 log = logging.getLogger(__name__)
 

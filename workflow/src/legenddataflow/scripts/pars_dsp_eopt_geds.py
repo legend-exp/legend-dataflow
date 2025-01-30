@@ -11,7 +11,6 @@ import sklearn.gaussian_process.kernels as ker
 from dbetto import TextDB
 from dbetto.catalog import Props
 from dspeed.units import unit_registry as ureg
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from pygama.math.distributions import hpge_peak
 from pygama.pargen.dsp_optimize import (
@@ -19,6 +18,8 @@ from pygama.pargen.dsp_optimize import (
     run_bayesian_optimisation,
     run_one_dsp,
 )
+
+from ..log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

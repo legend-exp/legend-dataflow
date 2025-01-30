@@ -6,7 +6,8 @@ import numpy as np
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
+
+from ..log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)

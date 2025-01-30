@@ -16,11 +16,12 @@ import numexpr as ne
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
+
+from ..log import build_log
 
 mpl.use("Agg")
 

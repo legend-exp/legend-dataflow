@@ -10,14 +10,15 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.FileKey import ChannelProcKey, ProcessingFileKey
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from pars_pht_aoecal import run_aoe_calibration
 from pars_pht_lqcal import run_lq_calibration
 from pars_pht_partcal import calibrate_partition
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
+
+from ..FileKey import ChannelProcKey, ProcessingFileKey
+from ..log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

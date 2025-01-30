@@ -88,4 +88,4 @@ docs = [
 ]
 
 [project.scripts]
-dataprod = "legenddataflow.execenv:dataprod"
+dataprod = "legenddataflow.library.execenv:dataprod"

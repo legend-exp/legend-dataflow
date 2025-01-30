@@ -3,10 +3,11 @@ import time
 from pathlib import Path
 
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata, TextDB
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
+
+from ..log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--input", help="input file", type=str)

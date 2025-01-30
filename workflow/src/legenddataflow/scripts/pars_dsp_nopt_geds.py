@@ -8,10 +8,11 @@ import numpy as np
 import pygama.pargen.noise_optimization as pno
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
+
+from ..log import build_log
 
 sto = lh5.LH5Store()
 

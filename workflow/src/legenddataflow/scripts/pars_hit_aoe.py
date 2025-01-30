@@ -10,13 +10,14 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.convert_np import convert_dict_np_to_float
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.utils import load_data
+
+from ..convert_np import convert_dict_np_to_float
+from ..log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

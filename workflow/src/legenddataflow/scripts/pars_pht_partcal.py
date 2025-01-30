@@ -13,13 +13,14 @@ import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.FileKey import ChannelProcKey, ProcessingFileKey
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from pygama.math.distributions import nb_poly
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
+
+from ..FileKey import ChannelProcKey, ProcessingFileKey
+from ..log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

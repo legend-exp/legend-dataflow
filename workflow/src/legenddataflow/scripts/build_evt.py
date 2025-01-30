@@ -6,10 +6,11 @@ from pathlib import Path
 import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import Props, TextDB
-from legenddataflow.log import build_log
 from legendmeta import LegendMetadata
 from lgdo.types import Array
 from pygama.evt import build_evt
+
+from ..log import build_log
 
 sto = lh5.LH5Store()
 

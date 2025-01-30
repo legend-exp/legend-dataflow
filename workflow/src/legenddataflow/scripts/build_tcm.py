@@ -6,8 +6,9 @@ import numpy as np
 from daq2lh5.orca import orca_flashcam
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from pygama.evt.build_tcm import build_tcm
+
+from ..log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("input", help="input file", type=str)

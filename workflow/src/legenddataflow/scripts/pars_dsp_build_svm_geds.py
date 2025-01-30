@@ -4,9 +4,10 @@ from pathlib import Path
 
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.log import build_log
 from lgdo import lh5
 from sklearn.svm import SVC
+
+from ..log import build_log
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--log", help="log file", type=str)

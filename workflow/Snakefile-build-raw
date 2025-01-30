@@ -15,13 +15,11 @@ utils.subst_vars_in_snakemake_config(workflow, config)
 
 check_in_cycle = True
 swenv = execenv.execenv_prefix(config)
-# meta = utils.metadata_path(config)
+meta_path = utils.metadata_path(config)
 det_status = utils.det_status_path(config)
 
-# wait for new pylegendmeta release
-# if not Path(meta).exists():
-#     meta = LegendMetadata()
-#     meta.checkout(config["configs"]["l200"]["legend_metadata_version"])
+if not Path(meta_path).exists():
+    LegendMetadata(meta_path).checkout(config["legend_metadata_version"])
 
 
 wildcard_constraints:

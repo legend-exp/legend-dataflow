@@ -9,7 +9,6 @@ from .FileKey import ChannelProcKey, FileKey, ProcessingFileKey
 from .pars_loading import ParsCatalog
 from .utils import (
     subst_vars,
-    subst_vars_impl,
     subst_vars_in_snakemake_config,
     unix_time,
 )
@@ -25,9 +24,6 @@ __all__ = [
     "execenv_python",
     "execenv_smk_py_script",
     "subst_vars",
-    "subst_vars",
-    "subst_vars_impl",
     "subst_vars_in_snakemake_config",
-    "unix_time",
     "unix_time",
 ]
