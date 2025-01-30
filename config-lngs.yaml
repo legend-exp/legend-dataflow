@@ -44,8 +44,7 @@ paths:
   tmp_par: $_/generated/tmp/par
 
   src: $_/software/python/src
-  install: $_/software/python/install
-  cache: $_/software/python/cache
+  install: $_/.snakemake/legend-dataflow/venv
 
 table_format:
   raw: ch{ch:07d}/raw
@@ -59,7 +58,7 @@ table_format:
   tcm: hardware_tcm_1
 
 execenv:
-  cmd: apptainer run
+  cmd: apptainer exec
   arg: /data2/public/prodenv/containers/legendexp_legend-base_latest_20241110203225.sif
   env:
     PRODENV: $PRODENV
