@@ -3,10 +3,9 @@ This module contains classes to convert between keys and files using the pattern
 """
 
 import re
+import string
 from collections import namedtuple
 from pathlib import Path
-
-import snakemake as smk
 
 from .patterns import (
     full_channel_pattern_with_extension,
@@ -18,6 +17,18 @@ from .utils import unix_time
 
 # key_pattern -> key
 #
+
+
+def regex_from_filepattern(filepattern):
+    f = []
+    last = 0
+    for match in re.compile(r"\{(?P<name>[\w]+)\}").finditer(filepattern):
+        wildcard = match.group("name")
+        f.append(f"(?P={wildcard})")
+        last = match.end()
+    f.append(re.escape(filepattern[last:]))
+    f.append("$")
+    return "".join(f)
 
 
 class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])):
@@ -51,18 +62,12 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
 
     @classmethod
     def get_filekey_from_pattern(cls, filename, pattern=None):
-        if pattern is None:
-            try:
-                key_pattern_rx = re.compile(smk.io.regex_from_filepattern(cls.key_pattern))
-            except AttributeError:
-                key_pattern_rx = re.compile(smk.io.regex(cls.key_pattern))
-        else:
-            if isinstance(pattern, Path):
-                pattern = pattern.as_posix()
-            try:
-                key_pattern_rx = re.compile(smk.io.regex_from_filepattern(pattern))
-            except AttributeError:
-                key_pattern_rx = re.compile(smk.io.regex(pattern))
+        if isinstance(pattern, Path):
+            pattern = pattern.as_posix()
+
+        key_pattern_rx = re.compile(
+            regex_from_filepattern(cls.key_pattern if pattern is None else pattern)
+        )
 
         if key_pattern_rx.match(filename) is None:
             return None
@@ -93,11 +98,14 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
                 d[key] = "*"
         return cls(**d)
 
+    def expand(self, file_pattern, **kwargs):
+        wildcard_dict = dict(**self._asdict(), **kwargs)
+        formatter = string.Formatter()
+        return [formatter.vformat(file_pattern, (), wildcard_dict)]
+
     def get_path_from_filekey(self, pattern, **kwargs):
-        if isinstance(pattern, Path):
-            pattern = pattern.as_posix()
         if kwargs is None:
-            return smk.io.expand(pattern, **self._asdict())
+            return self.expand(pattern, **kwargs)
         else:
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
@@ -105,7 +113,7 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
                         kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
                     else:
                         kwargs.pop(entry)
-            return smk.io.expand(pattern, **self._asdict(), **kwargs)
+            return self.expand(pattern, **kwargs)
 
     # get_path_from_key
     @classmethod
@@ -172,7 +180,7 @@ class ProcessingFileKey(FileKey):
         if not isinstance(pattern, str):
             pattern = pattern(self.tier, self.identifier)
         if kwargs is None:
-            return smk.io.expand(pattern, **self._asdict())
+            return self.expand(pattern, **kwargs)
         else:
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
@@ -180,7 +188,7 @@ class ProcessingFileKey(FileKey):
                         kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
                     else:
                         kwargs.pop(entry)
-            return smk.io.expand(pattern, **self._asdict(), **kwargs)
+            return self.expand(pattern, **kwargs)
 
 
 class ChannelProcKey(FileKey):
@@ -211,7 +219,9 @@ class ChannelProcKey(FileKey):
         for chan in chan_list:
             wildcards_dict = d._asdict()
             wildcards_dict.pop("channel")
-            file = smk.io.expand(par_pattern, **wildcards_dict, channel=chan)[0]
+            formatter = string.Formatter()
+            wildcards_dict["channel"] = chan
+            file = formatter.vformat(par_pattern, (), wildcards_dict)
             filenames.append(file)
         return filenames
 

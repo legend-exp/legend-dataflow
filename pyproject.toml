@@ -51,12 +51,15 @@ dynamic = ["version"]
 
 dependencies = [
     "dbetto>=1.0.5",
-    "snakemake>=8.16",
     "pylegendmeta==1.2.0a2",
 ]
 
 [project.optional-dependencies]
+full = [
+"snakemake>=8.16",
+]
 no_container = [
+  "legend_dataflow[full]",
   "pygama",
   "dspeed",
   "pylegendmeta==1.2.0a2",
