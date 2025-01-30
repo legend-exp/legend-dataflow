@@ -118,10 +118,6 @@ def install(args) -> None:
     """
     config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
     config_loc = Path(args.config_file).resolve().parent
-    path_install = config_dict.paths.install
-
-    if args.r and Path(path_install).exists():
-        shutil.rmtree(path_install)
 
     utils.subst_vars(
         config_dict,
@@ -129,6 +125,11 @@ def install(args) -> None:
         use_env=True,
         ignore_missing=False,
     )
+
+    path_install = config_dict.paths.install
+
+    if args.r and Path(path_install).exists():
+        shutil.rmtree(path_install)
 
     cmd_env = {}
 
@@ -143,38 +144,59 @@ def install(args) -> None:
 
         subprocess.run(cmd_expr, env=cmd_env, check=True)
 
+    has_uv = False
+    try:
+        subprocess.run(
+            [*execenv_prefix(config_dict, aslist=True), "uv", "--version"],
+            capture_output=True,
+            check=True,
+        )
+        has_uv = True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+
     # configure venv
-    cmd_expr = [*execenv_prefix(config_dict, aslist=True), "python3", "-m", "venv", path_install]
+    if has_uv:
+        cmd_expr = [*execenv_prefix(config_dict, aslist=True), "uv", "venv", path_install]
+    else:
+        cmd_expr = [
+            *execenv_prefix(config_dict, aslist=True),
+            "python3",
+            "-m",
+            "venv",
+            path_install,
+        ]
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_env, cmd_expr)
 
-    cmd_expr = [
-        *execenv_python(config_dict, aslist=True),
-        "-m",
-        "pip",
-        "--no-cache-dir",
-        "install",
-        "--upgrade",
-        "pip",
-    ]
+    if not has_uv:
+        cmd_expr = [
+            *execenv_python(config_dict, aslist=True),
+            "-m",
+            "pip",
+            "--no-cache-dir",
+            "install",
+            "--upgrade",
+            "pip",
+        ]
 
-    log.info("upgrading pip")
-    _runcmd(cmd_env, cmd_expr)
+        log.info("upgrading pip")
+        _runcmd(cmd_env, cmd_expr)
 
-    # install uv
-    cmd_expr = [
-        *execenv_python(config_dict, aslist=True),
-        "-m",
-        "pip",
-        "--no-cache-dir",
-        "install",
-        "--no-warn-script-location",
-        "uv",
-    ]
+        # install uv
+        cmd_expr = [
+            *execenv_python(config_dict, aslist=True),
+            "-m",
+            "pip",
+            "--no-cache-dir",
+            "install",
+            "--no-warn-script-location",
+            "uv",
+        ]
 
-    log.info("installing uv")
-    _runcmd(cmd_env, cmd_expr)
+        log.info("installing uv")
+        _runcmd(cmd_env, cmd_expr)
 
     # now packages
 
