@@ -98,7 +98,12 @@ def aoe_calibration(
 
     aoe.calibrate(data, "AoE_Uncorr")
     log.info("Calibrated A/E")
-    return cal_dicts, get_results_dict(aoe), fill_plot_dict(aoe, data, plot_options), aoe
+    return (
+        cal_dicts,
+        get_results_dict(aoe),
+        fill_plot_dict(aoe, data, plot_options),
+        aoe,
+    )
 
 
 argparser = argparse.ArgumentParser()
@@ -151,7 +156,9 @@ if kwarg_dict["run_aoe"] is True:
 
     pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else aoe_peak
 
-    sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else SigmaFit
+    sigma_func = (
+        eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else SigmaFit
+    )
 
     mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else Pol1
 

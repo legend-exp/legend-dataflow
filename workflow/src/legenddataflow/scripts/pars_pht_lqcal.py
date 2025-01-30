@@ -153,14 +153,13 @@ def run_lq_calibration(
     # gen_plots=True,
 ):
     configs = LegendMetadata(path=configs)
-    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"]["pars_pht_lqcal"][
-        "inputs"
-    ]["lqcal_config"][channel]
+    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"][
+        "pars_pht_lqcal"
+    ]["inputs"]["lqcal_config"][channel]
 
     kwarg_dict = Props.read_from(channel_dict)
 
     if kwarg_dict.pop("run_lq") is True:
-
         if "plot_options" in kwarg_dict:
             for field, item in kwarg_dict["plot_options"].items():
                 kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
@@ -208,9 +207,9 @@ def run_lq_calibration(
         )
         # need to change eres func as can't pickle lambdas
         try:
-            lq_obj.eres_func = results_dicts[next(iter(results_dicts))]["partition_ecal"][
-                kwarg_dict["cal_energy_param"]
-            ]["eres_linear"]
+            lq_obj.eres_func = results_dicts[next(iter(results_dicts))][
+                "partition_ecal"
+            ][kwarg_dict["cal_energy_param"]]["eres_linear"]
         except KeyError:
             lq_obj.eres_func = {}
     else:
@@ -241,16 +240,24 @@ def run_lq_calibration(
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--input_files", help="files", type=str, nargs="*", required=True
+    )
     argparser.add_argument(
         "--pulser_files", help="pulser_file", type=str, nargs="*", required=False
     )
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
-    argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--eres_file", help="eres_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="eres_file", type=str, nargs="*", required=True
+    )
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
@@ -260,7 +267,9 @@ if __name__ == "__main__":
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_file", help="plot_file", type=str, nargs="*", required=False
+    )
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--lq_results", help="lq_results", nargs="*", type=str)
 
@@ -370,7 +379,10 @@ if __name__ == "__main__":
 
         for tstamp in cal_dict:
             if tstamp not in np.unique(data["run_timestamp"]):
-                row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+                row = {
+                    key: [False] if data.dtypes[key] == "bool" else [np.nan]
+                    for key in data
+                }
                 row["run_timestamp"] = tstamp
                 row = pd.DataFrame(row)
                 data = pd.concat([data, row])

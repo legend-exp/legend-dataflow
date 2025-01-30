@@ -113,13 +113,21 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             dic.pop("covariance")
 
         out_dict = {
-            "total_fep": len(data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")),
-            "total_dep": len(data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")),
+            "total_fep": len(
+                data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")
+            ),
+            "total_dep": len(
+                data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")
+            ),
             "pass_fep": len(
-                data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}")
+                data.query(
+                    f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}"
+                )
             ),
             "pass_dep": len(
-                data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}")
+                data.query(
+                    f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}"
+                )
             ),
             "eres_linear": fwhm_linear,
             "eres_quadratic": fwhm_quad,
@@ -128,7 +136,9 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             "peak_param": results_dict["peak_param"],
         }
         if "calibration_parameters" in results_dict:
-            out_dict["calibration_parameters"] = results_dict["calibration_parameters"].to_dict()
+            out_dict["calibration_parameters"] = results_dict[
+                "calibration_parameters"
+            ].to_dict()
             out_dict["calibration_uncertainty"] = results_dict[
                 "calibration_uncertainties"
             ].to_dict()
@@ -149,13 +159,12 @@ def calibrate_partition(
     datatype,
     gen_plots=True,
 ):
-
     det_status = chmap[channel]["analysis"]["usability"]
 
     configs = LegendMetadata(path=configs)
-    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"]["pars_pht_partcal"][
-        "inputs"
-    ]["pars_pht_partcal_config"][channel]
+    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"][
+        "pars_pht_partcal"
+    ]["inputs"]["pars_pht_partcal_config"][channel]
 
     kwarg_dict = Props.read_from(channel_dict)
 
@@ -201,7 +210,9 @@ def calibrate_partition(
     glines = [pk_par[0] for pk_par in pk_pars]
 
     if "cal_energy_params" not in kwarg_dict:
-        cal_energy_params = [energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]]
+        cal_energy_params = [
+            energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]
+        ]
     else:
         cal_energy_params = kwarg_dict["cal_energy_params"]
 
@@ -211,14 +222,17 @@ def calibrate_partition(
     partcal_plot_dict = {}
     full_object_dict = {}
 
-    for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
+    for energy_param, cal_energy_param in zip(
+        kwarg_dict["energy_params"], cal_energy_params
+    ):
         energy = data.query(selection_string)[energy_param].to_numpy()
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param,
             glines,
             1,
             kwarg_dict.get("deg", 0),
-            debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,  # , fixed={1: 1}
+            debug_mode=kwarg_dict.get("debug_mode", False)
+            | args.debug,  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             energy,
@@ -249,9 +263,9 @@ def calibrate_partition(
             if csqr[0] / csqr[1] < 100:
                 allowed_p_val = (
                     0.9
-                    * full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
-                        "peak_parameters"
-                    ][2614.511]["p_value"]
+                    * full_object_dict[cal_energy_param].results[
+                        "hpge_fit_energy_peaks"
+                    ]["peak_parameters"][2614.511]["p_value"]
                 )
 
                 full_object_dict[cal_energy_param] = HPGeCalibration(
@@ -296,11 +310,14 @@ def calibrate_partition(
             full_object_dict[cal_energy_param], data, cal_energy_param, selection_string
         )
         cal_dicts = update_cal_dicts(
-            cal_dicts, {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
+            cal_dicts,
+            {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()},
         )
         if "ctc" in cal_energy_param:
             no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
-            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("ctc", "noctc")
+            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace(
+                "ctc", "noctc"
+            )
 
             cal_dicts = update_cal_dicts(
                 cal_dicts, {cal_energy_param.replace("ctc", "noctc"): no_ctc_dict}
@@ -318,42 +335,42 @@ def calibrate_partition(
         if gen_plots is True:
             param_plot_dict = {}
             if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
-                param_plot_dict["fwhm_fit"] = full_object_dict[cal_energy_param].plot_eres_fit(
-                    energy
-                )
-                param_plot_dict["cal_fit"] = full_object_dict[cal_energy_param].plot_cal_fit(
-                    energy
-                )
+                param_plot_dict["fwhm_fit"] = full_object_dict[
+                    cal_energy_param
+                ].plot_eres_fit(energy)
+                param_plot_dict["cal_fit"] = full_object_dict[
+                    cal_energy_param
+                ].plot_cal_fit(energy)
                 if det_status == "on":
                     param_plot_dict["cal_fit_with_errors"] = full_object_dict[
                         cal_energy_param
                     ].plot_cal_fit_with_errors(energy)
                 if (
                     len(
-                        full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
-                            "peak_parameters"
-                        ]
+                        full_object_dict[cal_energy_param].results[
+                            "hpge_fit_energy_peaks"
+                        ]["peak_parameters"]
                     )
                     < 17
                 ):
-                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
-                        energy, ncols=4, nrows=4
-                    )
+                    param_plot_dict["peak_fits"] = full_object_dict[
+                        cal_energy_param
+                    ].plot_fits(energy, ncols=4, nrows=4)
                 elif (
                     len(
-                        full_object_dict[cal_energy_param].results["hpge_fit_energy_peaks"][
-                            "peak_parameters"
-                        ]
+                        full_object_dict[cal_energy_param].results[
+                            "hpge_fit_energy_peaks"
+                        ]["peak_parameters"]
                     )
                     < 26
                 ):
-                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
-                        energy, ncols=5, nrows=5
-                    )
+                    param_plot_dict["peak_fits"] = full_object_dict[
+                        cal_energy_param
+                    ].plot_fits(energy, ncols=5, nrows=5)
                 else:
-                    param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
-                        energy, ncols=6, nrows=5
-                    )
+                    param_plot_dict["peak_fits"] = full_object_dict[
+                        cal_energy_param
+                    ].plot_fits(energy, ncols=6, nrows=5)
 
                 if "plot_options" in kwarg_dict:
                     for key, item in kwarg_dict["plot_options"].items():
@@ -389,7 +406,9 @@ def calibrate_partition(
     for tstamp, object_dict in object_dicts.items():
         out_object_dicts[tstamp] = dict(**object_dict, partition_ecal=full_object_dict)
 
-    common_dict = partcal_plot_dict.pop("common") if "common" in list(partcal_plot_dict) else None
+    common_dict = (
+        partcal_plot_dict.pop("common") if "common" in list(partcal_plot_dict) else None
+    )
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
@@ -404,16 +423,24 @@ def calibrate_partition(
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--input_files", help="files", type=str, nargs="*", required=True
+    )
     argparser.add_argument(
         "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
     )
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
-    argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--eres_file", help="eres_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="eres_file", type=str, nargs="*", required=True
+    )
 
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -423,7 +450,9 @@ if __name__ == "__main__":
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
     argparser.add_argument("--log", help="log_file", type=str)
 
-    argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_file", help="plot_file", type=str, nargs="*", required=False
+    )
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--fit_results", help="fit_results", nargs="*", type=str)
 
@@ -525,7 +554,9 @@ if __name__ == "__main__":
 
     for tstamp in cal_dict:
         if tstamp not in np.unique(data["run_timestamp"]):
-            row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+            row = {
+                key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data
+            }
             row["run_timestamp"] = tstamp
             row = pd.DataFrame(row)
             data = pd.concat([data, row])

@@ -27,7 +27,9 @@ args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True)
 if args.tier == "hit" or args.tier == "pht":
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_hit"]
+    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
+        "tier_hit"
+    ]
 else:
     msg = "unknown tier"
     raise ValueError(msg)

@@ -36,7 +36,9 @@ argparser.add_argument("--log", help="log file", type=str)
 args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True)
-config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_raw"]
+config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
+    "tier_raw"
+]
 
 log = build_log(config_dict, args.log)
 
@@ -53,19 +55,29 @@ all_channels = lh5.ls(args.input)
 # list of Ge channels and SiPM channels with associated metadata
 legendmetadata = LegendMetadata(args.metadata, lazy=True)
 ged_channels = (
-    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["geds"].map("daq.rawid")
+    legendmetadata.channelmap(args.timestamp)
+    .map("system", unique=False)["geds"]
+    .map("daq.rawid")
 )
 spms_channels = (
-    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["spms"].map("daq.rawid")
+    legendmetadata.channelmap(args.timestamp)
+    .map("system", unique=False)["spms"]
+    .map("daq.rawid")
 )
 auxs_channels = (
-    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["auxs"].map("daq.rawid")
+    legendmetadata.channelmap(args.timestamp)
+    .map("system", unique=False)["auxs"]
+    .map("daq.rawid")
 )
 blsn_channels = (
-    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["bsln"].map("daq.rawid")
+    legendmetadata.channelmap(args.timestamp)
+    .map("system", unique=False)["bsln"]
+    .map("daq.rawid")
 )
 puls_channels = (
-    legendmetadata.channelmap(args.timestamp).map("system", unique=False)["puls"].map("daq.rawid")
+    legendmetadata.channelmap(args.timestamp)
+    .map("system", unique=False)["puls"]
+    .map("daq.rawid")
 )
 
 store = lh5.LH5Store()
@@ -88,7 +100,9 @@ for chnum in list(ged_channels):
     # calibrate daq energy using pre existing curve
     daqenergy_cal = ne.evaluate(
         blind_curve["daqenergy_cal"]["expression"],
-        local_dict=dict(daqenergy=daqenergy, **blind_curve["daqenergy_cal"]["parameters"]),
+        local_dict=dict(
+            daqenergy=daqenergy, **blind_curve["daqenergy_cal"]["parameters"]
+        ),
     )
 
     # figure out which event indices should be blinded
@@ -148,7 +162,9 @@ for channel in all_channels:
     # the rest should be the Ge and SiPM channels that need to be blinded
 
     # read in all of the data but only for the unblinded events
-    blinded_chobj, _ = store.read(channel + "/raw", args.input, idx=tokeep, decompress=False)
+    blinded_chobj, _ = store.read(
+        channel + "/raw", args.input, idx=tokeep, decompress=False
+    )
 
     # now write the blinded data for this channel
     store.write_object(

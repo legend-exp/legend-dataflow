@@ -46,7 +46,9 @@ meta = LegendMetadata(path=args.metadata)
 channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
 channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
-configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(args.configs, lazy=True).on(
+    args.timestamp, system=args.datatype
+)
 dsp_config = config_dict["inputs"]["proc_chain"][args.channel]
 
 dplms_json = config_dict["inputs"]["dplms_pars"][args.channel]
@@ -62,7 +64,9 @@ if dplms_dict["run_dplms"] is True:
     log.info("\nLoad fft data")
     energies = sto.read(f"{channel}/raw/daqenergy", fft_files)[0]
     idxs = np.where(energies.nda == 0)[0]
-    raw_fft = sto.read(f"{channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs)[0]
+    raw_fft = sto.read(
+        f"{channel}/raw", fft_files, n_rows=dplms_dict["n_baselines"], idx=idxs
+    )[0]
     t1 = time.time()
     log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
 
@@ -71,13 +75,17 @@ if dplms_dict["run_dplms"] is True:
     kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0][
+        "peak"
+    ].nda
     ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
     raw_cal = sto.read(f"{channel}/raw", args.peak_file, idx=ids)[0]
-    log.info(f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}")
+    log.info(
+        f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}"
+    )
 
     if isinstance(dsp_config, (str, list)):
         dsp_config = Props.read_from(dsp_config)
@@ -107,9 +115,9 @@ if dplms_dict["run_dplms"] is True:
 
     coeffs = out_dict["dplms"].pop("coefficients")
     dplms_pars = Table(col_dict={"coefficients": Array(coeffs)})
-    out_dict["dplms"][
-        "coefficients"
-    ] = f"loadlh5('{args.lh5_path}', '{channel}/dplms/coefficients')"
+    out_dict["dplms"]["coefficients"] = (
+        f"loadlh5('{args.lh5_path}', '{channel}/dplms/coefficients')"
+    )
 
     log.info(f"DPLMS creation finished in {(time.time()-t0)/60} minutes")
 else:

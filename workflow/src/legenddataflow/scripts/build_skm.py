@@ -59,7 +59,9 @@ for field in out_fields:
 
     if isinstance(ptr1[items[-1]], Table):
         out_fields.remove(field)
-        out_fields = get_all_out_fields(ptr1[items[-1]], out_fields, current_field=field)
+        out_fields = get_all_out_fields(
+            ptr1[items[-1]], out_fields, current_field=field
+        )
 
 # remove unwanted columns
 out_table_skm = Table(size=len(out_table))

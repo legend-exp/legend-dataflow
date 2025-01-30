@@ -57,7 +57,9 @@ def get_results_dict(aoe_class):
             "high_cut": aoe_class.high_cut_val,
             "low_side_sfs": aoe_class.low_side_sfs.to_dict("index"),
             "2_side_sfs": aoe_class.two_side_sfs.to_dict("index"),
-            "low_side_sfs_by_run": aoe_class.low_side_sfs_by_run[tstamp].to_dict("index"),
+            "low_side_sfs_by_run": aoe_class.low_side_sfs_by_run[tstamp].to_dict(
+                "index"
+            ),
             "2_side_sfs_by_run": aoe_class.two_side_sfs_by_run[tstamp].to_dict("index"),
         }
     return result_dict
@@ -123,7 +125,12 @@ def aoe_calibration(
     )
     aoe.calibrate(data, "AoE_Uncorr")
     log.info("Calibrated A/E")
-    return cal_dicts, get_results_dict(aoe), fill_plot_dict(aoe, data, plot_options), aoe
+    return (
+        cal_dicts,
+        get_results_dict(aoe),
+        fill_plot_dict(aoe, data, plot_options),
+        aoe,
+    )
 
 
 def run_aoe_calibration(
@@ -139,14 +146,13 @@ def run_aoe_calibration(
     # gen_plots=True,
 ):
     configs = LegendMetadata(path=configs)
-    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"]["pars_pht_aoecal"][
-        "inputs"
-    ]["par_pht_aoecal_config"][channel]
+    channel_dict = configs.on(timestamp, system=datatype)["snakemake_rules"][
+        "pars_pht_aoecal"
+    ]["inputs"]["par_pht_aoecal_config"][channel]
 
     kwarg_dict = Props.read_from(channel_dict)
 
     if kwarg_dict.pop("run_aoe") is True:
-
         kwarg_dict.pop("pulser_multiplicity_threshold")
         kwarg_dict.pop("threshold")
         if "plot_options" in kwarg_dict:
@@ -155,9 +161,15 @@ def run_aoe_calibration(
 
         pdf = eval(kwarg_dict.pop("pdf")) if "pdf" in kwarg_dict else aoe_peak
 
-        mean_func = eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else Pol1
+        mean_func = (
+            eval(kwarg_dict.pop("mean_func")) if "mean_func" in kwarg_dict else Pol1
+        )
 
-        sigma_func = eval(kwarg_dict.pop("sigma_func")) if "sigma_func" in kwarg_dict else SigmaFit
+        sigma_func = (
+            eval(kwarg_dict.pop("sigma_func"))
+            if "sigma_func" in kwarg_dict
+            else SigmaFit
+        )
 
         if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
             cut_dict = kwarg_dict["dt_cut"]["cut"]
@@ -212,9 +224,9 @@ def run_aoe_calibration(
         aoe_obj.pdf = aoe_obj.pdf.name
         # need to change eres func as can't pickle lambdas
         try:
-            aoe_obj.eres_func = results_dicts[next(iter(results_dicts))]["partition_ecal"][
-                kwarg_dict["cal_energy_param"]
-            ]["eres_linear"]
+            aoe_obj.eres_func = results_dicts[next(iter(results_dicts))][
+                "partition_ecal"
+            ][kwarg_dict["cal_energy_param"]]["eres_linear"]
         except KeyError:
             aoe_obj.eres_func = {}
     else:
@@ -230,7 +242,9 @@ def run_aoe_calibration(
     for tstamp, object_dict in object_dicts.items():
         out_object_dicts[tstamp] = dict(**object_dict, aoe=aoe_obj)
 
-    common_dict = aoe_plot_dict.pop("common") if "common" in list(aoe_plot_dict) else None
+    common_dict = (
+        aoe_plot_dict.pop("common") if "common" in list(aoe_plot_dict) else None
+    )
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
@@ -244,18 +258,25 @@ def run_aoe_calibration(
 
 
 if __name__ == "__main__":
-
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--input_files", help="files", type=str, nargs="*", required=True
+    )
     argparser.add_argument(
         "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
     )
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
-    argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--eres_file", help="eres_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="eres_file", type=str, nargs="*", required=True
+    )
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata", type=str)
@@ -265,7 +286,9 @@ if __name__ == "__main__":
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_file", help="plot_file", type=str, nargs="*", required=False
+    )
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--aoe_results", help="aoe_results", nargs="*", type=str)
 
@@ -383,7 +406,10 @@ if __name__ == "__main__":
 
         for tstamp in cal_dict:
             if tstamp not in np.unique(data["run_timestamp"]):
-                row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+                row = {
+                    key: [False] if data.dtypes[key] == "bool" else [np.nan]
+                    for key in data
+                }
                 row["run_timestamp"] = tstamp
                 row = pd.DataFrame(row)
                 data = pd.concat([data, row])

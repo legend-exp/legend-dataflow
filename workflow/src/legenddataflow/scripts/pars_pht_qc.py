@@ -51,7 +51,9 @@ if __name__ == "__main__":
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_path", help="plot_path", type=str, nargs="*", required=False
+    )
     argparser.add_argument(
         "--save_path",
         help="save_path",
@@ -156,15 +158,21 @@ if __name__ == "__main__":
                 hit_dict_fft.update(cut_dict)
                 plot_dict_fft.update(cut_plots)
 
-                log.debug(f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}")
+                log.debug(
+                    f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
+                )
 
                 ct_mask = np.full(len(cut_data), True, dtype=bool)
                 for outname, info in cut_dict.items():
                     # convert to pandas eval
                     exp = info["expression"]
                     for key in info.get("parameters", None):
-                        exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
-                    cut_data[outname] = cut_data.eval(exp, local_dict=info.get("parameters", None))
+                        exp = re.sub(
+                            f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp
+                        )
+                    cut_data[outname] = cut_data.eval(
+                        exp, local_dict=info.get("parameters", None)
+                    )
                     if "_classifier" not in outname:
                         ct_mask = ct_mask & cut_data[outname]
                 cut_data = cut_data[ct_mask]
@@ -188,13 +196,19 @@ if __name__ == "__main__":
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
-        [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
+        [
+            key.replace(f"{channel}/dsp/", "")
+            for key in ls(cal_files[0], f"{channel}/dsp/")
+        ],
         kwarg_dict_cal["cut_parameters"],
     )
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         cut_fields += get_keys(
-            [key.replace(f"{channel}/dsp/", "") for key in ls(cal_files[0], f"{channel}/dsp/")],
+            [
+                key.replace(f"{channel}/dsp/", "")
+                for key in ls(cal_files[0], f"{channel}/dsp/")
+            ],
             init_cal["cut_parameters"],
         )
 
@@ -237,7 +251,10 @@ if __name__ == "__main__":
     is_recovering = np.full(len(data), False, dtype=bool)
     for tstamp in discharge_timestamps:
         is_recovering = is_recovering | np.where(
-            (((data["timestamp"] - tstamp) <= 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            (
+                ((data["timestamp"] - tstamp) <= 0.01)
+                & ((data["timestamp"] - tstamp) > 0)
+            ),
             True,
             False,
         )

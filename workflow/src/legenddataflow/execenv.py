@@ -88,13 +88,17 @@ def dataprod() -> None:
         prog="dataprod", description="dataprod's command-line interface"
     )
 
-    parser.add_argument("-v", "--verbose", help="increase verbosity", action="store_true")
+    parser.add_argument(
+        "-v", "--verbose", help="increase verbosity", action="store_true"
+    )
 
     subparsers = parser.add_subparsers()
     parser_install = subparsers.add_parser(
         "install", help="install user software in data production environment"
     )
-    parser_install.add_argument("config_file", help="production cycle configuration file")
+    parser_install.add_argument(
+        "config_file", help="production cycle configuration file"
+    )
     parser_install.add_argument(
         "-r",
         "--remove",
@@ -112,7 +116,9 @@ def dataprod() -> None:
     parser_exec = subparsers.add_parser(
         "exec", help="load data production environment and execute a given command"
     )
-    parser_exec.add_argument("config_file", help="production cycle configuration file", type=str)
+    parser_exec.add_argument(
+        "config_file", help="production cycle configuration file", type=str
+    )
     parser_exec.add_argument(
         "command", help="command to run within the container", type=str, nargs="+"
     )
@@ -123,7 +129,9 @@ def dataprod() -> None:
     if args.verbose:
         handler = colorlog.StreamHandler()
         handler.setFormatter(
-            colorlog.ColoredFormatter("%(log_color)s%(name)s [%(levelname)s] %(message)s")
+            colorlog.ColoredFormatter(
+                "%(log_color)s%(name)s [%(levelname)s] %(message)s"
+            )
         )
 
         logger = logging.getLogger("legenddataflow")

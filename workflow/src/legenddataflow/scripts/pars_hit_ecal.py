@@ -48,7 +48,9 @@ def plot_2614_timemap(
     plt.rcParams["figure.figsize"] = figsize
     plt.rcParams["font.size"] = fontsize
 
-    selection = data.query(f"{cal_energy_param}>2560&{cal_energy_param}<2660&{selection_string}")
+    selection = data.query(
+        f"{cal_energy_param}>2560&{cal_energy_param}<2660&{selection_string}"
+    )
 
     fig = plt.figure()
     if len(selection) == 0:
@@ -68,7 +70,9 @@ def plot_2614_timemap(
         )
 
     ticks, labels = plt.xticks()
-    plt.xlabel(f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}")
+    plt.xlabel(
+        f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}"
+    )
     plt.ylabel("Energy(keV)")
     plt.ylim([erange[0], erange[1]])
 
@@ -120,7 +124,9 @@ def plot_pulser_timemap(
         )
         plt.ylim([mean - n_spread * spread, mean + n_spread * spread])
     ticks, labels = plt.xticks()
-    plt.xlabel(f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}")
+    plt.xlabel(
+        f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}"
+    )
     plt.ylabel("Energy(keV)")
 
     plt.xticks(
@@ -298,7 +304,9 @@ def plot_baseline_timemap(
     )
 
     ticks, labels = plt.xticks()
-    plt.xlabel(f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}")
+    plt.xlabel(
+        f"Time starting : {datetime.utcfromtimestamp(ticks[0]).strftime('%d/%m/%y %H:%M')}"
+    )
     plt.ylabel("Baseline Value")
     plt.ylim([mean - n_spread * spread, mean + n_spread * spread])
 
@@ -351,7 +359,9 @@ def baseline_tracking_plots(files, lh5_path, plot_options=None):
     if plot_options is None:
         plot_options = {}
     plot_dict = {}
-    data = lh5.read_as(lh5_path, files, "pd", field_mask=["bl_mean", "baseline", "timestamp"])
+    data = lh5.read_as(
+        lh5_path, files, "pd", field_mask=["bl_mean", "baseline", "timestamp"]
+    )
     for key, item in plot_options.items():
         if item["options"] is not None:
             plot_dict[key] = item["function"](data, **item["options"])
@@ -402,13 +412,21 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             dic.pop("covariance")
 
         return {
-            "total_fep": len(data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")),
-            "total_dep": len(data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")),
+            "total_fep": len(
+                data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")
+            ),
+            "total_dep": len(
+                data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")
+            ),
             "pass_fep": len(
-                data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}")
+                data.query(
+                    f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}"
+                )
             ),
             "pass_dep": len(
-                data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}")
+                data.query(
+                    f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}"
+                )
             ),
             "eres_linear": fwhm_linear,
             "eres_quadratic": fwhm_quad,
@@ -422,8 +440,12 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--files", help="filelist", nargs="*", type=str)
-    argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
-    argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
+    argparser.add_argument(
+        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+    )
+    argparser.add_argument(
+        "--pulser_file", help="pulser_file", type=str, required=False
+    )
 
     argparser.add_argument("--ctc_dict", help="ctc_dict", nargs="*")
     argparser.add_argument("--in_hit_dict", help="in_hit_dict", required=False)
@@ -498,7 +520,12 @@ if __name__ == "__main__":
         files,
         f"{channel}/dsp",
         hit_dict,
-        params=[*kwarg_dict["energy_params"], kwarg_dict["cut_param"], "timestamp", "trapTmax"],
+        params=[
+            *kwarg_dict["energy_params"],
+            kwarg_dict["cut_param"],
+            "timestamp",
+            "trapTmax",
+        ],
         threshold=kwarg_dict["threshold"],
         return_selection_mask=True,
         cal_energy_param="trapTmax",
@@ -535,7 +562,9 @@ if __name__ == "__main__":
     glines = [pk_par[0] for pk_par in pk_pars]
 
     if "cal_energy_params" not in kwarg_dict:
-        cal_energy_params = [energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]]
+        cal_energy_params = [
+            energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]
+        ]
     else:
         cal_energy_params = kwarg_dict["cal_energy_params"]
 
@@ -545,7 +574,9 @@ if __name__ == "__main__":
     plot_dict = {}
     full_object_dict = {}
 
-    for energy_param, cal_energy_param in zip(kwarg_dict["energy_params"], cal_energy_params):
+    for energy_param, cal_energy_param in zip(
+        kwarg_dict["energy_params"], cal_energy_params
+    ):
         e_uncal = data.query(selection_string)[energy_param].to_numpy()
 
         hist, bins, bar = pgh.get_hist(
@@ -625,7 +656,9 @@ if __name__ == "__main__":
             full_object_dict[cal_energy_param], data, cal_energy_param, selection_string
         )
 
-        hit_dict.update({cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()})
+        hit_dict.update(
+            {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
+        )
         if "ctc" in cal_energy_param:
             no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
             no_ctc_dict["expression"] = no_ctc_dict["expression"].replace("_ctc", "")
@@ -641,15 +674,15 @@ if __name__ == "__main__":
         if args.plot_path:
             param_plot_dict = {}
             if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
-                param_plot_dict["fwhm_fit"] = full_object_dict[cal_energy_param].plot_eres_fit(
-                    e_uncal
-                )
-                param_plot_dict["cal_fit"] = full_object_dict[cal_energy_param].plot_cal_fit(
-                    e_uncal
-                )
-                param_plot_dict["peak_fits"] = full_object_dict[cal_energy_param].plot_fits(
-                    e_uncal
-                )
+                param_plot_dict["fwhm_fit"] = full_object_dict[
+                    cal_energy_param
+                ].plot_eres_fit(e_uncal)
+                param_plot_dict["cal_fit"] = full_object_dict[
+                    cal_energy_param
+                ].plot_cal_fit(e_uncal)
+                param_plot_dict["peak_fits"] = full_object_dict[
+                    cal_energy_param
+                ].plot_fits(e_uncal)
 
                 if "plot_options" in kwarg_dict:
                     for key, item in kwarg_dict["plot_options"].items():
@@ -738,7 +771,9 @@ if __name__ == "__main__":
             pkl.dump(total_plot_dict, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # save output dictionary
-    output_dict = convert_dict_np_to_float({"pars": hit_dict, "results": {"ecal": results_dict}})
+    output_dict = convert_dict_np_to_float(
+        {"pars": hit_dict, "results": {"ecal": results_dict}}
+    )
     Props.write_to(args.save_path, output_dict)
 
     # save calibration objects

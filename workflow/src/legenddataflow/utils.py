@@ -40,7 +40,19 @@ def tier_path(setup):
 
 
 def get_tier_path(setup, tier):
-    if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet", "skm"]:
+    if tier in [
+        "raw",
+        "tcm",
+        "dsp",
+        "hit",
+        "ann",
+        "evt",
+        "psp",
+        "pht",
+        "pan",
+        "pet",
+        "skm",
+    ]:
         return setup["paths"][f"tier_{tier}"]
     else:
         msg = f"no tier matching:{tier}"
@@ -145,7 +157,9 @@ def subst_vars(props, var_values=None, use_env=False, ignore_missing=False):
 
 
 def subst_vars_in_snakemake_config(workflow, config):
-    config_filename = workflow.overwrite_configfiles[0]  # ToDo: Better way of handling this?
+    config_filename = workflow.overwrite_configfiles[
+        0
+    ]  # ToDo: Better way of handling this?
     subst_vars(
         config,
         var_values={"_": Path(config_filename).parent},
@@ -209,7 +223,10 @@ def set_last_rule_name(workflow, new_name):
 
 
 def as_ro(config, path):
-    if "read_only_fs_sub_pattern" not in config or config["read_only_fs_sub_pattern"] is None:
+    if (
+        "read_only_fs_sub_pattern" not in config
+        or config["read_only_fs_sub_pattern"] is None
+    ):
         return path
 
     sub_pattern = config["read_only_fs_sub_pattern"]

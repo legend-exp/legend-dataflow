@@ -44,16 +44,24 @@ def run_splitter(files):
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--input_files", help="files", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--input_files", help="files", type=str, nargs="*", required=True
+    )
     argparser.add_argument(
         "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
     )
     argparser.add_argument(
         "--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
-    argparser.add_argument("--ecal_file", help="ecal_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--eres_file", help="eres_file", type=str, nargs="*", required=True)
-    argparser.add_argument("--inplots", help="eres_file", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--eres_file", help="eres_file", type=str, nargs="*", required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="eres_file", type=str, nargs="*", required=True
+    )
 
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -63,7 +71,9 @@ if __name__ == "__main__":
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
     argparser.add_argument("--log", help="log_file", type=str)
 
-    argparser.add_argument("--plot_file", help="plot_file", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_file", help="plot_file", type=str, nargs="*", required=False
+    )
     argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
     argparser.add_argument("--fit_results", help="fit_results", nargs="*", type=str)
 
@@ -121,7 +131,9 @@ if __name__ == "__main__":
         final_dict[timestamp] = sorted(filelist)
 
     kwarg_dict = Props.read_from(
-        config_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][args.channel]
+        config_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
+            args.channel
+        ]
     )
     aoe_kwarg_dict = Props.read_from(
         config_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel]
@@ -200,7 +212,9 @@ if __name__ == "__main__":
 
     for tstamp in cal_dict:
         if tstamp not in np.unique(data["run_timestamp"]):
-            row = {key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data}
+            row = {
+                key: [False] if data.dtypes[key] == "bool" else [np.nan] for key in data
+            }
             row["run_timestamp"] = tstamp
             row = pd.DataFrame(row)
             data = pd.concat([data, row])

@@ -9,6 +9,7 @@ def convert_dict_np_to_float(dic):
             dic[key] = float(dic[key])
         elif isinstance(dic[key], (list, tuple)):
             dic[key] = [
-                float(x) if isinstance(x, (np.float32, np.float64)) else x for x in dic[key]
+                float(x) if isinstance(x, (np.float32, np.float64)) else x
+                for x in dic[key]
             ]
     return dic

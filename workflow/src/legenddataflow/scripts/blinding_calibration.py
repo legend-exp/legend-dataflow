@@ -50,7 +50,9 @@ chmap = meta.channelmap(args.timestamp)
 # if chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["is_blinded"] is True:
 pars_dict = {}
 # peaks to search for
-peaks_keV = np.array([238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50])
+peaks_keV = np.array(
+    [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
+)
 
 E_uncal = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
 E_uncal = E_uncal[E_uncal > 200]
@@ -98,7 +100,11 @@ ax.hist(E_uncal * roughpars[0], bins=np.arange(0, 3000, 1), histtype="step")
 ax.set_ylabel("counts")
 ax.set_yscale("log")
 ax2 = plt.subplot(212)
-ax2.hist(E_uncal * roughpars[0], bins=np.arange(2600, 2630, 1 * roughpars[0]), histtype="step")
+ax2.hist(
+    E_uncal * roughpars[0],
+    bins=np.arange(2600, 2630, 1 * roughpars[0]),
+    histtype="step",
+)
 ax2.set_xlabel("energy (keV)")
 ax2.set_ylabel("counts")
 plt.suptitle(args.channel)

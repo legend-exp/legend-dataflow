@@ -36,7 +36,9 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--tier", help="Tier", type=str, required=True)
 
-argparser.add_argument("--pars_file", help="database file for detector", nargs="*", default=[])
+argparser.add_argument(
+    "--pars_file", help="database file for detector", nargs="*", default=[]
+)
 argparser.add_argument("--input", help="input file", type=str)
 
 argparser.add_argument("--output", help="output file", type=str)
@@ -74,7 +76,9 @@ else:
         for chan, file in channel_dict.items()
     }
 db_files = [
-    par_file for par_file in args.pars_file if Path(par_file).suffix in (".json", ".yaml", ".yml")
+    par_file
+    for par_file in args.pars_file
+    if Path(par_file).suffix in (".json", ".yaml", ".yml")
 ]
 
 database_dic = Props.read_from(db_files, subst_pathvar=True)
@@ -105,9 +109,12 @@ Path(temp_output).rename(args.output)
 key = Path(args.output).name.replace(f"-tier_{args.tier}.lh5", "")
 
 if args.tier in ["dsp", "psp"]:
-
-    raw_channels = [channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)]
-    raw_fields = [field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channels[0]}/raw/")]
+    raw_channels = [
+        channel for channel in lh5.ls(args.input) if re.match("(ch\\d{7})", channel)
+    ]
+    raw_fields = [
+        field.split("/")[-1] for field in lh5.ls(args.input, f"{raw_channels[0]}/raw/")
+    ]
 
     outputs = {}
     channels = []

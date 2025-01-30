@@ -16,13 +16,21 @@ mpl.use("Agg")
 
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("--input", help="input files", nargs="*", type=str, required=True)
-argparser.add_argument("--output", help="output file", nargs="*", type=str, required=True)
-argparser.add_argument("--in_plots", help="input plot files", nargs="*", type=str, required=False)
+argparser.add_argument(
+    "--input", help="input files", nargs="*", type=str, required=True
+)
+argparser.add_argument(
+    "--output", help="output file", nargs="*", type=str, required=True
+)
+argparser.add_argument(
+    "--in_plots", help="input plot files", nargs="*", type=str, required=False
+)
 argparser.add_argument(
     "--out_plots", help="output plot files", nargs="*", type=str, required=False
 )
-argparser.add_argument("--in_obj", help="input object files", nargs="*", type=str, required=False)
+argparser.add_argument(
+    "--in_obj", help="input object files", nargs="*", type=str, required=False
+)
 argparser.add_argument(
     "--out_obj", help="output object files", nargs="*", type=str, required=False
 )
@@ -35,7 +43,9 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 args = argparser.parse_args()
 
-configs = LegendMetadata(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+configs = LegendMetadata(args.configs, lazy=True).on(
+    args.timestamp, system=args.datatype
+)
 merge_config = Props.read_from(
     configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
 )
@@ -96,7 +106,9 @@ for field in ave_fields:
                 val = val[key]
 
     fig = plt.figure()
-    plt.scatter([datetime.strptime(tstamp, "%Y%m%dT%H%M%SZ") for tstamp in in_dicts], vals)
+    plt.scatter(
+        [datetime.strptime(tstamp, "%Y%m%dT%H%M%SZ") for tstamp in in_dicts], vals
+    )
     plt.axhline(y=mean_val, color="r", linestyle="-")
     plt.xlabel("time")
     if unit is not None:

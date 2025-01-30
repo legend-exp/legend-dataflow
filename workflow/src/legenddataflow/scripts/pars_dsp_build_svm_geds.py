@@ -18,7 +18,9 @@ argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 
 argparser.add_argument("--output_file", help="output SVM file", type=str, required=True)
 argparser.add_argument("--train_data", help="input data file", type=str, required=True)
-argparser.add_argument("--train_hyperpars", help="input hyperparameter file", required=True)
+argparser.add_argument(
+    "--train_hyperpars", help="input hyperparameter file", required=True
+)
 args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)

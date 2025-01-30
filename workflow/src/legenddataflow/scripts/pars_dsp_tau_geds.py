@@ -28,7 +28,9 @@ argparser.add_argument("--output_file", help="output file", type=str, required=T
 argparser.add_argument("--pulser_file", help="pulser file", type=str, required=False)
 
 argparser.add_argument("--raw_files", help="input files", nargs="*", type=str)
-argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str, required=False)
+argparser.add_argument(
+    "--tcm_files", help="tcm_files", nargs="*", type=str, required=False
+)
 args = argparser.parse_args()
 
 sto = lh5.LH5Store()
@@ -50,7 +52,10 @@ kwarg_dict = Props.read_from(kwarg_dict)
 if kwarg_dict["run_tau"] is True:
     dsp_config = Props.read_from(channel_dict)
     kwarg_dict.pop("run_tau")
-    if isinstance(args.raw_files, list) and args.raw_files[0].split(".")[-1] == "filelist":
+    if (
+        isinstance(args.raw_files, list)
+        and args.raw_files[0].split(".")[-1] == "filelist"
+    ):
         input_file = args.raw_files[0]
         with Path(input_file).open() as f:
             input_file = f.read().splitlines()
@@ -83,11 +88,16 @@ if kwarg_dict["run_tau"] is True:
     is_recovering = np.full(len(data), False, dtype=bool)
     for tstamp in discharge_timestamps:
         is_recovering = is_recovering | np.where(
-            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            (
+                ((data["timestamp"] - tstamp) < 0.01)
+                & ((data["timestamp"] - tstamp) > 0)
+            ),
             True,
             False,
         )
-    cuts = np.where((data.daqenergy.to_numpy() > threshold) & (~mask) & (~is_recovering))[0]
+    cuts = np.where(
+        (data.daqenergy.to_numpy() > threshold) & (~mask) & (~is_recovering)
+    )[0]
 
     tb_data = sto.read(
         f"{channel}/raw",

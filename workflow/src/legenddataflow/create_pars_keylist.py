@@ -15,7 +15,6 @@ from .patterns import par_validity_pattern
 
 
 class ParsKeyResolve:
-
     def __init__(self, valid_from, category, apply):
         self.valid_from = valid_from
         self.category = category
@@ -47,7 +46,9 @@ class ParsKeyResolve:
     @staticmethod
     def write_to_yaml(file_names, path):
         with Path(path).open("w") as of:
-            yaml.dump([file_name.__dict__ for file_name in file_names], of, sort_keys=False)
+            yaml.dump(
+                [file_name.__dict__ for file_name in file_names], of, sort_keys=False
+            )
 
     @staticmethod
     def match_keys(key1, key2):
@@ -79,7 +80,9 @@ class ParsKeyResolve:
 
     @staticmethod
     def match_entries(entry1, entry2):
-        datatype2 = ProcessingFileKey.get_filekey_from_filename(entry2.apply[0]).datatype
+        datatype2 = ProcessingFileKey.get_filekey_from_filename(
+            entry2.apply[0]
+        ).datatype
         for entry in entry1.apply:
             if ProcessingFileKey.get_filekey_from_filename(entry).datatype == datatype2:
                 pass
@@ -105,7 +108,9 @@ class ParsKeyResolve:
         else:
             wildcard_dict = d._asdict()
         try:
-            tier_pattern_rx = re.compile(smk.io.regex_from_filepattern(str(search_pattern)))
+            tier_pattern_rx = re.compile(
+                smk.io.regex_from_filepattern(str(search_pattern))
+            )
         except AttributeError:
             tier_pattern_rx = re.compile(smk.io.regex(str(search_pattern)))
         fn_glob_pattern = smk.io.expand(search_pattern, **wildcard_dict)[0]

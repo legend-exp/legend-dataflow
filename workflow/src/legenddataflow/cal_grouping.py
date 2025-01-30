@@ -79,9 +79,9 @@ class CalGrouping:
             for par_file in par_files:
                 if (
                     par_file.split("-")[-1]
-                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
-                        "-"
-                    )[-1]
+                    == str(
+                        get_pattern_pars(self.setup, tier, check_in_cycle=False).name
+                    ).split("-")[-1]
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
@@ -132,9 +132,9 @@ class CalGrouping:
             for par_file in par_files:
                 if (
                     par_file.split("-")[-1]
-                    == str(get_pattern_pars(self.setup, tier, check_in_cycle=False).name).split(
-                        "-"
-                    )[-1]
+                    == str(
+                        get_pattern_pars(self.setup, tier, check_in_cycle=False).name
+                    ).split("-")[-1]
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
@@ -190,7 +190,9 @@ class CalGrouping:
             fk.channel = channel
         return fk.get_path_from_filekey(get_pattern_log_channel(self.setup, name))[0]
 
-    def get_timestamp(self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"):
+    def get_timestamp(
+        self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
+    ):
         par_files = self.get_par_files(
             catalog,
             dataset,

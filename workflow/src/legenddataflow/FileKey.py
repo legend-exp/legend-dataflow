@@ -31,7 +31,9 @@ def regex_from_filepattern(filepattern):
     return "".join(f)
 
 
-class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])):
+class FileKey(
+    namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])
+):
     __slots__ = ()
 
     re_pattern = "(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+))?)?)?)?)?$"
@@ -110,7 +112,9 @@ class FileKey(namedtuple("FileKey", ["experiment", "period", "run", "datatype", 
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
                     if len(next(iter(set(value).intersection(self._list())))) > 0:
-                        kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
+                        kwargs[entry] = value[
+                            next(iter(set(value).intersection(self._list())))
+                        ]
                     else:
                         kwargs.pop(entry)
             return self.expand(pattern, **kwargs)
@@ -185,7 +189,9 @@ class ProcessingFileKey(FileKey):
             for entry, value in kwargs.items():
                 if isinstance(value, dict):
                     if len(next(iter(set(value).intersection(self._list())))) > 0:
-                        kwargs[entry] = value[next(iter(set(value).intersection(self._list())))]
+                        kwargs[entry] = value[
+                            next(iter(set(value).intersection(self._list())))
+                        ]
                     else:
                         kwargs.pop(entry)
             return self.expand(pattern, **kwargs)

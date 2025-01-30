@@ -41,7 +41,9 @@ default = np.finfo("float64").max
 timestamps = np.zeros(len(fdb.df), dtype="float64")
 
 for i, row in enumerate(fdb.df.itertuples()):
-    store = lh5.LH5Store(base_path=f"{fdb.data_dir}/{fdb.tier_dirs['raw']}", keep_open=True)
+    store = lh5.LH5Store(
+        base_path=f"{fdb.data_dir}/{fdb.tier_dirs['raw']}", keep_open=True
+    )
 
     # list of first timestamps for each channel
     loc_timestamps = np.full(len(row.raw_tables), fill_value=default, dtype="float64")

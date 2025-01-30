@@ -39,11 +39,15 @@ argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
 argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-argparser.add_argument("--final_dsp_pars", help="final_dsp_pars", type=str, required=True)
+argparser.add_argument(
+    "--final_dsp_pars", help="final_dsp_pars", type=str, required=True
+)
 argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
 argparser.add_argument("--plot_path", help="plot_path", type=str)
 
-argparser.add_argument("--plot_save_path", help="plot_save_path", type=str, required=False)
+argparser.add_argument(
+    "--plot_save_path", help="plot_save_path", type=str, required=False
+)
 args = argparser.parse_args()
 
 configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
@@ -104,7 +108,9 @@ if opt_dict.pop("run_eopt") is True:
         )
 
     peaks_rounded = [int(peak) for peak in peaks_kev]
-    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0]["peak"].nda
+    peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0][
+        "peak"
+    ].nda
     ids = np.isin(peaks, peaks_rounded)
     peaks = peaks[ids]
     idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
@@ -275,9 +281,15 @@ if opt_dict.pop("run_eopt") is True:
     bopt_trap.lambda_param = lambda_param
     bopt_trap.add_dimension("etrap", "rise", 1, 12, True, "us")
 
-    bopt_cusp.add_initial_values(x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp)
-    bopt_zac.add_initial_values(x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac)
-    bopt_trap.add_initial_values(x_init=sample_x, y_init=sample_y_trap, yerr_init=err_y_trap)
+    bopt_cusp.add_initial_values(
+        x_init=sample_x, y_init=sample_y_cusp, yerr_init=err_y_cusp
+    )
+    bopt_zac.add_initial_values(
+        x_init=sample_x, y_init=sample_y_zac, yerr_init=err_y_zac
+    )
+    bopt_trap.add_initial_values(
+        x_init=sample_x, y_init=sample_y_trap, yerr_init=err_y_trap
+    )
 
     best_idx = np.nanargmin(sample_y_cusp)
     bopt_cusp.optimal_results = results_cusp[best_idx]

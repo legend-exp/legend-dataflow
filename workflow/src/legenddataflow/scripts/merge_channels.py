@@ -86,7 +86,6 @@ if file_extension in (".json", ".yaml", ".yml"):
             if chmap is not None:
                 channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
             else:
-
                 channel_name = fkey.channel
             out_dict[channel_name] = channel_dict
         else:
@@ -104,7 +103,6 @@ elif file_extension == ".pkl":
         if chmap is not None:
             channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
         else:
-
             channel_name = fkey.channel
         out_dict[channel_name] = channel_dict
 
@@ -123,7 +121,6 @@ elif file_extension == ".dat" or file_extension == ".dir":
             if chmap is not None:
                 channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
             else:
-
                 channel_name = fkey.channel
             if isinstance(channel_dict, dict) and "common" in list(channel_dict):
                 chan_common_dict = channel_dict.pop("common")
@@ -142,7 +139,6 @@ elif file_extension == ".lh5":
             if chmap is not None:
                 channel_name = f"ch{chmap[fkey.channel].daq.rawid:07}"
             else:
-
                 channel_name = fkey.channel
             tb_in = lh5.read(f"{channel_name}", channel)
 
@@ -153,7 +149,9 @@ elif file_extension == ".lh5":
                 wo_mode="a",
             )
             if args.in_db:
-                db_dict[channel_name] = replace_path(db_dict[channel_name], channel, args.output)
+                db_dict[channel_name] = replace_path(
+                    db_dict[channel_name], channel, args.output
+                )
         else:
             msg = "Output file extension does not match input file extension"
             raise RuntimeError(msg)

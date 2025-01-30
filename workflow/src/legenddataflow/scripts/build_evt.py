@@ -53,7 +53,9 @@ args = argparser.parse_args()
 # load in config
 configs = TextDB(args.configs, lazy=True)
 if args.tier in ("evt", "pet"):
-    rule_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]["tier_evt"]
+    rule_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
+        "tier_evt"
+    ]
 
 else:
     msg = "unknown tier"
@@ -74,7 +76,9 @@ if args.datatype in ("phy", "xtc"):
     exp_string = exp_string.replace(
         'xtalk_matrix_filename=""', f'xtalk_matrix_filename="{args.xtc_file}"'
     )
-    exp_string = exp_string.replace('cal_par_files=""', f"cal_par_files={args.par_files}")
+    exp_string = exp_string.replace(
+        'cal_par_files=""', f"cal_par_files={args.par_files}"
+    )
     exp_string2 = exp_string.replace('return_mode="energy"', 'return_mode="tcm_index"')
 
     file_path_config = {

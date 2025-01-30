@@ -49,7 +49,9 @@ else:
     tcm_files = args.tcm_files
 # get pulser mask from tcm files
 tcm_files = sorted(np.unique(tcm_files))
-ids, mask = get_tcm_pulser_ids(tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold"))
+ids, mask = get_tcm_pulser_ids(
+    tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+)
 
 Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
 Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

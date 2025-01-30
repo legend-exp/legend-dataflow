@@ -71,7 +71,9 @@ def get_out_data(
             "baseline": lgdo.Array(raw_data["baseline"].nda[final_mask]),
             "daqenergy": lgdo.Array(raw_data["daqenergy"].nda[final_mask]),
             "daqenergy_cal": lgdo.Array(raw_data["daqenergy_cal"].nda[final_mask]),
-            "trapTmax_cal": lgdo.Array(dsp_data["trapTmax"].nda[final_mask] * ecal_pars),
+            "trapTmax_cal": lgdo.Array(
+                dsp_data["trapTmax"].nda[final_mask] * ecal_pars
+            ),
             "peak": lgdo.Array(np.full(len(np.where(final_mask)[0]), int(peak))),
         }
     )
@@ -81,11 +83,17 @@ def get_out_data(
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
-    argparser.add_argument("--tcm_filelist", help="tcm_filelist", type=str, required=False)
-    argparser.add_argument("--pulser_file", help="pulser_file", type=str, required=False)
+    argparser.add_argument(
+        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+    )
+    argparser.add_argument(
+        "--pulser_file", help="pulser_file", type=str, required=False
+    )
 
     argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
-    argparser.add_argument("--raw_cal", help="raw_cal", type=str, nargs="*", required=True)
+    argparser.add_argument(
+        "--raw_cal", help="raw_cal", type=str, nargs="*", required=True
+    )
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -160,16 +168,23 @@ if __name__ == "__main__":
         if lh5_path[-1] != "/":
             lh5_path += "/"
 
-        raw_fields = [field.replace(lh5_path, "") for field in lh5.ls(raw_files[0], lh5_path)]
+        raw_fields = [
+            field.replace(lh5_path, "") for field in lh5.ls(raw_files[0], lh5_path)
+        ]
 
-        tb = sto.read(lh5_path, raw_files, field_mask=["daqenergy", "t_sat_lo", "timestamp"])[0]
+        tb = sto.read(
+            lh5_path, raw_files, field_mask=["daqenergy", "t_sat_lo", "timestamp"]
+        )[0]
 
         discharges = tb["t_sat_lo"].nda > 0
         discharge_timestamps = np.where(tb["timestamp"].nda[discharges])[0]
         is_recovering = np.full(len(tb), False, dtype=bool)
         for tstamp in discharge_timestamps:
             is_recovering = is_recovering | np.where(
-                (((tb["timestamp"].nda - tstamp) < 0.01) & ((tb["timestamp"].nda - tstamp) > 0)),
+                (
+                    ((tb["timestamp"].nda - tstamp) < 0.01)
+                    & ((tb["timestamp"].nda - tstamp) > 0)
+                ),
                 True,
                 False,
             )
@@ -190,7 +205,9 @@ if __name__ == "__main__":
             masks[peak] = np.where(e_mask & (~is_recovering))[0]
             log.debug(f"{len(masks[peak])} events found in energy range for {peak}")
 
-        input_data = sto.read(f"{lh5_path}", raw_files, n_rows=10000, idx=np.where(~mask)[0])[0]
+        input_data = sto.read(
+            f"{lh5_path}", raw_files, n_rows=10000, idx=np.where(~mask)[0]
+        )[0]
 
         if isinstance(dsp_config, str):
             dsp_config = Props.read_from(dsp_config)
@@ -230,7 +247,9 @@ if __name__ == "__main__":
                     n_rows_to_read_i = bisect_left(peak_dict["idxs"][0], n_rows_i)
                     # now split idx into idx_i and the remainder
                     idx_i = (peak_dict["idxs"][0][:n_rows_to_read_i],)
-                    peak_dict["idxs"] = (peak_dict["idxs"][0][n_rows_to_read_i:] - n_rows_i,)
+                    peak_dict["idxs"] = (
+                        peak_dict["idxs"][0][n_rows_to_read_i:] - n_rows_i,
+                    )
                     if len(idx_i[0]) > 0:
                         peak_dict["obj_buf"], n_rows_read_i = sto.read(
                             lh5_path,
@@ -246,12 +265,17 @@ if __name__ == "__main__":
                         peak_dict["obj_buf_start"] += n_rows_read_i
                     if peak_dict["n_rows_read"] >= 10000 or file == raw_files[-1]:
                         if "e_lower_lim" not in peak_dict:
-                            tb_out = run_one_dsp(peak_dict["obj_buf"], dsp_config, db_dict=db_dict)
+                            tb_out = run_one_dsp(
+                                peak_dict["obj_buf"], dsp_config, db_dict=db_dict
+                            )
                             energy = tb_out[energy_parameter].nda
 
                             init_bin_width = (
                                 2
-                                * (np.nanpercentile(energy, 75) - np.nanpercentile(energy, 25))
+                                * (
+                                    np.nanpercentile(energy, 75)
+                                    - np.nanpercentile(energy, 25)
+                                )
                                 * len(energy) ** (-1 / 3)
                             )
 
@@ -285,10 +309,14 @@ if __name__ == "__main__":
                                 log.debug("Fit failed, using max guess")
                                 rough_adc_to_kev = peak / peak_loc
                                 e_lower_lim = (
-                                    peak_loc - (1.5 * peak_dict["kev_width"][0]) / rough_adc_to_kev
+                                    peak_loc
+                                    - (1.5 * peak_dict["kev_width"][0])
+                                    / rough_adc_to_kev
                                 )
                                 e_upper_lim = (
-                                    peak_loc + (1.5 * peak_dict["kev_width"][1]) / rough_adc_to_kev
+                                    peak_loc
+                                    + (1.5 * peak_dict["kev_width"][1])
+                                    / rough_adc_to_kev
                                 )
                                 hist, bins, var = pgh.get_hist(
                                     energy,
@@ -298,8 +326,12 @@ if __name__ == "__main__":
                                 mu = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
 
                             updated_adc_to_kev = peak / mu
-                            e_lower_lim = mu - (peak_dict["kev_width"][0]) / updated_adc_to_kev
-                            e_upper_lim = mu + (peak_dict["kev_width"][1]) / updated_adc_to_kev
+                            e_lower_lim = (
+                                mu - (peak_dict["kev_width"][0]) / updated_adc_to_kev
+                            )
+                            e_upper_lim = (
+                                mu + (peak_dict["kev_width"][1]) / updated_adc_to_kev
+                            )
                             log.info(
                                 f"{peak}: lower lim is :{e_lower_lim}, upper lim is {e_upper_lim}"
                             )
@@ -319,13 +351,23 @@ if __name__ == "__main__":
                                 final_cut_field=final_cut_field,
                                 energy_param=energy_parameter,
                             )
-                            sto.write(out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a")
+                            sto.write(
+                                out_tbl,
+                                name=lh5_path,
+                                lh5_file=temp_output,
+                                wo_mode="a",
+                            )
                             peak_dict["obj_buf"] = None
                             peak_dict["obj_buf_start"] = 0
                             peak_dict["n_events"] = n_wfs
-                            log.debug(f'found {peak_dict["n_events"]} events for {peak}')
+                            log.debug(
+                                f'found {peak_dict["n_events"]} events for {peak}'
+                            )
                         else:
-                            if peak_dict["obj_buf"] is not None and len(peak_dict["obj_buf"]) > 0:
+                            if (
+                                peak_dict["obj_buf"] is not None
+                                and len(peak_dict["obj_buf"]) > 0
+                            ):
                                 tb_out = run_one_dsp(
                                     peak_dict["obj_buf"], dsp_config, db_dict=db_dict
                                 )
@@ -343,14 +385,21 @@ if __name__ == "__main__":
                                 )
                                 peak_dict["n_events"] += n_wfs
                                 sto.write(
-                                    out_tbl, name=lh5_path, lh5_file=temp_output, wo_mode="a"
+                                    out_tbl,
+                                    name=lh5_path,
+                                    lh5_file=temp_output,
+                                    wo_mode="a",
                                 )
                                 peak_dict["obj_buf"] = None
                                 peak_dict["obj_buf_start"] = 0
-                                log.debug(f'found {peak_dict["n_events"]} events for {peak}')
+                                log.debug(
+                                    f'found {peak_dict["n_events"]} events for {peak}'
+                                )
                                 if peak_dict["n_events"] >= n_events:
                                     peak_dict["idxs"] = None
-                                    log.debug(f"{peak} has reached the required number of events")
+                                    log.debug(
+                                        f"{peak} has reached the required number of events"
+                                    )
 
     else:
         Path(temp_output).touch()

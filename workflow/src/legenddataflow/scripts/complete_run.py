@@ -50,9 +50,13 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 Path(file).unlink()
                 text = None
             if n_errors == 0:
-                f.write(f"{gen_output} successfully generated at {now} with no errors \n")
+                f.write(
+                    f"{gen_output} successfully generated at {now} with no errors \n"
+                )
             if n_warnings == 0:
-                w.write(f"{gen_output} successfully generated at {now} with no warnings \n")
+                w.write(
+                    f"{gen_output} successfully generated at {now} with no warnings \n"
+                )
     else:
         with Path(output_file).open("w") as f:
             n_errors = 0
@@ -73,7 +77,9 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 Path(file).unlink()
                 text = None
             if n_errors == 0:
-                f.write(f"{gen_output} successfully generated at {now} with no errors \n")
+                f.write(
+                    f"{gen_output} successfully generated at {now} with no errors \n"
+                )
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
         if len(os.listdir(path)) == 0:
@@ -139,7 +145,9 @@ def build_valid_keys(input_files_regex, output_dir):
 
     for key in list(key_dict):
         dtype = key.split("-")[-1]
-        out_file = Path(output_dir) / f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json'
+        out_file = (
+            Path(output_dir) / f'{key.replace(f"-{dtype}", "")}-valid_{dtype}.json'
+        )
         out_file.parent.mkdir(parents=True, exist_ok=True)
         if Path(out_file).is_file():
             out_dict = Props.read_from([out_file] + key_dict[key])
@@ -163,7 +171,9 @@ def find_gen_runs(gen_tier_path):
     # then look for concat tiers (use filenames now)
     paths_concat = gen_tier_path.glob("*/*/*.lh5")
     # use the directories to build a datatype/period/run string
-    runs_concat = {"/".join([str(p).split("-")[3]] + str(p).split("-")[1:3]) for p in paths_concat}
+    runs_concat = {
+        "/".join([str(p).split("-")[3]] + str(p).split("-")[1:3]) for p in paths_concat
+    }
 
     return runs | runs_concat
 
@@ -186,7 +196,10 @@ def build_file_dbs(gen_tier_path, outdir):
         outdir.mkdir(parents=True, exist_ok=True)
         # TODO: replace l200 with {experiment}
         outfile = outdir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
-        logfile = Path(ut.tmp_log_path(snakemake.params.setup)) / outfile.with_suffix(".log").name
+        logfile = (
+            Path(ut.tmp_log_path(snakemake.params.setup))
+            / outfile.with_suffix(".log").name
+        )
         print(f"INFO: ......building {outfile}")
 
         cmdline = [
@@ -223,7 +236,11 @@ def build_file_dbs(gen_tier_path, outdir):
 
     for p in processes:
         if p.returncode != 0:
-            _cmdline = " ".join([f"{k}={v}" for k, v in cmdenv.items()]) + " " + " ".join(p.args)
+            _cmdline = (
+                " ".join([f"{k}={v}" for k, v in cmdenv.items()])
+                + " "
+                + " ".join(p.args)
+            )
             msg = f"at least one FileDB building thread failed: {_cmdline}"
             raise RuntimeError(msg)
 
@@ -234,11 +251,16 @@ def build_file_dbs(gen_tier_path, outdir):
 
 file_db_config = {}
 
-if os.getenv("PRODENV") is not None and os.getenv("PRODENV") in snakemake.params.filedb_path:
+if (
+    os.getenv("PRODENV") is not None
+    and os.getenv("PRODENV") in snakemake.params.filedb_path
+):
     prodenv = as_ro(os.getenv("PRODENV"))
 
     def tdirs(tier):
-        return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(prodenv, "")
+        return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(
+            prodenv, ""
+        )
 
     file_db_config["data_dir"] = "$PRODENV"
 
@@ -251,11 +273,15 @@ else:
     file_db_config["data_dir"] = "/"
 
 
-file_db_config["tier_dirs"] = {k: tdirs(k) for k in snakemake.params.setup["table_format"]}
+file_db_config["tier_dirs"] = {
+    k: tdirs(k) for k in snakemake.params.setup["table_format"]
+}
 
 
 def fformat(tier):
-    abs_path = patterns.get_pattern_tier(snakemake.params.setup, tier, check_in_cycle=False)
+    abs_path = patterns.get_pattern_tier(
+        snakemake.params.setup, tier, check_in_cycle=False
+    )
     return str(abs_path).replace(ut.get_tier_path(snakemake.params.setup, tier), "")
 
 

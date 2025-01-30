@@ -39,7 +39,9 @@ if __name__ == "__main__":
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_path", help="plot_path", type=str, nargs="*", required=False)
+    argparser.add_argument(
+        "--plot_path", help="plot_path", type=str, nargs="*", required=False
+    )
     argparser.add_argument(
         "--save_path",
         help="save_path",
@@ -75,7 +77,9 @@ if __name__ == "__main__":
             else:
                 run_files = sorted(np.unique(run_files))
                 phy_files += run_files
-                bls = sto.read("ch1027200/dsp/", run_files, field_mask=["wf_max", "bl_mean"])[0]
+                bls = sto.read(
+                    "ch1027200/dsp/", run_files, field_mask=["wf_max", "bl_mean"]
+                )[0]
                 puls = sto.read("ch1027201/dsp/", run_files, field_mask=["trapTmax"])[0]
                 bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
                     puls["trapTmax"].nda < 200
@@ -87,12 +91,17 @@ if __name__ == "__main__":
         phy_files = sorted(np.unique(phy_files))
         bls = sto.read("ch1027200/dsp/", phy_files, field_mask=["wf_max", "bl_mean"])[0]
         puls = sto.read("ch1027201/dsp/", phy_files, field_mask=["trapTmax"])[0]
-        bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (puls["trapTmax"].nda < 200)
+        bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
+            puls["trapTmax"].nda < 200
+        )
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
 
     cut_fields = get_keys(
-        [key.replace(f"{channel}/dsp/", "") for key in ls(phy_files[0], f"{channel}/dsp/")],
+        [
+            key.replace(f"{channel}/dsp/", "")
+            for key in ls(phy_files[0], f"{channel}/dsp/")
+        ],
         kwarg_dict_fft["cut_parameters"],
     )
 
@@ -108,7 +117,10 @@ if __name__ == "__main__":
     is_recovering = np.full(len(data), False, dtype=bool)
     for tstamp in discharge_timestamps:
         is_recovering = is_recovering | np.where(
-            (((data["timestamp"] - tstamp) < 0.01) & ((data["timestamp"] - tstamp) > 0)),
+            (
+                ((data["timestamp"] - tstamp) < 0.01)
+                & ((data["timestamp"] - tstamp) > 0)
+            ),
             True,
             False,
         )
@@ -138,7 +150,9 @@ if __name__ == "__main__":
             exp = info["expression"]
             for key in info.get("parameters", None):
                 exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
-            cut_data[outname] = cut_data.eval(exp, local_dict=info.get("parameters", None))
+            cut_data[outname] = cut_data.eval(
+                exp, local_dict=info.get("parameters", None)
+            )
             if "_classifier" not in outname:
                 ct_mask = ct_mask & cut_data[outname]
         cut_data = cut_data[ct_mask]
