@@ -54,6 +54,7 @@ dynamic = ["version"]
 
 # these are the dependencies strictly required by legend-dataflow
 dependencies = [
+    "colorlog",
     "dbetto>=1.0.5",
     "pylegendmeta==1.2.0a2",
 ]

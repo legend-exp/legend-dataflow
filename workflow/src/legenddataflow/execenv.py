@@ -5,10 +5,10 @@ import logging
 import os
 import shlex
 import shutil
-import string
 import subprocess
 from pathlib import Path
 
+import colorlog
 import dbetto
 from dbetto import AttrsDict
 from packaging.requirements import Requirement
@@ -27,13 +27,19 @@ def execenv_prefix(config, aslist=False):
 
     cmdline = shlex.split(config.execenv.cmd)
     if "env" in config.execenv:
+        # FIXME: this is not portable, only works with Apptainer and Docker
         cmdline += [f"--env={var}={val}" for var, val in config.execenv.env.items()]
+
+    cmdenv = {}
+    xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+    if xdg_runtime_dir:
+        cmdenv["APPTAINER_BINDPATH"] = xdg_runtime_dir
 
     cmdline += shlex.split(config.execenv.arg)
 
     if aslist:
-        return cmdline
-    return " ".join(cmdline)
+        return cmdline, cmdenv
+    return " ".join(cmdline), cmdenv
 
 
 def execenv_python(config, aslist=False):
@@ -43,12 +49,12 @@ def execenv_python(config, aslist=False):
     """
     config = AttrsDict(config)
 
-    cmdline = execenv_prefix(config, aslist=True)
+    cmdline, cmdenv = execenv_prefix(config, aslist=True)
     cmdline.append(f"{config.paths.install}/bin/python")
 
     if aslist:
-        return cmdline
-    return " ".join(cmdline)
+        return cmdline, cmdenv
+    return " ".join(cmdline), cmdenv
 
 
 def execenv_smk_py_script(workflow, config, scriptname, aslist=False):
@@ -58,12 +64,12 @@ def execenv_smk_py_script(workflow, config, scriptname, aslist=False):
     """
     config = AttrsDict(config)
 
-    cmdline = execenv_python(config, aslist=True)
+    cmdline, cmdenv = execenv_python(config, aslist=True)
     cmdline.append(f"{workflow.basedir}/scripts/{scriptname}")
 
     if aslist:
-        return cmdline
-    return " ".join(cmdline)
+        return cmdline, cmdenv
+    return " ".join(cmdline), cmdenv
 
 
 def dataprod() -> None:
@@ -79,15 +85,18 @@ def dataprod() -> None:
         prog="dataprod", description="dataprod's command-line interface"
     )
 
+    parser.add_argument("-v", "--verbose", help="increase verbosity", action="store_true")
+
     subparsers = parser.add_subparsers()
     parser_install = subparsers.add_parser(
         "install", help="install user software in data production environment"
     )
+    parser_install.add_argument("config_file", help="production cycle configuration file")
     parser_install.add_argument(
-        "config_file", help="production cycle configuration file", type=str
-    )
-    parser_install.add_argument(
-        "-r", help="remove software directory before installing software", action="store_true"
+        "-r",
+        "--remove",
+        help="remove software directory before installing software",
+        action="store_true",
     )
     parser_install.set_defaults(func=install)
 
@@ -101,6 +110,17 @@ def dataprod() -> None:
     parser_exec.set_defaults(func=cmdexec)
 
     args = parser.parse_args()
+
+    if args.verbose:
+        handler = colorlog.StreamHandler()
+        handler.setFormatter(
+            colorlog.ColoredFormatter("%(log_color)s%(name)s [%(levelname)s] %(message)s")
+        )
+
+        logger = logging.getLogger("legenddataflow")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
     args.func(args)
 
 
@@ -128,28 +148,28 @@ def install(args) -> None:
 
     path_install = config_dict.paths.install
 
-    if args.r and Path(path_install).exists():
+    if args.remove and Path(path_install).exists():
         shutil.rmtree(path_install)
 
-    cmd_env = {}
-
-    def _runcmd(cmd_env, cmd_expr):
+    def _runcmd(cmd_expr, cmd_env, **kwargs):
         msg = (
-            "running:"
+            "running: "
             + " ".join([f"{k}={v}" for k, v in cmd_env.items()])
             + " "
             + " ".join(cmd_expr),
         )
         log.debug(msg)
 
-        subprocess.run(cmd_expr, env=cmd_env, check=True)
+        subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
+
+    cmd_prefix, cmd_env = execenv_prefix(config_dict, aslist=True)
 
     has_uv = False
     try:
-        subprocess.run(
-            [*execenv_prefix(config_dict, aslist=True), "uv", "--version"],
+        _runcmd(
+            [*cmd_prefix, "uv", "--version"],
+            cmd_env,
             capture_output=True,
-            check=True,
         )
         has_uv = True
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -157,22 +177,18 @@ def install(args) -> None:
 
     # configure venv
     if has_uv:
-        cmd_expr = [*execenv_prefix(config_dict, aslist=True), "uv", "venv", path_install]
+        cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
     else:
-        cmd_expr = [
-            *execenv_prefix(config_dict, aslist=True),
-            "python3",
-            "-m",
-            "venv",
-            path_install,
-        ]
+        cmd_expr = [*cmd_prefix, "python3", "-m", "venv", path_install]
 
     log.info(f"configuring virtual environment in {path_install}")
-    _runcmd(cmd_env, cmd_expr)
+    _runcmd(cmd_expr, cmd_env)
+
+    python, cmd_env = execenv_python(config_dict, aslist=True)
 
     if not has_uv:
         cmd_expr = [
-            *execenv_python(config_dict, aslist=True),
+            *python,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -182,11 +198,11 @@ def install(args) -> None:
         ]
 
         log.info("upgrading pip")
-        _runcmd(cmd_env, cmd_expr)
+        _runcmd(cmd_expr, cmd_env)
 
         # install uv
         cmd_expr = [
-            *execenv_python(config_dict, aslist=True),
+            *python,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -196,7 +212,7 @@ def install(args) -> None:
         ]
 
         log.info("installing uv")
-        _runcmd(cmd_env, cmd_expr)
+        _runcmd(cmd_expr, cmd_env)
 
     # now packages
 
@@ -209,24 +225,17 @@ def install(args) -> None:
         else:
             pkg_list.append(spec)
 
-    cmd_base = [
-        *execenv_python(config_dict, aslist=True),
-        "-m",
-        "uv",
-        "pip",
-        "--no-cache",
-        "install",
-    ]
+    cmd_base = [*python, "-m", "uv", "pip", "--no-cache", "install"]
 
     cmd_expr = cmd_base + pkg_list
 
     log.info("installing packages")
-    _runcmd(cmd_env, cmd_expr)
+    _runcmd(cmd_expr, cmd_env)
 
     # and finally legenddataflow
 
     cmd_expr = [
-        *execenv_python(config_dict, aslist=True),
+        *python,
         "-m",
         "uv",
         "pip",
@@ -237,45 +246,32 @@ def install(args) -> None:
     ]
 
     log.info("installing packages")
-    _runcmd(cmd_env, cmd_expr)
+    _runcmd(cmd_expr, cmd_env)
 
 
 def cmdexec(args) -> None:
     """
     This function loads the data production environment and executes a given command.
     """
-    config_file_dir = Path(args.config_file).resolve().parent
     config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
+    config_loc = Path(args.config_file).resolve().parent
 
-    exec_cmd = config_dict.execenv.cmd
-    exec_arg = config_dict.execenv.arg
-    env_vars = config_dict.execenv.env
-    path_install = config_dict.paths.install
+    utils.subst_vars(
+        config_dict,
+        var_values={"_": config_loc},
+        use_env=True,
+        ignore_missing=False,
+    )
 
-    exec_cmd = string.Template(exec_cmd).substitute({"_": config_file_dir})
-    exec_arg = string.Template(exec_arg).substitute({"_": config_file_dir})
-    path_install = string.Template(path_install).substitute({"_": config_file_dir})
+    cmd_prefix, cmd_env = execenv_prefix(config_dict, aslist=True)
+    cmd_expr = [*cmd_prefix, *args.command]
 
-    xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
-    if xdg_runtime_dir:
-        subprocess.run(
-            [*(exec_cmd.split()), exec_arg, *args.command],
-            env=dict(
-                PYTHONUSERBASE=path_install,
-                APPTAINERENV_APPEND_PATH=f":{path_install}/bin",
-                APPTAINER_BINDPATH=xdg_runtime_dir,
-                **env_vars,
-            ),
-            check=True,
-        )
-    else:
-        subprocess.run(
-            [*(exec_cmd.split()), exec_arg, *args.command],
-            env=dict(
-                PYTHONUSERBASE=path_install,
-                APPTAINERENV_APPEND_PATH=f":{path_install}/bin",
-                APPTAINER_BINDPATH=xdg_runtime_dir,
-                **env_vars,
-            ),
-            check=True,
-        )
+    msg = (
+        "running: "
+        + " ".join([f"{k}={v}" for k, v in cmd_env.items()])
+        + " "
+        + " ".join(cmd_expr),
+    )
+    log.debug(msg)
+
+    subprocess.run(cmd_expr, env=cmd_env, check=True)
