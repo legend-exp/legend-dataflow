@@ -103,3 +103,4 @@ repos:
     hooks:
       - id: snakefmt
         files: Snakefile*|\.smk
+        exclude: channel_merge.smk

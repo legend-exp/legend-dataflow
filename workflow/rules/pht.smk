@@ -117,6 +117,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_qc",
                 ),
             group:
@@ -171,7 +172,7 @@ rule build_pht_qc:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "qc")),
     log:
-        get_pattern_log_channel(setup, "par_pht_qc"),
+        get_pattern_log_channel(setup, "par_pht_qc", time),
     group:
         "par-pht"
     resources:
@@ -234,7 +235,7 @@ rule build_per_energy_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "energy_cal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_energy_cal"),
+        get_pattern_log_channel(setup, "par_pht_energy_cal", time),
     group:
         "par-pht"
     resources:
@@ -344,6 +345,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_partcal",
                 ),
             group:
@@ -406,7 +408,7 @@ rule build_pht_energy_super_calibrations:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "partcal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_partcal"),
+        get_pattern_log_channel(setup, "par_pht_partcal", time),
     group:
         "par-pht"
     resources:
@@ -526,6 +528,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_aoe",
                 ),
             group:
@@ -588,7 +591,7 @@ rule build_pht_aoe_calibrations:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_aoe_cal"),
+        get_pattern_log_channel(setup, "par_pht_aoe_cal", time),
     group:
         "par-pht"
     resources:
@@ -706,6 +709,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_lq",
                 ),
             group:
@@ -763,7 +767,7 @@ rule build_pht_lq_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
     log:
-        get_pattern_log_channel(setup, "par_pht_lq_cal"),
+        get_pattern_log_channel(setup, "par_pht_lq_cal", time),
     group:
         "par-pht"
     resources:
@@ -893,7 +897,7 @@ rule build_pht:
         tier="pht",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, "tier_pht"),
+        get_pattern_log(setup, "tier_pht", time),
     group:
         "tier-pht"
     resources:

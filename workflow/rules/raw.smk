@@ -32,7 +32,7 @@ rule build_raw_orca:
     output:
         get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
     log:
-        get_pattern_log(setup, "tier_raw"),
+        get_pattern_log(setup, "tier_raw", time),
     group:
         "tier-raw"
     resources:
@@ -62,7 +62,7 @@ rule build_raw_fcio:
     output:
         get_pattern_tier(setup, "raw", check_in_cycle=check_in_cycle),
     log:
-        get_pattern_log(setup, "tier_raw"),
+        get_pattern_log(setup, "tier_raw", time),
     group:
         "tier-raw"
     resources:
@@ -96,7 +96,7 @@ rule build_raw_blind:
     output:
         get_pattern_tier_raw_blind(setup),
     log:
-        str(get_pattern_log(setup, "tier_raw_blind")).replace("{datatype}", "phy"),
+        str(get_pattern_log(setup, "tier_raw_blind", time)).replace("{datatype}", "phy"),
     group:
         "tier-raw"
     resources:

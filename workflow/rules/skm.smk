@@ -20,7 +20,7 @@ rule build_skm:
         datatype="phy",
         ro_input=lambda _, input: ro(input),
     log:
-        get_pattern_log_concat(setup, "tier_skm"),
+        get_pattern_log_concat(setup, "tier_skm", time),
     group:
         "tier-skm"
     resources:

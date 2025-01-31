@@ -31,7 +31,7 @@ rule build_blinding_calibration:
         par_file=temp(get_pattern_pars_tmp_channel(setup, "raw_blindcal")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw_blindcal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_blind_cal"),
+        get_pattern_log_channel(setup, "pars_hit_blind_cal", time),
     group:
         "par-raw-blinding"
     resources:

@@ -87,6 +87,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "psp",
+                    time,
                     name="par_psp",
                 ),
             group:
@@ -134,7 +135,7 @@ rule build_par_psp:
         ),
         psp_plots=temp(get_pattern_plts_tmp_channel(setup, "psp")),
     log:
-        get_pattern_log_channel(setup, "pars_psp"),
+        get_pattern_log_channel(setup, "pars_psp", time),
     group:
         "par-psp"
     resources:
@@ -174,7 +175,7 @@ rule build_svm_psp:
     output:
         dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_psp_svm").replace("{datatype}", "cal"),
+        get_pattern_log(setup, "pars_psp_svm", time).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
@@ -195,7 +196,7 @@ rule build_pars_psp_svm:
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_svm"),
+        get_pattern_log_channel(setup, "pars_dsp_svm", time),
     group:
         "par-dsp"
     resources:

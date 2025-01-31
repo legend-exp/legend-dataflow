@@ -53,7 +53,7 @@ rule build_qc:
         qc_file=temp(get_pattern_pars_tmp_channel(setup, "hit", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "qc")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_qc"),
+        get_pattern_log_channel(setup, "pars_hit_qc", time),
     group:
         "par-hit"
     resources:
@@ -102,7 +102,7 @@ rule build_energy_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "energy_cal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_energy_cal"),
+        get_pattern_log_channel(setup, "pars_hit_energy_cal", time),
     group:
         "par-hit"
     resources:
@@ -151,7 +151,7 @@ rule build_aoe_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_aoe_cal"),
+        get_pattern_log_channel(setup, "pars_hit_aoe_cal", time),
     group:
         "par-hit"
     resources:
@@ -198,7 +198,7 @@ rule build_lq_calibration:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_lq_cal"),
+        get_pattern_log_channel(setup, "pars_hit_lq_cal", time),
     group:
         "par-hit"
     resources:
@@ -325,7 +325,7 @@ rule build_hit:
         tier="hit",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, "tier_hit"),
+        get_pattern_log(setup, "tier_hit", time),
     group:
         "tier-hit"
     resources:

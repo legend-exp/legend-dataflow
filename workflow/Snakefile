@@ -32,10 +32,10 @@ det_status = utils.det_status_path(config)
 swenv = utils.runcmd(config)
 basedir = workflow.basedir
 
-# wait for new pylegendmeta release
-# if not Path(meta).exists():
-#     meta = LegendMetadata()
-#     meta.checkout(config["configs"]["l200"]["legend_metadata_version"])
+time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+
+if not Path(meta).exists():
+    LegendMetadata().checkout(config["legend_metadata_version"])
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
@@ -145,18 +145,6 @@ onsuccess:
             os.remove(file)
     if os.path.exists(utils.filelist_path(config)):
         os.rmdir(utils.filelist_path(config))
-
-        # remove logs
-    files = glob.glob(os.path.join(utils.tmp_log_path(config), "*", "*.log"))
-    for file in files:
-        if os.path.isfile(file):
-            os.remove(file)
-    dirs = glob.glob(os.path.join(utils.tmp_log_path(config), "*"))
-    for d in dirs:
-        if os.path.isdir(d):
-            os.rmdir(d)
-    if os.path.exists(utils.tmp_log_path(config)):
-        os.rmdir(utils.tmp_log_path(config))
 
 
 rule gen_filelist:

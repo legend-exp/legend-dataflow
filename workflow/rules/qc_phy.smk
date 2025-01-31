@@ -57,6 +57,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_qc_phy",
                 ),
             group:
@@ -100,7 +101,7 @@ rule build_pht_qc_phy:
         hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "qcphy")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "qcphy")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_qc_phy"),
+        get_pattern_log_channel(setup, "pars_pht_qc_phy", time),
     group:
         "par-pht"
     resources:

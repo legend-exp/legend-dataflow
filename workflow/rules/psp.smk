@@ -169,7 +169,7 @@ rule build_psp:
         tier_file=get_pattern_tier(setup, "psp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "psp_db"),
     log:
-        get_pattern_log(setup, "tier_psp"),
+        get_pattern_log(setup, "tier_psp", time),
     group:
         "tier-dsp"
     resources:

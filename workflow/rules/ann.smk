@@ -22,7 +22,7 @@ rule build_ann:
         tier_file=get_pattern_tier(setup, "ann", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "ann_db"),
     log:
-        get_pattern_log(setup, "tier_ann"),
+        get_pattern_log(setup, "tier_ann", time),
     group:
         "tier-ann"
     resources:
@@ -54,7 +54,7 @@ rule build_pan:
         tier_file=get_pattern_tier(setup, "pan", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "pan_db"),
     log:
-        get_pattern_log(setup, "tier_pan"),
+        get_pattern_log(setup, "tier_pan", time),
     group:
         "tier-ann"
     resources:

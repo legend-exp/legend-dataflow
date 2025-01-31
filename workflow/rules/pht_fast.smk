@@ -96,6 +96,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "pht",
+                    time,
                     name="par_pht_fast",
                 ),
             group:
@@ -156,7 +157,7 @@ rule par_pht_fast:
         ),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
     log:
-        get_pattern_log_channel(setup, "par_pht_fast"),
+        get_pattern_log_channel(setup, "par_pht_fast", time),
     group:
         "par-pht"
     resources:

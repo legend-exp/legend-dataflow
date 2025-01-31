@@ -35,7 +35,7 @@ rule build_evt:
         tier="evt",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, f"tier_evt"),
+        get_pattern_log(setup, f"tier_evt", time),
     group:
         "tier-evt"
     resources:
@@ -88,7 +88,7 @@ rule build_pet:
         tier="pet",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, f"tier_pet"),
+        get_pattern_log(setup, f"tier_pet", time),
     group:
         "tier-evt"
     resources:
@@ -140,7 +140,7 @@ for evt_tier in ("evt", "pet"):
             lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat",
             ro_input=lambda _, input: utils.as_ro(setup, input),
         log:
-            get_pattern_log_concat(setup, f"tier_{evt_tier}_concat"),
+            get_pattern_log_concat(setup, f"tier_{evt_tier}_concat", time),
         group:
             "tier-evt"
         shell:

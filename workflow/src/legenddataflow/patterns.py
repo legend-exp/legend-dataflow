@@ -289,9 +289,10 @@ def get_pattern_plts(setup, tier, name=None):
         )
 
 
-def get_pattern_log(setup, processing_step):
+def get_pattern_log(setup, processing_step, time):
     return (
         Path(f"{tmp_log_path(setup)}")
+        / time
         / processing_step
         / (
             "{experiment}-{period}-{run}-{datatype}-{timestamp}-"
@@ -301,9 +302,10 @@ def get_pattern_log(setup, processing_step):
     )
 
 
-def get_pattern_log_channel(setup, processing_step):
+def get_pattern_log_channel(setup, processing_step, time):
     return (
         Path(f"{tmp_log_path(setup)}")
+        / time
         / processing_step
         / (
             "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"
@@ -313,9 +315,10 @@ def get_pattern_log_channel(setup, processing_step):
     )
 
 
-def get_pattern_log_concat(setup, processing_step):
+def get_pattern_log_concat(setup, processing_step, time):
     return (
         Path(f"{tmp_log_path(setup)}")
+        / time
         / processing_step
         / ("{experiment}-{period}-{run}-{datatype}-" + processing_step + ".log")
     )

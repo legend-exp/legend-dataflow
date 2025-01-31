@@ -185,7 +185,7 @@ rule build_dsp:
         tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(setup, "dsp_db"),
     log:
-        get_pattern_log(setup, "tier_dsp"),
+        get_pattern_log(setup, "tier_dsp", time),
     group:
         "tier-dsp"
     resources:

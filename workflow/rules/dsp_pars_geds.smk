@@ -35,7 +35,7 @@ rule build_pars_dsp_tau_geds:
         decay_const=temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_decay_constant"),
+        get_pattern_log_channel(setup, "par_dsp_decay_constant", time),
     group:
         "par-dsp"
     resources:
@@ -69,7 +69,7 @@ rule build_pars_evtsel_geds:
     output:
         peak_file=temp(get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_event_selection"),
+        get_pattern_log_channel(setup, "par_dsp_event_selection", time),
     group:
         "par-dsp"
     resources:
@@ -108,7 +108,7 @@ rule build_pars_dsp_nopt_geds:
         ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_noise_optimization"),
+        get_pattern_log_channel(setup, "par_dsp_noise_optimization", time),
     group:
         "par-dsp"
     resources:
@@ -148,7 +148,7 @@ rule build_pars_dsp_dplms_geds:
         ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "dplms")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_dplms"),
+        get_pattern_log_channel(setup, "pars_dsp_dplms", time),
     group:
         "par-dsp"
     resources:
@@ -187,7 +187,7 @@ rule build_pars_dsp_eopt_geds:
         ),
         plots=temp(get_pattern_plts_tmp_channel(setup, "dsp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_eopt"),
+        get_pattern_log_channel(setup, "pars_dsp_eopt", time),
     group:
         "par-dsp"
     resources:
@@ -217,7 +217,7 @@ rule build_svm_dsp_geds:
     output:
         dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal"),
+        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal", time),
     group:
         "par-dsp-svm"
     resources:
@@ -238,7 +238,7 @@ rule build_pars_dsp_svm_geds:
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_svm"),
+        get_pattern_log_channel(setup, "pars_dsp_svm", time),
     group:
         "par-dsp"
     resources:

@@ -32,7 +32,7 @@ rule build_blinding_check:
         check_file=temp(get_pattern_pars_tmp_channel(setup, "raw")),
         plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_blind_check"),
+        get_pattern_log_channel(setup, "pars_hit_blind_check", time),
     group:
         "par-hit"
     resources:

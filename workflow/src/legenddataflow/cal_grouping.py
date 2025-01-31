@@ -170,6 +170,7 @@ class CalGrouping:
         dataset,
         channel,
         tier,
+        processing_timestamp,
         experiment="l200",
         datatype="cal",
         name=None,
@@ -188,7 +189,9 @@ class CalGrouping:
             fk.channel = "{channel}"
         else:
             fk.channel = channel
-        return fk.get_path_from_filekey(get_pattern_log_channel(self.setup, name))[0]
+        return fk.get_path_from_filekey(
+            get_pattern_log_channel(self.setup, name, processing_timestamp)
+        )[0]
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"

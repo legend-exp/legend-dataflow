@@ -21,7 +21,7 @@ rule build_tier_tcm:
     output:
         get_pattern_tier(setup, "tcm", check_in_cycle=check_in_cycle),
     log:
-        get_pattern_log(setup, "tier_tcm"),
+        get_pattern_log(setup, "tier_tcm", time),
     group:
         "tier-tcm"
     resources:
@@ -51,7 +51,7 @@ rule build_pulser_ids:
     output:
         pulser=temp(get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids")),
     log:
-        get_pattern_log_channel(setup, "tcm_pulsers"),
+        get_pattern_log_channel(setup, "tcm_pulsers", time),
     group:
         "tier-tcm"
     resources:
