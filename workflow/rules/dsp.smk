@@ -18,11 +18,11 @@ from legenddataflow.patterns import (
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier(setup, "raw", check_in_cycle=False),
+    get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
-dsp_par_cat_file = Path(pars_path(setup)) / "dsp" / "validity.yaml"
+dsp_par_cat_file = Path(pars_path(config)) / "dsp" / "validity.yaml"
 if dsp_par_cat_file.is_file():
     dsp_par_cat_file.unlink()
 Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
@@ -32,7 +32,7 @@ ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
 rule build_plts_dsp:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
@@ -43,7 +43,7 @@ rule build_plts_dsp:
         timestamp="{timestamp}",
         datatype="cal",
     output:
-        get_pattern_plts(setup, "dsp"),
+        get_pattern_plts(config, "dsp"),
     group:
         "merge-dsp"
     shell:
@@ -57,7 +57,7 @@ rule build_plts_dsp:
 rule build_pars_dsp_objects:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
@@ -71,7 +71,7 @@ rule build_pars_dsp_objects:
         datatype="cal",
     output:
         get_pattern_pars(
-            setup,
+            config,
             "dsp",
             name="objects",
             extension="dir",
@@ -91,7 +91,7 @@ rule build_pars_dsp_objects:
 rule build_pars_dsp_db:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
@@ -104,7 +104,7 @@ rule build_pars_dsp_db:
     output:
         temp(
             get_pattern_pars_tmp(
-                setup,
+                config,
                 "dsp",
                 datatype="cal",
             )
@@ -123,7 +123,7 @@ rule build_pars_dsp_db:
 rule build_pars_dsp:
     input:
         in_files=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
@@ -133,13 +133,13 @@ rule build_pars_dsp:
             extension="lh5",
         ),
         in_db=get_pattern_pars_tmp(
-            setup,
+            config,
             "dsp",
             datatype="cal",
         ),
-        plts=get_pattern_plts(setup, "dsp"),
+        plts=get_pattern_plts(config, "dsp"),
         objects=get_pattern_pars(
-            setup,
+            config,
             "dsp",
             name="objects",
             extension="dir",
@@ -150,12 +150,12 @@ rule build_pars_dsp:
         datatype="cal",
     output:
         out_file=get_pattern_pars(
-            setup,
+            config,
             "dsp",
             extension="lh5",
             check_in_cycle=check_in_cycle,
         ),
-        out_db=get_pattern_pars(setup, "dsp", check_in_cycle=check_in_cycle),
+        out_db=get_pattern_pars(config, "dsp", check_in_cycle=check_in_cycle),
     group:
         "merge-dsp"
     shell:
@@ -171,10 +171,10 @@ rule build_pars_dsp:
 
 rule build_dsp:
     input:
-        raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
+        raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                setup, wildcards.timestamp, "dsp"
+                config, wildcards.timestamp, "dsp"
             )
         ),
     params:
@@ -182,10 +182,10 @@ rule build_dsp:
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
-        tier_file=get_pattern_tier(setup, "dsp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "dsp_db"),
+        tier_file=get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "dsp_db"),
     log:
-        get_pattern_log(setup, "tier_dsp", time),
+        get_pattern_log(config, "tier_dsp", time),
     group:
         "tier-dsp"
     resources:

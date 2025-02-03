@@ -12,15 +12,15 @@ from legenddataflow.patterns import (
 
 rule build_skm:
     input:
-        get_pattern_tier(setup, "pet_concat", check_in_cycle=False),
+        get_pattern_tier(config, "pet_concat", check_in_cycle=False),
     output:
-        get_pattern_tier(setup, "skm", check_in_cycle=check_in_cycle),
+        get_pattern_tier(config, "skm", check_in_cycle=check_in_cycle),
     params:
         timestamp="20230410T000000Z",
         datatype="phy",
         ro_input=lambda _, input: ro(input),
     log:
-        get_pattern_log_concat(setup, "tier_skm", time),
+        get_pattern_log_concat(config, "tier_skm", time),
     group:
         "tier-skm"
     resources:

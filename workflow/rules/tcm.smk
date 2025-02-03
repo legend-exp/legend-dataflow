@@ -13,15 +13,15 @@ from legenddataflow.patterns import (
 # This rule builds the tcm files each raw file
 rule build_tier_tcm:
     input:
-        get_pattern_tier(setup, "raw", check_in_cycle=False),
+        get_pattern_tier(config, "raw", check_in_cycle=False),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         input=lambda _, input: ro(input),
     output:
-        get_pattern_tier(setup, "tcm", check_in_cycle=check_in_cycle),
+        get_pattern_tier(config, "tcm", check_in_cycle=check_in_cycle),
     log:
-        get_pattern_log(setup, "tier_tcm", time),
+        get_pattern_log(config, "tier_tcm", time),
     group:
         "tier-tcm"
     resources:
@@ -41,7 +41,7 @@ rule build_tier_tcm:
 rule build_pulser_ids:
     input:
         os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-tcm.filelist"
         ),
     params:
         input=lambda _, input: ro(input),
@@ -49,9 +49,9 @@ rule build_pulser_ids:
         datatype="cal",
         channel="{channel}",
     output:
-        pulser=temp(get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids")),
+        pulser=temp(get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids")),
     log:
-        get_pattern_log_channel(setup, "tcm_pulsers", time),
+        get_pattern_log_channel(config, "tcm_pulsers", time),
     group:
         "tier-tcm"
     resources:

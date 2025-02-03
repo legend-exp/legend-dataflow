@@ -9,16 +9,11 @@ from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from legenddataflow.utils import filelist_path, runcmd
+from legenddataflow import execenv_smk_py_script
+from legenddataflow.utils import filelist_path
 
 
-def get_par_chanlist(
-    setup, keypart, tier, basedir, det_status, chan_maps, name=None, extension="yaml"
-):
-    tier_pattern = "((?P<file_type>[^_]+)(\\_(?P<tier>[^_]+)(\\_(?P<name>[^_]+)?)?)?)?"
-    keypart_rx = re.compile(tier_pattern)
-    d = keypart_rx.match(tier).groupdict()
-
+def get_chanlist(setup, keypart, workflow, config, det_status, chan_maps):
     key = ChannelProcKey.parse_keypart(keypart)
 
     flist_path = filelist_path(setup)
@@ -28,37 +23,36 @@ def get_par_chanlist(
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 
-    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --det_status {det_status}"
-    cmd += f" --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
+    cmd = "create_chankeylist"  # execenv_smk_py_script(workflow, config,  )[0]
+    cmd += f" --det_status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
+    cmd += f"--datatype cal --output_file {output_file}"
     os.system(cmd)
 
     with open(output_file) as r:
         chan_list = r.read().splitlines()
+    os.remove(output_file)
+    return chan_list
+
+
+def get_par_chanlist(
+    setup, keypart, tier, basedir, det_status, chan_maps, name=None, extension="yaml"
+):
+
+    chan_list = get_chanlist(setup, keypart, workflow, config, det_status, chan_maps)
 
     par_pattern = get_pattern_pars_tmp_channel(setup, tier, name, extension)
 
     filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
-    os.remove(output_file)
+
     return filenames
 
 
 def get_plt_chanlist(setup, keypart, tier, basedir, det_status, chan_maps, name=None):
-    key = ChannelProcKey.parse_keypart(keypart)
 
-    output_file = os.path.join(
-        filelist_path(setup),
-        f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
-    )
-
-    cmd = f"{runcmd(setup)} python3 -B {basedir}/scripts/create_chankeylist.py --det_status {det_status}"
-    cmd += f" --channelmap {chan_maps} --timestamp {key.timestamp} --datatype cal --output_file {output_file}"
-    os.system(cmd)
-
-    with open(output_file) as r:
-        chan_list = r.read().splitlines()
+    chan_list = get_chanlist(setup, keypart, workflow, config, det_status, chan_maps)
 
     par_pattern = get_pattern_plts_tmp_channel(setup, tier, name)
 
     filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
-    os.remove(output_file)
+
     return filenames

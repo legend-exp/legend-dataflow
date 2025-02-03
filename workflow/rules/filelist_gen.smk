@@ -105,30 +105,30 @@ def get_keys(keypart):
     return filekeys
 
 
-def get_pattern(setup, tier):
+def get_pattern(config, tier):
     """
     Helper function to get the search pattern for the given tier,
     some tiers such as skm need to refer to a different pattern when looking for files
     as only phy files are taken to skm others are only taken to pet
     """
     if tier == "blind":
-        fn_pattern = patt.get_pattern_tier(setup, "raw", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(config, "raw", check_in_cycle=False)
     elif tier in ("skm", "pet_concat"):
-        fn_pattern = patt.get_pattern_tier(setup, "pet", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(config, "pet", check_in_cycle=False)
     elif tier == "evt_concat":
-        fn_pattern = patt.get_pattern_tier(setup, "evt", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(config, "evt", check_in_cycle=False)
     elif tier == "daq":
-        fn_pattern = patt.get_pattern_tier_daq(setup, extension="{ext}")
+        fn_pattern = patt.get_pattern_tier_daq(config, extension="{ext}")
     else:
-        fn_pattern = patt.get_pattern_tier(setup, tier, check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier(config, tier, check_in_cycle=False)
     return fn_pattern
 
 
-def concat_phy_filenames(setup, phy_filenames, tier):
+def concat_phy_filenames(config, phy_filenames, tier):
     """
     This function concatenates the files from the same run together
     """
-    fn_pattern = patt.get_pattern(setup, tier)
+    fn_pattern = patt.get_pattern(config, tier)
     # group files by run
     sorted_phy_filenames = patt.run_grouper(phy_filenames)
     phy_filenames = []
@@ -136,7 +136,7 @@ def concat_phy_filenames(setup, phy_filenames, tier):
     for run in sorted_phy_filenames:
         key = FileKey.get_filekey_from_pattern(run[0], fn_pattern)
         out_key = FileKey.get_path_from_filekey(
-            key, patt.get_pattern_tier(setup, tier, check_in_cycle=False)
+            key, patt.get_pattern_tier(config, tier, check_in_cycle=False)
         )[0]
 
         phy_filenames.append(out_key)
@@ -145,7 +145,7 @@ def concat_phy_filenames(setup, phy_filenames, tier):
 
 
 def build_filelist(
-    setup,
+    config,
     filekeys,
     search_pattern,
     tier,
@@ -157,7 +157,7 @@ def build_filelist(
     and tier. It will ignore any keys in the ignore_keys list and only include
     the keys specified in the analysis_runs dict.
     """
-    fn_pattern = get_pattern(setup, tier)
+    fn_pattern = get_pattern(config, tier)
 
     if ignore_keys is None:
         ignore_keys = []
@@ -177,11 +177,11 @@ def build_filelist(
             else:
                 if tier == "blind" and _key.datatype in blind_datatypes:
                     filename = FileKey.get_path_from_filekey(
-                        _key, patt.get_pattern_tier_raw_blind(setup)
+                        _key, patt.get_pattern_tier_raw_blind(config)
                     )
                 elif tier == "skm":
                     filename = FileKey.get_path_from_filekey(
-                        _key, patt.get_pattern_tier(setup, "pet", check_in_cycle=False)
+                        _key, patt.get_pattern_tier(config, "pet", check_in_cycle=False)
                     )
                 elif tier == "daq":
                     filename = FileKey.get_path_from_filekey(
@@ -223,14 +223,14 @@ def build_filelist(
 
     if tier in concat_tiers:
         phy_filenames = concat_phy_filenames(
-            setup, phy_filenames, tier
+            config, phy_filenames, tier
         )  # concat phy files
 
     return phy_filenames + other_filenames
 
 
 def get_filelist(
-    wildcards, setup, search_pattern, ignore_keys_file=None, analysis_runs_file=None
+    wildcards, config, search_pattern, ignore_keys_file=None, analysis_runs_file=None
 ):
     file_selection = wildcards.label.split("-", 1)[0]
     # remove the file selection from the keypart
@@ -242,7 +242,7 @@ def get_filelist(
     filekeys = get_keys(keypart)
 
     return build_filelist(
-        setup,
+        config,
         filekeys,
         search_pattern,
         wildcards.tier,
@@ -253,7 +253,7 @@ def get_filelist(
 
 def get_filelist_full_wildcards(
     wildcards,
-    setup,
+    config,
     search_pattern,
     tier,
     ignore_keys_file=None,
@@ -268,7 +268,7 @@ def get_filelist_full_wildcards(
 
     filekeys = get_keys(keypart)
     return build_filelist(
-        setup,
+        config,
         filekeys,
         search_pattern,
         tier,

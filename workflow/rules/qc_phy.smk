@@ -90,7 +90,7 @@ for key, dataset in part.datasets.items():
 rule build_pht_qc_phy:
     input:
         phy_files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-phy-" + f"{intier}.filelist",
         ),
     params:
@@ -98,10 +98,10 @@ rule build_pht_qc_phy:
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "qcphy")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "qcphy")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qcphy")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qcphy")),
     log:
-        get_pattern_log_channel(setup, "pars_pht_qc_phy", time),
+        get_pattern_log_channel(config, "pars_pht_qc_phy", time),
     group:
         "par-pht"
     resources:
@@ -134,7 +134,7 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_plts_pht_phy:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
@@ -143,7 +143,7 @@ rule build_plts_pht_phy:
             name="qcphy",
         ),
     output:
-        get_pattern_plts(setup, "pht", "qc_phy"),
+        get_pattern_plts(config, "pht", "qc_phy"),
     group:
         "merge-hit"
     shell:
@@ -156,7 +156,7 @@ rule build_plts_pht_phy:
 rule build_pars_pht_phy:
     input:
         infiles=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
@@ -164,9 +164,9 @@ rule build_pars_pht_phy:
             chan_maps,
             name="qcphy",
         ),
-        plts=get_pattern_plts(setup, "pht", "qc_phy"),
+        plts=get_pattern_plts(config, "pht", "qc_phy"),
     output:
-        get_pattern_pars(setup, "pht", name="qc_phy", check_in_cycle=check_in_cycle),
+        get_pattern_pars(config, "pht", name="qc_phy", check_in_cycle=check_in_cycle),
     group:
         "merge-hit"
     shell:

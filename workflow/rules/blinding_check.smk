@@ -21,7 +21,7 @@ rule build_blinding_check:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=Path(filelist_path(setup))
+        files=Path(filelist_path(config))
         / "all-{experiment}-{period}-{run}-cal-raw.filelist",
         par_file=get_blinding_curve_file,
     params:
@@ -29,10 +29,10 @@ rule build_blinding_check:
         datatype="cal",
         channel="{channel}",
     output:
-        check_file=temp(get_pattern_pars_tmp_channel(setup, "raw")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw")),
+        check_file=temp(get_pattern_pars_tmp_channel(config, "raw")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_blind_check", time),
+        get_pattern_log_channel(config, "pars_hit_blind_check", time),
     group:
         "par-hit"
     resources:
@@ -55,7 +55,7 @@ rule build_blinding_check:
 rule build_plts_raw:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
@@ -63,7 +63,7 @@ rule build_plts_raw:
             chan_maps,
         ),
     output:
-        get_pattern_plts(setup, "raw"),
+        get_pattern_plts(config, "raw"),
     group:
         "merge-raw"
     shell:
@@ -76,7 +76,7 @@ rule build_plts_raw:
 rule build_pars_raw:
     input:
         infiles=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
@@ -84,11 +84,11 @@ rule build_pars_raw:
             chan_maps,
         ),
         plts=get_pattern_plts(
-            setup,
+            config,
             "raw",
         ),
     output:
-        get_pattern_pars(setup, "raw", check_in_cycle=check_in_cycle),
+        get_pattern_pars(config, "raw", check_in_cycle=check_in_cycle),
     group:
         "merge-raw"
     shell:

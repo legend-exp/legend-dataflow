@@ -20,7 +20,7 @@ rule build_blinding_calibration:
     if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
     """
     input:
-        files=Path(filelist_path(setup))
+        files=Path(filelist_path(config))
         / "all-{experiment}-{period}-{run}-cal-raw.filelist",
     params:
         timestamp="{timestamp}",
@@ -28,10 +28,10 @@ rule build_blinding_calibration:
         channel="{channel}",
         meta=meta,
     output:
-        par_file=temp(get_pattern_pars_tmp_channel(setup, "raw_blindcal")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "raw_blindcal")),
+        par_file=temp(get_pattern_pars_tmp_channel(config, "raw_blindcal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw_blindcal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_blind_cal", time),
+        get_pattern_log_channel(config, "pars_hit_blind_cal", time),
     group:
         "par-raw-blinding"
     resources:
@@ -53,7 +53,7 @@ rule build_blinding_calibration:
 rule build_plts_blinding:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
@@ -62,7 +62,7 @@ rule build_plts_blinding:
             name="blindcal",
         ),
     output:
-        get_pattern_plts(setup, "raw", name="blindcal"),
+        get_pattern_plts(config, "raw", name="blindcal"),
     group:
         "merge-blindcal"
     shell:
@@ -75,7 +75,7 @@ rule build_plts_blinding:
 rule build_pars_blinding:
     input:
         infiles=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
             basedir,
@@ -83,9 +83,9 @@ rule build_pars_blinding:
             chan_maps,
             name="blindcal",
         ),
-        plts=get_pattern_plts(setup, "raw", name="blindcal"),
+        plts=get_pattern_plts(config, "raw", name="blindcal"),
     output:
-        get_pattern_pars(setup, "raw", name="blindcal", check_in_cycle=check_in_cycle),
+        get_pattern_pars(config, "raw", name="blindcal", check_in_cycle=check_in_cycle),
     group:
         "merge-blindcal"
     shell:

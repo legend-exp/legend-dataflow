@@ -17,11 +17,11 @@ from legenddataflow.patterns import (
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier(setup, "raw", check_in_cycle=False),
+    get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
 
-psp_par_cat_file = Path(pars_path(setup)) / "psp" / "validity.yaml"
+psp_par_cat_file = Path(pars_path(config)) / "psp" / "validity.yaml"
 if psp_par_cat_file.is_file():
     psp_par_cat_file.unlink()
 Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
@@ -31,7 +31,7 @@ ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
 rule build_pars_psp_objects:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
@@ -42,7 +42,7 @@ rule build_pars_psp_objects:
         ),
     output:
         get_pattern_pars(
-            setup,
+            config,
             "psp",
             name="objects",
             extension="dir",
@@ -61,7 +61,7 @@ rule build_pars_psp_objects:
 rule build_plts_psp:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
@@ -69,7 +69,7 @@ rule build_plts_psp:
             chan_maps,
         ),
     output:
-        get_pattern_plts(setup, "psp"),
+        get_pattern_plts(config, "psp"),
     group:
         "merge-psp"
     shell:
@@ -83,7 +83,7 @@ rule build_plts_psp:
 rule build_pars_psp_db:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "psp",
             basedir,
@@ -93,7 +93,7 @@ rule build_pars_psp_db:
     output:
         temp(
             get_pattern_pars_tmp(
-                setup,
+                config,
                 "psp",
                 datatype="cal",
             )
@@ -111,7 +111,7 @@ rule build_pars_psp_db:
 rule build_pars_psp:
     input:
         in_files=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "dsp",
             basedir,
@@ -121,13 +121,13 @@ rule build_pars_psp:
             extension="lh5",
         ),
         in_db=get_pattern_pars_tmp(
-            setup,
+            config,
             "psp",
             datatype="cal",
         ),
-        plts=get_pattern_plts(setup, "psp"),
+        plts=get_pattern_plts(config, "psp"),
         objects=get_pattern_pars(
-            setup,
+            config,
             "psp",
             name="objects",
             extension="dir",
@@ -135,12 +135,12 @@ rule build_pars_psp:
         ),
     output:
         out_file=get_pattern_pars(
-            setup,
+            config,
             "psp",
             extension="lh5",
             check_in_cycle=check_in_cycle,
         ),
-        out_db=get_pattern_pars(setup, "psp", check_in_cycle=check_in_cycle),
+        out_db=get_pattern_pars(config, "psp", check_in_cycle=check_in_cycle),
     group:
         "merge-psp"
     shell:
@@ -155,10 +155,10 @@ rule build_pars_psp:
 
 rule build_psp:
     input:
-        raw_file=get_pattern_tier(setup, "raw", check_in_cycle=False),
+        raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                setup, wildcards.timestamp, "psp"
+                config, wildcards.timestamp, "psp"
             )
         ),
     params:
@@ -166,10 +166,10 @@ rule build_psp:
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
-        tier_file=get_pattern_tier(setup, "psp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "psp_db"),
+        tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "psp_db"),
     log:
-        get_pattern_log(setup, "tier_psp", time),
+        get_pattern_log(config, "tier_psp", time),
     group:
         "tier-dsp"
     resources:

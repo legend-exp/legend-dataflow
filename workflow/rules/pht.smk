@@ -21,13 +21,13 @@ from legenddataflow.patterns import (
     get_pattern_pars,
 )
 
-pht_par_catalog = ds.ParsKeyResolve.get_par_catalog(
+pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier(setup, "raw", check_in_cycle=False),
+    get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_pht"], "lar": ["par_pht"]},
 )
 
-pht_par_cat_file = Path(pars_path(setup)) / "pht" / "validity.yaml"
+pht_par_cat_file = Path(pars_path(config)) / "pht" / "validity.yaml"
 if pht_par_cat_file.is_file():
     pht_par_cat_file.unlink()
 Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
@@ -39,11 +39,11 @@ intier = "psp"
 rule pht_checkpoint:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
         ),
     output:
-        temp(get_pattern_pars_tmp_channel(setup, "pht", "check")),
+        temp(get_pattern_pars_tmp_channel(config, "pht", "check")),
     shell:
         "touch {output}"
 
@@ -154,25 +154,25 @@ for key, dataset in part.datasets.items():
 rule build_pht_qc:
     input:
         cal_files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
         ),
         fft_files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-fft-" + f"{intier}.filelist",
         ),
-        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        check_file=get_pattern_pars_tmp_channel(setup, "pht", "check"),
+        pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        check_file=get_pattern_pars_tmp_channel(config, "pht", "check"),
         overwrite_files=lambda wildcards: get_overwrite_file("pht", wildcards=wildcards),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "qc")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "qc")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qc")),
     log:
-        get_pattern_log_channel(setup, "par_pht_qc", time),
+        get_pattern_log_channel(config, "par_pht_qc", time),
     group:
         "par-pht"
     resources:
@@ -210,15 +210,15 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_per_energy_calibration:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        pht_dict=get_pattern_pars_tmp_channel(setup, "pht", "qc"),
-        inplots=get_pattern_plts_tmp_channel(setup, "pht", "qc"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        pht_dict=get_pattern_pars_tmp_channel(config, "pht", "qc"),
+        inplots=get_pattern_plts_tmp_channel(config, "pht", "qc"),
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                setup, wildcards.timestamp, intier
+                config, wildcards.timestamp, intier
             )
         ),
     params:
@@ -227,15 +227,15 @@ rule build_per_energy_calibration:
         channel="{channel}",
         tier="pht",
     output:
-        ecal_file=temp(get_pattern_pars_tmp_channel(setup, "pht", "energy_cal")),
+        ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
         results_file=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "energy_cal_objects", extension="pkl"
+                config, "pht", "energy_cal_objects", extension="pkl"
             )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "energy_cal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "energy_cal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_energy_cal", time),
+        get_pattern_log_channel(config, "par_pht_energy_cal", time),
     group:
         "par-pht"
     resources:
@@ -386,29 +386,29 @@ for key, dataset in part.datasets.items():
 rule build_pht_energy_super_calibrations:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal" + f"-{intier}.filelist",
         ),
-        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
+        pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "pht", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "energy_cal_objects", extension="pkl"
+            config, "pht", "energy_cal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "pht", "energy_cal"),
+        inplots=get_pattern_plts_tmp_channel(config, "pht", "energy_cal"),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "partcal")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "partcal")),
         partcal_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "partcal_objects", extension="pkl"
+                config, "pht", "partcal_objects", extension="pkl"
             )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "partcal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "partcal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_partcal", time),
+        get_pattern_log_channel(config, "par_pht_partcal", time),
     group:
         "par-pht"
     resources:
@@ -569,29 +569,29 @@ for key, dataset in part.datasets.items():
 rule build_pht_aoe_calibrations:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
         ),
-        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "partcal"),
+        pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "pht", "partcal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "partcal_objects", extension="pkl"
+            config, "pht", "partcal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "pht", "partcal"),
+        inplots=get_pattern_plts_tmp_channel(config, "pht", "partcal"),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht", "aoecal")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "aoecal")),
         aoe_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "pht", "aoecal_objects", extension="pkl"
+                config, "pht", "aoecal_objects", extension="pkl"
             )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht", "aoecal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "aoecal")),
     log:
-        get_pattern_log_channel(setup, "par_pht_aoe_cal", time),
+        get_pattern_log_channel(config, "par_pht_aoe_cal", time),
     group:
         "par-pht"
     resources:
@@ -747,27 +747,27 @@ for key, dataset in part.datasets.items():
 rule build_pht_lq_calibration:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
         ),
-        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "aoecal"),
+        pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "pht", "aoecal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "aoecal_objects", extension="pkl"
+            config, "pht", "aoecal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "pht", "aoecal"),
+        inplots=get_pattern_plts_tmp_channel(config, "pht", "aoecal"),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         lq_results=temp(
-            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(config, "pht", "objects", extension="pkl")
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht")),
     log:
-        get_pattern_log_channel(setup, "par_pht_lq_cal", time),
+        get_pattern_log_channel(config, "par_pht_lq_cal", time),
     group:
         "par-pht"
     resources:
@@ -806,7 +806,7 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_pars_pht_objects:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
@@ -817,7 +817,7 @@ rule build_pars_pht_objects:
         ),
     output:
         get_pattern_pars(
-            setup,
+            config,
             "pht",
             name="objects",
             extension="dir",
@@ -835,7 +835,7 @@ rule build_pars_pht_objects:
 rule build_plts_pht:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
@@ -843,7 +843,7 @@ rule build_plts_pht:
             chan_maps,
         ),
     output:
-        get_pattern_plts(setup, "pht"),
+        get_pattern_plts(config, "pht"),
     group:
         "merge-hit"
     shell:
@@ -856,23 +856,23 @@ rule build_plts_pht:
 rule build_pars_pht:
     input:
         infiles=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
             basedir,
             det_status,
             chan_maps,
         ),
-        plts=get_pattern_plts(setup, "pht"),
+        plts=get_pattern_plts(config, "pht"),
         objects=get_pattern_pars(
-            setup,
+            config,
             "pht",
             name="objects",
             extension="dir",
             check_in_cycle=check_in_cycle,
         ),
     output:
-        get_pattern_pars(setup, "pht", check_in_cycle=check_in_cycle),
+        get_pattern_pars(config, "pht", check_in_cycle=check_in_cycle),
     group:
         "merge-hit"
     shell:
@@ -884,20 +884,20 @@ rule build_pars_pht:
 
 rule build_pht:
     input:
-        dsp_file=get_pattern_tier(setup, intier, check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, intier, check_in_cycle=False),
         pars_file=lambda wildcards: ParsCatalog.get_par_file(
-            setup, wildcards.timestamp, "pht"
+            config, wildcards.timestamp, "pht"
         ),
     output:
-        tier_file=get_pattern_tier(setup, "pht", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "pht_db"),
+        tier_file=get_pattern_tier(config, "pht", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "pht_db"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="pht",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, "tier_pht", time),
+        get_pattern_log(config, "tier_pht", time),
     group:
         "tier-pht"
     resources:

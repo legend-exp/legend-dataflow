@@ -23,11 +23,11 @@ from legenddataflow.patterns import (
 
 hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier(setup, "raw", check_in_cycle=False),
+    get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_hit"], "lar": ["par_hit"]},
 )
 
-hit_par_cat_file = Path(pars_path(setup)) / "hit" / "validity.yaml"
+hit_par_cat_file = Path(pars_path(config)) / "hit" / "validity.yaml"
 if hit_par_cat_file.is_file():
     hit_par_cat_file.unlink()
 Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
@@ -38,22 +38,22 @@ ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
 rule build_qc:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
         fft_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         overwrite_files=lambda wildcards: get_overwrite_file("hit", wildcards),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        qc_file=temp(get_pattern_pars_tmp_channel(setup, "hit", "qc")),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "qc")),
+        qc_file=temp(get_pattern_pars_tmp_channel(config, "hit", "qc")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "qc")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_qc", time),
+        get_pattern_log_channel(config, "pars_hit_qc", time),
     group:
         "par-hit"
     resources:
@@ -79,30 +79,30 @@ rule build_qc:
 rule build_energy_calibration:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                setup, wildcards.timestamp, "dsp"
+                config, wildcards.timestamp, "dsp"
             )
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "hit", "qc"),
-        in_hit_dict=get_pattern_pars_tmp_channel(setup, "hit", "qc"),
+        inplots=get_pattern_plts_tmp_channel(config, "hit", "qc"),
+        in_hit_dict=get_pattern_pars_tmp_channel(config, "hit", "qc"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        ecal_file=temp(get_pattern_pars_tmp_channel(setup, "hit", "energy_cal")),
+        ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
         results_file=temp(
             get_pattern_pars_tmp_channel(
-                setup, "hit", "energy_cal_objects", extension="pkl"
+                config, "hit", "energy_cal_objects", extension="pkl"
             )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "energy_cal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "energy_cal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_energy_cal", time),
+        get_pattern_log_channel(config, "pars_hit_energy_cal", time),
     group:
         "par-hit"
     resources:
@@ -130,28 +130,28 @@ rule build_energy_calibration:
 rule build_aoe_calibration:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "energy_cal"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "hit", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "hit", "energy_cal_objects", extension="pkl"
+            config, "hit", "energy_cal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "hit", "energy_cal"),
+        inplots=get_pattern_plts_tmp_channel(config, "hit", "energy_cal"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit", "aoe_cal")),
         aoe_results=temp(
             get_pattern_pars_tmp_channel(
-                setup, "hit", "aoe_cal_objects", extension="pkl"
+                config, "hit", "aoe_cal_objects", extension="pkl"
             )
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "aoe_cal")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_aoe_cal", time),
+        get_pattern_log_channel(config, "pars_hit_aoe_cal", time),
     group:
         "par-hit"
     resources:
@@ -179,26 +179,26 @@ rule build_aoe_calibration:
 rule build_lq_calibration:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "hit", "aoe_cal"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "hit", "aoe_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "hit", "aoe_cal_objects", extension="pkl"
+            config, "hit", "aoe_cal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "hit", "aoe_cal"),
+        inplots=get_pattern_plts_tmp_channel(config, "hit", "aoe_cal"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "hit")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit")),
         lq_results=temp(
-            get_pattern_pars_tmp_channel(setup, "hit", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(config, "hit", "objects", extension="pkl")
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "hit")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "hit")),
     log:
-        get_pattern_log_channel(setup, "pars_hit_lq_cal", time),
+        get_pattern_log_channel(config, "pars_hit_lq_cal", time),
     group:
         "par-hit"
     resources:
@@ -225,7 +225,7 @@ rule build_lq_calibration:
 rule build_pars_hit_objects:
     input:
         lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
@@ -236,7 +236,7 @@ rule build_pars_hit_objects:
         ),
     output:
         get_pattern_pars(
-            setup,
+            config,
             "hit",
             name="objects",
             extension="dir",
@@ -257,7 +257,7 @@ rule build_pars_hit_objects:
 rule build_plts_hit:
     input:
         lambda wildcards: get_plt_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
@@ -265,7 +265,7 @@ rule build_plts_hit:
             chan_maps,
         ),
     output:
-        get_pattern_plts(setup, "hit"),
+        get_pattern_plts(config, "hit"),
     params:
         ro_input=lambda _, input: ro(input),
     group:
@@ -281,16 +281,16 @@ rule build_plts_hit:
 rule build_pars_hit:
     input:
         infiles=lambda wildcards: get_par_chanlist(
-            setup,
+            config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "hit",
             basedir,
             det_status,
             chan_maps,
         ),
-        plts=get_pattern_plts(setup, "hit"),
+        plts=get_pattern_plts(config, "hit"),
         objects=get_pattern_pars(
-            setup,
+            config,
             "hit",
             name="objects",
             extension="dir",
@@ -299,7 +299,7 @@ rule build_pars_hit:
     params:
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
-        get_pattern_pars(setup, "hit", check_in_cycle=check_in_cycle),
+        get_pattern_pars(config, "hit", check_in_cycle=check_in_cycle),
     group:
         "merge-hit"
     shell:
@@ -312,20 +312,20 @@ rule build_pars_hit:
 
 rule build_hit:
     input:
-        dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, "dsp", check_in_cycle=False),
         pars_file=lambda wildcards: ParsCatalog.get_par_file(
-            setup, wildcards.timestamp, "hit"
+            config, wildcards.timestamp, "hit"
         ),
     output:
-        tier_file=get_pattern_tier(setup, "hit", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "hit_db"),
+        tier_file=get_pattern_tier(config, "hit", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "hit_db"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="hit",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, "tier_hit", time),
+        get_pattern_log(config, "tier_hit", time),
     group:
         "tier-hit"
     resources:

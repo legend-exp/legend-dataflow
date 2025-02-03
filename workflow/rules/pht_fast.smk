@@ -137,27 +137,27 @@ for key, dataset in part.datasets.items():
 rule par_pht_fast:
     input:
         files=os.path.join(
-            filelist_path(setup),
+            filelist_path(config),
             "all-{experiment}-{period}-{run}-cal" + f"-{intier}.filelist",
         ),
-        pulser_files=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(setup, "pht", "energy_cal"),
+        pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        ecal_file=get_pattern_pars_tmp_channel(config, "pht", "energy_cal"),
         eres_file=get_pattern_pars_tmp_channel(
-            setup, "pht", "energy_cal_objects", extension="pkl"
+            config, "pht", "energy_cal_objects", extension="pkl"
         ),
-        inplots=get_pattern_plts_tmp_channel(setup, "pht", "energy_cal"),
+        inplots=get_pattern_plts_tmp_channel(config, "pht", "energy_cal"),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(setup, "pht")),
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         partcal_results=temp(
-            get_pattern_pars_tmp_channel(setup, "pht", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(config, "pht", "objects", extension="pkl")
         ),
-        plot_file=temp(get_pattern_plts_tmp_channel(setup, "pht")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht")),
     log:
-        get_pattern_log_channel(setup, "par_pht_fast", time),
+        get_pattern_log_channel(config, "par_pht_fast", time),
     group:
         "par-pht"
     resources:

@@ -13,16 +13,16 @@ from legenddataflow.patterns import (
 
 rule build_ann:
     input:
-        dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, "dsp", check_in_cycle=False),
         pars_file=lambda wildcards: get_input_par_file(wildcards, "ann", "cuts"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
     output:
-        tier_file=get_pattern_tier(setup, "ann", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "ann_db"),
+        tier_file=get_pattern_tier(config, "ann", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "ann_db"),
     log:
-        get_pattern_log(setup, "tier_ann", time),
+        get_pattern_log(config, "tier_ann", time),
     group:
         "tier-ann"
     resources:
@@ -30,7 +30,7 @@ rule build_ann:
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_dsp.py')} "
+        "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -45,16 +45,16 @@ rule build_ann:
 
 rule build_pan:
     input:
-        dsp_file=get_pattern_tier(setup, "psp", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, "psp", check_in_cycle=False),
         pars_file=lambda wildcards: get_input_par_file(wildcards, "ann", "cuts"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
     output:
-        tier_file=get_pattern_tier(setup, "pan", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(setup, "pan_db"),
+        tier_file=get_pattern_tier(config, "pan", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "pan_db"),
     log:
-        get_pattern_log(setup, "tier_pan", time),
+        get_pattern_log(config, "tier_pan", time),
     group:
         "tier-ann"
     resources:
@@ -62,7 +62,7 @@ rule build_pan:
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
         "{swenv} python3 -B "
-        f"{workflow.source_path('../scripts/build_dsp.py')} "
+        "{basedir}/../scripts/build_dsp.py "
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
