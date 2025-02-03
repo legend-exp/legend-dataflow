@@ -5,6 +5,7 @@ This module contains classes to convert between keys and files using the pattern
 import re
 import string
 from collections import namedtuple
+from itertools import product
 from pathlib import Path
 
 from .patterns import (
@@ -21,10 +22,16 @@ from .utils import unix_time
 
 def regex_from_filepattern(filepattern):
     f = []
+    wildcards = []
     last = 0
     for match in re.compile(r"\{(?P<name>[\w]+)\}").finditer(filepattern):
+        f.append(re.escape(filepattern[last : match.start()]))
         wildcard = match.group("name")
-        f.append(f"(?P={wildcard})")
+        if wildcard in wildcards:
+            f.append(f"(?P={wildcard})")
+        else:
+            wildcards.append(wildcard)
+            f.append(f"(?P<{wildcard}>.+)")
         last = match.end()
     f.append(re.escape(filepattern[last:]))
     f.append("$")
@@ -101,9 +108,21 @@ class FileKey(
         return cls(**d)
 
     def expand(self, file_pattern, **kwargs):
+        if isinstance(file_pattern, Path):
+            file_pattern = file_pattern.as_posix()
         wildcard_dict = dict(**self._asdict(), **kwargs)
+        wildcard_dict = {
+            wildcard: [wildcard_value]
+            if isinstance(wildcard_value, str)
+            else wildcard_value
+            for wildcard, wildcard_value in wildcard_dict.items()
+        }
         formatter = string.Formatter()
-        return [formatter.vformat(file_pattern, (), wildcard_dict)]
+        result = []
+        for combo in product(*wildcard_dict.values()):
+            substitution = dict(zip(list(wildcard_dict), combo))
+            result.append(formatter.vformat(file_pattern, (), substitution))
+        return result
 
     def get_path_from_filekey(self, pattern, **kwargs):
         if kwargs is None:

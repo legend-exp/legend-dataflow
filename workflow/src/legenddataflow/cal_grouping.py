@@ -85,7 +85,7 @@ class CalGrouping:
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
-            channel = "{channel}"
+            channel = "{detector}"
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
@@ -138,7 +138,7 @@ class CalGrouping:
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
-            channel = "{channel}"
+            channel = "{detector}"
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
@@ -184,14 +184,17 @@ class CalGrouping:
             datatype=datatype,
             name=name,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
-        if channel == "default":
-            fk.channel = "{channel}"
+        if len(par_files) > 0:
+            fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
+            if channel == "default":
+                fk.channel = "{detector}"
+            else:
+                fk.channel = channel
+            return fk.get_path_from_filekey(
+                get_pattern_log_channel(self.setup, name, processing_timestamp)
+            )[0]
         else:
-            fk.channel = channel
-        return fk.get_path_from_filekey(
-            get_pattern_log_channel(self.setup, name, processing_timestamp)
-        )[0]
+            return "/tmp/log.log"
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
@@ -205,8 +208,12 @@ class CalGrouping:
             datatype=datatype,
             name=None,
         )
-        fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
-        return fk.timestamp
+
+        if len(par_files) > 0:
+            fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
+            return fk.timestamp
+        else:
+            return "20200101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
         if channel == "default":
