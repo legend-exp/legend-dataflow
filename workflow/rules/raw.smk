@@ -43,7 +43,7 @@ rule build_raw_orca:
         f'{execenv_smk_py_script(config, "build-tier-raw-orca")}'
         "--log {log} "
         f"--configs {ro(configs)} "
-        f"--chan_maps {ro(chan_maps)} "
+        f"--chan-maps {ro(chan_maps)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "{params.ro_input} {output}"
@@ -72,7 +72,7 @@ rule build_raw_fcio:
         f'{execenv_smk_py_script(config, "build-tier-raw-fcio")}'
         "--log {log} "
         f"--configs {ro(configs)} "
-        f"--chan_maps {ro(chan_maps)} "
+        f"--chan-maps {ro(chan_maps)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "{params.ro_input} {output}"
@@ -107,10 +107,10 @@ rule build_raw_blind:
         f'{execenv_smk_py_script(config, "build-tier-raw-blind")}'
         "--log {log} "
         f"--configs {ro(configs)} "
-        f"--chan_maps {ro(chan_maps)} "
+        f"--chan-maps {ro(chan_maps)} "
         f"--metadata {ro(meta)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--blind_curve {params.ro_input[blind_file]} "
+        "--blind-curve {params.ro_input[blind_file]} "
         "--input {params.ro_input[tier_file]} "
         "--output {output}"

@@ -39,8 +39,8 @@ rule build_ann:
         "--timestamp {params.timestamp} "
         "--input {input.dsp_file} "
         "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {input.pars_file} "
+        "--db-file {output.db_file} "
+        "--pars-file {input.pars_file} "
 
 
 rule build_pan:
@@ -70,5 +70,5 @@ rule build_pan:
         "--timestamp {params.timestamp} "
         "--input {input.dsp_file} "
         "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {input.pars_file} "
+        "--db-file {output.db_file} "
+        "--pars-file {input.pars_file} "

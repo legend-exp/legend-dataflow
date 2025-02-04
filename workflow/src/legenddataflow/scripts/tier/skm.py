@@ -23,7 +23,7 @@ def get_all_out_fields(input_table, out_fields, current_field=""):
 
 def build_tier_skm() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--evt_file", help="evt file", required=True)
+    argparser.add_argument("--evt-file", help="evt file", required=True)
     argparser.add_argument("--configs", help="configs", required=True)
     argparser.add_argument("--datatype", help="datatype", required=True)
     argparser.add_argument("--timestamp", help="timestamp", required=True)

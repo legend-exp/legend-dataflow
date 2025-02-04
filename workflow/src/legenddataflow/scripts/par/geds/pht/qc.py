@@ -27,17 +27,17 @@ warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
-    argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
+    argparser.add_argument("--cal-files", help="cal_files", nargs="*", type=str)
+    argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
 
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", nargs="*", type=str, required=False
+        "--tcm-filelist", help="tcm_filelist", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
+        "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--overwrite_files", help="overwrite_files", nargs="*", type=str, required=False
+        "--overwrite-files", help="overwrite_files", nargs="*", type=str, required=False
     )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
@@ -49,10 +49,10 @@ if __name__ == "__main__":
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
     argparser.add_argument(
-        "--plot_path", help="plot_path", type=str, nargs="*", required=False
+        "--plot-path", help="plot_path", type=str, nargs="*", required=False
     )
     argparser.add_argument(
-        "--save_path",
+        "--save-path",
         help="save_path",
         type=str,
         nargs="*",

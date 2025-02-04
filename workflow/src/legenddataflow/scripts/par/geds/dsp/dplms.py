@@ -17,8 +17,8 @@ from ....log import build_log
 
 def par_geds_dsp_dplms() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--fft_raw_filelist", help="fft_raw_filelist", type=str)
-    argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
+    argparser.add_argument("--fft-raw-filelist", help="fft_raw_filelist", type=str)
+    argparser.add_argument("--peak-file", help="tcm_filelist", type=str, required=True)
     argparser.add_argument("--inplots", help="in_plot_path", type=str)
     argparser.add_argument("--database", help="database", type=str, required=True)
 
@@ -30,9 +30,9 @@ def par_geds_dsp_dplms() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--dsp_pars", help="dsp_pars", type=str, required=True)
-    argparser.add_argument("--lh5_path", help="lh5_path", type=str, required=True)
-    argparser.add_argument("--plot_path", help="plot_path", type=str)
+    argparser.add_argument("--dsp-pars", help="dsp_pars", type=str, required=True)
+    argparser.add_argument("--lh5-path", help="lh5_path", type=str, required=True)
+    argparser.add_argument("--plot-path", help="plot_path", type=str)
 
     args = argparser.parse_args()
 

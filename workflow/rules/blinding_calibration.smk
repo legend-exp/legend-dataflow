@@ -45,8 +45,8 @@ rule build_blinding_calibration:
         "--channel {params.channel} "
         "--configs {configs} "
         "--meta {params.meta} "
-        "--plot_file {output.plot_file} "
-        "--blind_curve {output.par_file} "
+        "--plot-file {output.plot_file} "
+        "--blind-curve {output.par_file} "
         "--files {input.files} "
 
 

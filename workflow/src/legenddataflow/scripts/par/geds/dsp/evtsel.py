@@ -82,17 +82,17 @@ def get_out_data(
 
 def par_geds_dsp_evtsel() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
+    argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+        "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
     argparser.add_argument(
-        "--pulser_file", help="pulser_file", type=str, required=False
+        "--pulser-file", help="pulser_file", type=str, required=False
     )
 
     argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
     argparser.add_argument(
-        "--raw_cal", help="raw_cal", type=str, nargs="*", required=True
+        "--raw-cal", help="raw_cal", type=str, nargs="*", required=True
     )
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -103,7 +103,7 @@ def par_geds_dsp_evtsel() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--peak_file", help="peak_file", type=str, required=True)
+    argparser.add_argument("--peak-file", help="peak_file", type=str, required=True)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)

@@ -42,10 +42,10 @@ rule build_pars_dsp_tau_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--plot_path {output.plots} "
-        "--output_file {output.decay_const} "
-        "--pulser_file {input.pulser} "
-        "--raw_files {input.files}"
+        "--plot-path {output.plots} "
+        "--output-file {output.decay_const} "
+        "--pulser-file {input.pulser} "
+        "--raw-files {input.files}"
 
 
 rule build_pars_evtsel_geds:
@@ -76,11 +76,11 @@ rule build_pars_evtsel_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--peak_file {output.peak_file} "
-        "--pulser_file {input.pulser_file} "
-        "--decay_const {input.database} "
-        "--raw_cal {input.raw_cal} "
-        "--raw_filelist {input.files}"
+        "--peak-file {output.peak_file} "
+        "--pulser-file {input.pulser_file} "
+        "--decay-const {input.database} "
+        "--raw-cal {input.raw_cal} "
+        "--raw-filelist {input.files}"
 
 
 # This rule builds the optimal energy filter parameters for the dsp using fft files
@@ -115,9 +115,9 @@ rule build_pars_dsp_nopt_geds:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--inplots {input.inplots} "
-        "--plot_path {output.plots} "
-        "--dsp_pars {output.dsp_pars_nopt} "
-        "--raw_filelist {input.files}"
+        "--plot-path {output.plots} "
+        "--dsp-pars {output.dsp_pars_nopt} "
+        "--raw-filelist {input.files}"
 
 
 # This rule builds the dplms energy filter for the dsp using fft and cal files
@@ -145,8 +145,8 @@ rule build_pars_dsp_dplms_geds:
         runtime=300,
     shell:
         f'{execenv_smk_py_script(config, "par-geds-dsp-dplms")}'
-        "--fft_raw_filelist {input.fft_files} "
-        "--peak_file {input.peak_file} "
+        "--fft-raw-filelist {input.fft_files} "
+        "--peak-file {input.peak_file} "
         "--database {input.database} "
         "--inplots {input.inplots} "
         "--configs {configs} "
@@ -154,9 +154,9 @@ rule build_pars_dsp_dplms_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--dsp_pars {output.dsp_pars} "
-        "--lh5_path {output.lh5_path} "
-        "--plot_path {output.plots} "
+        "--dsp-pars {output.dsp_pars} "
+        "--lh5-path {output.lh5_path} "
+        "--plot-path {output.plots} "
 
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
@@ -188,12 +188,12 @@ rule build_pars_dsp_eopt_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--peak_file {input.peak_file} "
+        "--peak-file {input.peak_file} "
         "--inplots {input.inplots} "
-        "--decay_const {input.decay_const} "
-        "--plot_path {output.plots} "
-        "--qbb_grid_path {output.qbb_grid} "
-        "--final_dsp_pars {output.dsp_pars}"
+        "--decay-const {input.decay_const} "
+        "--plot-path {output.plots} "
+        "--qbb-grid-path {output.qbb_grid} "
+        "--final-dsp-pars {output.dsp_pars}"
 
 
 rule build_svm_dsp_geds:
@@ -215,9 +215,9 @@ rule build_svm_dsp_geds:
     shell:
         f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
         "--log {log} "
-        "--train_data {input.train_data} "
-        "--train_hyperpars {input.hyperpars} "
-        "--output_file {output.dsp_pars}"
+        "--train-data {input.train_data} "
+        "--train-hyperpars {input.hyperpars} "
+        "--output-file {output.dsp_pars}"
 
 
 rule build_pars_dsp_svm_geds:
@@ -235,6 +235,6 @@ rule build_pars_dsp_svm_geds:
     shell:
         f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
         "--log {log} "
-        "--input_file {input.dsp_pars} "
-        "--output_file {output.dsp_pars} "
-        "--svm_file {input.svm_file}"
+        "--input-file {input.dsp_pars} "
+        "--output-file {output.dsp_pars} "
+        "--svm-file {input.svm_file}"

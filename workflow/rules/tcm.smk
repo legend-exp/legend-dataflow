@@ -63,6 +63,6 @@ rule build_pulser_ids:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--tcm_files {params.input} "
-        "--pulser_file {output.pulser} "
+        "--tcm-files {params.input} "
+        "--pulser-file {output.pulser} "
         "--metadata {meta} "

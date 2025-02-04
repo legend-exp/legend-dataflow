@@ -7,12 +7,12 @@ from legendmeta import LegendMetadata
 
 def create_chankeylist() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--det_status", help="det_status", type=str, required=True)
+    argparser.add_argument("--det-status", help="det_status", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channelmap", help="Channel Map", type=str, required=True)
 
-    argparser.add_argument("--output_file", help="output_file", type=str, required=True)
+    argparser.add_argument("--output-file", help="output_file", type=str, required=True)
     args = argparser.parse_args()
 
     det_status = TextDB(args.det_status, lazy=True)

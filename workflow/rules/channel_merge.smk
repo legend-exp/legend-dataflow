@@ -152,8 +152,8 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
             )
             if lh5_merge is True:
                 shell_string += (
-                    "--in_db {input.in_db} "
-                    "--out_db {output.out_db} "
+                    "--in-db {input.in_db} "
+                    "--out-db {output.out_db} "
                 )
             shell(shell_string)
 

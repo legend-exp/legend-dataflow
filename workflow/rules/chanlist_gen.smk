@@ -24,8 +24,8 @@ def get_chanlist(setup, keypart, workflow, config, det_status, chan_maps):
     )
 
     cmd = execenv_smk_py_script(config, "create-chankeylist")
-    cmd += f" --det_status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
-    cmd += f"--datatype cal --output_file {output_file}"
+    cmd += f" --det-status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
+    cmd += f"--datatype cal --output-file {output_file}"
     os.system(cmd)
 
     with open(output_file) as r:

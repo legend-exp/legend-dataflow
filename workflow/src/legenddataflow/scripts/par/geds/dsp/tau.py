@@ -24,16 +24,16 @@ def par_geds_dsp_tau() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_path", help="plot path", type=str, required=False)
-    argparser.add_argument("--output_file", help="output file", type=str, required=True)
+    argparser.add_argument("--plot-path", help="plot path", type=str, required=False)
+    argparser.add_argument("--output-file", help="output file", type=str, required=True)
 
     argparser.add_argument(
-        "--pulser_file", help="pulser file", type=str, required=False
+        "--pulser-file", help="pulser file", type=str, required=False
     )
 
-    argparser.add_argument("--raw_files", help="input files", nargs="*", type=str)
+    argparser.add_argument("--raw-files", help="input files", nargs="*", type=str)
     argparser.add_argument(
-        "--tcm_files", help="tcm_files", nargs="*", type=str, required=False
+        "--tcm-files", help="tcm_files", nargs="*", type=str, required=False
     )
     args = argparser.parse_args()
 

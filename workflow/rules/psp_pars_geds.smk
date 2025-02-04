@@ -103,10 +103,10 @@ for key, dataset in part.datasets.items():
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
-                "--in_plots {input.dsp_plots} "
-                "--out_plots {output.psp_plots} "
-                "--in_obj {input.dsp_objs} "
-                "--out_obj {output.psp_objs} "
+                "--in-plots {input.dsp_plots} "
+                "--out-plots {output.psp_plots} "
+                "--in-obj {input.dsp_objs} "
+                "--out-obj {output.psp_objs} "
                 "--input {input.dsp_pars} "
                 "--output {output.psp_pars} "
 
@@ -148,10 +148,10 @@ rule build_par_psp_fallback:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--in_plots {input.dsp_plots} "
-        "--out_plots {output.psp_plots} "
-        "--in_obj {input.dsp_objs} "
-        "--out_obj {output.psp_objs} "
+        "--in-plots {input.dsp_plots} "
+        "--out-plots {output.psp_plots} "
+        "--in-obj {input.dsp_objs} "
+        "--out-obj {output.psp_objs} "
         "--input {input.dsp_pars} "
         "--output {output.psp_pars} "
 
@@ -185,9 +185,9 @@ rule build_svm_psp:
     shell:
         f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
         "--log {log} "
-        "--train_data {input.train_data} "
-        "--train_hyperpars {input.hyperpars} "
-        "--output_file {output.dsp_pars}"
+        "--train-data {input.train_data} "
+        "--train-hyperpars {input.hyperpars} "
+        "--output-file {output.dsp_pars}"
 
 
 rule build_pars_psp_svm:
@@ -205,6 +205,6 @@ rule build_pars_psp_svm:
     shell:
         f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
         "--log {log} "
-        "--input_file {input.dsp_pars} "
-        "--output_file {output.dsp_pars} "
-        "--svm_file {input.svm_model}"
+        "--input-file {input.dsp_pars} "
+        "--output-file {output.dsp_pars} "
+        "--svm-file {input.svm_model}"

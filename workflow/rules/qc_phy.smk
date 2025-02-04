@@ -73,9 +73,9 @@ for key, dataset in part.datasets.items():
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
-                "--save_path {output.hit_pars} "
-                "--plot_path {output.plot_file} "
-                "--phy_files {input.phy_files}"
+                "--save-path {output.hit_pars} "
+                "--plot-path {output.plot_file} "
+                "--phy-files {input.phy_files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_qc_phy")
 
@@ -114,9 +114,9 @@ rule build_pht_qc_phy:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--save_path {output.hit_pars} "
-        "--plot_path {output.plot_file} "
-        "--phy_files {input.phy_files}"
+        "--save-path {output.hit_pars} "
+        "--plot-path {output.plot_file} "
+        "--phy-files {input.phy_files}"
 
 
 fallback_qc_rule = list(workflow.rules)[-1]

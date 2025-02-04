@@ -24,8 +24,8 @@ def par_geds_raw_blindcal() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--files", help="files", nargs="*", type=str)
 
-    argparser.add_argument("--blind_curve", help="blind_curve", type=str)
-    argparser.add_argument("--plot_file", help="out plot path", type=str)
+    argparser.add_argument("--blind-curve", help="blind_curve", type=str)
+    argparser.add_argument("--plot-file", help="out plot path", type=str)
 
     argparser.add_argument("--meta", help="meta", type=str)
     argparser.add_argument("--configs", help="configs", type=str)

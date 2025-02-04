@@ -27,17 +27,17 @@ warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 def par_geds_hit_qc() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--cal_files", help="cal_files", nargs="*", type=str)
-    argparser.add_argument("--fft_files", help="fft_files", nargs="*", type=str)
+    argparser.add_argument("--cal-files", help="cal_files", nargs="*", type=str)
+    argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
 
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+        "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
     argparser.add_argument(
-        "--pulser_file", help="pulser_file", type=str, required=False
+        "--pulser-file", help="pulser_file", type=str, required=False
     )
     argparser.add_argument(
-        "--overwrite_files",
+        "--overwrite-files",
         help="overwrite_files",
         type=str,
         required=False,
@@ -53,8 +53,8 @@ def par_geds_hit_qc() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     argparser.add_argument("--tier", help="tier", type=str, default="hit")
 
-    argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
-    argparser.add_argument("--save_path", help="save_path", type=str)
+    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
+    argparser.add_argument("--save-path", help="save_path", type=str)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)

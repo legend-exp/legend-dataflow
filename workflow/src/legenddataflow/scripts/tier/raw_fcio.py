@@ -17,7 +17,7 @@ def build_tier_raw_fcio() -> None:
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--configs", help="config file", type=str)
-    argparser.add_argument("--chan_maps", help="chan map", type=str)
+    argparser.add_argument("--chan-maps", help="chan map", type=str)
     argparser.add_argument("--log", help="log file", type=str)
     args = argparser.parse_args()
 

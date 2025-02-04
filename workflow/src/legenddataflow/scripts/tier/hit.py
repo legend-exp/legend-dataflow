@@ -13,7 +13,7 @@ from ...log import build_log
 def build_tier_hit() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--input", help="input file", type=str)
-    argparser.add_argument("--pars_file", help="hit pars file", nargs="*")
+    argparser.add_argument("--pars-file", help="hit pars file", nargs="*")
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata", type=str, required=True)
@@ -24,7 +24,7 @@ def build_tier_hit() -> None:
     argparser.add_argument("--tier", help="Tier", type=str, required=True)
 
     argparser.add_argument("--output", help="output file", type=str)
-    argparser.add_argument("--db_file", help="db file", type=str)
+    argparser.add_argument("--db-file", help="db file", type=str)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True)

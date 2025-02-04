@@ -224,19 +224,19 @@ def run_aoe_calibration(
 def par_geds_pht_aoe() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        "--input_files", help="files", type=str, nargs="*", required=True
+        "--input-files", help="files", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--pulser_files", help="pulser_file", nargs="*", type=str, required=False
+        "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", type=str, nargs="*", required=False
+        "--tcm-filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
     argparser.add_argument(
-        "--ecal_file", help="ecal_file", type=str, nargs="*", required=True
+        "--ecal-file", help="ecal_file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--eres_file", help="eres_file", type=str, nargs="*", required=True
+        "--eres-file", help="eres_file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
         "--inplots", help="eres_file", type=str, nargs="*", required=True
@@ -251,10 +251,10 @@ def par_geds_pht_aoe() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
     argparser.add_argument(
-        "--plot_file", help="plot_file", type=str, nargs="*", required=False
+        "--plot-file", help="plot_file", type=str, nargs="*", required=False
     )
-    argparser.add_argument("--hit_pars", help="hit_pars", nargs="*", type=str)
-    argparser.add_argument("--aoe_results", help="aoe_results", nargs="*", type=str)
+    argparser.add_argument("--hit-pars", help="hit_pars", nargs="*", type=str)
+    argparser.add_argument("--aoe-results", help="aoe_results", nargs="*", type=str)
 
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()

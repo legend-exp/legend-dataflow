@@ -61,5 +61,5 @@ rule build_dsp:
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {params.ro_input[pars_file]} "
+        "--db-file {output.db_file} "
+        "--pars-file {params.ro_input[pars_file]} "

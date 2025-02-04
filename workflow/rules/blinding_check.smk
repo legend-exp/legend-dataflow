@@ -47,8 +47,8 @@ rule build_blinding_check:
         "--configs {configs} "
         "--metadata {meta} "
         "--output {output.check_file} "
-        "--blind_curve {input.par_file} "
-        "--plot_file {output.plot_file} "
+        "--blind-curve {input.par_file} "
+        "--plot-file {output.plot_file} "
         "--files {input.files} "
 
 

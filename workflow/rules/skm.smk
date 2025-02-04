@@ -32,5 +32,5 @@ rule build_skm:
         "--timestamp {params.timestamp} "
         "--log {log} "
         "--datatype {params.datatype} "
-        "--evt_file {params.ro_input} "
+        "--evt-file {params.ro_input} "
         "--output {output} "

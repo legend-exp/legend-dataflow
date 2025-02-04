@@ -24,16 +24,16 @@ def par_geds_psp_average() -> None:
         "--output", help="output file", nargs="*", type=str, required=True
     )
     argparser.add_argument(
-        "--in_plots", help="input plot files", nargs="*", type=str, required=False
+        "--in-plots", help="input plot files", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--out_plots", help="output plot files", nargs="*", type=str, required=False
+        "--out-plots", help="output plot files", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--in_obj", help="input object files", nargs="*", type=str, required=False
+        "--in-obj", help="input object files", nargs="*", type=str, required=False
     )
     argparser.add_argument(
-        "--out_obj", help="output object files", nargs="*", type=str, required=False
+        "--out-obj", help="output object files", nargs="*", type=str, required=False
     )
 
     argparser.add_argument("--log", help="log_file", type=str)

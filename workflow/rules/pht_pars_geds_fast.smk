@@ -115,13 +115,13 @@ for key, dataset in part.datasets.items():
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
                 "--metadata {meta} "
-                "--fit_results {output.partcal_results} "
-                "--eres_file {input.eres_file} "
-                "--hit_pars {output.hit_pars} "
-                "--plot_file {output.plot_file} "
-                "--ecal_file {input.ecal_file} "
-                "--pulser_files {input.pulser_files} "
-                "--input_files {input.files}"
+                "--fit-results {output.partcal_results} "
+                "--eres-file {input.eres_file} "
+                "--hit-pars {output.hit_pars} "
+                "--plot-file {output.plot_file} "
+                "--ecal-file {input.ecal_file} "
+                "--pulser-files {input.pulser_files} "
+                "--input-files {input.files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-par_pht_fast")
         slow_rule = workflow._rules[f"{key}-{partition}-build_pht_lq_calibration"]
@@ -173,13 +173,13 @@ rule par_pht_fast:
         "--channel {params.channel} "
         "--metadata {meta} "
         "--inplots {input.inplots} "
-        "--fit_results {output.partcal_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} "
-        "--pulser_files {input.pulser_files} "
-        "--input_files {input.files}"
+        "--fit-results {output.partcal_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--ecal-file {input.ecal_file} "
+        "--pulser-files {input.pulser_files} "
+        "--input-files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]

@@ -8,10 +8,10 @@ def par_geds_dsp_svm() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--log", help="log file", type=str)
     argparser.add_argument(
-        "--output_file", help="output par file", type=str, required=True
+        "--output-file", help="output par file", type=str, required=True
     )
     argparser.add_argument(
-        "--input_file", help="input par file", type=str, required=True
+        "--input-file", help="input par file", type=str, required=True
     )
     argparser.add_argument("--svm_file", help="svm file", required=True)
     args = argparser.parse_args()

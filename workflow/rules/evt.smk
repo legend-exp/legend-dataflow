@@ -51,15 +51,15 @@ rule build_evt:
             "--tier {params.tier} "
             "--datatype {params.datatype} "
             "--timestamp {params.timestamp} "
-            "--xtc_file {params.ro_input[xtalk_matrix]} "
-            "--par_files {params.ro_input[par_files]} "
-            "--hit_file {params.ro_input[hit_file]} "
-            "--tcm_file {params.ro_input[tcm_file]} "
-            "--dsp_file {params.ro_input[dsp_file]} "
+            "--xtc-file {params.ro_input[xtalk_matrix]} "
+            "--par-files {params.ro_input[par_files]} "
+            "--hit-file {params.ro_input[hit_file]} "
+            "--tcm-file {params.ro_input[tcm_file]} "
+            "--dsp-file {params.ro_input[dsp_file]} "
             "--output {output} "
         )
         if input.ann_file is not None:
-            shell_string += "--ann_file {params.ro_input[ann_file]} "
+            shell_string += "--ann-file {params.ro_input[ann_file]} "
 
         shell(shell_string)
 
@@ -103,15 +103,15 @@ rule build_pet:
             "--tier {params.tier} "
             "--datatype {params.datatype} "
             "--timestamp {params.timestamp} "
-            "--xtc_file {params.ro_input[xtalk_matrix]} "
-            "--par_files {params.ro_input[par_files]} "
-            "--hit_file {params.ro_input[hit_file]} "
-            "--tcm_file {params.ro_input[tcm_file]} "
-            "--dsp_file {params.ro_input[dsp_file]} "
+            "--xtc-file {params.ro_input[xtalk_matrix]} "
+            "--par-files {params.ro_input[par_files]} "
+            "--hit-file {params.ro_input[hit_file]} "
+            "--tcm-file {params.ro_input[tcm_file]} "
+            "--dsp-file {params.ro_input[dsp_file]} "
             "--output {output} "
         )
         if input.ann_file is not None:
-            shell_string += "--ann_file {params.ro_input[ann_file]} "
+            shell_string += "--ann-file {params.ro_input[ann_file]} "
 
         shell(shell_string)
 
