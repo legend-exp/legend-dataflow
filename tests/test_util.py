@@ -1,6 +1,6 @@
-import json
 from pathlib import Path
 
+import yaml
 from legenddataflow import (
     FileKey,
     ParsKeyResolve,
@@ -12,7 +12,7 @@ from legenddataflow import (
 testprod = Path(__file__).parent / "dummy_cycle"
 
 with (testprod / "config.yaml").open() as r:
-    setup = json.load(r)
+    setup = yaml.safe_load(r)
 subst_vars(setup, var_values={"_": str(testprod)})
 setup = setup["setups"]["test"]
 
