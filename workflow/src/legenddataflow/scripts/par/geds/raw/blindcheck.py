@@ -48,20 +48,19 @@ def par_geds_raw_blindcheck() -> None:
     log = build_log(config_dict, args.log)
 
     # get the usability status for this channel
-    chmap = (
-        LegendMetadata(args.metadata, lazy=True)
-        .channelmap(args.timestamp)
-        .map("daq.rawid")
+    chmap = LegendMetadata(args.metadata, lazy=True).channelmap(
+        args.timestamp, system=args.datatype
     )
-    det_status = chmap[int(args.channel[2:])]["analysis"]["is_blinded"]
+    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+    det_status = chmap[args.channel]["analysis"]["is_blinded"]
 
     # read in calibration curve for this channel
-    blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
+    blind_curve = Props.read_from(args.blind_curve)[channel]["pars"]["operations"]
 
     # load in the data
-    daqenergy = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[
-        0
-    ].view_as("np")
+    daqenergy = lh5.read(f"{channel}/raw/daqenergy", sorted(args.files))[0].view_as(
+        "np"
+    )
 
     # calibrate daq energy using pre existing curve
     daqenergy_cal = ne.evaluate(

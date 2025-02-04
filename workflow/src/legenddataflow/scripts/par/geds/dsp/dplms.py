@@ -48,9 +48,7 @@ def par_geds_dsp_dplms() -> None:
     channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
     channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
-    configs = LegendMetadata(args.configs, lazy=True).on(
-        args.timestamp, system=args.datatype
-    )
+    configs = TextDB(args.configs).on(args.timestamp, system=args.datatype)
     dsp_config = config_dict["inputs"]["proc_chain"][args.channel]
 
     dplms_json = config_dict["inputs"]["dplms_pars"][args.channel]

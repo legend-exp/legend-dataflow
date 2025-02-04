@@ -13,6 +13,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from dbetto.catalog import Props
+from legendmeta import LegendMetadata
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
 
@@ -44,25 +45,18 @@ def par_geds_raw_blindcal() -> None:
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     log = logging.getLogger(__name__)
 
-    # load in channel map
-    # meta = LegendMetadata(args.meta, lazy=True)
-
-    # chmap = meta.channelmap(args.timestamp)
-    # if chmap.map("daq.rawid")[int(args.channel[2:])]["analysis"]["is_blinded"] is True:
+    meta = LegendMetadata(path=args.meta)
+    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
+    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
 
     # peaks to search for
     peaks_keV = np.array(
         [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
     )
 
-    E_uncal = lh5.read(f"{args.channel}/raw/daqenergy", sorted(args.files))[0].view_as(
-        "np"
-    )
+    E_uncal = lh5.read(f"{channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
     E_uncal = E_uncal[E_uncal > 200]
     guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
-    # Euc_min = peaks_keV[0] / guess_keV * 0.6
-    # Euc_max = peaks_keV[-1] / guess_keV * 1.1
-    # dEuc = 1 / guess_keV
 
     # daqenergy is an int so use integer binning (dx used to be bugged as output so switched to nbins)
 
