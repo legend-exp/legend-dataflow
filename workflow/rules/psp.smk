@@ -22,17 +22,11 @@ psp_par_catalog = ParsKeyResolve.get_par_catalog(
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
 
-psp_par_cat_file = Path(pars_path(config)) / "psp" / "validity.yaml"
-if psp_par_cat_file.is_file():
-    psp_par_cat_file.unlink()
-Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
-
 
 include: "channel_merge.smk"
 
 
-build_merge_rules("psp", lh5_merge=True)
+build_merge_rules("psp", lh5_merge=True, lh5_tier="dsp")
 
 
 rule build_psp:

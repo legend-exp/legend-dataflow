@@ -10,7 +10,9 @@ from legenddataflow.utils import set_last_rule_name
 import inspect
 from legenddataflow.execenv import execenv_smk_py_script
 
-def build_merge_rules(tier,lh5_merge=False):
+def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
+    if lh5_tier is None:
+        lh5_tier = tier
     rule:
         input:
             lambda wildcards: get_plt_chanlist(
@@ -108,7 +110,7 @@ def build_merge_rules(tier,lh5_merge=False):
             in_files=lambda wildcards: get_par_chanlist(
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-                tier,
+                lh5_tier,
                 basedir,
                 det_status,
                 chan_maps,
@@ -116,13 +118,13 @@ def build_merge_rules(tier,lh5_merge=False):
             ),
             in_db=get_pattern_pars_tmp(
                 config,
-                "dsp",
+                tier,
                 datatype="cal",
             ) if lh5_merge is True else [],
-            plts=get_pattern_plts(config, "dsp"),
+            plts=get_pattern_plts(config, tier),
             objects=get_pattern_pars(
                 config,
-                "dsp",
+                tier,
                 name="objects",
                 extension="dir",
                 check_in_cycle=check_in_cycle,

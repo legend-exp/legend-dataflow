@@ -15,12 +15,6 @@ from legenddataflow.patterns import (
 )
 from legenddataflow.execenv import execenv_smk_py_script
 
-dsp_par_catalog = ParsKeyResolve.get_par_catalog(
-    ["-*-*-*-cal"],
-    get_pattern_tier(config, "raw", check_in_cycle=False),
-    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-)
-
 
 rule build_pars_dsp_tau_geds:
     input:

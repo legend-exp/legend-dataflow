@@ -4,8 +4,8 @@ Snakemake rules for processing psp (partition dsp) tier data.
 - extraction of psd calibration parameters and partition level energy fitting for each channel over whole partition from cal data
 """
 
-from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.utils import set_last_rule_name
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -21,6 +21,7 @@ psp_par_catalog = ParsKeyResolve.get_par_catalog(
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
+
 
 psp_rules = {}
 for key, dataset in part.datasets.items():
@@ -119,7 +120,7 @@ for key, dataset in part.datasets.items():
 
 # Merged energy and a/e supercalibrations to reduce number of rules as they have same inputs/outputs
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
-rule build_par_psp:
+rule build_par_psp_fallback:
     input:
         dsp_pars=get_pattern_pars_tmp_channel(config, "dsp", "eopt"),
         dsp_objs=get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl"),

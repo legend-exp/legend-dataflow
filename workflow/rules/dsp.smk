@@ -7,7 +7,6 @@ Snakemake rules for processing dsp tier.
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_tier,
@@ -22,12 +21,6 @@ dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
-
-dsp_par_cat_file = Path(pars_path(config)) / "dsp" / "validity.yaml"
-if dsp_par_cat_file.is_file():
-    dsp_par_cat_file.unlink()
-Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
 
 
 include: "channel_merge.smk"
