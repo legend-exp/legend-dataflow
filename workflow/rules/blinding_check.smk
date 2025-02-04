@@ -39,7 +39,7 @@ rule build_blinding_check:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_raw_blindcheck")}'
+        f'{execenv_smk_py_script(config, "par-geds-raw-blindcheck")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -67,7 +67,7 @@ rule build_plts_raw:
     group:
         "merge-raw"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -91,4 +91,4 @@ rule build_pars_raw:
     group:
         "merge-raw"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'

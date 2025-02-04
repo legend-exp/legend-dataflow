@@ -46,7 +46,7 @@ rule build_qc:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_qc")}'
+        f'{execenv_smk_py_script(config, "par-geds-hit-qc")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -94,7 +94,7 @@ rule build_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
+        f'{execenv_smk_py_script(config, "par-geds-hit-ecal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -142,7 +142,7 @@ rule build_aoe_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_aoe")}'
+        f'{execenv_smk_py_script(config, "par-geds-hit-aoe")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -188,7 +188,7 @@ rule build_lq_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_lq")}'
+        f'{execenv_smk_py_script(config, "par-geds-hit-lq")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

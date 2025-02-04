@@ -36,7 +36,7 @@ rule build_pars_dsp_tau_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_tau")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-tau")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -70,7 +70,7 @@ rule build_pars_evtsel_geds:
         runtime=300,
         mem_swap=70,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_evtsel")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-evtsel")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -107,7 +107,7 @@ rule build_pars_dsp_nopt_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_nopt")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-nopt")}'
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
@@ -144,7 +144,7 @@ rule build_pars_dsp_dplms_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_dplms")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-dplms")}'
         "--fft_raw_filelist {input.fft_files} "
         "--peak_file {input.peak_file} "
         "--database {input.database} "
@@ -182,7 +182,7 @@ rule build_pars_dsp_eopt_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_eopt")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-eopt")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -213,7 +213,7 @@ rule build_svm_dsp_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -233,7 +233,7 @@ rule build_pars_dsp_svm_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "

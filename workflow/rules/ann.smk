@@ -30,7 +30,7 @@ rule build_ann:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
+        f'{execenv_smk_py_script(config, "build-tier-dsp")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -61,7 +61,7 @@ rule build_pan:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
+        f'{execenv_smk_py_script(config, "build-tier-dsp")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

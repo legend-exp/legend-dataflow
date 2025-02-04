@@ -97,7 +97,7 @@ for key, dataset in part.datasets.items():
             resources:
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
+                f'{execenv_smk_py_script(config, "par-geds-psp-average")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -142,7 +142,7 @@ rule build_par_psp_fallback:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
+        f'{execenv_smk_py_script(config, "par-geds-psp-average")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -183,7 +183,7 @@ rule build_svm_psp:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -203,7 +203,7 @@ rule build_pars_psp_svm:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
+        f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "

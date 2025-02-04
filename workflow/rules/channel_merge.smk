@@ -31,7 +31,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
         group:
             f"merge-{tier}"
         shell:
-            f'{execenv_smk_py_script(config, "merge_channels")}'
+            f'{execenv_smk_py_script(config, "merge-channels")}'
             "--input {input} "
             "--output {output} "
             "--channelmap {meta} "
@@ -64,7 +64,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
         group:
             f"merge-{tier}"
         shell:
-            f'{execenv_smk_py_script(config, "merge_channels")}'
+            f'{execenv_smk_py_script(config, "merge-channels")}'
             "--input {input} "
             "--output {output} "
             "--timestamp {params.timestamp} "
@@ -97,7 +97,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
             group:
                 f"merge-{tier}"
             shell:
-                f'{execenv_smk_py_script(config, "merge_channels")}'
+                f'{execenv_smk_py_script(config, "merge-channels")}'
                 "--input {input} "
                 "--output {output} "
                 "--timestamp {params.timestamp} "
@@ -144,7 +144,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
             f"merge-{tier}"
         run:
             shell_string = (
-                f'{execenv_smk_py_script(config, "merge_channels")}'
+                f'{execenv_smk_py_script(config, "merge-channels")}'
                 "--output {output.out_file} "
                 "--input {input.in_files} "
                 "--timestamp {params.timestamp} "

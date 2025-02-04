@@ -106,7 +106,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 12,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-fast")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -164,7 +164,7 @@ rule par_pht_fast:
         mem_swap=50,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-fast")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

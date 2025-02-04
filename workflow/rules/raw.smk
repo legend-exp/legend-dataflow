@@ -40,7 +40,7 @@ rule build_raw_orca:
         mem_swap=110,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_raw_orca")}'
+        f'{execenv_smk_py_script(config, "build-tier-raw-orca")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "
@@ -69,7 +69,7 @@ rule build_raw_fcio:
         mem_swap=110,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_raw_fcio")}'
+        f'{execenv_smk_py_script(config, "build-tier-raw-fcio")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "
@@ -104,7 +104,7 @@ rule build_raw_blind:
         mem_swap=110,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_raw_blind")}'
+        f'{execenv_smk_py_script(config, "build-tier-raw-blind")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "

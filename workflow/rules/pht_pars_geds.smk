@@ -101,7 +101,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-qc")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -152,7 +152,7 @@ rule build_pht_qc:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-qc")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -213,7 +213,7 @@ rule build_per_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
+        f'{execenv_smk_py_script(config, "par-geds-hit-ecal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -325,7 +325,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-ecal-part")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -385,7 +385,7 @@ rule build_pht_energy_super_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-ecal-part")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -506,7 +506,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-aoe")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -566,7 +566,7 @@ rule build_pht_aoe_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-aoe")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -685,7 +685,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-lq")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -740,7 +740,7 @@ rule build_pht_lq_calibration:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-lq")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

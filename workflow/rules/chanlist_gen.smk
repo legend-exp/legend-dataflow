@@ -23,7 +23,7 @@ def get_chanlist(setup, keypart, workflow, config, det_status, chan_maps):
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 
-    cmd = execenv_smk_py_script(config, "create_chankeylist")
+    cmd = execenv_smk_py_script(config, "create-chankeylist")
     cmd += f" --det_status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
     cmd += f"--datatype cal --output_file {output_file}"
     os.system(cmd)

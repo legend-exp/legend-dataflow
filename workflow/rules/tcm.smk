@@ -29,7 +29,7 @@ rule build_tier_tcm:
         runtime=300,
         mem_swap=20,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_tcm")}'
+        f'{execenv_smk_py_script(config, "build-tier-tcm")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
@@ -57,7 +57,7 @@ rule build_pulser_ids:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_tcm_pulser")}'
+        f'{execenv_smk_py_script(config, "par-geds-tcm-pulser")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         "--datatype {params.datatype} "

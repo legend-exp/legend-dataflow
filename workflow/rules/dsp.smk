@@ -52,7 +52,7 @@ rule build_dsp:
         runtime=300,
         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
+        f'{execenv_smk_py_script(config, "build-tier-dsp")}'
         "--log {log} "
         "--tier dsp "
         f"--configs {ro(configs)} "

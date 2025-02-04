@@ -67,7 +67,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_qc_phy")}'
+                f'{execenv_smk_py_script(config, "par-geds-pht-qc-phy")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -108,7 +108,7 @@ rule build_pht_qc_phy:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_qc_phy")}'
+        f'{execenv_smk_py_script(config, "par-geds-pht-qc-phy")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -146,7 +146,7 @@ rule build_plts_pht_phy:
     group:
         "merge-hit"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -168,6 +168,6 @@ rule build_pars_pht_phy:
     group:
         "merge-hit"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'
         "--input {input.infiles} "
         "--output {output} "

@@ -53,7 +53,7 @@ rule build_pht:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_hit")}'
+        f'{execenv_smk_py_script(config, "build-tier-hit")}'
         f"--configs {ro(configs)} "
         "--metadata {meta} "
         "--log {log} "

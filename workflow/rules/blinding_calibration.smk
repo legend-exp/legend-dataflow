@@ -38,7 +38,7 @@ rule build_blinding_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_raw_blindcal")}'
+        f'{execenv_smk_py_script(config, "par-geds-raw-blindcal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -66,7 +66,7 @@ rule build_plts_blinding:
     group:
         "merge-blindcal"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -88,6 +88,6 @@ rule build_pars_blinding:
     group:
         "merge-blindcal"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
+        f'{execenv_smk_py_script(config, "merge-channels")}'
         "--input {input.infiles} "
         "--output {output} "

@@ -44,7 +44,7 @@ rule build_evt:
         mem_swap=50,
     run:
         shell_string = (
-            f'{execenv_smk_py_script(config, "build_tier_evt")}'
+            f'{execenv_smk_py_script(config, "build-tier-evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
@@ -96,7 +96,7 @@ rule build_pet:
         mem_swap=50,
     run:
         shell_string = (
-            f'{execenv_smk_py_script(config, "build_tier_evt")}'
+            f'{execenv_smk_py_script(config, "build-tier-evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "

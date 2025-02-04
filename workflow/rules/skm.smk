@@ -27,7 +27,7 @@ rule build_skm:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_skm")}'
+        f'{execenv_smk_py_script(config, "build-tier-skm")}'
         f"--configs {ro(configs)} "
         "--timestamp {params.timestamp} "
         "--log {log} "
