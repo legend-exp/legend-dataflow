@@ -8,6 +8,7 @@ from scripts.util.patterns import (
 )
 from scripts.util.utils import set_last_rule_name
 import inspect
+from legenddataflow.execenv import execenv_smk_py_script
 
 def build_merge_rules(tier,lh5_merge=False):
     rule:
@@ -28,8 +29,7 @@ def build_merge_rules(tier,lh5_merge=False):
         group:
             f"merge-{tier}"
         shell:
-            "{swenv} python3 -B "
-            "{basedir}/../scripts/merge_channels.py "
+            f'{execenv_smk_py_script(config, "merge_channels")}'
             "--input {input} "
             "--output {output} "
             "--channelmap {meta} "
@@ -59,8 +59,7 @@ def build_merge_rules(tier,lh5_merge=False):
         group:
             f"merge-{tier}"
         shell:
-            "{swenv} python3 -B "
-            "{basedir}/../scripts/merge_channels.py "
+            f'{execenv_smk_py_script(config, "merge_channels")}'
             "--input {input} "
             "--output {output} "
             "--timestamp {params.timestamp} "
@@ -93,8 +92,7 @@ def build_merge_rules(tier,lh5_merge=False):
             group:
                 f"merge-{tier}"
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/merge_channels.py "
+                execenv_smk_py_script(config, "merge_channels")
                 "--input {input} "
                 "--output {output} "
                 "--timestamp {params.timestamp} "
@@ -140,17 +138,18 @@ def build_merge_rules(tier,lh5_merge=False):
         group:
             f"merge-{tier}"
         run:
-            shell_cmd  = "{swenv} python3 -B "
-            shell_cmd += "{basedir}/../scripts/merge_channels.py "
-            shell_cmd += "--output {output.out_file} "
-            shell_cmd += "--input {input.in_files} "
-            shell_cmd += "--timestamp {params.timestamp} "
-            shell_cmd += "--channelmap {meta} "
-            if lh5_merge is True:
-                shell_cmd +="--in_db {input.in_db} "
-                shell_cmd +="--out_db {output.out_db} "
-            shell(
-                shell_cmd
+            shell_string = (
+                execenv_smk_py_script(config, "merge_channels")
+                "--output {output.out_file} "
+                "--input {input.in_files} "
+                "--timestamp {params.timestamp} "
+                "--channelmap {meta} "
             )
+            if lh5_merge is True:
+                shell_string += (
+                    "--in_db {input.in_db} "
+                    "--out_db {output.out_db} "
+                )
+            shell(shell_string)
 
     set_last_rule_name(workflow, f"build_pars_{tier}")

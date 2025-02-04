@@ -13,6 +13,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -41,8 +42,7 @@ rule build_pars_dsp_tau_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_tau_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_tau")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -76,8 +76,7 @@ rule build_pars_evtsel_geds:
         runtime=300,
         mem_swap=70,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_evtsel_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_evtsel")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -114,8 +113,7 @@ rule build_pars_dsp_nopt_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_nopt_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_nopt")}'
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
@@ -154,8 +152,7 @@ rule build_pars_dsp_dplms_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_dplms_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_dplms")}'
         "--fft_raw_filelist {input.fft_files} "
         "--peak_file {input.peak_file} "
         "--database {input.database} "
@@ -193,8 +190,7 @@ rule build_pars_dsp_eopt_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_eopt_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_eopt")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -225,8 +221,7 @@ rule build_svm_dsp_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_build_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -246,8 +241,7 @@ rule build_pars_dsp_svm_geds:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "

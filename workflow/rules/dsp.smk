@@ -15,6 +15,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -47,8 +48,7 @@ rule build_plts_dsp:
     group:
         "merge-dsp"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
         "--channelmap {meta} "
@@ -80,8 +80,7 @@ rule build_pars_dsp_objects:
     group:
         "merge-dsp"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
         "--timestamp {params.timestamp} "
@@ -112,8 +111,7 @@ rule build_pars_dsp_db:
     group:
         "merge-dsp"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
         "--timestamp {params.timestamp} "
@@ -159,8 +157,7 @@ rule build_pars_dsp:
     group:
         "merge-dsp"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--output {output.out_file} "
         "--in_db {input.in_db} "
         "--out_db {output.out_db} "
@@ -192,8 +189,7 @@ rule build_dsp:
         runtime=300,
         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_dsp.py "
+        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
         "--log {log} "
         "--tier dsp "
         f"--configs {ro(configs)} "

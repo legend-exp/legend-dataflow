@@ -9,6 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 rule build_evt:
@@ -43,8 +44,7 @@ rule build_evt:
         mem_swap=50,
     run:
         shell_string = (
-            f"{swenv} python3 -B "
-            f"{basedir}/../scripts/build_evt.py "
+            f'{execenv_smk_py_script(config, "build_tier_evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
@@ -96,8 +96,7 @@ rule build_pet:
         mem_swap=50,
     run:
         shell_string = (
-            f"{swenv} python3 -B "
-            f"{basedir}/../scripts/build_evt.py "
+            f'{execenv_smk_py_script(config, "build_tier_evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
@@ -139,14 +138,14 @@ for evt_tier in ("evt", "pet"):
         params:
             timestamp="all",
             datatype="{datatype}",
-            lh5concat_exe=config["paths"]["install"] + "/bin/lh5concat",
             ro_input=lambda _, input: utils.as_ro(config, input),
         log:
             get_pattern_log_concat(config, f"tier_{evt_tier}_concat", time),
         group:
             "tier-evt"
         shell:
-            "{swenv} {params.lh5concat_exe} --verbose --overwrite "
+            f'{execenv_smk_py_script(config, "lh5concat")}'
+            "--verbose --overwrite "
             "--output {output} "
             "-- {params.ro_input} &> {log}"
 

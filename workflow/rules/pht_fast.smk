@@ -11,6 +11,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 pht_fast_rules = {}
@@ -105,8 +106,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 12,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                f"{basedir}/../scripts/pars_pht_fast.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -164,8 +164,7 @@ rule par_pht_fast:
         mem_swap=50,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_fast.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

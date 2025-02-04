@@ -20,6 +20,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -126,8 +127,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/pars_pht_qc.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -179,8 +179,7 @@ rule build_pht_qc:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_qc.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -241,8 +240,7 @@ rule build_per_energy_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_hit_ecal.py "
+        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -354,8 +352,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/pars_pht_partcal.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -415,8 +412,7 @@ rule build_pht_energy_super_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_partcal.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -537,8 +533,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/pars_pht_aoecal.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -598,8 +593,7 @@ rule build_pht_aoe_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_aoecal.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -718,8 +712,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/pars_pht_lqcal.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
@@ -774,8 +767,7 @@ rule build_pht_lq_calibration:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_lqcal.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -826,8 +818,7 @@ rule build_pars_pht_objects:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -847,8 +838,7 @@ rule build_plts_pht:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -876,8 +866,7 @@ rule build_pars_pht:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input.infiles} "
         "--output {output} "
 
@@ -903,8 +892,7 @@ rule build_pht:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_hit.py "
+        f'{execenv_smk_py_script(config, "build_tier_hit")}'
         f"--configs {ro(configs)} "
         "--metadata {meta} "
         "--log {log} "

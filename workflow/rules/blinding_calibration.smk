@@ -12,6 +12,7 @@ from legenddataflow.patterns import (
     get_pattern_log_channel,
 )
 from pathlib import Path
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 rule build_blinding_calibration:
@@ -37,8 +38,7 @@ rule build_blinding_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/blinding_calibration.py "
+        f'{execenv_smk_py_script(config, "par_geds_raw_blindcal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -66,8 +66,7 @@ rule build_plts_blinding:
     group:
         "merge-blindcal"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -89,7 +88,6 @@ rule build_pars_blinding:
     group:
         "merge-blindcal"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input.infiles} "
         "--output {output} "

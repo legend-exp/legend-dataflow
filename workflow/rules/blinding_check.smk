@@ -12,6 +12,7 @@ from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 from pathlib import Path
 
 
@@ -38,8 +39,7 @@ rule build_blinding_check:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/check_blinding.py "
+        f'{execenv_smk_py_script(config, "par_geds_raw_blindcheck")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -67,8 +67,7 @@ rule build_plts_raw:
     group:
         "merge-raw"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -92,5 +91,4 @@ rule build_pars_raw:
     group:
         "merge-raw"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'

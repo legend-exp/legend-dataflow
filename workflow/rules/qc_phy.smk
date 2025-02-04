@@ -11,6 +11,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 intier = "psp"
 
@@ -66,8 +67,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/pars_pht_qc_phy.py "
+                f'{execenv_smk_py_script(config, "par_geds_pht_qc_phy")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -108,8 +108,7 @@ rule build_pht_qc_phy:
         mem_swap=60,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_pht_qc_phy.py "
+        f'{execenv_smk_py_script(config, "par_geds_pht_qc_phy")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -147,8 +146,7 @@ rule build_plts_pht_phy:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input} "
         "--output {output} "
 
@@ -170,7 +168,6 @@ rule build_pars_pht_phy:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {input.infiles} "
         "--output {output} "

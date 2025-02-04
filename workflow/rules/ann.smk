@@ -9,6 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 rule build_ann:
@@ -29,8 +30,7 @@ rule build_ann:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_dsp.py "
+        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -61,8 +61,7 @@ rule build_pan:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_dsp.py "
+        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "

@@ -20,6 +20,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -59,8 +60,7 @@ rule build_qc:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_hit_qc.py "
+        f'{execenv_smk_py_script(config, "par_geds_hit_qc")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -108,8 +108,7 @@ rule build_energy_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_hit_ecal.py "
+        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -157,8 +156,7 @@ rule build_aoe_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_hit_aoe.py "
+        f'{execenv_smk_py_script(config, "par_geds_hit_aoe")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -204,8 +202,7 @@ rule build_lq_calibration:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_hit_lq.py "
+        f'{execenv_smk_py_script(config, "par_geds_hit_lq")}'
         "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
@@ -247,8 +244,7 @@ rule build_pars_hit_objects:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {params.ro_input} "
         "--output {output} "
         "--channelmap {meta} "
@@ -271,8 +267,7 @@ rule build_plts_hit:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {params.ro_input} "
         "--output {output} "
         "--channelmap {meta} "
@@ -303,8 +298,7 @@ rule build_pars_hit:
     group:
         "merge-hit"
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/merge_channels.py "
+        f'{execenv_smk_py_script(config, "merge_channels")}'
         "--input {params.ro_input[infiles]} "
         "--output {output} "
         "--channelmap {meta} "
@@ -331,8 +325,7 @@ rule build_hit:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_hit.py "
+        f'{execenv_smk_py_script(config, "build_tier_hit")}'
         f"--configs {ro(configs)} "
         "--metadata {meta} "
         "--log {log} "

@@ -7,6 +7,7 @@ from legenddataflow.patterns import (
 )
 from legenddataflow.utils import set_last_rule_name
 from legenddataflow.create_pars_keylist import ParsKeyResolve
+from legenddataflow.execenv import execenv_smk_py_script
 
 raw_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -39,8 +40,7 @@ rule build_raw_orca:
         mem_swap=110,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}" + f"/../scripts/build_raw_orca.py "
+        f'{execenv_smk_py_script(config, "build_tier_raw_orca")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "
@@ -69,8 +69,7 @@ rule build_raw_fcio:
         mem_swap=110,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}" + f"/../scripts/build_raw_fcio.py "
+        f'{execenv_smk_py_script(config, "build_tier_raw_fcio")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "
@@ -105,8 +104,7 @@ rule build_raw_blind:
         mem_swap=110,
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/build_raw_blind.py "
+        f'{execenv_smk_py_script(config, "build_tier_raw_blind")}'
         "--log {log} "
         f"--configs {ro(configs)} "
         f"--chan_maps {ro(chan_maps)} "

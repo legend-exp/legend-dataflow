@@ -14,6 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_tier,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -95,8 +96,7 @@ for key, dataset in part.datasets.items():
             resources:
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/par_psp_geds.py "
+                f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -141,8 +141,7 @@ rule build_par_psp:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/par_psp.py "
+        f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -183,8 +182,7 @@ rule build_svm_psp:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_build_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -204,8 +202,7 @@ rule build_pars_psp_svm:
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "
