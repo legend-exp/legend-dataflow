@@ -85,7 +85,7 @@ class CalGrouping:
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
-            channel = "{detector}"
+            channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
@@ -138,7 +138,7 @@ class CalGrouping:
                 ):
                     all_par_files.append(par_file)
         if channel == "default":
-            channel = "{detector}"
+            channel = "{channel}"
         selected_par_files = []
         for par_file in all_par_files:
             fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
@@ -187,7 +187,7 @@ class CalGrouping:
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             if channel == "default":
-                fk.channel = "{detector}"
+                fk.channel = "{channel}"
             else:
                 fk.channel = channel
             return fk.get_path_from_filekey(
@@ -208,7 +208,6 @@ class CalGrouping:
             datatype=datatype,
             name=None,
         )
-
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             return fk.timestamp
@@ -231,6 +230,6 @@ class CalGrouping:
             out_string = ""
             for channel in exclude_chans:
                 out_string += f"(?!{channel})"
-            return out_string + r"^[VPCB]\d{1}\w{5}$"
+            return out_string + r"[PCVB]{1}\d{1}\w{5}"
         else:
-            return r"^[VPCB]\d{1}\w{5}$"
+            return r"[PCVB]{1}\d{1}\w{5}"
