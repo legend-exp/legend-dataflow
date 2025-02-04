@@ -14,7 +14,6 @@ testprod = Path(__file__).parent / "dummy_cycle"
 with (testprod / "config.yaml").open() as r:
     setup = yaml.safe_load(r)
 subst_vars(setup, var_values={"_": str(testprod)})
-setup = setup["setups"]["test"]
 
 
 def test_util():
