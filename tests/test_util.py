@@ -11,7 +11,7 @@ from legenddataflow import (
 
 testprod = Path(__file__).parent / "dummy_cycle"
 
-with (testprod / "config.json").open() as r:
+with (testprod / "config.yaml").open() as r:
     setup = json.load(r)
 subst_vars(setup, var_values={"_": str(testprod)})
 setup = setup["setups"]["test"]
@@ -42,7 +42,7 @@ def test_filekey():
     assert (
         FileKey.get_filekey_from_pattern(
             key.get_path_from_filekey(patterns.get_pattern_tier(setup, "dsp"))[0],
-            utils.get_pattern_tier(setup, "dsp"),
+            utils.get_tier_path(setup, "dsp"),
         ).name
         == key.name
     )
@@ -98,6 +98,6 @@ def test_create_pars_keylist():
             pkeylist, {"cal": ["par_dsp"], "lar": ["par_dsp"]}
         )[1].apply
     ) == {
-        "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.json",
-        "lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.json",
+        "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.yaml",
+        "lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.yaml",
     }
