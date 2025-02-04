@@ -4,22 +4,24 @@ Snakemake rules for processing psp (partition dsp) tier data.
 - extraction of psd calibration parameters and partition level energy fitting for each channel over whole partition from cal data
 """
 
-from legenddataflow.pars_loading import pars_catalog
-from legenddataflow.create_pars_keylist import pars_key_resolve
-from legenddataflow.utils import par_psp_path, par_dsp_path, set_last_rule_name
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_tier,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
-psp_par_catalog = pars_key_resolve.get_par_catalog(
+psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
+    get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
+
 
 psp_rules = {}
 for key, dataset in part.datasets.items():
@@ -87,6 +89,7 @@ for key, dataset in part.datasets.items():
                     partition,
                     key,
                     "psp",
+                    time,
                     name="par_psp",
                 ),
             group:
@@ -94,8 +97,7 @@ for key, dataset in part.datasets.items():
             resources:
                 runtime=300,
             shell:
-                "{swenv} python3 -B "
-                "{basedir}/../scripts/par_psp_geds.py "
+                f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
                 "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
@@ -118,30 +120,29 @@ for key, dataset in part.datasets.items():
 
 # Merged energy and a/e supercalibrations to reduce number of rules as they have same inputs/outputs
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
-rule build_par_psp:
+rule build_par_psp_fallback:
     input:
-        dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp", "eopt"),
-        dsp_objs=get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl"),
-        dsp_plots=get_pattern_plts_tmp_channel(setup, "dsp"),
+        dsp_pars=get_pattern_pars_tmp_channel(config, "dsp", "eopt"),
+        dsp_objs=get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl"),
+        dsp_plots=get_pattern_plts_tmp_channel(config, "dsp"),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
     output:
-        psp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp", "eopt")),
+        psp_pars=temp(get_pattern_pars_tmp_channel(config, "psp", "eopt")),
         psp_objs=temp(
-            get_pattern_pars_tmp_channel(setup, "psp", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(config, "psp", "objects", extension="pkl")
         ),
-        psp_plots=temp(get_pattern_plts_tmp_channel(setup, "psp")),
+        psp_plots=temp(get_pattern_plts_tmp_channel(config, "psp")),
     log:
-        get_pattern_log_channel(setup, "pars_psp"),
+        get_pattern_log_channel(config, "pars_psp", time),
     group:
         "par-psp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/par_psp.py "
+        f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -167,21 +168,22 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 rule build_svm_psp:
     input:
-        hyperpars=lambda wildcards: get_svm_file(wildcards, "psp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(
+        hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "psp", "svm_hyperpars"
+        ),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "psp", "svm_hyperpars")
         ).replace("hyperpars.json", "train.lh5"),
     output:
-        dsp_pars=get_pattern_pars(setup, "psp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars(config, "psp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_psp_svm").replace("{datatype}", "cal"),
+        str(get_pattern_log(config, "pars_psp_svm", time)).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_build_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -190,19 +192,18 @@ rule build_svm_psp:
 
 rule build_pars_psp_svm:
     input:
-        dsp_pars=get_pattern_pars_tmp_channel(setup, "psp_eopt"),
-        svm_model=get_pattern_pars(setup, "psp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars_tmp_channel(config, "psp_eopt"),
+        svm_model=get_pattern_pars(config, "psp", "svm", "pkl"),
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "psp")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "psp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_svm"),
+        get_pattern_log_channel(config, "pars_dsp_svm", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "

@@ -38,15 +38,15 @@ rule autogen_output:
     - generate lists of valid keys
     """
     input:
-        filelist=os.path.join(filelist_path(setup), "{label}-{tier}.filelist"),
+        filelist=os.path.join(filelist_path(config), "{label}-{tier}.filelist"),
     output:
         gen_output="{label}-{tier}.gen",
-        summary_log=log_path(setup) + "/summary-{label}-{tier}-" + timestamp + ".log",
-        warning_log=log_path(setup) + "/warning-{label}-{tier}-" + timestamp + ".log",
+        summary_log=log_path(config) + "/summary-{label}-{tier}-" + timestamp + ".log",
+        warning_log=log_path(config) + "/warning-{label}-{tier}-" + timestamp + ".log",
     params:
-        valid_keys_path=os.path.join(pars_path(setup), "valid_keys"),
-        filedb_path=os.path.join(pars_path(setup), "filedb"),
-        setup=lambda wildcards: setup,
+        valid_keys_path=os.path.join(pars_path(config), "valid_keys"),
+        filedb_path=os.path.join(pars_path(config), "filedb"),
+        setup=lambda wildcards: config,
         basedir=basedir,
     threads: min(workflow.cores, 64)
     script:

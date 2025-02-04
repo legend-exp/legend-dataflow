@@ -4,45 +4,39 @@ Snakemake rules for building dsp pars for HPGes, before running build_dsp()
 - extraction of energy filter parameters and charge trapping correction for each channel from cal data
 """
 
-from legenddataflow.create_pars_keylist import pars_key_resolve
+from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
-    get_pattern_tier_raw,
+    get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
 )
-
-dsp_par_catalog = pars_key_resolve.get_par_catalog(
-    ["-*-*-*-cal"],
-    get_pattern_tier_raw(setup),
-    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
-)
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 rule build_pars_dsp_tau_geds:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
-        pulser=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
+        pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        decay_const=temp(get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant")),
-        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant")),
+        decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_decay_constant"),
+        get_pattern_log_channel(config, "par_dsp_decay_constant", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_tau_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_tau")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -57,27 +51,26 @@ rule build_pars_dsp_tau_geds:
 rule build_pars_evtsel_geds:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-cal-raw.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
-        pulser_file=get_pattern_pars_tmp_channel(setup, "tcm", "pulser_ids"),
-        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
+        pulser_file=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+        database=get_pattern_pars_tmp_channel(config, "dsp", "decay_constant"),
         raw_cal=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        peak_file=temp(get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5")),
+        peak_file=temp(get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_event_selection"),
+        get_pattern_log_channel(config, "par_dsp_event_selection", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
         mem_swap=70,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_evtsel_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_evtsel")}'
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -94,28 +87,27 @@ rule build_pars_evtsel_geds:
 rule build_pars_dsp_nopt_geds:
     input:
         files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        database=get_pattern_pars_tmp_channel(setup, "dsp", "decay_constant"),
-        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "decay_constant"),
+        database=get_pattern_pars_tmp_channel(config, "dsp", "decay_constant"),
+        inplots=get_pattern_plts_tmp_channel(config, "dsp", "decay_constant"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
         dsp_pars_nopt=temp(
-            get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization")
+            get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
         ),
-        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
     log:
-        get_pattern_log_channel(setup, "par_dsp_noise_optimization"),
+        get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_nopt_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_nopt")}'
         "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
@@ -132,30 +124,27 @@ rule build_pars_dsp_nopt_geds:
 rule build_pars_dsp_dplms_geds:
     input:
         fft_files=os.path.join(
-            filelist_path(setup), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+            filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        peak_file=get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5"),
-        database=get_pattern_pars_tmp_channel(setup, "dsp", "noise_optimization"),
-        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "noise_optimization"),
+        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5"),
+        database=get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization"),
+        inplots=get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp", "dplms")),
-        lh5_path=temp(
-            get_pattern_pars_tmp_channel(setup, "dsp", "dplms", extension="lh5")
-        ),
-        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp", "dplms")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
+        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_dplms"),
+        get_pattern_log_channel(config, "pars_dsp_dplms", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_dplms_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_dplms")}'
         "--fft_raw_filelist {input.fft_files} "
         "--peak_file {input.peak_file} "
         "--database {input.database} "
@@ -173,28 +162,27 @@ rule build_pars_dsp_dplms_geds:
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt_geds:
     input:
-        peak_file=get_pattern_pars_tmp_channel(setup, "dsp", "peaks", "lh5"),
-        decay_const=get_pattern_pars_tmp_channel(setup, "dsp", "dplms"),
-        inplots=get_pattern_plts_tmp_channel(setup, "dsp", "dplms"),
+        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5"),
+        decay_const=get_pattern_pars_tmp_channel(config, "dsp", "dplms"),
+        inplots=get_pattern_plts_tmp_channel(config, "dsp", "dplms"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp_eopt")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
         qbb_grid=temp(
-            get_pattern_pars_tmp_channel(setup, "dsp", "objects", extension="pkl")
+            get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl")
         ),
-        plots=temp(get_pattern_plts_tmp_channel(setup, "dsp")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_eopt"),
+        get_pattern_log_channel(config, "pars_dsp_eopt", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_eopt_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_eopt")}'
         "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
@@ -210,21 +198,22 @@ rule build_pars_dsp_eopt_geds:
 
 rule build_svm_dsp_geds:
     input:
-        hyperpars=lambda wildcards: get_svm_file(wildcards, "dsp", "svm_hyperpars"),
-        train_data=lambda wildcards: get_svm_file(
+        hyperpars=lambda wildcards: get_input_par_file(
             wildcards, "dsp", "svm_hyperpars"
+        ),
+        train_data=lambda wildcards: str(
+            get_input_par_file(wildcards, "dsp", "svm_hyperpars")
         ).replace("hyperpars.json", "train.lh5"),
     output:
-        dsp_pars=get_pattern_pars(setup, "dsp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars(config, "dsp", "svm", "pkl"),
     log:
-        get_pattern_log(setup, "pars_dsp_svm").replace("{datatype}", "cal"),
+        str(get_pattern_log(config, "pars_dsp_svm", time)).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_build_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
         "--log {log} "
         "--train_data {input.train_data} "
         "--train_hyperpars {input.hyperpars} "
@@ -233,19 +222,18 @@ rule build_svm_dsp_geds:
 
 rule build_pars_dsp_svm_geds:
     input:
-        dsp_pars=get_pattern_pars_tmp_channel(setup, "dsp_eopt"),
-        svm_file=get_pattern_pars(setup, "dsp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars_tmp_channel(config, "dsp_eopt"),
+        svm_file=get_pattern_pars(config, "dsp", "svm", "pkl"),
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(setup, "dsp")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp")),
     log:
-        get_pattern_log_channel(setup, "pars_dsp_svm"),
+        get_pattern_log_channel(config, "pars_dsp_svm", time),
     group:
         "par-dsp"
     resources:
         runtime=300,
     shell:
-        "{swenv} python3 -B "
-        "{basedir}/../scripts/pars_dsp_svm_geds.py "
+        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
         "--log {log} "
         "--input_file {input.dsp_pars} "
         "--output_file {output.dsp_pars} "

@@ -9,33 +9,34 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
+from legenddataflow.execenv import execenv_smk_py_script
 
 
 rule build_evt:
     input:
-        dsp_file=get_pattern_tier(setup, "dsp", check_in_cycle=False),
-        hit_file=get_pattern_tier(setup, "hit", check_in_cycle=False),
-        tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, "dsp", check_in_cycle=False),
+        hit_file=get_pattern_tier(config, "hit", check_in_cycle=False),
+        tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
             None
             if int(wildcards["period"][1:]) > 11
-            else get_pattern_tier(setup, "ann", check_in_cycle=False)
+            else get_pattern_tier(config, "ann", check_in_cycle=False)
         ),
         par_files=lambda wildcards: ParsCatalog.get_par_file(
-            setup, wildcards.timestamp, "hit"
+            config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="evt", wildcards=wildcards, name="xtc"
         ),
     output:
-        get_pattern_tier(setup, "evt", check_in_cycle=check_in_cycle),
+        get_pattern_tier(config, "evt", check_in_cycle=check_in_cycle),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="evt",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, f"tier_evt"),
+        get_pattern_log(config, f"tier_evt", time),
     group:
         "tier-evt"
     resources:
@@ -43,8 +44,7 @@ rule build_evt:
         mem_swap=50,
     run:
         shell_string = (
-            f"{swenv} python3 -B "
-            f"{basedir}/../scripts/build_evt.py "
+            f'{execenv_smk_py_script(config, "build_tier_evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
@@ -66,29 +66,29 @@ rule build_evt:
 
 rule build_pet:
     input:
-        dsp_file=get_pattern_tier(setup, "psp", check_in_cycle=False),
-        hit_file=get_pattern_tier(setup, "pht", check_in_cycle=False),
-        tcm_file=get_pattern_tier(setup, "tcm", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, "psp", check_in_cycle=False),
+        hit_file=get_pattern_tier(config, "pht", check_in_cycle=False),
+        tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
             None
             if int(wildcards["period"][1:]) > 11
-            else get_pattern_tier(setup, "pan", check_in_cycle=False)
+            else get_pattern_tier(config, "pan", check_in_cycle=False)
         ),
         par_files=lambda wildcards: ParsCatalog.get_par_file(
-            setup, wildcards.timestamp, "pht"
+            config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="pet", wildcards=wildcards, name="xtc"
         ),
     output:
-        get_pattern_tier(setup, "pet", check_in_cycle=check_in_cycle),
+        get_pattern_tier(config, "pet", check_in_cycle=check_in_cycle),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="pet",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(setup, f"tier_pet"),
+        get_pattern_log(config, f"tier_pet", time),
     group:
         "tier-evt"
     resources:
@@ -96,8 +96,7 @@ rule build_pet:
         mem_swap=50,
     run:
         shell_string = (
-            f"{swenv} python3 -B "
-            f"{basedir}/../scripts/build_evt.py "
+            f'{execenv_smk_py_script(config, "build_tier_evt")}'
             f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
@@ -126,25 +125,27 @@ for evt_tier in ("evt", "pet"):
             lambda wildcards: sorted(
                 get_filelist_full_wildcards(
                     wildcards,
-                    setup,
-                    get_pattern_tier_raw(setup),
+                    config,
+                    get_pattern_tier_raw(config),
                     tier,
                     ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
                 )
             ),
         output:
-            get_pattern_tier(setup, f"{evt_tier}_concat", check_in_cycle=check_in_cycle),
+            get_pattern_tier(
+                config, f"{evt_tier}_concat", check_in_cycle=check_in_cycle
+            ),
         params:
             timestamp="all",
             datatype="{datatype}",
-            lh5concat_exe=setup["paths"]["install"] + "/bin/lh5concat",
-            ro_input=lambda _, input: utils.as_ro(setup, input),
+            ro_input=lambda _, input: utils.as_ro(config, input),
         log:
-            get_pattern_log_concat(setup, f"tier_{evt_tier}_concat"),
+            get_pattern_log_concat(config, f"tier_{evt_tier}_concat", time),
         group:
             "tier-evt"
         shell:
-            "{swenv} {params.lh5concat_exe} --verbose --overwrite "
+            f'{execenv_smk_py_script(config, "lh5concat")}'
+            "--verbose --overwrite "
             "--output {output} "
             "-- {params.ro_input} &> {log}"
 

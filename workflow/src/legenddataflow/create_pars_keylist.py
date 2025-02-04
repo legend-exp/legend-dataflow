@@ -7,10 +7,9 @@ import re
 import warnings
 from pathlib import Path
 
-import snakemake as smk
 import yaml
 
-from .FileKey import FileKey, ProcessingFileKey
+from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
 from .patterns import par_validity_pattern
 
 
@@ -107,13 +106,10 @@ class ParsKeyResolve:
             wildcard_dict = dict(ext="*", **d._asdict())
         else:
             wildcard_dict = d._asdict()
-        try:
-            tier_pattern_rx = re.compile(
-                smk.io.regex_from_filepattern(str(search_pattern))
-            )
-        except AttributeError:
-            tier_pattern_rx = re.compile(smk.io.regex(str(search_pattern)))
-        fn_glob_pattern = smk.io.expand(search_pattern, **wildcard_dict)[0]
+
+        tier_pattern_rx = re.compile(regex_from_filepattern(str(search_pattern)))
+        key = FileKey.get_filekey_from_pattern(search_pattern, search_pattern)
+        fn_glob_pattern = key.get_path_from_filekey(search_pattern, **wildcard_dict)[0]
         p = Path(fn_glob_pattern)
         parts = p.parts[p.is_absolute() :]
         files = Path(p.root).glob(str(Path(*parts)))
