@@ -141,9 +141,7 @@ rule build_pars_dsp_dplms_geds:
         channel="{channel}",
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
-        lh5_path=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "dplms", extension="lh5")
-        ),
+        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
         plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
     log:
         get_pattern_log_channel(config, "pars_dsp_dplms", time),

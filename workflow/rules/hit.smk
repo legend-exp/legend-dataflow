@@ -219,89 +219,10 @@ rule build_lq_calibration:
         "{input.files}"
 
 
-rule build_pars_hit_objects:
-    input:
-        lambda wildcards: get_par_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "hit",
-            basedir,
-            det_status,
-            chan_maps,
-            name="objects",
-            extension="pkl",
-        ),
-    output:
-        get_pattern_pars(
-            config,
-            "hit",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    params:
-        ro_input=lambda _, input: ro(input),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {params.ro_input} "
-        "--output {output} "
-        "--channelmap {meta} "
+include: "channel_merge.smk"
 
 
-rule build_plts_hit:
-    input:
-        lambda wildcards: get_plt_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "hit",
-            basedir,
-            det_status,
-            chan_maps,
-        ),
-    output:
-        get_pattern_plts(config, "hit"),
-    params:
-        ro_input=lambda _, input: ro(input),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {params.ro_input} "
-        "--output {output} "
-        "--channelmap {meta} "
-
-
-rule build_pars_hit:
-    input:
-        infiles=lambda wildcards: get_par_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "hit",
-            basedir,
-            det_status,
-            chan_maps,
-        ),
-        plts=get_pattern_plts(config, "hit"),
-        objects=get_pattern_pars(
-            config,
-            "hit",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    params:
-        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-    output:
-        get_pattern_pars(config, "hit", check_in_cycle=check_in_cycle),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {params.ro_input[infiles]} "
-        "--output {output} "
-        "--channelmap {meta} "
+build_merge_rules("hit", lh5_merge=False)
 
 
 rule build_hit:

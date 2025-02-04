@@ -795,80 +795,10 @@ rule_order_list.append(fallback_pht_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
 
 
-rule build_pars_pht_objects:
-    input:
-        lambda wildcards: get_par_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "pht",
-            basedir,
-            det_status,
-            chan_maps,
-            name="objects",
-            extension="pkl",
-        ),
-    output:
-        get_pattern_pars(
-            config,
-            "pht",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {input} "
-        "--output {output} "
+include: "channel_merge.smk"
 
 
-rule build_plts_pht:
-    input:
-        lambda wildcards: get_plt_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "pht",
-            basedir,
-            det_status,
-            chan_maps,
-        ),
-    output:
-        get_pattern_plts(config, "pht"),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {input} "
-        "--output {output} "
-
-
-rule build_pars_pht:
-    input:
-        infiles=lambda wildcards: get_par_chanlist(
-            config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
-            "pht",
-            basedir,
-            det_status,
-            chan_maps,
-        ),
-        plts=get_pattern_plts(config, "pht"),
-        objects=get_pattern_pars(
-            config,
-            "pht",
-            name="objects",
-            extension="dir",
-            check_in_cycle=check_in_cycle,
-        ),
-    output:
-        get_pattern_pars(config, "pht", check_in_cycle=check_in_cycle),
-    group:
-        "merge-hit"
-    shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {input.infiles} "
-        "--output {output} "
+build_merge_rules("pht", lh5_merge=False)
 
 
 rule build_pht:
