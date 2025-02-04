@@ -11,8 +11,10 @@ from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv, ParsKeyResolve
 from datetime import datetime
+from dbetto import AttrsDict
 
 utils.subst_vars_in_snakemake_config(workflow, config)
+config = AttrsDict(config)
 
 check_in_cycle = True
 swenv = execenv.execenv_prefix(config)
@@ -22,7 +24,7 @@ det_status = utils.det_status_path(config)
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
 if not Path(meta_path).exists():
-    LegendMetadata(meta_path).checkout(config["legend_metadata_version"])
+    LegendMetadata(meta_path).checkout(config.legend_metadata_version)
 
 
 wildcard_constraints:
