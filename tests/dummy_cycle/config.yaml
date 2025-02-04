@@ -1,6 +1,6 @@
 paths:
   sandbox_path: ""
-  tier_daq: $_/generated/tier/daq
+  tier_daq: $_/input_data/tier/daq
   tier_raw_blind: ""
 
   workflow: $_/workflow

@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -18,7 +19,10 @@ subst_vars(setup, var_values={"_": str(testprod)})
 
 def test_util():
     assert utils.tier_path(setup) == str(testprod / "generated/tier")
-    assert utils.unix_time("20230101T123456Z") == 1672572896.0
+    time = datetime.now()
+    assert int(utils.unix_time(time.strftime("%Y%m%dT%H%M%SZ"))) == int(
+        time.timestamp()
+    )
 
 
 def test_filekey():
@@ -41,7 +45,7 @@ def test_filekey():
     assert (
         FileKey.get_filekey_from_pattern(
             key.get_path_from_filekey(patterns.get_pattern_tier(setup, "dsp"))[0],
-            utils.get_tier_path(setup, "dsp"),
+            patterns.get_pattern_tier(setup, "dsp"),
         ).name
         == key.name
     )
@@ -70,9 +74,10 @@ def test_create_pars_keylist():
         "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.yaml",
         "lar/p00/r000/l200-p00-r000-lar-20230102T123456Z-par_dsp.yaml",
     }
-
     keylist = sorted(
-        ParsKeyResolve.get_keys("-*-*-*-cal", patterns.get_pattern_tier_daq(setup)),
+        ParsKeyResolve.get_keys(
+            "-*-*-*-cal", patterns.get_pattern_tier_daq(setup, extension="*")
+        ),
         key=FileKey.get_unix_timestamp,
     )
     assert keylist == [
