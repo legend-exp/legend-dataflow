@@ -84,14 +84,43 @@ docs = [
 
 [project.scripts]
 dataprod = "legenddataflow.execenv:dataprod"
+create_chankeylist = "legenddataflow.scripts.create_chankeylist:create_chankeylist"
+merge_channels = "legenddataflow.scripts.merge_channels:merge_channels"
+build_filedb = "legenddataflow.scripts.build_filedb:build_filedb"
+build_tier_dsp = "legenddataflow.scripts.tier.dsp:build_tier_dsp"
+build_tier_evt = "legenddataflow.scripts.tier.evt:build_tier_evt"
+build_tier_hit = "legenddataflow.scripts.tier.hit:build_tier_hit"
+build_tier_raw_blind = "legenddataflow.scripts.tier.raw_blind:build_tier_raw_blind"
+build_tier_raw_fcio = "legenddataflow.scripts.tier.raw_fcio:build_tier_raw_fcio"
+build_tier_raw_orca = "legenddataflow.scripts.tier.raw_orca:build_tier_raw_orca"
+build_tier_skm = "legenddataflow.scripts.tier.skm:build_tier_skm"
+build_tier_tcm = "legenddataflow.scripts.tier.tcm:build_tier_tcm"
+par_geds_dsp_dplms = "legenddataflow.scripts.par.geds.dsp.dplms:par_geds_dsp_dplms"
+par_geds_dsp_eopt = "legenddataflow.scripts.par.geds.dsp.eopt:par_geds_dsp_eopt"
+par_geds_dsp_evtsel = "legenddataflow.scripts.par.geds.dsp.evtsel:par_geds_dsp_evtsel"
+par_geds_dsp_nopt = "legenddataflow.scripts.par.geds.dsp.nopt:par_geds_dsp_nopt"
+par_geds_dsp_svm_build = "legenddataflow.scripts.par.geds.dsp.svm_build:par_geds_dsp_svm_build"
+par_geds_dsp_svm = "legenddataflow.scripts.par.geds.dsp.svm:par_geds_dsp_svm"
+par_geds_dsp_tau = "legenddataflow.scripts.par.geds.dsp.tau:par_geds_dsp_tau"
+par_geds_hit_aoe = "legenddataflow.scripts.par.geds.hit.aoe:par_geds_hit_aoe"
+par_geds_hit_ecal = "legenddataflow.scripts.par.geds.hit.ecal:par_geds_hit_ecal"
+par_geds_hit_lq = "legenddataflow.scripts.par.geds.hit.lq:par_geds_hit_lq"
+par_geds_hit_qc = "legenddataflow.scripts.par.geds.hit.qc:par_geds_hit_qc"
+par_geds_pht_aoe = "legenddataflow.scripts.par.geds.pht.aoe:par_geds_pht_aoe"
+par_geds_pht_ecal_part = "legenddataflow.scripts.par.geds.pht.ecal_part:par_geds_pht_ecal_part"
+par_geds_pht_fast = "legenddataflow.scripts.par.geds.pht.fast:par_geds_pht_fast"
+par_geds_pht_qc_phy = "legenddataflow.scripts.par.geds.pht.qc_phy:par_geds_pht_qc_phy"
+par_geds_pht_qc = "legenddataflow.scripts.par.geds.pht.qc:par_geds_pht_qc"
+par_geds_psp_average = "legenddataflow.scripts.par.geds.psp.average:par_geds_psp_average"
+par_geds_raw_blindcal = "legenddataflow.scripts.par.geds.raw.blindcal:par_geds_raw_blindcal"
+par_geds_raw_blindcheck = "legenddataflow.scripts.par.geds.raw.blindcheck:par_geds_raw_blindcheck"
+par_geds_tcm_pulser = "legenddataflow.scripts.par.geds.raw.tcm.pulser:par_geds_raw_pulser"
 
 [tool.uv.workspace]
 exclude = ["generated", "inputs", "software", "workflow"]
 
 [tool.uv]
-dev-dependencies = [
-  "legend-dataflow[test]",
-]
+default-groups = []
 
 [tool.pytest.ini_options]
 minversion = "6.0"
