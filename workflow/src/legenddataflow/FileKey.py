@@ -73,7 +73,7 @@ class FileKey(
     def get_filekey_from_pattern(cls, filename, pattern=None):
         if isinstance(pattern, Path):
             pattern = pattern.as_posix()
-
+        filename = str(filename)
         key_pattern_rx = re.compile(
             regex_from_filepattern(cls.key_pattern if pattern is None else pattern)
         )
@@ -108,9 +108,11 @@ class FileKey(
         return cls(**d)
 
     def expand(self, file_pattern, **kwargs):
-        if isinstance(file_pattern, Path):
-            file_pattern = file_pattern.as_posix()
-        wildcard_dict = dict(**self._asdict(), **kwargs)
+        file_pattern = str(file_pattern)
+        wildcard_dict = self._asdict()
+        if kwargs is not None:
+            for key, value in kwargs.items():
+                wildcard_dict[key] = value
         wildcard_dict = {
             wildcard: [wildcard_value]
             if isinstance(wildcard_value, str)

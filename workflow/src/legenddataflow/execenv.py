@@ -60,19 +60,19 @@ def execenv_python(config, aslist=False):
     return " ".join(cmdline), cmdenv
 
 
-def execenv_smk_py_script(workflow, config, scriptname, aslist=False):
+def execenv_smk_py_script(config, scriptname, aslist=False):
     """Returns the command used to run a Python script for a Snakemake rule.
 
     For example: `apptainer run image.sif python path/to/script.py`
     """
     config = AttrsDict(config)
 
-    cmdline, cmdenv = execenv_python(config, aslist=True)
-    cmdline.append(f"{workflow.basedir}/scripts/{scriptname}")
+    cmdline, _ = execenv_prefix(config, aslist=True)
+    cmdline.append(f"{config.paths.install}/bin/{scriptname} ")
 
     if aslist:
-        return cmdline, cmdenv
-    return " ".join(cmdline), cmdenv
+        return cmdline
+    return " ".join(cmdline)
 
 
 def dataprod() -> None:
@@ -240,9 +240,8 @@ def install(args) -> None:
         "pip",
         "--no-cache",
         "install",
-        str(config_loc),
+        str(config_loc),  # +"[dataprod]"
     ]
-
     if args.editable:
         cmd_expr.insert(-1, "--editable")
 

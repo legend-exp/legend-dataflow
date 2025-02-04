@@ -194,7 +194,7 @@ class CalGrouping:
                 get_pattern_log_channel(self.setup, name, processing_timestamp)
             )[0]
         else:
-            return "/tmp/log.log"
+            return "log.log"
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
