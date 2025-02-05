@@ -78,6 +78,17 @@ def test_execenv_prefix(config):
         "--image=legendexp/legend-base:latest "
     )
 
+    config = {
+        "execenv": {
+            "env": {
+                "VAR1": "val1",
+                "VAR2": "val2",
+            }
+        }
+    }
+    cmd_str = execenv.execenv_prefix(config, as_string=True)
+    assert cmd_str == "VAR1=val1 VAR2=val2  "
+
 
 def test_execenv_pyexe(config):
     cmd_str = execenv.execenv_pyexe(config, "dio-boe")
