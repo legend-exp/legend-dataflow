@@ -38,12 +38,12 @@ def build_tier_dsp() -> None:
     argparser.add_argument("--tier", help="Tier", type=str, required=True)
 
     argparser.add_argument(
-        "--pars_file", help="database file for detector", nargs="*", default=[]
+        "--pars-file", help="database file for detector", nargs="*", default=[]
     )
     argparser.add_argument("--input", help="input file", type=str)
 
     argparser.add_argument("--output", help="output file", type=str)
-    argparser.add_argument("--db_file", help="db file", type=str)
+    argparser.add_argument("--db-file", help="db file", type=str)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True)

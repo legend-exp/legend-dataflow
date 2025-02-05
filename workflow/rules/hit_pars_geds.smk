@@ -18,7 +18,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 # This rule builds the qc using the calibration dsp files and fft files
@@ -46,19 +46,18 @@ rule build_qc:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_qc")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-qc") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
         "--metadata {meta} "
-        "--plot_path {output.plot_file} "
-        "--save_path {output.qc_file} "
-        "--pulser_file {input.pulser} "
-        "--cal_files {input.files} "
-        "--fft_files {input.fft_files} "
-        "--overwrite_files {input.overwrite_files} "
+        "--plot-path {output.plot_file} "
+        "--save-path {output.qc_file} "
+        "--pulser-file {input.pulser} "
+        "--cal-files {input.files} "
+        "--fft-files {input.fft_files} "
+        "--overwrite-files {input.overwrite_files} "
 
 
 # This rule builds the energy calibration using the calibration dsp files
@@ -94,20 +93,19 @@ rule build_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
         "--metadata {meta} "
-        "--plot_path {output.plot_file} "
-        "--results_path {output.results_file} "
-        "--save_path {output.ecal_file} "
-        "--inplot_dict {input.inplots} "
-        "--in_hit_dict {input.in_hit_dict} "
-        "--ctc_dict {input.ctc_dict} "
-        "--pulser_file {input.pulser} "
+        "--plot-path {output.plot_file} "
+        "--results-path {output.results_file} "
+        "--save-path {output.ecal_file} "
+        "--inplot-dict {input.inplots} "
+        "--in-hit-dict {input.in_hit_dict} "
+        "--ctc-dict {input.ctc_dict} "
+        "--pulser-file {input.pulser} "
         "--files {input.files}"
 
 
@@ -142,20 +140,19 @@ rule build_aoe_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_aoe")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-aoe") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--aoe_results {output.aoe_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--pulser_file {input.pulser} "
-        "--ecal_file {input.ecal_file} "
+        "--aoe-results {output.aoe_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--pulser-file {input.pulser} "
+        "--ecal-file {input.ecal_file} "
         "{input.files}"
 
 
@@ -188,18 +185,17 @@ rule build_lq_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_lq")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-lq") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--lq_results {output.lq_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--pulser_file {input.pulser} "
-        "--ecal_file {input.ecal_file} "
+        "--lq-results {output.lq_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--pulser-file {input.pulser} "
+        "--ecal-file {input.ecal_file} "
         "{input.files}"

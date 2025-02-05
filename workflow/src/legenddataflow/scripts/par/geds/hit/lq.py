@@ -49,14 +49,14 @@ def par_geds_hit_lq() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("files", help="files", nargs="*", type=str)
     argparser.add_argument(
-        "--pulser_file", help="pulser_file", type=str, required=False
+        "--pulser-file", help="pulser_file", type=str, required=False
     )
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+        "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
 
-    argparser.add_argument("--ecal_file", help="ecal_file", type=str, required=True)
-    argparser.add_argument("--eres_file", help="eres_file", type=str, required=True)
+    argparser.add_argument("--ecal-file", help="ecal_file", type=str, required=True)
+    argparser.add_argument("--eres-file", help="eres_file", type=str, required=True)
     argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
@@ -67,9 +67,9 @@ def par_geds_hit_lq() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--plot_file", help="plot_file", type=str, required=False)
-    argparser.add_argument("--hit_pars", help="hit_pars", type=str)
-    argparser.add_argument("--lq_results", help="lq_results", type=str)
+    argparser.add_argument("--plot-file", help="plot_file", type=str, required=False)
+    argparser.add_argument("--hit-pars", help="hit_pars", type=str)
+    argparser.add_argument("--lq-results", help="lq_results", type=str)
 
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()

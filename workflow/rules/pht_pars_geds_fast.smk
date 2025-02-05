@@ -11,7 +11,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 pht_fast_rules = {}
@@ -106,8 +106,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 12,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-fast") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
@@ -115,13 +114,13 @@ for key, dataset in part.datasets.items():
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
                 "--metadata {meta} "
-                "--fit_results {output.partcal_results} "
-                "--eres_file {input.eres_file} "
-                "--hit_pars {output.hit_pars} "
-                "--plot_file {output.plot_file} "
-                "--ecal_file {input.ecal_file} "
-                "--pulser_files {input.pulser_files} "
-                "--input_files {input.files}"
+                "--fit-results {output.partcal_results} "
+                "--eres-file {input.eres_file} "
+                "--hit-pars {output.hit_pars} "
+                "--plot-file {output.plot_file} "
+                "--ecal-file {input.ecal_file} "
+                "--pulser-files {input.pulser_files} "
+                "--input-files {input.files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-par_pht_fast")
         slow_rule = workflow._rules[f"{key}-{partition}-build_pht_lq_calibration"]
@@ -164,8 +163,7 @@ rule par_pht_fast:
         mem_swap=50,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_fast")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-fast") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
@@ -173,13 +171,13 @@ rule par_pht_fast:
         "--channel {params.channel} "
         "--metadata {meta} "
         "--inplots {input.inplots} "
-        "--fit_results {output.partcal_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} "
-        "--pulser_files {input.pulser_files} "
-        "--input_files {input.files}"
+        "--fit-results {output.partcal_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--ecal-file {input.ecal_file} "
+        "--pulser-files {input.pulser_files} "
+        "--input-files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]

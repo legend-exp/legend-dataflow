@@ -9,7 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from legenddataflow import execenv_smk_py_script
+from legenddataflow import execenv_pyexe
 from legenddataflow.utils import filelist_path
 
 
@@ -23,10 +23,11 @@ def get_chanlist(setup, keypart, workflow, config, det_status, chan_maps):
         f"all-{key.experiment}-{key.period}-{key.run}-cal-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
     )
 
-    cmd = execenv_smk_py_script(config, "create_chankeylist")
-    cmd += f" --det_status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
-    cmd += f"--datatype cal --output_file {output_file}"
-    os.system(cmd)
+    os.system(
+        execenv_pyexe(config, "create-chankeylist")
+        + "--det-status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
+        "--datatype cal --output-file {output_file}"
+    )
 
     with open(output_file) as r:
         chan_list = r.read().splitlines()

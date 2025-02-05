@@ -8,7 +8,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 rule build_skm:
@@ -27,10 +27,9 @@ rule build_skm:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_skm")}'
-        f"--configs {ro(configs)} "
+        execenv_pyexe(config, "build-tier-skm") + f"--configs {ro(configs)} "
         "--timestamp {params.timestamp} "
         "--log {log} "
         "--datatype {params.datatype} "
-        "--evt_file {params.ro_input} "
+        "--evt-file {params.ro_input} "
         "--output {output} "

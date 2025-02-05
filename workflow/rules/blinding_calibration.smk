@@ -12,7 +12,7 @@ from legenddataflow.patterns import (
     get_pattern_log_channel,
 )
 from pathlib import Path
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 rule build_blinding_calibration:
@@ -38,15 +38,14 @@ rule build_blinding_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_raw_blindcal")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-raw-blindcal") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
         "--meta {params.meta} "
-        "--plot_file {output.plot_file} "
-        "--blind_curve {output.par_file} "
+        "--plot-file {output.plot_file} "
+        "--blind-curve {output.par_file} "
         "--files {input.files} "
 
 
@@ -66,8 +65,7 @@ rule build_plts_blinding:
     group:
         "merge-blindcal"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {input} "
+        execenv_pyexe(config, "merge-channels") + "--input {input} "
         "--output {output} "
 
 
@@ -88,6 +86,5 @@ rule build_pars_blinding:
     group:
         "merge-blindcal"
     shell:
-        f'{execenv_smk_py_script(config, "merge_channels")}'
-        "--input {input.infiles} "
+        execenv_pyexe(config, "merge-channels") + "--input {input.infiles} "
         "--output {output} "

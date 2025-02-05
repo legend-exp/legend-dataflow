@@ -19,13 +19,13 @@ def par_geds_dsp_svm_build() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
 
     argparser.add_argument(
-        "--output_file", help="output SVM file", type=str, required=True
+        "--output-file", help="output SVM file", type=str, required=True
     )
     argparser.add_argument(
-        "--train_data", help="input data file", type=str, required=True
+        "--train-data", help="input data file", type=str, required=True
     )
     argparser.add_argument(
-        "--train_hyperpars", help="input hyperparameter file", required=True
+        "--train-hyperpars", help="input hyperparameter file", required=True
     )
     args = argparser.parse_args()
 

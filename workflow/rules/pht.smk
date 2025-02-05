@@ -15,7 +15,7 @@ from legenddataflow.patterns import (
     get_pattern_pars_tmp,
     get_pattern_log,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -53,14 +53,13 @@ rule build_pht:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_hit")}'
-        f"--configs {ro(configs)} "
+        execenv_pyexe(config, "build-tier-hit") + f"--configs {ro(configs)} "
         "--metadata {meta} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--pars_file {params.ro_input[pars_file]} "
+        "--pars-file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
         "--input {params.ro_input[dsp_file]} "
-        "--db_file {output.db_file}"
+        "--db-file {output.db_file}"

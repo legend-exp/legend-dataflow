@@ -19,7 +19,7 @@ def par_geds_dsp_nopt() -> None:
     sto = lh5.LH5Store()
 
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--raw_filelist", help="raw_filelist", type=str)
+    argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
     argparser.add_argument("--database", help="database", type=str, required=True)
     argparser.add_argument("--inplots", help="inplots", type=str)
 
@@ -31,8 +31,8 @@ def par_geds_dsp_nopt() -> None:
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
-    argparser.add_argument("--dsp_pars", help="dsp_pars", type=str, required=True)
-    argparser.add_argument("--plot_path", help="plot_path", type=str)
+    argparser.add_argument("--dsp-pars", help="dsp_pars", type=str, required=True)
+    argparser.add_argument("--plot-path", help="plot_path", type=str)
 
     args = argparser.parse_args()
 

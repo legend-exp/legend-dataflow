@@ -30,9 +30,9 @@ def par_geds_raw_blindcheck() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--files", help="files", nargs="*", type=str)
     argparser.add_argument("--output", help="output file", type=str)
-    argparser.add_argument("--plot_file", help="plot file", type=str)
+    argparser.add_argument("--plot-file", help="plot file", type=str)
     argparser.add_argument(
-        "--blind_curve", help="blinding curves file", nargs="*", type=str
+        "--blind-curve", help="blinding curves file", nargs="*", type=str
     )
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)

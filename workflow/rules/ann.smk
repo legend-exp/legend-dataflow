@@ -9,7 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 rule build_ann:
@@ -30,17 +30,16 @@ rule build_ann:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
-        "--log {log} "
+        execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
-        f"--tier ann "
+        "--tier ann "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {input.dsp_file} "
         "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {input.pars_file} "
+        "--db-file {output.db_file} "
+        "--pars-file {input.pars_file} "
 
 
 rule build_pan:
@@ -61,14 +60,13 @@ rule build_pan:
         runtime=300,
         mem_swap=lambda wildcards: 25 if wildcards.datatype == "cal" else 15,
     shell:
-        f'{execenv_smk_py_script(config, "build_tier_dsp")}'
-        "--log {log} "
+        execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
-        f"--tier pan "
+        "--tier pan "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {input.dsp_file} "
         "--output {output.tier_file} "
-        "--db_file {output.db_file} "
-        "--pars_file {input.pars_file} "
+        "--db-file {output.db_file} "
+        "--pars-file {input.pars_file} "

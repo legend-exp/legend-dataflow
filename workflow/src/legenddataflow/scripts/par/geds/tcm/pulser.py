@@ -21,10 +21,10 @@ def par_geds_tcm_pulser() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
     argparser.add_argument(
-        "--pulser_file", help="pulser file", type=str, required=False
+        "--pulser-file", help="pulser file", type=str, required=False
     )
 
-    argparser.add_argument("--tcm_files", help="tcm_files", nargs="*", type=str)
+    argparser.add_argument("--tcm-files", help="tcm_files", nargs="*", type=str)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)

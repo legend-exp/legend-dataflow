@@ -33,12 +33,12 @@ def find_matching_values_with_delay(arr1, arr2, jit_delay):
 
 def build_tier_evt() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--hit_file", help="hit file", type=str)
-    argparser.add_argument("--dsp_file", help="dsp file", type=str)
-    argparser.add_argument("--tcm_file", help="tcm file", type=str)
-    argparser.add_argument("--ann_file", help="ann file")
-    argparser.add_argument("--xtc_file", help="xtc file", type=str)
-    argparser.add_argument("--par_files", help="par files", nargs="*")
+    argparser.add_argument("--hit-file", help="hit file", type=str)
+    argparser.add_argument("--dsp-file", help="dsp file", type=str)
+    argparser.add_argument("--tcm-file", help="tcm file", type=str)
+    argparser.add_argument("--ann-file", help="ann file")
+    argparser.add_argument("--xtc-file", help="xtc file", type=str)
+    argparser.add_argument("--par-files", help="par files", nargs="*")
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)

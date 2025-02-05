@@ -26,7 +26,7 @@ warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--phy_files", help="cal_files", nargs="*", type=str)
+    argparser.add_argument("--phy-files", help="cal_files", nargs="*", type=str)
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
@@ -37,10 +37,10 @@ if __name__ == "__main__":
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
     argparser.add_argument(
-        "--plot_path", help="plot_path", type=str, nargs="*", required=False
+        "--plot-path", help="plot_path", type=str, nargs="*", required=False
     )
     argparser.add_argument(
-        "--save_path",
+        "--save-path",
         help="save_path",
         type=str,
         nargs="*",

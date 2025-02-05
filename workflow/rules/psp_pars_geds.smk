@@ -14,7 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_tier,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -97,16 +97,15 @@ for key, dataset in part.datasets.items():
             resources:
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
-                "--in_plots {input.dsp_plots} "
-                "--out_plots {output.psp_plots} "
-                "--in_obj {input.dsp_objs} "
-                "--out_obj {output.psp_objs} "
+                "--in-plots {input.dsp_plots} "
+                "--out-plots {output.psp_plots} "
+                "--in-obj {input.dsp_objs} "
+                "--out-obj {output.psp_objs} "
                 "--input {input.dsp_pars} "
                 "--output {output.psp_pars} "
 
@@ -142,16 +141,15 @@ rule build_par_psp_fallback:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_psp_average")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--in_plots {input.dsp_plots} "
-        "--out_plots {output.psp_plots} "
-        "--in_obj {input.dsp_objs} "
-        "--out_obj {output.psp_objs} "
+        "--in-plots {input.dsp_plots} "
+        "--out-plots {output.psp_plots} "
+        "--in-obj {input.dsp_objs} "
+        "--out-obj {output.psp_objs} "
         "--input {input.dsp_pars} "
         "--output {output.psp_pars} "
 
@@ -183,11 +181,10 @@ rule build_svm_psp:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm_build")}'
-        "--log {log} "
-        "--train_data {input.train_data} "
-        "--train_hyperpars {input.hyperpars} "
-        "--output_file {output.dsp_pars}"
+        execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
+        "--train-data {input.train_data} "
+        "--train-hyperpars {input.hyperpars} "
+        "--output-file {output.dsp_pars}"
 
 
 rule build_pars_psp_svm:
@@ -203,8 +200,7 @@ rule build_pars_psp_svm:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_dsp_svm")}'
-        "--log {log} "
-        "--input_file {input.dsp_pars} "
-        "--output_file {output.dsp_pars} "
-        "--svm_file {input.svm_model}"
+        execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
+        "--input-file {input.dsp_pars} "
+        "--output-file {output.dsp_pars} "
+        "--svm-file {input.svm_model}"

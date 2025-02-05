@@ -28,8 +28,8 @@ warnings.filterwarnings(action="ignore", category=np.RankWarning)
 def par_geds_dsp_eopt() -> None:
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument("--peak_file", help="tcm_filelist", type=str, required=True)
-    argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
+    argparser.add_argument("--peak-file", help="tcm_filelist", type=str, required=True)
+    argparser.add_argument("--decay-const", help="decay_const", type=str, required=True)
     argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -41,13 +41,13 @@ def par_geds_dsp_eopt() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
 
     argparser.add_argument(
-        "--final_dsp_pars", help="final_dsp_pars", type=str, required=True
+        "--final-dsp-pars", help="final_dsp_pars", type=str, required=True
     )
     argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
     argparser.add_argument("--plot_path", help="plot_path", type=str)
 
     argparser.add_argument(
-        "--plot_save_path", help="plot_save_path", type=str, required=False
+        "--plot-save-path", help="plot_save_path", type=str, required=False
     )
     args = argparser.parse_args()
 

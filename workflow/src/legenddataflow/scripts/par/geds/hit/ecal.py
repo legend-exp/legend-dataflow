@@ -439,15 +439,15 @@ def par_geds_hit_ecal() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--files", help="filelist", nargs="*", type=str)
     argparser.add_argument(
-        "--tcm_filelist", help="tcm_filelist", type=str, required=False
+        "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
     argparser.add_argument(
-        "--pulser_file", help="pulser_file", type=str, required=False
+        "--pulser-file", help="pulser_file", type=str, required=False
     )
 
-    argparser.add_argument("--ctc_dict", help="ctc_dict", nargs="*")
-    argparser.add_argument("--in_hit_dict", help="in_hit_dict", required=False)
-    argparser.add_argument("--inplot_dict", help="inplot_dict", required=False)
+    argparser.add_argument("--ctc-dict", help="ctc_dict", nargs="*")
+    argparser.add_argument("--in-hit-dict", help="in_hit_dict", required=False)
+    argparser.add_argument("--inplot-dict", help="inplot_dict", required=False)
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
@@ -459,9 +459,9 @@ def par_geds_hit_ecal() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
 
-    argparser.add_argument("--plot_path", help="plot_path", type=str, required=False)
-    argparser.add_argument("--save_path", help="save_path", type=str)
-    argparser.add_argument("--results_path", help="results_path", type=str)
+    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
+    argparser.add_argument("--save-path", help="save_path", type=str)
+    argparser.add_argument("--results-path", help="results_path", type=str)
 
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()

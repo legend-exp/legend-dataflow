@@ -31,13 +31,13 @@ def merge_channels() -> None:
     )
     argparser.add_argument("--output", help="output file", type=str, required=True)
     argparser.add_argument(
-        "--in_db",
+        "--in-db",
         help="in db file (used for when lh5 files referred to in db)",
         type=str,
         required=False,
     )
     argparser.add_argument(
-        "--out_db",
+        "--out-db",
         help="lh5 file (used for when lh5 files referred to in db)",
         type=str,
         required=False,

@@ -20,7 +20,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -101,19 +101,18 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
-                "--save_path {output.hit_pars} "
-                "--plot_path {output.plot_file} "
-                "--overwrite_files {input.overwrite_files} "
-                "--pulser_files {input.pulser_files} "
-                "--fft_files {input.fft_files} "
-                "--cal_files {input.cal_files}"
+                "--save-path {output.hit_pars} "
+                "--plot-path {output.plot_file} "
+                "--overwrite-files {input.overwrite_files} "
+                "--pulser-files {input.pulser_files} "
+                "--fft-files {input.fft_files} "
+                "--cal-files {input.cal_files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_qc")
 
@@ -152,19 +151,18 @@ rule build_pht_qc:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_qc")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--save_path {output.hit_pars} "
-        "--plot_path {output.plot_file} "
-        "--overwrite_files {input.overwrite_files} "
-        "--pulser_files {input.pulser_files} "
-        "--fft_files {input.fft_files} "
-        "--cal_files {input.cal_files}"
+        "--save-path {output.hit_pars} "
+        "--plot-path {output.plot_file} "
+        "--overwrite-files {input.overwrite_files} "
+        "--pulser-files {input.pulser_files} "
+        "--fft-files {input.fft_files} "
+        "--cal-files {input.cal_files}"
 
 
 fallback_qc_rule = list(workflow.rules)[-1]
@@ -213,21 +211,20 @@ rule build_per_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_hit_ecal")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
         "--tier {params.tier} "
         "--metadata {meta} "
-        "--plot_path {output.plot_file} "
-        "--results_path {output.results_file} "
-        "--save_path {output.ecal_file} "
-        "--inplot_dict {input.inplots} "
-        "--in_hit_dict {input.pht_dict} "
-        "--ctc_dict {input.ctc_dict} "
-        "--pulser_file {input.pulser} "
+        "--plot-path {output.plot_file} "
+        "--results-path {output.results_file} "
+        "--save-path {output.ecal_file} "
+        "--inplot-dict {input.inplots} "
+        "--in-hit-dict {input.pht_dict} "
+        "--ctc-dict {input.ctc_dict} "
+        "--pulser-file {input.pulser} "
         "--files {input.files}"
 
 
@@ -325,21 +322,20 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
                 "--metadata {meta} "
-                "--fit_results {output.partcal_results} "
-                "--eres_file {input.eres_file} "
-                "--hit_pars {output.hit_pars} "
-                "--plot_file {output.plot_file} "
-                "--ecal_file {input.ecal_file} "
-                "--pulser_files {input.pulser_files} "
-                "--input_files {input.files}"
+                "--fit-results {output.partcal_results} "
+                "--eres-file {input.eres_file} "
+                "--hit-pars {output.hit_pars} "
+                "--plot-file {output.plot_file} "
+                "--ecal-file {input.ecal_file} "
+                "--pulser-files {input.pulser_files} "
+                "--input-files {input.files}"
 
         set_last_rule_name(
             workflow, f"{key}-{partition}-build_pht_energy_super_calibrations"
@@ -385,21 +381,20 @@ rule build_pht_energy_super_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_ecal_part")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--metadata {meta} "
         "--inplots {input.inplots} "
-        "--fit_results {output.partcal_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} "
-        "--pulser_files {input.pulser_files} "
-        "--input_files {input.files}"
+        "--fit-results {output.partcal_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--ecal-file {input.ecal_file} "
+        "--pulser-files {input.pulser_files} "
+        "--input-files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]
@@ -506,21 +501,20 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
-                "--aoe_results {output.aoe_results} "
-                "--eres_file {input.eres_file} "
-                "--hit_pars {output.hit_pars} "
-                "--plot_file {output.plot_file} "
-                "--ecal_file {input.ecal_file} "
-                "--pulser_files {input.pulser_files} "
-                "--input_files {input.files}"
+                "--aoe-results {output.aoe_results} "
+                "--eres-file {input.eres_file} "
+                "--hit-pars {output.hit_pars} "
+                "--plot-file {output.plot_file} "
+                "--ecal-file {input.ecal_file} "
+                "--pulser-files {input.pulser_files} "
+                "--input-files {input.files}"
 
         set_last_rule_name(
             workflow, f"{key}-{partition}-build_pht_aoe_calibrations"
@@ -566,21 +560,20 @@ rule build_pht_aoe_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_aoe")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--aoe_results {output.aoe_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} "
-        "--pulser_files {input.pulser_files} "
-        "--input_files {input.files}"
+        "--aoe-results {output.aoe_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--ecal-file {input.ecal_file} "
+        "--pulser-files {input.pulser_files} "
+        "--input-files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]
@@ -685,21 +678,20 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
-                "--lq_results {output.lq_results} "
-                "--eres_file {input.eres_file} "
-                "--hit_pars {output.hit_pars} "
-                "--plot_file {output.plot_file} "
-                "--ecal_file {input.ecal_file} "
-                "--pulser_files {input.pulser_files} "
-                "--input_files {input.files}"
+                "--lq-results {output.lq_results} "
+                "--eres-file {input.eres_file} "
+                "--hit-pars {output.hit_pars} "
+                "--plot-file {output.plot_file} "
+                "--ecal-file {input.ecal_file} "
+                "--pulser-files {input.pulser_files} "
+                "--input-files {input.files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_lq_calibration")
 
@@ -740,21 +732,20 @@ rule build_pht_lq_calibration:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par_geds_pht_lq")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--lq_results {output.lq_results} "
-        "--eres_file {input.eres_file} "
-        "--hit_pars {output.hit_pars} "
-        "--plot_file {output.plot_file} "
-        "--ecal_file {input.ecal_file} "
-        "--pulser_files {input.pulser_files} "
-        "--input_files {input.files}"
+        "--lq-results {output.lq_results} "
+        "--eres-file {input.eres_file} "
+        "--hit-pars {output.hit_pars} "
+        "--plot-file {output.plot_file} "
+        "--ecal-file {input.ecal_file} "
+        "--pulser-files {input.pulser_files} "
+        "--input-files {input.files}"
 
 
 fallback_pht_rule = list(workflow.rules)[-1]
