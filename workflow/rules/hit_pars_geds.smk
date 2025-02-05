@@ -18,7 +18,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 # This rule builds the qc using the calibration dsp files and fft files
@@ -46,8 +46,7 @@ rule build_qc:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-hit-qc")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-qc") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -94,8 +93,7 @@ rule build_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-hit-ecal")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -142,8 +140,7 @@ rule build_aoe_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-hit-aoe")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-aoe") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
@@ -188,8 +185,7 @@ rule build_lq_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-hit-lq")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-lq") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "

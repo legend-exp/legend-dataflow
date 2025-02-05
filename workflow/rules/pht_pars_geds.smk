@@ -20,7 +20,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -101,8 +101,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-pht-qc")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
@@ -152,8 +151,7 @@ rule build_pht_qc:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-pht-qc")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
@@ -213,8 +211,7 @@ rule build_per_energy_calibration:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-hit-ecal")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -325,8 +322,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-pht-ecal-part")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
@@ -385,8 +381,7 @@ rule build_pht_energy_super_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-pht-ecal-part")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -506,8 +501,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-pht-aoe")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
@@ -566,8 +560,7 @@ rule build_pht_aoe_calibrations:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-pht-aoe")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "
@@ -685,8 +678,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-pht-lq")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
                 "--configs {configs} "
                 "--metadata {meta} "
                 "--datatype {params.datatype} "
@@ -740,8 +732,7 @@ rule build_pht_lq_calibration:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-pht-lq")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
         "--configs {configs} "
         "--metadata {meta} "
         "--datatype {params.datatype} "

@@ -14,7 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_tier,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -97,8 +97,7 @@ for key, dataset in part.datasets.items():
             resources:
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-psp-average")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
@@ -142,8 +141,7 @@ rule build_par_psp_fallback:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-psp-average")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -183,8 +181,7 @@ rule build_svm_psp:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
         "--output-file {output.dsp_pars}"
@@ -203,8 +200,7 @@ rule build_pars_psp_svm:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
         "--input-file {input.dsp_pars} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_model}"

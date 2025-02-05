@@ -13,7 +13,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 rule build_pars_dsp_tau_geds:
@@ -36,8 +36,7 @@ rule build_pars_dsp_tau_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-tau")}'
-        "--configs {configs} "
+        execenv_pyexe(config, "par-geds-dsp-tau") + "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -70,8 +69,7 @@ rule build_pars_evtsel_geds:
         runtime=300,
         mem_swap=70,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-evtsel")}'
-        "--configs {configs} "
+        execenv_pyexe(config, "par-geds-dsp-evtsel") + "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -107,8 +105,7 @@ rule build_pars_dsp_nopt_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-nopt")}'
-        "--database {input.database} "
+        execenv_pyexe(config, "par-geds-dsp-nopt") + "--database {input.database} "
         "--configs {configs} "
         "--log {log} "
         "--datatype {params.datatype} "
@@ -144,9 +141,8 @@ rule build_pars_dsp_dplms_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-dplms")}'
+        execenv_pyexe(config, "par-geds-dsp-dplms") + "--peak-file {input.peak_file} "
         "--fft-raw-filelist {input.fft_files} "
-        "--peak-file {input.peak_file} "
         "--database {input.database} "
         "--inplots {input.inplots} "
         "--configs {configs} "
@@ -182,8 +178,7 @@ rule build_pars_dsp_eopt_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-eopt")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-dsp-eopt") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -213,8 +208,7 @@ rule build_svm_dsp_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-svm-build")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
         "--output-file {output.dsp_pars}"
@@ -233,8 +227,7 @@ rule build_pars_dsp_svm_geds:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-dsp-svm")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
         "--input-file {input.dsp_pars} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_file}"

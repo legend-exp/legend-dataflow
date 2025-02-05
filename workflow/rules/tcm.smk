@@ -8,7 +8,7 @@ from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_log_channel,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 # This rule builds the tcm files each raw file
@@ -29,8 +29,7 @@ rule build_tier_tcm:
         runtime=300,
         mem_swap=20,
     shell:
-        f'{execenv_smk_py_script(config, "build-tier-tcm")}'
-        "--log {log} "
+        execenv_pyexe(config, "build-tier-tcm") + "--log {log} "
         f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -57,8 +56,7 @@ rule build_pulser_ids:
     resources:
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-tcm-pulser")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-tcm-pulser") + "--log {log} "
         f"--configs {ro(configs)} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "

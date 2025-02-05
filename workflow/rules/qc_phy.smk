@@ -11,7 +11,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 intier = "psp"
 
@@ -67,8 +67,7 @@ for key, dataset in part.datasets.items():
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
                 runtime=300,
             shell:
-                f'{execenv_smk_py_script(config, "par-geds-pht-qc-phy")}'
-                "--log {log} "
+                execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
                 "--configs {configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
@@ -108,8 +107,7 @@ rule build_pht_qc_phy:
         mem_swap=60,
         runtime=300,
     shell:
-        f'{execenv_smk_py_script(config, "par-geds-pht-qc-phy")}'
-        "--log {log} "
+        execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
         "--configs {configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -146,8 +144,7 @@ rule build_plts_pht_phy:
     group:
         "merge-hit"
     shell:
-        f'{execenv_smk_py_script(config, "merge-channels")}'
-        "--input {input} "
+        execenv_pyexe(config, "merge-channels") + "--input {input} "
         "--output {output} "
 
 
@@ -168,6 +165,5 @@ rule build_pars_pht_phy:
     group:
         "merge-hit"
     shell:
-        f'{execenv_smk_py_script(config, "merge-channels")}'
-        "--input {input.infiles} "
+        execenv_pyexe(config, "merge-channels") + "--input {input.infiles} "
         "--output {output} "

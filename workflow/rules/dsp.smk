@@ -14,7 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -52,8 +52,7 @@ rule build_dsp:
         runtime=300,
         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
     shell:
-        f'{execenv_smk_py_script(config, "build-tier-dsp")}'
-        "--log {log} "
+        execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--tier dsp "
         f"--configs {ro(configs)} "
         "--metadata {meta} "

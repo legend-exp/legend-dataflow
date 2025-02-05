@@ -60,18 +60,15 @@ def execenv_python(config, aslist=False):
     return " ".join(cmdline), cmdenv
 
 
-def execenv_smk_py_script(config, scriptname, aslist=False):
-    """Returns the command used to run a Python script for a Snakemake rule.
+def execenv_pyexe(config, exename):
+    """Returns the command used to run a legend-dataflow executable for a Snakemake rule.
 
-    For example: `apptainer run image.sif python path/to/script.py`
+    For example: `apptainer run image.sif path/to/bindir/<exename>`
     """
-    config = AttrsDict(config)
-
     cmdline, _ = execenv_prefix(config, aslist=True)
-    cmdline.append(f"{config.paths.install}/bin/{scriptname} ")
+    # NOTE: space after the executable name
+    cmdline.append(f"{config.paths.install}/bin/{exename} ")
 
-    if aslist:
-        return cmdline
     return " ".join(cmdline)
 
 

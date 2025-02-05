@@ -9,7 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
-from legenddataflow.execenv import execenv_smk_py_script
+from legenddataflow.execenv import execenv_pyexe
 
 
 rule build_evt:
@@ -44,8 +44,7 @@ rule build_evt:
         mem_swap=50,
     run:
         shell_string = (
-            f'{execenv_smk_py_script(config, "build-tier-evt")}'
-            f"--configs {ro(configs)} "
+            execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
             "--tier {params.tier} "
@@ -96,8 +95,7 @@ rule build_pet:
         mem_swap=50,
     run:
         shell_string = (
-            f'{execenv_smk_py_script(config, "build-tier-evt")}'
-            f"--configs {ro(configs)} "
+            execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
             f"--metadata {ro(meta)} "
             "--log {log} "
             "--tier {params.tier} "
@@ -144,8 +142,7 @@ for evt_tier in ("evt", "pet"):
         group:
             "tier-evt"
         shell:
-            f'{execenv_smk_py_script(config, "lh5concat")}'
-            "--verbose --overwrite "
+            execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
             "--output {output} "
             "-- {params.ro_input} &> {log}"
 
