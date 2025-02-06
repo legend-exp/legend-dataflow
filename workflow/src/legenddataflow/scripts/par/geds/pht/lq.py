@@ -14,13 +14,14 @@ from dbetto.catalog import Props
 from legendmeta import LegendMetadata
 from pygama.math.distributions import gaussian
 from pygama.pargen.AoE_cal import *  # noqa: F403
-from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 
-from ..FileKey import ChannelProcKey, ProcessingFileKey
-from ..log import build_log
+from ....FileKey import ChannelProcKey, ProcessingFileKey
+from ....log import build_log
+from ...pulser_removal import get_pulser_mask
+from ...table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -281,9 +282,7 @@ if __name__ == "__main__":
 
     log = build_log(config_dict, args.log)
 
-    meta = LegendMetadata(path=args.metadata)
-    chmap = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -353,27 +352,16 @@ if __name__ == "__main__":
             return_selection_mask=True,
         )
 
-        if args.pulser_files:
-            mask = np.array([], dtype=bool)
-            for file in args.pulser_files:
-                with Path(file).open() as f:
-                    pulser_dict = json.load(f)
-                pulser_mask = np.array(pulser_dict["mask"])
-                mask = np.append(mask, pulser_mask)
-            if "pulser_multiplicity_threshold" in kwarg_dict:
-                kwarg_dict.pop("pulser_multiplicity_threshold")
-
-        elif args.tcm_filelist:
-            # get pulser mask from tcm files
-            with Path(args.tcm_filelist).open() as f:
-                tcm_files = f.read().splitlines()
-            tcm_files = sorted(np.unique(tcm_files))
-            ids, mask = get_tcm_pulser_ids(
-                tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
-            )
-        else:
-            msg = "No pulser file or tcm filelist provided"
-            raise ValueError(msg)
+        mask = get_pulser_mask(
+            pulser_file=args.pulser_files,
+            tcm_filelist=args.tcm_filelist,
+            channel=channel,
+            pulser_multiplicity_threshold=kwarg_dict.get(
+                "pulser_multiplicity_threshold"
+            ),
+        )
+        if "pulser_multiplicity_threshold" in kwarg_dict:
+            kwarg_dict.pop("pulser_multiplicity_threshold")
 
         data["is_pulser"] = mask[threshold_mask]
 

@@ -7,8 +7,7 @@ import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-from dbetto.catalog import Props
-from legendmeta import LegendMetadata
+from dbetto.catalog import Props, TextDB
 
 from ....FileKey import ChannelProcKey
 
@@ -44,9 +43,7 @@ def par_geds_psp_average() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     args = argparser.parse_args()
 
-    configs = LegendMetadata(args.configs, lazy=True).on(
-        args.timestamp, system=args.datatype
-    )
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     merge_config = Props.read_from(
         configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
     )

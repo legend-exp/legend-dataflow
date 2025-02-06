@@ -4,10 +4,10 @@ from pathlib import Path
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 from ....log import build_log
+from ...table_name import get_table_name
 
 
 def par_geds_tcm_pulser() -> None:
@@ -35,9 +35,7 @@ def par_geds_tcm_pulser() -> None:
     kwarg_dict = config_dict["inputs"]["pulser_config"]
     kwarg_dict = Props.read_from(kwarg_dict)
 
-    meta = LegendMetadata(path=args.metadata)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     if (
         isinstance(args.tcm_files, list)

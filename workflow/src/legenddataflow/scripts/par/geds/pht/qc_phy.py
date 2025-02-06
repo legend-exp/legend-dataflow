@@ -11,7 +11,6 @@ import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
@@ -20,6 +19,7 @@ from pygama.pargen.data_cleaning import (
 
 from ....convert_np import convert_dict_np_to_float
 from ....log import build_log
+from ...table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -52,9 +52,7 @@ if __name__ == "__main__":
 
     log = build_log(config_dict, args.log)
 
-    meta = LegendMetadata(path=args.metadata)
-    chmap = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     # get metadata dictionary
     channel_dict = config_dict["qc_config"][args.channel]

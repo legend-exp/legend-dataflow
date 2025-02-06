@@ -1,5 +1,4 @@
 import argparse
-import logging
 import pickle as pkl
 import time
 from pathlib import Path
@@ -8,11 +7,11 @@ import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
 from ....log import build_log
+from ...table_name import get_table_name
 
 
 def par_geds_dsp_dplms() -> None:
@@ -40,13 +39,9 @@ def par_geds_dsp_dplms() -> None:
     config_dict = configs["snakemake_rules"]["pars_dsp_dplms"]
 
     log = build_log(config_dict, args.log)
-
-    log = logging.getLogger(__name__)
     sto = lh5.LH5Store()
 
-    meta = LegendMetadata(path=args.metadata)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     configs = TextDB(args.configs).on(args.timestamp, system=args.datatype)
     dsp_config = config_dict["inputs"]["proc_chain"][args.channel]

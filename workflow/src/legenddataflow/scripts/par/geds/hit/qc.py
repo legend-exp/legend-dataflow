@@ -10,17 +10,17 @@ from pathlib import Path
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
-    get_tcm_pulser_ids,
 )
 from pygama.pargen.utils import load_data
 
 from ....convert_np import convert_dict_np_to_float
 from ....log import build_log
+from ...pulser_removal import get_pulser_mask
+from ...table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -62,9 +62,7 @@ def par_geds_hit_qc() -> None:
 
     log = build_log(config_dict, args.log)
 
-    meta = LegendMetadata(path=args.metadata)
-    chmap = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     # get metadata dictionary
     channel_dict = config_dict["inputs"]["qc_config"][args.channel]
@@ -198,21 +196,12 @@ def par_geds_hit_qc() -> None:
         cal_energy_param="trapTmax",
     )
 
-    if args.pulser_file:
-        pulser_dict = Props.read_from(args.pulser_file)
-        mask = np.array(pulser_dict["mask"])
-
-    elif args.tcm_filelist:
-        # get pulser mask from tcm files
-        with Path(args.tcm_filelist).open() as f:
-            tcm_files = f.read().splitlines()
-        tcm_files = sorted(np.unique(tcm_files))
-        ids, mask = get_tcm_pulser_ids(
-            tcm_files, channel, kwarg_dict["pulser_multiplicity_threshold"]
-        )
-    else:
-        msg = "No pulser file or tcm filelist provided"
-        raise ValueError(msg)
+    mask = get_pulser_mask(
+        pulser_file=args.pulser_file,
+        tcm_filelist=args.tcm_filelist,
+        channel=channel,
+        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
+    )
 
     data["is_pulser"] = mask[threshold_mask]
 

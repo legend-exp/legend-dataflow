@@ -13,9 +13,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
+
+from ...table_name import get_table_name
 
 mpl.use("agg")
 
@@ -45,9 +46,7 @@ def par_geds_raw_blindcal() -> None:
     logging.getLogger("matplotlib").setLevel(logging.INFO)
     log = logging.getLogger(__name__)
 
-    meta = LegendMetadata(path=args.meta)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.meta, args.timestamp, args.datatype, args.channel)
 
     # peaks to search for
     peaks_keV = np.array(

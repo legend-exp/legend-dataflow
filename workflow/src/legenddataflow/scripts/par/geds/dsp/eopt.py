@@ -11,7 +11,6 @@ import sklearn.gaussian_process.kernels as ker
 from dbetto import TextDB
 from dbetto.catalog import Props
 from dspeed.units import unit_registry as ureg
-from legendmeta import LegendMetadata
 from pygama.math.distributions import hpge_peak
 from pygama.pargen.dsp_optimize import (
     BayesianOptimizer,
@@ -20,6 +19,7 @@ from pygama.pargen.dsp_optimize import (
 )
 
 from ....log import build_log
+from ...table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
@@ -59,9 +59,7 @@ def par_geds_dsp_eopt() -> None:
     sto = lh5.LH5Store()
     t0 = time.time()
 
-    meta = LegendMetadata(path=args.metadata)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
     opt_json = config_dict["inputs"]["optimiser_config"][args.channel]

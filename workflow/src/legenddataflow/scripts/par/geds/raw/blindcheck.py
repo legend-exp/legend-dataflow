@@ -22,6 +22,7 @@ from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 
 from ....log import build_log
+from ...table_name import get_table_name
 
 mpl.use("Agg")
 
@@ -48,10 +49,9 @@ def par_geds_raw_blindcheck() -> None:
     log = build_log(config_dict, args.log)
 
     # get the usability status for this channel
-    chmap = LegendMetadata(args.metadata, lazy=True).channelmap(
-        args.timestamp, system=args.datatype
-    )
-    channel = f"ch{chmap[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
+
+    chmap = LegendMetadata(args.meta).channelmap(args.timestamp, system=args.datatype)
     det_status = chmap[args.channel]["analysis"]["is_blinded"]
 
     # read in calibration curve for this channel

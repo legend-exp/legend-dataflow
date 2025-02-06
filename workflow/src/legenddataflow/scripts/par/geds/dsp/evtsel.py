@@ -12,11 +12,12 @@ import pygama.math.histogram as pgh
 import pygama.pargen.energy_cal as pgc
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
-from pygama.pargen.data_cleaning import generate_cuts, get_keys, get_tcm_pulser_ids
+from pygama.pargen.data_cleaning import generate_cuts, get_keys
 from pygama.pargen.dsp_optimize import run_one_dsp
 
 from ....log import build_log
+from ...pulser_removal import get_pulser_mask
+from ...table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -114,9 +115,7 @@ def par_geds_dsp_evtsel() -> None:
     sto = lh5.LH5Store()
     t0 = time.time()
 
-    meta = LegendMetadata(path=args.metadata)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
+    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
     peak_json = config_dict["inputs"]["peak_config"][args.channel]
@@ -135,21 +134,14 @@ def par_geds_dsp_evtsel() -> None:
             files = f.read().splitlines()
         raw_files = sorted(files)
 
-        if args.pulser_file:
-            pulser_dict = Props.read_from(args.pulser_file)
-            mask = np.array(pulser_dict["mask"])
-
-        elif args.tcm_filelist:
-            # get pulser mask from tcm files
-            with Path(args.tcm_filelist).open() as f:
-                tcm_files = f.read().splitlines()
-            tcm_files = sorted(np.unique(tcm_files))
-            ids, mask = get_tcm_pulser_ids(
-                tcm_files, channel, peak_dict["pulser_multiplicity_threshold"]
-            )
-        else:
-            msg = "No pulser file or tcm filelist provided"
-            raise ValueError(msg)
+        mask = get_pulser_mask(
+            pulser_file=args.pulser_file,
+            tcm_filelist=args.tcm_filelist,
+            channel=channel,
+            pulser_multiplicity_threshold=peak_dict.get(
+                "pulser_multiplicity_threshold"
+            ),
+        )
 
         raw_dict = Props.read_from(args.raw_cal)[channel]["pars"]["operations"]
 
