@@ -1,6 +1,7 @@
 # ruff: noqa: F821, T201
-# from snakemake.script import snakemake # snakemake > 8.16
 from pathlib import Path
+
+from snakemake.script import snakemake  # snakemake > 8.16
 
 print(f"INFO: found {len(snakemake.input)} files")
 if len(snakemake.input) == 0:

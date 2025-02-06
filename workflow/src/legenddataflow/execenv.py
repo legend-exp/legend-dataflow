@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Iterable, Mapping
 
 import colorlog
 import dbetto
@@ -17,68 +18,105 @@ from . import utils
 log = logging.getLogger(__name__)
 
 
-def execenv_prefix(config, aslist=False):
+def _execenv2str(cmd_expr: Iterable, cmd_env: Mapping) -> str:
+    return " ".join([f"{k}={v}" for k, v in cmd_env.items()]) + " " + " ".join(cmd_expr)
+
+
+def apptainer_env_vars(cmdenv: Mapping) -> list[str]:
+    return [f"--env={var}={val}" for var, val in cmdenv.items()]
+
+
+def docker_env_vars(cmdenv: Mapping) -> list[str]:
+    # same syntax
+    return apptainer_env_vars(cmdenv)
+
+
+def shifter_env_vars(cmdenv: Mapping) -> list[str]:
+    # same syntax
+    return apptainer_env_vars(cmdenv)
+
+
+def execenv_prefix(
+    config: AttrsDict, as_string: bool = True
+) -> str | tuple[list, dict]:
     """Returns the software environment command prefix.
 
     For example: `apptainer run image.sif`
+
+    Note
+    ----
+    If `as_string` is True, a space is appended to the returned string.
     """
     config = AttrsDict(config)
+
+    cmdline = []
+    if "env" in config.execenv:
+        cmdenv = config.execenv.env
 
     if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
         cmdline = shlex.split(config.execenv.cmd)
-        if "env" in config.execenv:
-            # FIXME: this is not portable, only works with Apptainer and Docker
-            cmdline += [f"--env={var}={val}" for var, val in config.execenv.env.items()]
 
-        cmdenv = {}
+        has_xdg = False
         xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
         if xdg_runtime_dir:
-            cmdenv["APPTAINER_BINDPATH"] = xdg_runtime_dir
+            has_xdg = True
 
+        if "env" in config.execenv:
+            if any(exe in config.execenv.cmd for exe in ("apptainer", "singularity")):
+                cmdline += apptainer_env_vars(config.execenv.env)
+                if has_xdg:
+                    cmdline += [f"--bind={xdg_runtime_dir}"]
+
+            elif "docker" in config.execenv.cmd:
+                cmdline += docker_env_vars(config.execenv.env)
+
+            elif "shifter" in config.execenv.cmd:
+                cmdline += shifter_env_vars(config.execenv.env)
+
+            if (
+                any(exe in config.execenv.cmd for exe in ("docker", "shifter"))
+                and has_xdg
+            ):
+                cmdline += [f"--volume={xdg_runtime_dir}:{xdg_runtime_dir}"]
+
+        # now we can add the arguments
         cmdline += shlex.split(config.execenv.arg)
-    else:
-        cmdenv = {}
-        cmdline = []
 
-    if aslist:
-        return cmdline, cmdenv
-    return " ".join(cmdline), cmdenv
+    if as_string:
+        return _execenv2str(cmdline, cmdenv) + " "
+
+    return cmdline, cmdenv
 
 
-def execenv_python(config, aslist=False):
+def execenv_pyexe(
+    config: AttrsDict, exename: str, as_string: bool = True
+) -> str | tuple[list, dict]:
     """Returns the Python interpreter command.
 
     For example: `apptainer run image.sif python`
+
+    Note
+    ----
+    If `as_string` is True, a space is appended to the returned string.
     """
     config = AttrsDict(config)
 
-    cmdline, cmdenv = execenv_prefix(config, aslist=True)
-    cmdline.append(f"{config.paths.install}/bin/python")
+    cmdline, cmdenv = execenv_prefix(config, as_string=False)
+    cmdline.append(f"{config.paths.install}/bin/{exename}")
 
-    if aslist:
-        return cmdline, cmdenv
-    return " ".join(cmdline), cmdenv
+    if as_string:
+        return _execenv2str(cmdline, cmdenv) + " "
 
-
-def execenv_pyexe(config, exename):
-    """Returns the command used to run a legend-dataflow executable for a Snakemake rule.
-
-    For example: `apptainer run image.sif path/to/bindir/<exename>`
-    """
-    cmdline, _ = execenv_prefix(config, aslist=True)
-    # NOTE: space after the executable name
-    cmdline.append(f"{config.paths.install}/bin/{exename} ")
-
-    return " ".join(cmdline)
+    return cmdline, cmdenv
 
 
 def dataprod() -> None:
-    """dataprod's command-line interface for installing and loading the software in the data production environment.
+    """dataprod's CLI for installing and loading the software in the data production environment.
 
     .. code-block:: console
 
       $ dataprod --help
-      $ dataprod exec --help  # help section for a specific sub-command
+      $ dataprod install --help  # help section for a specific sub-command
     """
 
     parser = argparse.ArgumentParser(
@@ -139,9 +177,9 @@ def dataprod() -> None:
 
 
 def install(args) -> None:
-    """
-    This function installs user software in the data production environment.
-    The software packages should be specified in the config.yaml file with the
+    """Installs user software in the data production environment.
+
+    The software packages should be specified in the `config_file` with the
     format:
 
     ```yaml
@@ -149,6 +187,12 @@ def install(args) -> None:
       - python_package_spec
       - ...
     ```
+
+    .. code-block:: console
+
+      $ dataprod install config.yaml
+      $ dataprod install --editable config.yaml  # install legend-dataflow in editable mode
+      $ dataprod install --remove config.yaml  # remove install directory
     """
     config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
     config_loc = Path(args.config_file).resolve().parent
@@ -166,17 +210,12 @@ def install(args) -> None:
         shutil.rmtree(path_install)
 
     def _runcmd(cmd_expr, cmd_env, **kwargs):
-        msg = (
-            "running: "
-            + " ".join([f"{k}={v}" for k, v in cmd_env.items()])
-            + " "
-            + " ".join(cmd_expr),
-        )
+        msg = "running: " + _execenv2str(cmd_expr, cmd_env)
         log.debug(msg)
 
         subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
 
-    cmd_prefix, cmd_env = execenv_prefix(config_dict, aslist=True)
+    cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
 
     has_uv = False
     try:
@@ -198,7 +237,7 @@ def install(args) -> None:
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
 
-    python, cmd_env = execenv_python(config_dict, aslist=True)
+    python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
 
     if not has_uv:
         cmd_expr = [
@@ -247,9 +286,7 @@ def install(args) -> None:
 
 
 def cmdexec(args) -> None:
-    """
-    This function loads the data production environment and executes a given command.
-    """
+    """Load the data production environment and execute a given command."""
     config_dict = AttrsDict(dbetto.utils.load_dict(args.config_file))
     config_loc = Path(args.config_file).resolve().parent
 
@@ -260,15 +297,10 @@ def cmdexec(args) -> None:
         ignore_missing=False,
     )
 
-    cmd_prefix, cmd_env = execenv_prefix(config_dict, aslist=True)
+    cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
     cmd_expr = [*cmd_prefix, *args.command]
 
-    msg = (
-        "running: "
-        + " ".join([f"{k}={v}" for k, v in cmd_env.items()])
-        + " "
-        + " ".join(cmd_expr),
-    )
+    msg = "running: " + _execenv2str(cmd_expr, cmd_env)
     log.debug(msg)
 
     subprocess.run(cmd_expr, env=cmd_env, check=True)

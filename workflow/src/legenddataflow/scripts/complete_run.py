@@ -7,9 +7,9 @@ import subprocess
 import time
 from pathlib import Path
 
-from .. import patterns
-from .. import utils as ut
-from ..FileKey import FileKey
+from legenddataflow import FileKey, patterns
+from legenddataflow import utils as ut
+from legenddataflow.execenv import _execenv2str, execenv_pyexe
 
 print("INFO: dataflow ran successfully, now few final checks and scripts")
 
@@ -200,14 +200,14 @@ def build_file_dbs(gen_tier_path, outdir):
             Path(ut.tmp_log_path(snakemake.params.setup))
             / outfile.with_suffix(".log").name
         )
+
         print(f"INFO: ......building {outfile}")
+        pre_cmdline, cmdenv = execenv_pyexe(
+            snakemake.params.setup, "build-filedb", as_string=False
+        )
 
         cmdline = [
-            *ut.runcmd(snakemake.params.setup, aslist=True),
-            "--",
-            "python3",
-            "-B",
-            f"{snakemake.params.basedir}/scripts/build_fdb.py",
+            *pre_cmdline,
             "--scan-path",
             spec,
             "--output",
@@ -221,10 +221,8 @@ def build_file_dbs(gen_tier_path, outdir):
         if speck[0] == "phy":
             cmdline += ["--assume-nonsparse"]
 
-        cmdenv = {}
-
         # TODO: forward stdout to log file
-        processes.add(subprocess.Popen(cmdline))
+        processes.add(subprocess.Popen(cmdline, env=cmdenv))
 
         if len(processes) >= snakemake.threads:
             os.wait()
@@ -236,12 +234,7 @@ def build_file_dbs(gen_tier_path, outdir):
 
     for p in processes:
         if p.returncode != 0:
-            _cmdline = (
-                " ".join([f"{k}={v}" for k, v in cmdenv.items()])
-                + " "
-                + " ".join(p.args)
-            )
-            msg = f"at least one FileDB building thread failed: {_cmdline}"
+            msg = f"at least one FileDB building thread failed: {_execenv2str(p.args, cmdenv)}"
             raise RuntimeError(msg)
 
     toc = time.time()

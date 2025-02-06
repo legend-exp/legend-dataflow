@@ -3,7 +3,6 @@ from .create_pars_keylist import ParsKeyResolve
 from .execenv import (
     execenv_prefix,
     execenv_pyexe,
-    execenv_python,
 )
 from .FileKey import ChannelProcKey, FileKey, ProcessingFileKey
 from .pars_loading import ParsCatalog
@@ -22,7 +21,6 @@ __all__ = [
     "ProcessingFileKey",
     "execenv_prefix",
     "execenv_pyexe",
-    "execenv_python",
     "subst_vars",
     "subst_vars_in_snakemake_config",
     "unix_time",

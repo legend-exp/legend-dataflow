@@ -80,7 +80,7 @@ onstart:
 
     # Make sure some packages are initialized before we begin to avoid race conditions
     for pkg in ["dspeed", "lgdo", "matplotlib"]:
-        shell('{swenv} python3 -B -c "import ' + pkg + '"')
+        shell(execenv.execenv_pyexe(config, "python") + f" -c 'import {pkg}'")
 
         # Log parameter catalogs in validity.jsonl files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
@@ -169,4 +169,4 @@ rule gen_filelist:
     output:
         temp(Path(utils.filelist_path(config)) / "{label}-{tier}.filelist"),
     script:
-        "scripts/write_filelist.py"
+        "src/legenddataflow/scripts/write_filelist.py"
