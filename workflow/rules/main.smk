@@ -47,7 +47,7 @@ rule autogen_output:
         valid_keys_path=os.path.join(pars_path(config), "valid_keys"),
         filedb_path=os.path.join(pars_path(config), "filedb"),
         setup=lambda wildcards: config,
-        basedir=basedir,
+        basedir=workflow.basedir,
     threads: min(workflow.cores, 64)
     script:
-        "../scripts/complete_run.py"
+        "../src/legenddataflow/scripts/complete_run.py"
