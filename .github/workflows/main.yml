@@ -57,3 +57,5 @@ jobs:
           python -m pytest --cov=legenddataflow --cov-report=xml
       - name: Upload Coverage to codecov.io
         uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
