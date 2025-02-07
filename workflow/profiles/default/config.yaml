@@ -1,5 +1,5 @@
 cores: all
-configfile: config.yaml
+configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true

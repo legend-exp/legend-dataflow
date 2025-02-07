@@ -2,7 +2,7 @@ cores: 125
 restart-times: 2
 resources:
   - mem_swap=3500
-configfile: config.yaml
+configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true
