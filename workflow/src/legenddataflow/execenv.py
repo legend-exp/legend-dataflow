@@ -50,7 +50,8 @@ def execenv_prefix(
     config = AttrsDict(config)
 
     cmdline = []
-    if "env" in config.execenv:
+    cmdenv = {}
+    if "execenv" in config and "env" in config.execenv:
         cmdenv = config.execenv.env
 
     if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
@@ -207,6 +208,8 @@ def install(args) -> None:
     path_install = config_dict.paths.install
 
     if args.remove and Path(path_install).exists():
+        msg = f"removing: {path_install}"
+        log.info(msg)
         shutil.rmtree(path_install)
 
     def _runcmd(cmd_expr, cmd_env, **kwargs):
@@ -216,8 +219,10 @@ def install(args) -> None:
         subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
+    python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
 
     has_uv = False
+    uv_expr = [*python, "-m", "uv"]
     try:
         _runcmd(
             [*cmd_prefix, "uv", "--version"],
@@ -225,6 +230,7 @@ def install(args) -> None:
             capture_output=True,
         )
         has_uv = True
+        uv_expr = [*cmd_prefix, "uv", "--version"]
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
@@ -232,12 +238,10 @@ def install(args) -> None:
     if has_uv:
         cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
     else:
-        cmd_expr = [*cmd_prefix, "python3", "-m", "venv", path_install]
+        cmd_expr = [*cmd_prefix, "python", "-m", "venv", path_install]
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
-
-    python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
 
     if not has_uv:
         cmd_expr = [
@@ -270,9 +274,7 @@ def install(args) -> None:
     # and finally install legenddataflow with all dependencies
 
     cmd_expr = [
-        *python,
-        "-m",
-        "uv",
+        *uv_expr,
         "pip",
         "--no-cache",
         "install",
