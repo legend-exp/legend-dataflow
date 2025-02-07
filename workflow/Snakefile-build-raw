@@ -1,0 +1,102 @@
+"""
+Snakefile for doing the first stages of data processing from the daq sandbox files
+to the blinded raw data. It handles:
+- moving the daq files from the sandbox to the sorted file system
+- running build raw on this data (with trimming)
+- blinding the physics data
+"""
+
+import os, sys
+from pathlib import Path
+from legenddataflow import patterns as patt
+from legenddataflow import utils, execenv, ParsKeyResolve
+from datetime import datetime
+from dbetto import AttrsDict
+
+utils.subst_vars_in_snakemake_config(workflow, config)
+config = AttrsDict(config)
+
+check_in_cycle = True
+swenv = execenv.execenv_prefix(config)
+meta_path = utils.metadata_path(config)
+det_status = utils.det_status_path(config)
+configs = utils.config_path(config)
+chan_maps = utils.chan_map_path(config)
+meta = utils.metadata_path(config)
+
+time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+
+if not Path(meta_path).exists():
+    LegendMetadata(meta_path).checkout(config.legend_metadata_version)
+
+
+wildcard_constraints:
+    experiment=r"\w+",
+    period=r"p\d{2}",
+    run=r"r\d{3}",
+    datatype=r"\w{3}",
+    timestamp=r"\d{8}T\d{6}Z",
+
+
+localrules:
+    gen_filelist,
+    autogen_output,
+
+
+include: "rules/common.smk"
+include: "rules/filelist_gen.smk"
+include: "rules/main.smk"
+include: "rules/raw.smk"
+include: "rules/blinding_check.smk"
+
+
+onstart:
+    print("INFO: initializing workflow")
+
+    # Make sure some packages are initialized before we send jobs to avoid race conditions
+    shell(execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'")
+
+    raw_par_cat_file = Path(utils.pars_path(config)) / "raw" / "validity.yaml"
+    if raw_par_cat_file.is_file():
+        raw_par_cat_file.unlink()
+    try:
+        Path(raw_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
+        ParsKeyResolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
+    except NameError:
+        print("WARNING: no raw parameter catalog found")
+
+
+onsuccess:
+    shell("rm -f *.gen")
+    shell(f"rm -rf {utils.filelist_path(config)}/*")
+
+
+rule gen_filelist:
+    input:
+        lambda wildcards: get_filelist(
+            wildcards,
+            config,
+            get_search_pattern(wildcards.tier),
+            ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
+            analysis_runs_file=Path(det_status) / "runlists.yaml",
+        ),
+    output:
+        temp(Path(utils.filelist_path(config)) / "{label}-{tier}.filelist"),
+    script:
+        "src/legenddataflow/scripts/write_filelist.py"
+
+
+rule sort_data:
+    """
+    This rules moves the daq data from the unsorted sandbox dir
+    to the sorted dirs under generated
+    """
+    input:
+        patt.get_pattern_tier_daq_unsorted(config, extension="fcio"),
+    output:
+        patt.get_pattern_tier_daq(config, extension="fcio"),
+    shell:
+        "mv {input} {output}"
+
+
+# vim: filetype=snakemake

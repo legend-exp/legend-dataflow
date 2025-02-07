@@ -1,3 +1,6 @@
+.snakemake
+workflow/src/legenddataflow/_version.py
+
 # New additions go at the top!
 *.c
 .DS_Store
@@ -10,6 +13,13 @@
 *~
 *.csv
 
+# uv
+uv.lock
+
+#prodenv_stuff
+inputs
+software
+generated
 
 # -------------------- github-generated stuff -------------------
 # Byte-compiled / optimized / DLL files
@@ -77,7 +87,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-/docs/build/
+/docs/_build/
 /docs/source/generated
 
 # PyBuilder
@@ -113,3 +123,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+docs/source/api

@@ -1,9 +1,11 @@
-The legend-dataflow-hades package is licensed under the MIT "Expat" License:
+The legend-dataflow package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2021:
 >
->    Matteo Agostini <matteo.agostini@ph.tum.de>
->    Oliver Schulz <oschulz@mpp.mpg.de>
+> Matteo Agostini <matteo.agostini@ph.tum.de>
+> Oliver Schulz <oschulz@mpp.mpg.de>
+> George Marshall <george.marshall.20@ucl.ac.uk>
+> Luigi Pertoldi <gipert@pm.me>
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
@@ -22,4 +24,3 @@ The legend-dataflow-hades package is licensed under the MIT "Expat" License:
 > LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
->

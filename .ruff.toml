@@ -12,7 +12,7 @@ lint.select = [
   "PIE",         # flake8-pie
   "PL",          # pylint
   "PT",          # flake8-pytest-style
-  # "PTH",         # flake8-use-pathlib
+  "PTH",         # flake8-use-pathlib
   "RET",         # flake8-return
   "RUF",         # Ruff-specific
   "SIM",         # flake8-simplify
@@ -29,7 +29,6 @@ lint.extend-ignore = [
   "G004",   # Logging statement uses f-string
   "PLR",    # Design related pylint codes
   "E501",   # Line too long
-  "PT004",  # Use underscore for non-returning fixture (use usefixture instead)
   "RET505", # Unnecessary `else` after `return` statement
   "E402", # Module level imports at top of file need disable for numba default imports
   "NPY201", # Numpy 2 warnings ignore for the moment

@@ -1,8 +1,0 @@
-cores: 30
-restart-times: 2
-max-jobs-per-second: 1
-resources:
-  - mem_swap=3500
-configfile: config.json
-keep-going: true
-rerun-incomplete: true
