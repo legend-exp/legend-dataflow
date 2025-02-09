@@ -16,7 +16,7 @@ from dbetto.catalog import Props
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
 
-from ...table_name import get_table_name
+from ....table_name import get_table_name
 
 mpl.use("agg")
 

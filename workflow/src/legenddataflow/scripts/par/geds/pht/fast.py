@@ -16,10 +16,10 @@ from workflow.src.legenddataflow.scripts.par.geds.pht.aoe import run_aoe_calibra
 from workflow.src.legenddataflow.scripts.par.geds.pht.lq import run_lq_calibration
 from workflow.src.legenddataflow.scripts.par.geds.pht.partcal import calibrate_partition
 
+from .....log import build_log
 from ....FileKey import ChannelProcKey, ProcessingFileKey
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

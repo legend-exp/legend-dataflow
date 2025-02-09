@@ -17,9 +17,9 @@ from pygama.pargen.data_cleaning import (
     get_keys,
 )
 
+from .....log import build_log
 from ....convert_np import convert_dict_np_to_float
-from ....log import build_log
-from ...table_name import get_table_name
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

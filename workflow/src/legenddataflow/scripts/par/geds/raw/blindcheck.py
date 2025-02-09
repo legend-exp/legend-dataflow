@@ -21,8 +21,8 @@ from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 
-from ....log import build_log
-from ...table_name import get_table_name
+from .....log import build_log
+from ....table_name import get_table_name
 
 mpl.use("Agg")
 

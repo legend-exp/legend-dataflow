@@ -18,8 +18,8 @@ from pygama.pargen.dsp_optimize import (
     run_one_dsp,
 )
 
-from ....log import build_log
-from ...table_name import get_table_name
+from .....log import build_log
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

@@ -23,10 +23,10 @@ from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
 
+from .....log import build_log
 from ....convert_np import convert_dict_np_to_float
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 mpl.use("agg")
 sto = lh5.LH5Store()

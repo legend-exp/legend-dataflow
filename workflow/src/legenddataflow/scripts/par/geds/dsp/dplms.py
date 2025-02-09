@@ -10,8 +10,8 @@ from dbetto.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
-from ....log import build_log
-from ...table_name import get_table_name
+from .....log import build_log
+from ....table_name import get_table_name
 
 
 def par_geds_dsp_dplms() -> None:

@@ -15,9 +15,9 @@ from dbetto.catalog import Props
 from pygama.pargen.data_cleaning import generate_cuts, get_keys
 from pygama.pargen.dsp_optimize import run_one_dsp
 
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from .....log import build_log
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 

@@ -6,8 +6,8 @@ from dbetto import TextDB
 from dbetto.catalog import Props
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
-from ....log import build_log
-from ...table_name import get_table_name
+from .....log import build_log
+from ....table_name import get_table_name
 
 
 def par_geds_tcm_pulser() -> None:

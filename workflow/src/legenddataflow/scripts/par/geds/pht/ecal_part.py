@@ -18,10 +18,10 @@ from pygama.math.distributions import nb_poly
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 
+from .....log import build_log
 from ....FileKey import ChannelProcKey, ProcessingFileKey
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)

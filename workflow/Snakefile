@@ -20,8 +20,7 @@ import logging
 
 from dbetto import AttrsDict
 from legendmeta import LegendMetadata
-from legenddataflow import CalGrouping
-from legenddataflow import utils
+from legenddataflow import CalGrouping, execenv, utils
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
@@ -37,6 +36,8 @@ time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
 if not Path(meta).exists():
     LegendMetadata(meta).checkout(config.legend_metadata_version)
+
+metadata = LegendMetadata(meta, lazy=True)
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
@@ -80,7 +81,7 @@ onstart:
 
     # Make sure some packages are initialized before we begin to avoid race conditions
     for pkg in ["dspeed", "lgdo", "matplotlib"]:
-        shell(execenv.execenv_pyexe(config, "python") + f" -c 'import {pkg}'")
+        shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
 
         # Log parameter catalogs in validity.jsonl files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
@@ -123,9 +124,11 @@ onstart:
 onsuccess:
     from snakemake.report import auto_report
 
+
     rep_dir = f"{log_path(config)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
     Path(rep_dir).mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
+    auto_report(workflow.persistence.dag, report_plugin, report_settings)
 
     with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
         f.writelines(str(workflow.persistence.dag))

@@ -10,9 +10,9 @@ from pygama.pargen.data_cleaning import get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 from pygama.pargen.extract_tau import ExtractTau
 
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from .....log import build_log
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 
 def par_geds_dsp_tau() -> None:

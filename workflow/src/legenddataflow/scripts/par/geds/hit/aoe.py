@@ -12,10 +12,10 @@ from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.utils import load_data
 
+from .....log import build_log
 from ....convert_np import convert_dict_np_to_float
-from ....log import build_log
-from ...pulser_removal import get_pulser_mask
-from ...table_name import get_table_name
+from ....pulser_removal import get_pulser_mask
+from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
