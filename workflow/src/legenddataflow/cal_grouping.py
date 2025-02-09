@@ -71,11 +71,12 @@ class CalGrouping:
         datatype="cal",
         name=None,
         extension="yaml",
+        pattern_func=get_pattern_pars_tmp_channel,
     ):
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
-        for item in catalog:
-            par_files = item.apply
+        for item in catalog.entries["all"]:
+            par_files = item.file
             for par_file in par_files:
                 if (
                     par_file.split("-")[-1]
@@ -98,7 +99,7 @@ class CalGrouping:
                 if name is not None:
                     selected_par_files.append(
                         fk.get_path_from_filekey(
-                            get_pattern_pars_tmp_channel(
+                            pattern_func(
                                 self.setup, tier, name=name, extension=extension
                             ),
                             channel=channel,
@@ -107,7 +108,7 @@ class CalGrouping:
                 else:
                     selected_par_files.append(
                         fk.get_path_from_filekey(
-                            get_pattern_pars_tmp_channel(
+                            pattern_func(
                                 self.setup, tier, name=name, extension=extension
                             ),
                             channel=channel,
@@ -125,44 +126,17 @@ class CalGrouping:
         datatype="cal",
         name=None,
     ):
-        dataset = self.get_dataset(dataset, channel)
-        all_par_files = []
-        for item in catalog:
-            par_files = item.apply
-            for par_file in par_files:
-                if (
-                    par_file.split("-")[-1]
-                    == str(
-                        get_pattern_pars(self.setup, tier, check_in_cycle=False).name
-                    ).split("-")[-1]
-                ):
-                    all_par_files.append(par_file)
-        if channel == "default":
-            channel = "{channel}"
-        selected_par_files = []
-        for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
-            if (
-                fk.datatype == datatype
-                and fk.experiment == experiment
-                and fk.period in list(dataset)
-                and (dataset[fk.period] == "all" or fk.run in dataset[fk.period])
-            ):
-                if name is not None:
-                    selected_par_files.append(
-                        fk.get_path_from_filekey(
-                            get_pattern_plts_tmp_channel(self.setup, tier, name=name),
-                            channel=channel,
-                        )[0]
-                    )
-                else:
-                    selected_par_files.append(
-                        fk.get_path_from_filekey(
-                            get_pattern_plts_tmp_channel(self.setup, tier, name=name),
-                            channel=channel,
-                        )[0]
-                    )
-        return selected_par_files
+        return self.get_par_files(
+            catalog,
+            dataset,
+            channel,
+            tier,
+            experiment=experiment,
+            datatype=datatype,
+            name=name,
+            extension="pkl",
+            pattern_func=get_pattern_plts_tmp_channel,
+        )
 
     def get_log_file(
         self,

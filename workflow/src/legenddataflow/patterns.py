@@ -250,15 +250,16 @@ def get_pattern_pars_tmp_channel(setup, tier, name=None, extension="yaml"):
         )
 
 
-def get_pattern_plts_tmp_channel(setup, tier, name=None):
+def get_pattern_plts_tmp_channel(setup, tier, name=None, extension="pkl"):
     if name is None:
         return Path(f"{tmp_plts_path(setup)}") / (
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_" + tier + ".pkl"
+            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
+            + f"{tier}.{extension}"
         )
     else:
         return Path(f"{tmp_plts_path(setup)}") / (
             "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
-            + f"{tier}_{name}.pkl"
+            + f"{tier}_{name}.{extension}"
         )
 
 
