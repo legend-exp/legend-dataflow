@@ -9,7 +9,6 @@ import copy
 import os
 import re
 import string
-from datetime import datetime
 from pathlib import Path
 
 # from dateutil import parser
@@ -187,14 +186,6 @@ def run_splitter(files):
             if run == run_no:
                 run_files[i].append(file)
     return run_files
-
-
-def unix_time(value):
-    if isinstance(value, str):
-        return datetime.timestamp(datetime.strptime(value, "%Y%m%dT%H%M%SZ"))
-    else:
-        msg = f"Can't convert type {type(value)} to unix time"
-        raise ValueError(msg)
 
 
 def set_last_rule_name(workflow, new_name):

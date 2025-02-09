@@ -8,13 +8,14 @@ from collections import namedtuple
 from itertools import product
 from pathlib import Path
 
+from dbetto.time import unix_time
+
 from .patterns import (
     full_channel_pattern_with_extension,
     get_pattern_tier,
     key_pattern,
     processing_pattern,
 )
-from .utils import unix_time
 
 # key_pattern -> key
 #

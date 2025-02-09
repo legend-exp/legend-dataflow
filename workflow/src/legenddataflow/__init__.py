@@ -9,7 +9,6 @@ from .pars_loading import ParsCatalog
 from .utils import (
     subst_vars,
     subst_vars_in_snakemake_config,
-    unix_time,
 )
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "execenv_pyexe",
     "subst_vars",
     "subst_vars_in_snakemake_config",
-    "unix_time",
 ]
