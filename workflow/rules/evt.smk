@@ -23,7 +23,7 @@ rule build_evt:
             else get_pattern_tier(config, "ann", check_in_cycle=False)
         ),
         par_files=lambda wildcards: ParsCatalog.get_par_file(
-            config, wildcards.timestamp, "hit"
+            hit_par_catalog, config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="evt", wildcards=wildcards, name="xtc"
@@ -74,7 +74,7 @@ rule build_pet:
             else get_pattern_tier(config, "pan", check_in_cycle=False)
         ),
         par_files=lambda wildcards: ParsCatalog.get_par_file(
-            config, wildcards.timestamp, "pht"
+            pht_par_catalog, config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="pet", wildcards=wildcards, name="xtc"

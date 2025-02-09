@@ -4,7 +4,7 @@ Helper functions for running data production
 
 from pathlib import Path
 from legenddataflow import patterns as patt
-from legenddataflow import ProcessingFileKey
+from legenddataflow import ProcessingFileKey, ParsCatalog
 from dbetto.catalog import Catalog
 from legenddataflow import utils
 
@@ -28,11 +28,11 @@ def get_blinding_curve_file(wildcards):
         ]
 
 
-def get_blinding_check_file(wildcards):
+def get_blinding_check_file(
+    wildcards,
+):
     """func to get the right blinding check file"""
-    par_files = Catalog.get_files(
-        Path(patt.get_pars_path(config, "raw")) / "validity.yaml", wildcards.timestamp
-    )
+    par_files = ParsCatalog.get_files(raw_catalog, wildcards.timestamp)
     if isinstance(par_files, str):
         return Path(patt.get_pars_path(config, "raw")) / par_files
     else:
@@ -114,3 +114,8 @@ def get_search_pattern(tier):
         return patt.get_pattern_tier_daq(config, extension="*")
     else:
         return patt.get_pattern_tier(config, "raw", check_in_cycle=False)
+
+
+def get_table_name(metadata, config, datatype, timestamp, detector, tier):
+    chmap = metadata.channelmap(timestamp, system=datatype)
+    return config.table_format[tier].format(ch=chmap[detector].daq.rawid)

@@ -69,7 +69,7 @@ rule build_energy_calibration:
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                config, wildcards.timestamp, "dsp"
+                dsp_par_catalog, config, wildcards.timestamp, "dsp"
             )
         ),
         inplots=get_pattern_plts_tmp_channel(config, "hit", "qc"),

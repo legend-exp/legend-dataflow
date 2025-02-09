@@ -51,7 +51,7 @@ dynamic = ["version"]
 
 dependencies = [
     "colorlog",
-    "dbetto>=1.0.5",
+    "dbetto>=1.2.0",
     "pygama>=2",
     "dspeed>=1.6",
     "pylegendmeta==1.2.0a2",
@@ -114,7 +114,7 @@ par-geds-pht-qc         = "legenddataflow.scripts.par.geds.pht.qc:par_geds_pht_q
 par-geds-psp-average    = "legenddataflow.scripts.par.geds.psp.average:par_geds_psp_average"
 par-geds-raw-blindcal   = "legenddataflow.scripts.par.geds.raw.blindcal:par_geds_raw_blindcal"
 par-geds-raw-blindcheck = "legenddataflow.scripts.par.geds.raw.blindcheck:par_geds_raw_blindcheck"
-par-geds-tcm-pulser     = "legenddataflow.scripts.par.geds.raw.tcm.pulser:par_geds_raw_pulser"
+par-geds-tcm-pulser     = "legenddataflow.scripts.par.geds.tcm.pulser:par_geds_tcm_pulser"
 
 [tool.uv.workspace]
 exclude = ["generated", "inputs", "software", "workflow"]

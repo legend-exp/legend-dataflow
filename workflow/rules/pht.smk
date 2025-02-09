@@ -36,7 +36,7 @@ rule build_pht:
     input:
         dsp_file=get_pattern_tier(config, intier, check_in_cycle=False),
         pars_file=lambda wildcards: ParsCatalog.get_par_file(
-            config, wildcards.timestamp, "pht"
+            pht_par_catalog, config, wildcards.timestamp, "pht"
         ),
     output:
         tier_file=get_pattern_tier(config, "pht", check_in_cycle=check_in_cycle),

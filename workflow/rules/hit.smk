@@ -33,7 +33,7 @@ rule build_hit:
     input:
         dsp_file=get_pattern_tier(config, "dsp", check_in_cycle=False),
         pars_file=lambda wildcards: ParsCatalog.get_par_file(
-            config, wildcards.timestamp, "hit"
+            hit_par_catalog, config, wildcards.timestamp, "hit"
         ),
     output:
         tier_file=get_pattern_tier(config, "hit", check_in_cycle=check_in_cycle),

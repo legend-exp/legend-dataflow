@@ -174,6 +174,9 @@ rule build_svm_psp:
         ).replace("hyperpars.json", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(config, "psp", "svm", "pkl"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     log:
         str(get_pattern_log(config, "pars_psp_svm", time)).replace("{datatype}", "cal"),
     group:
@@ -185,6 +188,9 @@ rule build_svm_psp:
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
         "--output-file {output.dsp_pars}"
+        "--timestamp {params.timestamp} "
+        "--datatype {params.datatype} "
+        "--configs {configs} "
 
 
 rule build_pars_psp_svm:

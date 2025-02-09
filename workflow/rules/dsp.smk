@@ -34,7 +34,7 @@ rule build_dsp:
         raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                config, wildcards.timestamp, "dsp"
+                dsp_par_catalog, config, wildcards.timestamp, "dsp"
             )
         ),
     params:

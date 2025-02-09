@@ -34,7 +34,7 @@ rule build_psp:
         raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                config, wildcards.timestamp, "psp"
+                psp_par_catalog, config, wildcards.timestamp, "psp"
             )
         ),
     params:

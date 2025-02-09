@@ -26,6 +26,9 @@ rule build_pars_dsp_tau_geds:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        raw_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+        ),
     output:
         decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
         plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
@@ -59,6 +62,9 @@ rule build_pars_evtsel_geds:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        raw_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+        ),
     output:
         peak_file=temp(get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5")),
     log:
@@ -93,6 +99,9 @@ rule build_pars_dsp_nopt_geds:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        raw_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+        ),
     output:
         dsp_pars_nopt=temp(
             get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
@@ -199,6 +208,9 @@ rule build_svm_dsp_geds:
         train_data=lambda wildcards: str(
             get_input_par_file(wildcards, "dsp", "svm_hyperpars")
         ).replace("hyperpars.json", "train.lh5"),
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
     output:
         dsp_pars=get_pattern_pars(config, "dsp", "svm", "pkl"),
     log:
@@ -211,7 +223,10 @@ rule build_svm_dsp_geds:
         execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
-        "--output-file {output.dsp_pars}"
+        "--output-file {output.dsp_pars} "
+        "--timestamp {params.timestamp} "
+        "--datatype {params.datatype} "
+        "--configs {configs} "
 
 
 rule build_pars_dsp_svm_geds:

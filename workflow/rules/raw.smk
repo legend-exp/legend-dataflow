@@ -85,7 +85,7 @@ rule build_raw_blind:
         tier_file=str(get_pattern_tier(config, "raw", check_in_cycle=False)).replace(
             "{datatype}", "phy"
         ),
-        blind_file=get_blinding_curve_file,
+        blind_file=lambda wildcards: get_blinding_check_file(wildcards, raw_par_catalog),
     params:
         timestamp="{timestamp}",
         datatype="phy",

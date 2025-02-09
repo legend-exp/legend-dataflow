@@ -188,7 +188,10 @@ rule build_per_energy_calibration:
         inplots=get_pattern_plts_tmp_channel(config, "pht", "qc"),
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                config, wildcards.timestamp, intier
+                psp_par_catalog if intier == "psp" else dsp_par_catalog,
+                config,
+                wildcards.timestamp,
+                intier,
             )
         ),
     params:

@@ -25,8 +25,8 @@ def get_chanlist(setup, keypart, workflow, config, det_status, chan_maps):
 
     os.system(
         execenv_pyexe(config, "create-chankeylist")
-        + "--det-status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
-        "--datatype cal --output-file {output_file}"
+        + f"--det-status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
+        f"--datatype cal --output-file {output_file}"
     )
 
     with open(output_file) as r:
