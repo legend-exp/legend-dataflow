@@ -128,9 +128,9 @@ def concat_phy_filenames(config, phy_filenames, tier):
     """
     This function concatenates the files from the same run together
     """
-    fn_pattern = patt.get_pattern(config, tier)
+    fn_pattern = get_pattern(config, tier)
     # group files by run
-    sorted_phy_filenames = patt.run_grouper(phy_filenames)
+    sorted_phy_filenames = run_grouper(phy_filenames)
     phy_filenames = []
 
     for run in sorted_phy_filenames:

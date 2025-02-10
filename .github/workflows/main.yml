@@ -86,6 +86,8 @@ jobs:
         run: |
           snakemake --workflow-profile workflow/profiles/lngs-build-raw -n all-*-daq.gen
           snakemake --workflow-profile workflow/profiles/lngs-build-raw -n all-*-raw.gen
+          snakemake --workflow-profile workflow/profiles/lngs -n all-*-evt.gen
+          snakemake --workflow-profile workflow/profiles/lngs -n all-*-skm.gen
 
   test-coverage:
     name: Calculate and upload test coverage
@@ -96,7 +98,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Generate Report
         run: |
