@@ -57,6 +57,7 @@ dependencies = [
     "pylegendmeta==1.2.0a2",
     "legend-pydataobj>=1.11.6",
     "legend-daq2lh5>=1.4",
+    "pip",
 ]
 
 [project.optional-dependencies]

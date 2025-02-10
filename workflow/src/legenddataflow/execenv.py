@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Iterable, Mapping
 
@@ -50,7 +51,8 @@ def execenv_prefix(
     config = AttrsDict(config)
 
     cmdline = []
-    if "env" in config.execenv:
+    cmdenv = {}
+    if "execenv" in config and "env" in config.execenv:
         cmdenv = config.execenv.env
 
     if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
@@ -91,9 +93,9 @@ def execenv_prefix(
 def execenv_pyexe(
     config: AttrsDict, exename: str, as_string: bool = True
 ) -> str | tuple[list, dict]:
-    """Returns the Python interpreter command.
+    """Returns the path to an executable installed in the virtualenv.
 
-    For example: `apptainer run image.sif python`
+    For example: `apptainer run image.sif path/to/venv/bin/{exename}`
 
     Note
     ----
@@ -204,9 +206,12 @@ def install(args) -> None:
         ignore_missing=False,
     )
 
+    # path to virtualenv location
     path_install = config_dict.paths.install
 
     if args.remove and Path(path_install).exists():
+        msg = f"removing: {path_install}"
+        log.info(msg)
         shutil.rmtree(path_install)
 
     def _runcmd(cmd_expr, cmd_env, **kwargs):
@@ -216,32 +221,39 @@ def install(args) -> None:
         subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
+    # HACK: get the full path to this python interpreter in case there is no execenv prefix
+    python = sys.executable if cmd_prefix == [] else "python"
+    python_venv, _ = execenv_pyexe(config_dict, "python", as_string=False)
 
     has_uv = False
     try:
+        # is uv already available?
         _runcmd(
             [*cmd_prefix, "uv", "--version"],
             cmd_env,
             capture_output=True,
         )
         has_uv = True
+        # we'll use the existing uv
+        uv_expr = [*cmd_prefix, "uv", "--version"]
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+        # we'll use uv from the virtualenv (installed below)
+        uv_expr = [*python_venv, "-m", "uv"]
 
     # configure venv
     if has_uv:
+        # if uv is available, just use it to create the venv
         cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
     else:
-        cmd_expr = [*cmd_prefix, "python3", "-m", "venv", path_install]
+        # otherwise use python-venv
+        cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
 
-    python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
-
     if not has_uv:
         cmd_expr = [
-            *python,
+            *python_venv,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -255,7 +267,7 @@ def install(args) -> None:
 
         # install uv
         cmd_expr = [
-            *python,
+            *python_venv,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -268,15 +280,14 @@ def install(args) -> None:
         _runcmd(cmd_expr, cmd_env)
 
     # and finally install legenddataflow with all dependencies
+    # this must be done within the execenv, since jobs will be run within it
 
     cmd_expr = [
-        *python,
-        "-m",
-        "uv",
+        *uv_expr,
         "pip",
         "--no-cache",
         "install",
-        str(config_loc),  # +"[dataprod]"
+        str(config_loc),
     ]
     if args.editable:
         cmd_expr.insert(-1, "--editable")
