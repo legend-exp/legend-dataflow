@@ -59,7 +59,6 @@ table_format:
 
 execenv:
   env:
-    PRODENV: $PRODENV
     HDF5_USE_FILE_LOCKING: "False"
     LGDO_BOUNDSCHECK: "false"
     DSPEED_BOUNDSCHECK: "false"
