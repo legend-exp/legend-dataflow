@@ -5,3 +5,6 @@ configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile-build-raw
 keep-going: true
 rerun-incomplete: true
+envvars:
+  PRODENV: /data2/public/prodenv
+  SYSTEM: lngs

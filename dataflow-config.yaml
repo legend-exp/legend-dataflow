@@ -58,14 +58,32 @@ table_format:
   tcm: hardware_tcm_1
 
 execenv:
-  cmd: apptainer exec
-  arg: $PRODENV/containers/legendexp_legend-base_latest_20241110203225.sif
-  env:
-    HDF5_USE_FILE_LOCKING: "False"
-    LGDO_BOUNDSCHECK: "false"
-    DSPEED_BOUNDSCHECK: "false"
-    PYGAMA_PARALLEL: "false"
-    PYGAMA_FASTMATH: "false"
-    DISABLE_TQDM: "True"
+  local:
+    env:
+      HDF5_USE_FILE_LOCKING: "False"
+      LGDO_BOUNDSCHECK: "false"
+      DSPEED_BOUNDSCHECK: "false"
+      PYGAMA_PARALLEL: "false"
+      PYGAMA_FASTMATH: "false"
+      DISABLE_TQDM: "True"
+  lngs:
+    cmd: apptainer exec
+    arg: $PRODENV/containers/legendexp_legend-base_latest_20241110203225.sif
+    env:
+      HDF5_USE_FILE_LOCKING: "False"
+      LGDO_BOUNDSCHECK: "false"
+      DSPEED_BOUNDSCHECK: "false"
+      PYGAMA_PARALLEL: "false"
+      PYGAMA_FASTMATH: "false"
+      DISABLE_TQDM: "True"
+  nersc:
+    cmd: shifter
+    arg: " --image legendexp/legend-base:latest"
+    env:
+      HDF5_USE_FILE_LOCKING: "FALSE"
+      LGDO_BOUNDSCHECK: "false"
+      DSPEED_BOUNDSCHECK: "false"
+      PYGAMA_PARALLEL: "false"
+      PYGAMA_FASTMATH: "false"
 
 legend_metadata_version: refactor
