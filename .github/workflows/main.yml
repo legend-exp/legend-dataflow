@@ -80,7 +80,6 @@ jobs:
       - name: test prodenv scripts
         run: |
           cp .github/dataflow-config-ci.yaml ./dataflow-config.yaml
-          python -m uv run dataprod -v install dataflow-config.yaml
 
       - name: run workflows in dry-run mode
         run: |

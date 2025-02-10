@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Iterable, Mapping
 
@@ -220,7 +221,9 @@ def install(args) -> None:
         subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
-    python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
+    # HACK: get the full path to this python interpreter in case there is no execenv prefix
+    python = sys.executable if cmd_prefix == [] else "python"
+    python_venv, _ = execenv_pyexe(config_dict, "python", as_string=False)
 
     has_uv = False
     try:
@@ -235,7 +238,7 @@ def install(args) -> None:
         uv_expr = [*cmd_prefix, "uv", "--version"]
     except (subprocess.CalledProcessError, FileNotFoundError):
         # we'll use uv from the virtualenv (installed below)
-        uv_expr = [*python, "-m", "uv"]
+        uv_expr = [*python_venv, "-m", "uv"]
 
     # configure venv
     if has_uv:
@@ -243,18 +246,14 @@ def install(args) -> None:
         cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
     else:
         # otherwise use python-venv
-        cmd_expr = [*cmd_prefix, "python", "-m", "venv", path_install]
-
-    print(cmd_expr)  # noqa: T201
-    print(cmd_env)  # noqa: T201
+        cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
 
     if not has_uv:
         cmd_expr = [
-            *cmd_prefix,
-            "python",
+            *python_venv,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -268,8 +267,7 @@ def install(args) -> None:
 
         # install uv
         cmd_expr = [
-            *cmd_prefix,
-            "python",
+            *python_venv,
             "-m",
             "pip",
             "--no-cache-dir",
@@ -289,7 +287,7 @@ def install(args) -> None:
         "pip",
         "--no-cache",
         "install",
-        str(config_loc),  # +"[dataprod]"
+        str(config_loc),
     ]
     if args.editable:
         cmd_expr.insert(-1, "--editable")
