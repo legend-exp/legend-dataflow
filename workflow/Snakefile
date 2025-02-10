@@ -21,6 +21,7 @@ import logging
 from dbetto import AttrsDict
 from legendmeta import LegendMetadata
 from legenddataflow import CalGrouping, execenv, utils
+from legenddataflow.patterns import get_pattern_tier
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
@@ -89,7 +90,7 @@ onstart:
         hit_par_cat_file.unlink()
     try:
         Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        ParsKeyResolve.write_to_yaml(hit_par_catalog, hit_par_cat_file)
+        hit_par_catalog.write_to(hit_par_cat_file)
     except NameError:
         print("No hit parameter catalog found")
 
@@ -98,7 +99,7 @@ onstart:
         pht_par_cat_file.unlink()
     try:
         Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        ParsKeyResolve.write_to_yaml(pht_par_catalog, pht_par_cat_file)
+        pht_par_catalog.write_to(pht_par_cat_file)
     except NameError:
         print("No pht parameter catalog found")
 
@@ -107,7 +108,7 @@ onstart:
         dsp_par_cat_file.unlink()
     try:
         Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        ParsKeyResolve.write_to_yaml(dsp_par_catalog, dsp_par_cat_file)
+        dsp_par_catalog.write_to(dsp_par_cat_file)
     except NameError:
         print("No dsp parameter catalog found")
 
@@ -116,7 +117,7 @@ onstart:
         psp_par_cat_file.unlink()
     try:
         Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        ParsKeyResolve.write_to_yaml(psp_par_catalog, psp_par_cat_file)
+        psp_par_catalog.write_to(psp_par_cat_file)
     except NameError:
         print("No psp parameter catalog found")
 
@@ -165,7 +166,7 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             config,
-            get_search_pattern(wildcards.tier),
+            get_pattern_tier(config, "raw", check_in_cycle=False),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),

@@ -61,7 +61,7 @@ onstart:
         raw_par_cat_file.unlink()
     try:
         Path(raw_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        ParsKeyResolve.write_to_yaml(raw_par_catalog, raw_par_cat_file)
+        raw_par_catalog.write_to(raw_par_cat_file)
     except NameError:
         print("WARNING: no raw parameter catalog found")
 

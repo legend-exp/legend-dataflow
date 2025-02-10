@@ -96,8 +96,8 @@ class ParsKeyResolve(Catalog):
                 keys.append(key)
         return keys
 
-    @staticmethod
-    def get_par_catalog(keypart, search_patterns, name_dict):
+    @classmethod
+    def get_par_catalog(cls, keypart, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
         if isinstance(search_patterns, (str, Path)):
@@ -113,5 +113,6 @@ class ParsKeyResolve(Catalog):
         else:
             msg = "No Keys found"
             warnings.warn(msg, stacklevel=0)
-            entrylist = [ParsKeyResolve("00000000T000000Z", "all", [])]
+            fk = FileKey("l200", "p00", "r000", "cal", "20230101T000000Z")
+            entrylist = [ParsKeyResolve.entry_from_filekey(fk, name_dict)]
         return Catalog({"all": entrylist})
