@@ -92,9 +92,9 @@ def execenv_prefix(
 def execenv_pyexe(
     config: AttrsDict, exename: str, as_string: bool = True
 ) -> str | tuple[list, dict]:
-    """Returns the Python interpreter command.
+    """Returns the path to an executable installed in the virtualenv.
 
-    For example: `apptainer run image.sif python`
+    For example: `apptainer run image.sif path/to/venv/bin/{exename}`
 
     Note
     ----
@@ -205,6 +205,7 @@ def install(args) -> None:
         ignore_missing=False,
     )
 
+    # path to virtualenv location
     path_install = config_dict.paths.install
 
     if args.remove and Path(path_install).exists():
@@ -222,30 +223,38 @@ def install(args) -> None:
     python, cmd_env = execenv_pyexe(config_dict, "python", as_string=False)
 
     has_uv = False
-    uv_expr = [*python, "-m", "uv"]
     try:
+        # is uv already available?
         _runcmd(
             [*cmd_prefix, "uv", "--version"],
             cmd_env,
             capture_output=True,
         )
         has_uv = True
+        # we'll use the existing uv
         uv_expr = [*cmd_prefix, "uv", "--version"]
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+        # we'll use uv from the virtualenv (installed below)
+        uv_expr = [*python, "-m", "uv"]
 
     # configure venv
     if has_uv:
+        # if uv is available, just use it to create the venv
         cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
     else:
+        # otherwise use python-venv
         cmd_expr = [*cmd_prefix, "python", "-m", "venv", path_install]
+
+    print(cmd_expr)  # noqa: T201
+    print(cmd_env)  # noqa: T201
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
 
     if not has_uv:
         cmd_expr = [
-            *python,
+            *cmd_prefix,
+            "python",
             "-m",
             "pip",
             "--no-cache-dir",
@@ -259,7 +268,8 @@ def install(args) -> None:
 
         # install uv
         cmd_expr = [
-            *python,
+            *cmd_prefix,
+            "python",
             "-m",
             "pip",
             "--no-cache-dir",
@@ -272,6 +282,7 @@ def install(args) -> None:
         _runcmd(cmd_expr, cmd_env)
 
     # and finally install legenddataflow with all dependencies
+    # this must be done within the execenv, since jobs will be run within it
 
     cmd_expr = [
         *uv_expr,
