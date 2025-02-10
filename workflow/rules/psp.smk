@@ -33,8 +33,8 @@ rule build_psp:
     input:
         raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
-            lambda wildcards: ParsCatalog.get_par_file(
-                psp_par_catalog, config, wildcards.timestamp, "psp"
+            lambda wildcards: psp_par_catalog.get_par_file(
+                config, wildcards.timestamp, "psp"
             )
         ),
     params:

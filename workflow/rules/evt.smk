@@ -22,8 +22,8 @@ rule build_evt:
             if int(wildcards["period"][1:]) > 11
             else get_pattern_tier(config, "ann", check_in_cycle=False)
         ),
-        par_files=lambda wildcards: ParsCatalog.get_par_file(
-            hit_par_catalog, config, wildcards.timestamp, "hit"
+        par_files=lambda wildcards: hit_par_catalog.get_par_file(
+            config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="evt", wildcards=wildcards, name="xtc"
@@ -73,8 +73,8 @@ rule build_pet:
             if int(wildcards["period"][1:]) > 11
             else get_pattern_tier(config, "pan", check_in_cycle=False)
         ),
-        par_files=lambda wildcards: ParsCatalog.get_par_file(
-            pht_par_catalog, config, wildcards.timestamp, "pht"
+        par_files=lambda wildcards: pht_par_catalog.get_par_file(
+            config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
             tier="pet", wildcards=wildcards, name="xtc"

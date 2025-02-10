@@ -7,13 +7,13 @@ import warnings
 from pathlib import Path
 
 from dbetto import time
-from dbetto.catalog import Catalog
 
 from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
+from .pars_loading import ParsCatalog
 from .patterns import par_validity_pattern
 
 
-class ParsKeyResolve(Catalog):
+class ParsKeyResolve(ParsCatalog):
     @staticmethod
     def match_keys(key1, key2):
         if (
@@ -115,4 +115,4 @@ class ParsKeyResolve(Catalog):
             warnings.warn(msg, stacklevel=0)
             fk = FileKey("l200", "p00", "r000", "cal", "20230101T000000Z")
             entrylist = [ParsKeyResolve.entry_from_filekey(fk, name_dict)]
-        return Catalog({"all": entrylist})
+        return cls({"all": entrylist})

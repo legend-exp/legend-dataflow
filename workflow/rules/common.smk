@@ -32,7 +32,7 @@ def get_blinding_check_file(
     wildcards,
 ):
     """func to get the right blinding check file"""
-    par_files = ParsCatalog.get_files(raw_catalog, wildcards.timestamp)
+    par_files = raw_catalog.get_files(wildcards.timestamp)
     if isinstance(par_files, str):
         return Path(patt.get_pars_path(config, "raw")) / par_files
     else:

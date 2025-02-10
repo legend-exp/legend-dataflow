@@ -52,8 +52,7 @@ class ParsCatalog(Catalog):
                         filelist2 = []
         return filelist1, filelist2
 
-    @staticmethod
-    def get_par_file(catalog, setup: dict, timestamp: str, tier: str) -> list:
+    def get_par_file(self, setup: dict, timestamp: str, tier: str) -> list:
         """
         Takes the par file and par overwrite file for a particular timestamp
         combines the two lists, applying the overwrite files to the par files
@@ -73,7 +72,7 @@ class ParsCatalog(Catalog):
         list
             List of par files
         """
-        pars_files = catalog.valid_for(timestamp)
+        pars_files = self.valid_for(timestamp)
         par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
         pars_files_overwrite = ParsCatalog.get_files(par_overwrite_file, timestamp)
         if len(pars_files_overwrite) > 0:
