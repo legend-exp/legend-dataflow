@@ -55,7 +55,7 @@ dependencies = [
     "pygama>=2",
     "dspeed>=1.6",
     "pylegendmeta==1.2.0a2",
-    "legend-pydataobj>=1.11.4",
+    "legend-pydataobj>=1.11.6",
     "legend-daq2lh5>=1.4",
 ]
 

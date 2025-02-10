@@ -8,7 +8,6 @@ import numpy as np
 import pygama.pargen.noise_optimization as pno
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 
@@ -24,12 +23,14 @@ def par_geds_dsp_nopt() -> None:
     argparser.add_argument("--inplots", help="inplots", type=str)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
     argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
 
     argparser.add_argument("--dsp-pars", help="dsp_pars", type=str, required=True)
     argparser.add_argument("--plot-path", help="plot_path", type=str)
@@ -43,10 +44,6 @@ def par_geds_dsp_nopt() -> None:
 
     t0 = time.time()
 
-    meta = LegendMetadata(path=args.metadata)
-    channel_dict = meta.channelmap(args.timestamp, system=args.datatype)
-    channel = f"ch{channel_dict[args.channel].daq.rawid:07}"
-
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
     opt_json = config_dict["inputs"]["optimiser_config"][args.channel]
 
@@ -59,10 +56,12 @@ def par_geds_dsp_nopt() -> None:
 
         raw_files = sorted(files)
 
-        energies = sto.read(f"{channel}/raw/daqenergy", raw_files)[0]
+        energies = sto.read(
+            f"{args.raw_table_name}", raw_files, field_mask=["daqenergy"]
+        )["daqenergy"][0]
         idxs = np.where(energies.nda == 0)[0]
         tb_data = sto.read(
-            f"{channel}/raw", raw_files, n_rows=opt_dict["n_events"], idx=idxs
+            "args.raw_table_name", raw_files, n_rows=opt_dict["n_events"], idx=idxs
         )[0]
         t1 = time.time()
         log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
@@ -72,7 +71,7 @@ def par_geds_dsp_nopt() -> None:
         cut_dict = generate_cuts(dsp_data, cut_dict=opt_dict.pop("cut_pars"))
         cut_idxs = get_cut_indexes(dsp_data, cut_dict)
         tb_data = sto.read(
-            f"{channel}/raw",
+            args.raw_table_name,
             raw_files,
             n_rows=opt_dict.pop("n_events"),
             idx=idxs[cut_idxs],
@@ -84,11 +83,16 @@ def par_geds_dsp_nopt() -> None:
 
         if args.plot_path:
             out_dict, plot_dict = pno.noise_optimization(
-                tb_data, dsp_config, db_dict.copy(), opt_dict, channel, display=1
+                tb_data,
+                dsp_config,
+                db_dict.copy(),
+                opt_dict,
+                args.raw_table_name,
+                display=1,
             )
         else:
             out_dict = pno.noise_optimization(
-                raw_files, dsp_config, db_dict.copy(), opt_dict, channel
+                raw_files, dsp_config, db_dict.copy(), opt_dict, args.raw_table_name
             )
 
         t2 = time.time()

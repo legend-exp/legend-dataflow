@@ -2,6 +2,7 @@ import argparse
 import pickle as pkl
 from pathlib import Path
 
+import lgdo
 import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
@@ -12,18 +13,22 @@ from pygama.pargen.extract_tau import ExtractTau
 
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 
 def par_geds_dsp_tau() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--configs", help="configs path", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
     argparser.add_argument("--log", help="log file", type=str)
+    argparser.add_argument(
+        "-p", "--no-pulse", help="no pulser present", action="store_true"
+    )
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
 
     argparser.add_argument("--plot-path", help="plot path", type=str, required=False)
     argparser.add_argument("--output-file", help="output file", type=str, required=True)
@@ -33,19 +38,14 @@ def par_geds_dsp_tau() -> None:
     )
 
     argparser.add_argument("--raw-files", help="input files", nargs="*", type=str)
-    argparser.add_argument(
-        "--tcm-files", help="tcm_files", nargs="*", type=str, required=False
-    )
     args = argparser.parse_args()
 
     sto = lh5.LH5Store()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_dsp_nopt"]
+    config_dict = configs["snakemake_rules"]["pars_dsp_tau"]
 
     log = build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     channel_dict = config_dict["inputs"]["processing_chain"][args.channel]
     kwarg_dict = config_dict["inputs"]["tau_config"][args.channel]
@@ -65,21 +65,21 @@ def par_geds_dsp_tau() -> None:
         else:
             input_file = args.raw_files
 
-        mask = get_pulser_mask(
-            pulser_file=args.pulser_file,
-            tcm_filelist=args.tcm_files,
-            channel=channel,
-            pulser_multiplicity_threshold=kwarg_dict.get(
-                "pulser_multiplicity_threshold"
-            ),
-        )
+        log.debug(lgdo.__version__)
+        log.debug(f"Reading Data for {args.raw_table_name} from:")
+        log.debug(input_file)
 
-        data = sto.read(
-            f"{channel}/raw",
+        data = lh5.read(
+            args.raw_table_name,
             input_file,
             field_mask=["daqenergy", "timestamp", "t_sat_lo"],
-        )[0].view_as("pd")
+        ).view_as("pd")
         threshold = kwarg_dict.pop("threshold")
+
+        if args.no_pulse is False:
+            mask = get_pulser_mask(args.pulser_file)
+        else:
+            mask = np.full(len(data), False)
 
         discharges = data["t_sat_lo"] > 0
         discharge_timestamps = np.where(data["timestamp"][discharges])[0]
@@ -98,7 +98,7 @@ def par_geds_dsp_tau() -> None:
         )[0]
 
         tb_data = sto.read(
-            f"{channel}/raw",
+            args.raw_table_name,
             input_file,
             idx=cuts,
             n_rows=kwarg_dict.pop("n_events"),

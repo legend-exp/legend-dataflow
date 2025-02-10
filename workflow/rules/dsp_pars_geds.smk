@@ -44,6 +44,7 @@ rule build_pars_dsp_tau_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--raw-table-name {params.raw_table_name} "
         "--plot-path {output.plots} "
         "--output-file {output.decay_const} "
         "--pulser-file {input.pulser} "
@@ -80,6 +81,7 @@ rule build_pars_evtsel_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--raw-table-name {params.raw_table_name} "
         "--peak-file {output.peak_file} "
         "--pulser-file {input.pulser_file} "
         "--decay-const {input.database} "
@@ -120,6 +122,7 @@ rule build_pars_dsp_nopt_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--raw-table-name {params.raw_table_name} "
         "--inplots {input.inplots} "
         "--plot-path {output.plots} "
         "--dsp-pars {output.dsp_pars_nopt} "
@@ -139,6 +142,9 @@ rule build_pars_dsp_dplms_geds:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        raw_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+        ),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
         lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
@@ -159,6 +165,7 @@ rule build_pars_dsp_dplms_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--raw-table-name {params.raw_table_name} "
         "--dsp-pars {output.dsp_pars} "
         "--lh5-path {output.lh5_path} "
         "--plot-path {output.plots} "
@@ -174,6 +181,9 @@ rule build_pars_dsp_eopt_geds:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        raw_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+        ),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
         qbb_grid=temp(
@@ -192,6 +202,7 @@ rule build_pars_dsp_eopt_geds:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--raw-table-name {params.raw_table_name} "
         "--peak-file {input.peak_file} "
         "--inplots {input.inplots} "
         "--decay-const {input.decay_const} "

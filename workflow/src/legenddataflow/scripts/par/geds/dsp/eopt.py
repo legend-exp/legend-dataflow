@@ -19,7 +19,6 @@ from pygama.pargen.dsp_optimize import (
 )
 
 from .....log import build_log
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
@@ -34,11 +33,13 @@ def par_geds_dsp_eopt() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
 
     argparser.add_argument(
         "--final-dsp-pars", help="final_dsp_pars", type=str, required=True
@@ -58,8 +59,6 @@ def par_geds_dsp_eopt() -> None:
 
     sto = lh5.LH5Store()
     t0 = time.time()
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
     opt_json = config_dict["inputs"]["optimiser_config"][args.channel]
@@ -107,14 +106,14 @@ def par_geds_dsp_eopt() -> None:
             )
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = sto.read(f"{channel}/raw", args.peak_file, field_mask=["peak"])[0][
+        peaks = sto.read(args.raw_table_name, args.peak_file, field_mask=["peak"])[0][
             "peak"
         ].nda
         ids = np.isin(peaks, peaks_rounded)
         peaks = peaks[ids]
         idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-        tb_data = sto.read(f"{channel}/raw", args.peak_file, idx=ids)[0]
+        tb_data = sto.read(args.raw_table_name, args.peak_file, idx=ids)[0]
 
         t1 = time.time()
         log.info(f"Data Loaded in {(t1-t0)/60} minutes")

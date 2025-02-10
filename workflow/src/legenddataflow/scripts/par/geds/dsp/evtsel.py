@@ -17,7 +17,6 @@ from pygama.pargen.dsp_optimize import run_one_dsp
 
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -85,10 +84,10 @@ def par_geds_dsp_evtsel() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
     argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, required=False
+        "--pulser-file", help="pulser_file", type=str, required=False
     )
     argparser.add_argument(
-        "--pulser-file", help="pulser_file", type=str, required=False
+        "-p", "--no-pulse", help="no pulser present", action="store_true"
     )
 
     argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
@@ -98,11 +97,13 @@ def par_geds_dsp_evtsel() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
 
     argparser.add_argument("--peak-file", help="peak_file", type=str, required=True)
     args = argparser.parse_args()
@@ -114,8 +115,6 @@ def par_geds_dsp_evtsel() -> None:
 
     sto = lh5.LH5Store()
     t0 = time.time()
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
     peak_json = config_dict["inputs"]["peak_config"][args.channel]
@@ -134,16 +133,7 @@ def par_geds_dsp_evtsel() -> None:
             files = f.read().splitlines()
         raw_files = sorted(files)
 
-        mask = get_pulser_mask(
-            pulser_file=args.pulser_file,
-            tcm_filelist=args.tcm_filelist,
-            channel=channel,
-            pulser_multiplicity_threshold=peak_dict.get(
-                "pulser_multiplicity_threshold"
-            ),
-        )
-
-        raw_dict = Props.read_from(args.raw_cal)[channel]["pars"]["operations"]
+        raw_dict = Props.read_from(args.raw_cal)[args.channel]["pars"]["operations"]
 
         peaks_kev = peak_dict["peaks"]
         kev_widths = peak_dict["kev_widths"]
@@ -152,7 +142,7 @@ def par_geds_dsp_evtsel() -> None:
         final_cut_field = peak_dict["final_cut_field"]
         energy_parameter = peak_dict.get("energy_parameter", "trapTmax")
 
-        lh5_path = f"{channel}/raw"
+        lh5_path = args.raw_table_name
 
         if not isinstance(kev_widths, list):
             kev_widths = [kev_widths]
@@ -163,6 +153,13 @@ def par_geds_dsp_evtsel() -> None:
         tb = sto.read(
             lh5_path, raw_files, field_mask=["daqenergy", "t_sat_lo", "timestamp"]
         )[0]
+
+        if args.no_pulse is False:
+            mask = get_pulser_mask(
+                args.pulser_file,
+            )
+        else:
+            mask = np.full(len(tb), False)
 
         discharges = tb["t_sat_lo"].nda > 0
         discharge_timestamps = np.where(tb["timestamp"].nda[discharges])[0]

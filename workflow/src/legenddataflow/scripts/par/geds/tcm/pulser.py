@@ -7,7 +7,6 @@ from dbetto.catalog import Props
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 from .....log import build_log
-from ....table_name import get_table_name
 
 
 def par_geds_tcm_pulser() -> None:
@@ -19,6 +18,7 @@ def par_geds_tcm_pulser() -> None:
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--rawid", help="rawid", type=str, required=True)
 
     argparser.add_argument(
         "--pulser-file", help="pulser file", type=str, required=False
@@ -35,8 +35,6 @@ def par_geds_tcm_pulser() -> None:
     kwarg_dict = config_dict["inputs"]["pulser_config"]
     kwarg_dict = Props.read_from(kwarg_dict)
 
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
-
     if (
         isinstance(args.tcm_files, list)
         and args.tcm_files[0].split(".")[-1] == "filelist"
@@ -49,7 +47,7 @@ def par_geds_tcm_pulser() -> None:
     # get pulser mask from tcm files
     tcm_files = sorted(np.unique(tcm_files))
     ids, mask = get_tcm_pulser_ids(
-        tcm_files, channel, kwarg_dict.pop("pulser_multiplicity_threshold")
+        tcm_files, args.rawid, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
 
     Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
