@@ -15,8 +15,8 @@ paths:
 
   tier: $_/generated/tier
   tier_daq: $_/generated/tier/daq
-  tier_raw: $_/generated/tier/raw
-  tier_tcm: $_/generated/tier/tcm
+  tier_raw: /data1/shared/l200-p13/prodenv/prod-orig/ref-raw/generated/tier/raw
+  tier_tcm: /data1/shared/l200-p13/prodenv/prod-orig/ref-raw/generated/tier/tcm
   tier_dsp: $_/generated/tier/dsp
   tier_hit: $_/generated/tier/hit
   tier_ann: $_/generated/tier/ann
