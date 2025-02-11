@@ -84,6 +84,10 @@ def build_tier_dsp() -> None:
 
     database_dic = Props.read_from(db_files, subst_pathvar=True)
     database_dic = replace_list_with_array(database_dic)
+    database_dic = {
+            f"ch{chan_map[chan].daq.rawid:07}": dic
+            for chan, dic in database_dic.items()
+        }
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 

@@ -39,7 +39,7 @@ def build_tier_raw_blind() -> None:
 
     configs = TextDB(args.configs, lazy=True)
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_raw"
+        "tier_raw_blind"
     ]
 
     build_log(config_dict, args.log)
@@ -55,31 +55,11 @@ def build_tier_raw_blind() -> None:
 
     # list of Ge channels and SiPM channels with associated metadata
     legendmetadata = LegendMetadata(args.metadata, lazy=True)
-    ged_channels = (
-        legendmetadata.channelmap(args.timestamp)
-        .map("system", unique=False)["geds"]
-        .map("daq.rawid")
-    )
-    spms_channels = (
-        legendmetadata.channelmap(args.timestamp)
-        .map("system", unique=False)["spms"]
-        .map("daq.rawid")
-    )
-    auxs_channels = (
-        legendmetadata.channelmap(args.timestamp)
-        .map("system", unique=False)["auxs"]
-        .map("daq.rawid")
-    )
-    blsn_channels = (
-        legendmetadata.channelmap(args.timestamp)
-        .map("system", unique=False)["bsln"]
-        .map("daq.rawid")
-    )
-    puls_channels = (
-        legendmetadata.channelmap(args.timestamp)
-        .map("system", unique=False)["puls"]
-        .map("daq.rawid")
-    )
+    chmap = legendmetadata.channelmap(args.timestamp)
+    chans = {system: chan_dict.map("daq.rawid") for system, chan_dict in chmap.map("system", unique=False).items()}
+
+    main_channels = (list(chans["geds"]) + list(chans["spms"]) + 
+                     list(chans["auxs"]) + list(chans["blsns"]) + list(chans["puls"]))
 
     store = lh5.LH5Store()
 
@@ -87,16 +67,16 @@ def build_tier_raw_blind() -> None:
     toblind = np.array([])
 
     # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
-    for chnum in list(ged_channels):
+    for chnum in chans["geds"]:
         # skip Ge detectors that are anti-coincidence only or not able to be blinded for some other reason
-        if ged_channels[chnum]["analysis"]["is_blinded"] is False:
+        if chans["geds"][chnum]["analysis"]["is_blinded"] is False:
             continue
 
         # load in just the daqenergy for now
         daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", args.input)
 
         # read in calibration curve for this channel
-        blind_curve = Props.read_from(args.blind_curve)[f"ch{chnum}"]["pars"][
+        blind_curve = Props.read_from(args.blind_curve)[chmap.map("daq.rawid").name]["pars"][
             "operations"
         ]
 
@@ -144,13 +124,7 @@ def build_tier_raw_blind() -> None:
             )
             continue
 
-        if (
-            (chnum not in list(ged_channels))
-            and (chnum not in list(spms_channels))
-            and (chnum not in list(auxs_channels))
-            and (chnum not in list(blsn_channels))
-            and (chnum not in list(puls_channels))
-        ):
+        if chnum not in main_channels:
             # if this is a PMT or not included for some reason, just copy it to the output file
             chobj, _ = store.read(channel + "/raw", args.input, decompress=False)
             store.write_object(
