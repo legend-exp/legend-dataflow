@@ -78,10 +78,6 @@ jobs:
         run: |
           echo "PRODENV=$(realpath $GITHUB_WORKSPACE/..)" >> $GITHUB_ENV
 
-      - name: test prodenv scripts
-        run: |
-          cp .github/dataflow-config-ci.yaml ./dataflow-config.yaml
-
       - name: run workflows in dry-run mode
         run: |
           snakemake --workflow-profile workflow/profiles/lngs-build-raw -n all-*-daq.gen

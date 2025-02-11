@@ -3,6 +3,5 @@ configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true
-envvars:
-  SYSTEM: local
-  PRODENV: "."
+config:
+  - "system=local"

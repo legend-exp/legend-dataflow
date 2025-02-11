@@ -11,6 +11,7 @@ from pygama.pargen.data_cleaning import get_cut_indexes
 from pygama.pargen.dsp_optimize import run_one_dsp
 from pygama.pargen.extract_tau import ExtractTau
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
@@ -39,8 +40,6 @@ def par_geds_dsp_tau() -> None:
 
     argparser.add_argument("--raw-files", help="input files", nargs="*", type=str)
     args = argparser.parse_args()
-
-    sto = lh5.LH5Store()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_dsp_tau"]
@@ -96,8 +95,9 @@ def par_geds_dsp_tau() -> None:
         cuts = np.where(
             (data.daqenergy.to_numpy() > threshold) & (~mask) & (~is_recovering)
         )[0]
-
-        tb_data = sto.read(
+        log.debug(f"{len(cuts)} events passed threshold and pulser cuts")
+        log.debug(cuts)
+        tb_data = lh5.read(
             args.raw_table_name,
             input_file,
             idx=cuts,
@@ -130,7 +130,7 @@ def par_geds_dsp_tau() -> None:
 
             with Path(args.plot_path).open("wb") as f:
                 pkl.dump({"tau": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
-        out_dict = tau.output_dict
+        out_dict = convert_dict_np_to_float(tau.output_dict)
     else:
         out_dict = {}
 

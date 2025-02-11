@@ -44,8 +44,8 @@ def par_geds_dsp_eopt() -> None:
     argparser.add_argument(
         "--final-dsp-pars", help="final_dsp_pars", type=str, required=True
     )
-    argparser.add_argument("--qbb_grid_path", help="qbb_grid_path", type=str)
-    argparser.add_argument("--plot_path", help="plot_path", type=str)
+    argparser.add_argument("--qbb-grid-path", help="qbb_grid_path", type=str)
+    argparser.add_argument("--plot-path", help="plot_path", type=str)
 
     argparser.add_argument(
         "--plot-save-path", help="plot_save_path", type=str, required=False
