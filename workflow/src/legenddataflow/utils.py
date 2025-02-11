@@ -160,13 +160,6 @@ def subst_vars(
     subst_vars_impl(props, combined_var_values, ignore_missing)
 
 
-def sub_system_in_config(config, system=None):
-    if os.getenv("SYSTEM"):
-        system = os.getenv("SYSTEM")
-    if system is not None:
-        config["execenv"] = config["execenv"][system]
-
-
 def subst_vars_in_snakemake_config(workflow, config):
     config_filename = workflow.overwrite_configfiles[
         0
@@ -177,7 +170,10 @@ def subst_vars_in_snakemake_config(workflow, config):
         use_env=True,
         ignore_missing=False,
     )
-    sub_system_in_config(config)
+    if "system" in config:
+        config["execenv"] = config["execenv"][config["system"]]
+    else:
+        config["execenv"] = config["execenv"]["local"]
 
 
 def run_splitter(files):

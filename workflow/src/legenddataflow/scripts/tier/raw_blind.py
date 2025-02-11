@@ -56,10 +56,18 @@ def build_tier_raw_blind() -> None:
     # list of Ge channels and SiPM channels with associated metadata
     legendmetadata = LegendMetadata(args.metadata, lazy=True)
     chmap = legendmetadata.channelmap(args.timestamp)
-    chans = {system: chan_dict.map("daq.rawid") for system, chan_dict in chmap.map("system", unique=False).items()}
+    chans = {
+        system: chan_dict.map("daq.rawid")
+        for system, chan_dict in chmap.map("system", unique=False).items()
+    }
 
-    main_channels = (list(chans["geds"]) + list(chans["spms"]) + 
-                     list(chans["auxs"]) + list(chans["blsns"]) + list(chans["puls"]))
+    main_channels = (
+        list(chans["geds"])
+        + list(chans["spms"])
+        + list(chans["auxs"])
+        + list(chans["blsns"])
+        + list(chans["puls"])
+    )
 
     store = lh5.LH5Store()
 
@@ -76,9 +84,9 @@ def build_tier_raw_blind() -> None:
         daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", args.input)
 
         # read in calibration curve for this channel
-        blind_curve = Props.read_from(args.blind_curve)[chmap.map("daq.rawid").name]["pars"][
-            "operations"
-        ]
+        blind_curve = Props.read_from(args.blind_curve)[chmap.map("daq.rawid").name][
+            "pars"
+        ]["operations"]
 
         # calibrate daq energy using pre existing curve
         daqenergy_cal = ne.evaluate(

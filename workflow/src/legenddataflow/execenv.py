@@ -208,7 +208,7 @@ def install(args) -> None:
     utils.subst_vars(
         config_dict, var_values={"_": config_loc}, use_env=True, ignore_missing=False
     )
-    utils.sub_system_in_config(config_dict, system=args.system)
+    config_dict["execenv"] = config_dict["execenv"][args.system]
 
     # path to virtualenv location
     path_install = config_dict.paths.install
@@ -311,7 +311,7 @@ def cmdexec(args) -> None:
         use_env=True,
         ignore_missing=False,
     )
-    utils.sub_system_in_config(config_dict, system=args.system)
+    config_dict["execenv"] = config_dict["execenv"][args.system]
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
     cmd_expr = [*cmd_prefix, *args.command]

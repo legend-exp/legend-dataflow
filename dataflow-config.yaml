@@ -13,7 +13,7 @@ paths:
   detector_db: $_/inputs/hardware/detectors
 
   tier: $_/generated/tier
-  tier_raw: $_/generated/tier/raw
+  tier_raw: /data2/public/prodenv/prod-blind/ref-raw/generated/tier/raw
   tier_tcm: $_/generated/tier/tcm
   tier_dsp: $_/generated/tier/dsp
   tier_hit: $_/generated/tier/hit
@@ -72,6 +72,7 @@ execenv:
     env:
       HDF5_USE_FILE_LOCKING: "False"
       LGDO_BOUNDSCHECK: "false"
+      LGDO_CACHE: "false"
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
       PYGAMA_FASTMATH: "false"

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata
 from lgdo import lh5
 
 from ..FileKey import ChannelProcKey
