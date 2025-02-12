@@ -53,7 +53,7 @@ def execenv_prefix(
     cmdline = []
     cmdenv = {}
     if "execenv" in config and "env" in config.execenv:
-        cmdenv = config.execenv.env
+        cmdenv |= config.execenv.env
 
     if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
         cmdline = shlex.split(config.execenv.cmd)
@@ -227,7 +227,7 @@ def install(args) -> None:
         msg = "running: " + _execenv2str(cmd_expr, cmd_env)
         log.debug(msg)
 
-        subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
+        subprocess.run(cmd_expr, env=os.environ | cmd_env, check=True, **kwargs)
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
     # HACK: get the full path to this python interpreter in case there is no execenv prefix
@@ -324,4 +324,4 @@ def cmdexec(args) -> None:
     msg = "running: " + _execenv2str(cmd_expr, cmd_env)
     log.debug(msg)
 
-    subprocess.run(cmd_expr, env=cmd_env, check=True)
+    subprocess.run(cmd_expr, env=os.environ | cmd_env, check=True)
