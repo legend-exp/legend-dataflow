@@ -137,7 +137,12 @@ def dataprod() -> None:
         "config_file", help="production cycle configuration file"
     )
     parser_install.add_argument(
-        "--system", help="system running on", default="local", type=str, required=False
+        "-s",
+        "--system",
+        help="system running on",
+        default="bare",
+        type=str,
+        required=False,
     )
     parser_install.add_argument(
         "-r",
