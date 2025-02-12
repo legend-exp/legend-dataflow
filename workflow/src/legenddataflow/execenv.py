@@ -247,12 +247,12 @@ def install(args) -> None:
         uv_expr = [*cmd_prefix, "uv", "--version"]
     except (subprocess.CalledProcessError, FileNotFoundError):
         # we'll use uv from the virtualenv (installed below)
-        uv_expr = [*python_venv, "-m", "uv"]
+        uv_expr = [*python_venv, "-m", "uv", "--quiet"]
 
     # configure venv
     if has_uv:
         # if uv is available, just use it to create the venv
-        cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
+        cmd_expr = [*cmd_prefix, "uv", "--quiet", "venv", path_install]
     else:
         # otherwise use python-venv
         cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
@@ -265,6 +265,7 @@ def install(args) -> None:
             *python_venv,
             "-m",
             "pip",
+            "--quiet",
             "--no-cache-dir",
             "install",
             "--upgrade",
@@ -279,6 +280,7 @@ def install(args) -> None:
             *python_venv,
             "-m",
             "pip",
+            "--quiet",
             "--no-cache-dir",
             "install",
             "--no-warn-script-location",
