@@ -28,7 +28,7 @@ def test_match_pars_files():
 
 
 def test_get_par_file():
-    setup = "test_setup"
+    setup = {"paths": {"par": "/pars", "overwrite": "/overwrite/path"}}
     timestamp = "20230101T000000Z"
     tier = "test_tier"
 
@@ -44,13 +44,16 @@ def test_get_par_file():
     ) as mock_get_pars_path, patch(
         "legenddataflow.pars_loading.par_overwrite_path"
     ) as mock_par_overwrite_path, patch(
-        "legenddataflow.pars_loading.ParsCatalog.get_files"
-    ) as mock_get_files, patch(
+        "legenddataflow.pars_loading.ParsCatalog.read_from"
+    ) as mock_read_from, patch(
+        "legenddataflow.pars_loading.ParsCatalog.valid_for"
+    ) as mock_valid_for, patch(
         "legenddataflow.pars_loading.ParsCatalog.match_pars_files"
     ) as mock_match_pars_files:
         mock_get_pars_path.return_value = "/pars/path"
         mock_par_overwrite_path.return_value = "/overwrite/path"
-        mock_get_files.side_effect = [
+        mock_read_from.return_value = ParsCatalog({"all": []})
+        mock_valid_for.side_effect = [
             ["file1.yaml", "file2.yaml"],  # pars_files
             ["file3.yaml"],  # pars_files_overwrite
         ]

@@ -173,7 +173,7 @@ def subst_vars_in_snakemake_config(workflow, config):
     if "system" in config:
         config["execenv"] = config["execenv"][config["system"]]
     else:
-        config["execenv"] = config["execenv"]["local"]
+        config["execenv"] = config["execenv"]["bare"]
 
 
 def run_splitter(files):

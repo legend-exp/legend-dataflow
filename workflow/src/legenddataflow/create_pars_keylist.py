@@ -113,6 +113,5 @@ class ParsKeyResolve(ParsCatalog):
         else:
             msg = "No Keys found"
             warnings.warn(msg, stacklevel=0)
-            fk = FileKey("l200", "p00", "r000", "cal", "20230101T000000Z")
-            entrylist = [ParsKeyResolve.entry_from_filekey(fk, name_dict)]
+            entrylist = []
         return cls({"all": entrylist})
