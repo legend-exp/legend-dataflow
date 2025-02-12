@@ -148,7 +148,7 @@ def test_subst_vars_in_snakemake_config(mock_workflow, mock_os_environ):  # noqa
         "prodenv": "$PRODENV",
         "path": {"tier": "$_/generated/tier"},
         "execenv": {
-            "local": {
+            "bare": {
                 "env": {
                     "VAR1": "val1",
                 }
@@ -173,7 +173,7 @@ def test_subst_vars_in_snakemake_config(mock_workflow, mock_os_environ):  # noqa
         "prodenv": "$PRODENV",
         "path": {"tier": "$_/generated/tier"},
         "execenv": {
-            "local": {
+            "bare": {
                 "env": {
                     "VAR1": "val1",
                 }
