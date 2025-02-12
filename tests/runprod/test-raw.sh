@@ -37,7 +37,7 @@ _smk_opts=(
 
 for tier in daq raw; do
     set -x
-    snakemake "${_smk_opts[@]}" "all-*-${tier}.gen"
+    snakemake "${_smk_opts[@]}" "all-*-${tier}.gen" || exit 1
     { set +x; } 2>/dev/null
 done
 
