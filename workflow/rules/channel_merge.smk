@@ -23,9 +23,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 det_status,
                 chan_maps,
             ),
-        params:
-            timestamp="{timestamp}",
-            datatype="cal",
         output:
             get_pattern_plts(config, tier),
         group:
@@ -34,7 +31,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
             execenv_pyexe(config, "merge-channels") + \
             "--input {input} "
             "--output {output} "
-            "--channelmap {meta} "
 
     set_last_rule_name(workflow, f"build_plts_{tier}")
 
@@ -50,9 +46,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 name="objects",
                 extension="pkl",
             ),
-        params:
-            timestamp="{timestamp}",
-            datatype="cal",
         output:
             get_pattern_pars(
                 config,
@@ -67,8 +60,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
             execenv_pyexe(config, "merge-channels") + \
             "--input {input} "
             "--output {output} "
-            "--timestamp {params.timestamp} "
-            "--channelmap {meta} "
 
     set_last_rule_name(workflow, f"build_pars_{tier}_objects")
 
@@ -83,9 +74,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                     det_status,
                     chan_maps,
                 ),
-            params:
-                timestamp="{timestamp}",
-                datatype="cal",
             output:
                 temp(
                     get_pattern_pars_tmp(
@@ -100,8 +88,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 execenv_pyexe(config, "merge-channels") + \
                 "--input {input} "
                 "--output {output} "
-                "--timestamp {params.timestamp} "
-                "--channelmap {meta} "
 
         set_last_rule_name(workflow, f"build_pars_{tier}_db")
 
@@ -129,9 +115,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 extension="dir",
                 check_in_cycle=check_in_cycle,
             ),
-        params:
-            timestamp="{timestamp}",
-            datatype="cal",
         output:
             out_file=get_pattern_pars(
                 config,
@@ -147,8 +130,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 execenv_pyexe(config, "merge-channels") + \
                 "--output {output.out_file} "
                 "--input {input.in_files} "
-                "--timestamp {params.timestamp} "
-                "--channelmap {meta} "
             )
             if lh5_merge is True:
                 shell_string += (

@@ -84,15 +84,19 @@ def par_geds_dsp_evtsel() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
     argparser.add_argument(
-        "--pulser-file", help="pulser_file", type=str, required=False
+        "--pulser-file", help="pulser-file", type=str, required=False
     )
     argparser.add_argument(
         "-p", "--no-pulse", help="no pulser present", action="store_true"
     )
 
-    argparser.add_argument("--decay_const", help="decay_const", type=str, required=True)
+    argparser.add_argument("--decay-const", help="decay_const", type=str, required=True)
     argparser.add_argument(
-        "--raw-cal", help="raw_cal", type=str, nargs="*", required=True
+        "--raw-cal-curve",
+        help="raw calibration curve file(s)",
+        type=str,
+        nargs="*",
+        required=True,
     )
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -133,7 +137,9 @@ def par_geds_dsp_evtsel() -> None:
             files = f.read().splitlines()
         raw_files = sorted(files)
 
-        raw_dict = Props.read_from(args.raw_cal)[args.channel]["pars"]["operations"]
+        raw_dict = Props.read_from(args.raw_cal_curve)[args.channel]["pars"][
+            "operations"
+        ]
 
         peaks_kev = peak_dict["peaks"]
         kev_widths = peak_dict["kev_widths"]

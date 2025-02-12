@@ -137,6 +137,9 @@ def dataprod() -> None:
         "config_file", help="production cycle configuration file"
     )
     parser_install.add_argument(
+        "--system", help="system running on", default="local", type=str, required=False
+    )
+    parser_install.add_argument(
         "-r",
         "--remove",
         help="remove software directory before installing software",
@@ -155,6 +158,9 @@ def dataprod() -> None:
     )
     parser_exec.add_argument(
         "config_file", help="production cycle configuration file", type=str
+    )
+    parser_exec.add_argument(
+        "--system", help="system running on", default="local", type=str, required=False
     )
     parser_exec.add_argument(
         "command", help="command to run within the container", type=str, nargs="+"
@@ -200,11 +206,9 @@ def install(args) -> None:
     config_loc = Path(args.config_file).resolve().parent
 
     utils.subst_vars(
-        config_dict,
-        var_values={"_": config_loc},
-        use_env=True,
-        ignore_missing=False,
+        config_dict, var_values={"_": config_loc}, use_env=True, ignore_missing=False
     )
+    config_dict["execenv"] = config_dict["execenv"][args.system]
 
     # path to virtualenv location
     path_install = config_dict.paths.install
@@ -307,6 +311,7 @@ def cmdexec(args) -> None:
         use_env=True,
         ignore_missing=False,
     )
+    config_dict["execenv"] = config_dict["execenv"][args.system]
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
     cmd_expr = [*cmd_prefix, *args.command]

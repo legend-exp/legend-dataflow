@@ -5,3 +5,5 @@ configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile-build-raw
 keep-going: true
 rerun-incomplete: true
+config:
+  - system=lngs

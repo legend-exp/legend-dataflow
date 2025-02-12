@@ -84,7 +84,7 @@ onstart:
     for pkg in ["dspeed", "lgdo", "matplotlib"]:
         shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
 
-        # Log parameter catalogs in validity.jsonl files
+        # Log parameter catalogs in validity files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()

@@ -58,7 +58,7 @@ rule build_pars_evtsel_geds:
         ),
         pulser_file=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         database=get_pattern_pars_tmp_channel(config, "dsp", "decay_constant"),
-        raw_cal=get_blinding_curve_file,
+        raw_cal_curve=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -85,7 +85,7 @@ rule build_pars_evtsel_geds:
         "--peak-file {output.peak_file} "
         "--pulser-file {input.pulser_file} "
         "--decay-const {input.database} "
-        "--raw-cal {input.raw_cal} "
+        "--raw-cal-curve {input.raw_cal_curve} "
         "--raw-filelist {input.files}"
 
 

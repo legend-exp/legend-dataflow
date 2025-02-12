@@ -145,7 +145,12 @@ def subst_vars_impl(x, var_values, ignore_missing=False):
         return x
 
 
-def subst_vars(props, var_values=None, use_env=False, ignore_missing=False):
+def subst_vars(
+    props,
+    var_values=None,
+    use_env=False,
+    ignore_missing=False,
+):
     if var_values is None:
         var_values = {}
     combined_var_values = var_values
@@ -165,6 +170,10 @@ def subst_vars_in_snakemake_config(workflow, config):
         use_env=True,
         ignore_missing=False,
     )
+    if "system" in config:
+        config["execenv"] = config["execenv"][config["system"]]
+    else:
+        config["execenv"] = config["execenv"]["local"]
 
 
 def run_splitter(files):
