@@ -18,7 +18,7 @@ rule build_evt:
         hit_file=get_pattern_tier(config, "hit", check_in_cycle=False),
         tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
-            None
+            []
             if int(wildcards["period"][1:]) > 11
             else get_pattern_tier(config, "ann", check_in_cycle=False)
         ),
@@ -69,7 +69,7 @@ rule build_pet:
         hit_file=get_pattern_tier(config, "pht", check_in_cycle=False),
         tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
-            None
+            []
             if int(wildcards["period"][1:]) > 11
             else get_pattern_tier(config, "pan", check_in_cycle=False)
         ),

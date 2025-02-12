@@ -23,6 +23,8 @@ from legendmeta import LegendMetadata
 from legenddataflow import CalGrouping, execenv, utils
 from legenddataflow.patterns import get_pattern_tier
 
+print(config)
+
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
@@ -79,7 +81,6 @@ localrules:
 
 onstart:
     print("INFO: starting workflow")
-
     # Make sure some packages are initialized before we begin to avoid race conditions
     for pkg in ["dspeed", "lgdo", "matplotlib"]:
         shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")

@@ -10,7 +10,7 @@ from dbetto.catalog import Catalog
 from .FileKey import ProcessingFileKey
 
 # from .patterns import
-from .utils import get_pars_path, par_overwrite_path
+from .utils import get_pars_path, par_overwrite_path, pars_path
 
 
 class ParsCatalog(Catalog):
@@ -37,6 +37,13 @@ class ParsCatalog(Catalog):
         filelist2 : list
             List of files
         """
+        if (
+            filelist1 is None
+            or filelist2 is None
+            or len(filelist1) == 0
+            or len(filelist2) == 0
+        ):
+            return filelist1, filelist2
         for file2 in filelist2:
             fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)
             for j, file1 in enumerate(filelist1):
@@ -72,18 +79,35 @@ class ParsCatalog(Catalog):
         list
             List of par files
         """
-        pars_files = self.valid_for(timestamp)
+        allow_none = setup.get("allow_none_par", False)
+        if pars_path(setup) not in get_pars_path(setup, tier):
+            par_file = Path(get_pars_path(setup, tier)) / "validity.yaml"
+            catalog = ParsCatalog.read_from(par_file)
+            pars_files = catalog.valid_for(timestamp, allow_none=allow_none)
+        else:
+            pars_files = self.valid_for(timestamp, allow_none=allow_none)
         par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
-        pars_files_overwrite = ParsCatalog.get_files(par_overwrite_file, timestamp)
-        if len(pars_files_overwrite) > 0:
-            pars_files, pars_files_overwrite = ParsCatalog.match_pars_files(
-                pars_files, pars_files_overwrite
-            )
-        pars_files = [Path(get_pars_path(setup, tier)) / file for file in pars_files]
-        if len(pars_files_overwrite) > 0:
-            pars_overwrite_files = [
+        overwrite_catalog = ParsCatalog.read_from(par_overwrite_file)
+        pars_files_overwrite = overwrite_catalog.valid_for(
+            timestamp, allow_none=allow_none
+        )
+        pars_files, pars_files_overwrite = ParsCatalog.match_pars_files(
+            pars_files, pars_files_overwrite
+        )
+        if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
+            pars_files_overwrite = [
                 Path(par_overwrite_path(setup)) / tier / file
                 for file in pars_files_overwrite
             ]
-            pars_files += pars_overwrite_files
+        if pars_files is not None:
+            pars_files = [
+                Path(get_pars_path(setup, tier)) / file for file in pars_files
+            ]
+            if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
+                pars_files += pars_files_overwrite
+        else:
+            if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
+                pars_files = pars_files_overwrite
+            else:
+                pars_files = []
         return pars_files
