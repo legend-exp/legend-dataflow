@@ -26,14 +26,19 @@ mkdir -p "${sandbox}"
         l200-p13-r002-anp-20241217T094846Z.fcio
 )
 
+# FIXME: --touch does not do what I thought. need to add this functionality to
+# the future plugin
 _smk_opts=(
-    --workflow-profile workflow/profiles/lngs-build-raw
-    --config system=bare
+    --forcerun
     --touch
+    --config system=bare
+    --workflow-profile workflow/profiles/lngs-build-raw
 )
 
 for tier in daq raw; do
+    set -x
     snakemake "${_smk_opts[@]}" "all-*-${tier}.gen"
+    { set +x; } 2>/dev/null
 done
 
 rm -rf "${sandbox}"
