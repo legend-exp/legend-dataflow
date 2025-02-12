@@ -43,5 +43,5 @@ _smk_opts=(
 )
 
 set -x
-snakemake "${_smk_opts[@]}" "all-*-evt.gen"
+snakemake "${_smk_opts[@]}" "all-*-evt.gen" || exit 1
 { set +x; } 2>/dev/null
