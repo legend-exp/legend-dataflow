@@ -70,9 +70,10 @@ jobs:
 
       - name: Run data production tests
         run: |
+          ./tests/runprod/install.sh
           for test in tests/runprod/test-*.sh; do
             echo "INFO: running test $test"
-            command $test
+            ./$test
           done
 
   test-coverage:
