@@ -3,7 +3,9 @@
 PRODENV="$(realpath ..)"
 export PRODENV
 
-python -m pip install --upgrade pip wheel setuptools
-python -m pip install --upgrade '.[runprod]'
+echo "INFO: setting up test environment"
+
+python -m pip --quiet install --upgrade pip wheel setuptools
+python -m pip --quiet install --upgrade '.[runprod]'
 
 dataprod -v install --remove --system bare -- dataflow-config.yaml

@@ -70,7 +70,10 @@ jobs:
 
       - name: Run data production tests
         run: |
-          for test in tests/runprod/test-*.sh; do command $test; done
+          for test in tests/runprod/test-*.sh; do
+            echo "INFO: running test $test"
+            command $test
+          done
 
   test-coverage:
     name: Calculate and upload test coverage
