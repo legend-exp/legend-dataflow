@@ -4,4 +4,4 @@ snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true
 config:
-  - "system=local"
+  - system=bare
