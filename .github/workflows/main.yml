@@ -68,21 +68,9 @@ jobs:
           token: ${{ secrets.CLONE_LEGEND_METADATA }}
           path: ${{ env.LEGEND_METADATA }}
 
-      - name: Get dependencies and install legend-dataflow
+      - name: Run data production tests
         run: |
-          python -m pip install --upgrade uv
-          python -m uv pip install --upgrade .[runprod]
-
-      - name: Set the PRODENV variable
-        run: |
-          echo "PRODENV=$(realpath $GITHUB_WORKSPACE/..)" >> $GITHUB_ENV
-
-      - name: run workflows in dry-run mode
-        run: |
-          snakemake --workflow-profile workflow/profiles/lngs-build-raw -n all-*-daq.gen
-          snakemake --workflow-profile workflow/profiles/lngs-build-raw -n all-*-raw.gen
-          snakemake --workflow-profile workflow/profiles/lngs -n all-*-evt.gen
-          snakemake --workflow-profile workflow/profiles/lngs -n all-*-skm.gen
+          for test in tests/runprod/test-*.sh; do command $test; done
 
   test-coverage:
     name: Calculate and upload test coverage
