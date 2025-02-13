@@ -1,4 +1,5 @@
 legend_metadata_version: main
+allow_none_par: true
 
 paths:
   sandbox_path: $_/sandbox
@@ -15,8 +16,8 @@ paths:
 
   tier: $_/generated/tier
   tier_daq: $_/generated/tier/daq
-  tier_raw: /data1/shared/l200-p13/prodenv/prod-orig/ref-raw/generated/tier/raw
-  tier_tcm: /data1/shared/l200-p13/prodenv/prod-orig/ref-raw/generated/tier/tcm
+  tier_raw: $_/../ref-raw/generated/tier/raw
+  tier_tcm: $_/../ref-raw/generated/tier/tcm
   tier_dsp: $_/generated/tier/dsp
   tier_hit: $_/generated/tier/hit
   tier_ann: $_/generated/tier/ann
