@@ -16,9 +16,9 @@ run_test_command() {
     status=$?
 
     if [ $status -ne 0 ]; then
-        printf "\033[31m%s\033[0m\n" "ERROR: command failed with status $status. Output:"
+        printf "\033[31m%s\033[0m\n" "vvvvvv ERROR: command failed with status $status vvvvvv"
         echo "$output"
-        printf "\033[31m%s\033[0m\n" "ERROR: command failed with status $status"
+        printf "\033[31m%s\033[0m\n" "^^^^^^ ERROR: command failed with status $status ^^^^^^"
     fi
 
     return $status
