@@ -8,17 +8,23 @@ from legenddataflow import utils, execenv_pyexe
 
 rule build_pars_dsp_tau_spms:
     input:
-        filelist=Path(utils.filelist_path(config)) / "all-{experiment}-{period}-{run}-{datatype}-raw.filelist"
-        pardb=lambda wildcards: get_overwrite_file("dsp", wildcards)
+        filelist=Path(utils.filelist_path(config))
+        / "all-{experiment}-{period}-{run}-{datatype}-raw.filelist",
+        pardb=lambda wildcards: get_overwrite_file("dsp", wildcards),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, wildcards.datatype, wildcards.timestamp, wildcards.channel, "raw"
+            metadata,
+            config,
+            wildcards.datatype,
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     wildcard_constraints:
-        datatype=r"\b(?!cal\b|xtc\b)\w+\b"
+        datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     output:
         temp(patt.get_pattern_pars_tmp_channel(config, "dsp", "spms_trigger_threshold")),
     log:
@@ -26,8 +32,7 @@ rule build_pars_dsp_tau_spms:
     group:
         "par-dsp"
     shell:
-        execenv_pyexe(config, "par-spms-dsp-trg-thr") + \
-        "--config-path {configs} "
+        execenv_pyexe(config, "par-spms-dsp-trg-thr") + "--config-path {configs} "
         "--raw-files {input.filelist} "
         "--dsp-db {input.pardb} "
         "--datatype {params.datatype} "
