@@ -69,12 +69,7 @@ jobs:
           path: ${{ env.LEGEND_METADATA }}
 
       - name: Run data production tests
-        run: |
-          ./tests/runprod/install.sh
-          for test in tests/runprod/test-*.sh; do
-            echo "INFO: running test $test"
-            ./$test
-          done
+        run: ./tests/runprod/run-all.sh
 
   test-coverage:
     name: Calculate and upload test coverage

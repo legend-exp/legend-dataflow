@@ -42,6 +42,4 @@ _smk_opts=(
     --workflow-profile workflow/profiles/lngs
 )
 
-set -x
-snakemake "${_smk_opts[@]}" "all-*-evt.gen" || exit 1
-{ set +x; } 2>/dev/null
+run_test_command snakemake "${_smk_opts[@]}" "all-*-evt.gen" || exit 1

@@ -2,7 +2,7 @@
 
 # IMPORTANT: this script must be executed from the legend-dataflow directory
 
-echo "DEBUG: setting up test environment"
+printf "\033[32m%s\033[0m\n" "DEBUG: setting up test environment"
 
 PRODENV="$(realpath ..)"
 export PRODENV
