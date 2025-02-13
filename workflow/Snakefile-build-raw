@@ -90,9 +90,10 @@ rule gen_filelist:
 
 
 rule sort_data:
-    """
-    This rules moves the daq data from the unsorted sandbox dir
-    to the sorted dirs under generated
+    """Move DAQ data from sandbox to organized folder.
+
+    This rules moves the DAQ data from the unsorted sandbox directory to the
+    correct location in the `tier_raw` folder.
     """
     input:
         patt.get_pattern_tier_daq_unsorted(config),
@@ -102,17 +103,11 @@ rule sort_data:
         "mv {input} {output}"
 
 
-rule sort_data_fcio:
-    """
-    This rules moves the daq data from the unsorted sandbox dir
-    to the sorted dirs under generated
-    """
+use rule sort_data as sort_data_fcio with:
     input:
         patt.get_pattern_tier_daq_unsorted(config, extension="fcio"),
     output:
         patt.get_pattern_tier_daq(config, extension="fcio"),
-    shell:
-        "mv {input} {output}"
 
 
 # vim: filetype=snakemake
