@@ -54,7 +54,10 @@ onstart:
     print("INFO: initializing workflow")
 
     # Make sure some packages are initialized before we send jobs to avoid race conditions
-    shell(execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'")
+    if not workflow.touch:
+        shell(
+            execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'"
+        )
 
     raw_par_cat_file = Path(utils.pars_path(config)) / "raw" / "validity.yaml"
     if raw_par_cat_file.is_file():
@@ -87,16 +90,24 @@ rule gen_filelist:
 
 
 rule sort_data:
+    """Move DAQ data from sandbox to organized folder.
+
+    This rules moves the DAQ data from the unsorted sandbox directory to the
+    correct location in the `tier_raw` folder.
     """
-    This rules moves the daq data from the unsorted sandbox dir
-    to the sorted dirs under generated
-    """
+    input:
+        patt.get_pattern_tier_daq_unsorted(config),
+    output:
+        patt.get_pattern_tier_daq(config),
+    shell:
+        "mv {input} {output}"
+
+
+use rule sort_data as sort_data_fcio with:
     input:
         patt.get_pattern_tier_daq_unsorted(config, extension="fcio"),
     output:
         patt.get_pattern_tier_daq(config, extension="fcio"),
-    shell:
-        "mv {input} {output}"
 
 
 # vim: filetype=snakemake

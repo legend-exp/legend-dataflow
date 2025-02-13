@@ -161,9 +161,12 @@ def subst_vars(
 
 
 def subst_vars_in_snakemake_config(workflow, config):
-    config_filename = workflow.overwrite_configfiles[
-        0
-    ]  # ToDo: Better way of handling this?
+    if len(workflow.overwrite_configfiles) == 0:
+        msg = "configfile not set!"
+        raise RuntimeError(msg)
+
+    config_filename = workflow.overwrite_configfiles[0]
+
     subst_vars(
         config,
         var_values={"_": Path(config_filename).parent},

@@ -80,10 +80,11 @@ localrules:
 onstart:
     print("INFO: starting workflow")
     # Make sure some packages are initialized before we begin to avoid race conditions
-    for pkg in ["dspeed", "lgdo", "matplotlib"]:
-        shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
+    if not workflow.touch:
+        for pkg in ["dspeed", "lgdo", "matplotlib"]:
+            shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
 
-        # Log parameter catalogs in validity files
+            # Log parameter catalogs in validity files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()
