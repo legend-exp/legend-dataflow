@@ -67,7 +67,7 @@ execenv:
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
       PYGAMA_FASTMATH: "false"
-      DISABLE_TQDM: "true"
+      TQDM_DISABLE: "true"
 
   lngs:
     cmd: apptainer exec
@@ -79,7 +79,7 @@ execenv:
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
       PYGAMA_FASTMATH: "false"
-      DISABLE_TQDM: "true"
+      TQDM_DISABLE: "true"
 
   nersc:
     cmd: shifter
@@ -91,4 +91,4 @@ execenv:
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
       PYGAMA_FASTMATH: "false"
-      DISABLE_TQDM: "true"
+      TQDM_DISABLE: "true"
