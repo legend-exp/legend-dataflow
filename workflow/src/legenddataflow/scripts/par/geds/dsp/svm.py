@@ -13,7 +13,7 @@ def par_geds_dsp_svm() -> None:
     argparser.add_argument(
         "--input-file", help="input par file", type=str, required=True
     )
-    argparser.add_argument("--svm_file", help="svm file", required=True)
+    argparser.add_argument("--svm-file", help="svm file", required=True)
     args = argparser.parse_args()
 
     par_data = Props.read_from(args.input_file)

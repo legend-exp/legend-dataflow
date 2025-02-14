@@ -218,7 +218,7 @@ rule build_svm_dsp_geds:
         ),
         train_data=lambda wildcards: str(
             get_input_par_file(wildcards, "dsp", "svm_hyperpars")
-        ).replace("hyperpars.json", "train.lh5"),
+        ).replace("hyperpars.yaml", "train.lh5"),
     params:
         timestamp="{timestamp}",
         datatype="cal",

@@ -171,7 +171,7 @@ rule build_svm_psp:
         ),
         train_data=lambda wildcards: str(
             get_input_par_file(wildcards, "psp", "svm_hyperpars")
-        ).replace("hyperpars.json", "train.lh5"),
+        ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(config, "psp", "svm", "pkl"),
     params:

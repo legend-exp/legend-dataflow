@@ -26,6 +26,10 @@ def create_chankeylist() -> None:
         for chan in status_map
         if status_map[chan]["processable"] is True and chmap[chan].system == "geds"
     ]
+
+    if len(channels) == 0:
+        print("WARNING: No channels found")  # noqa: T201
+
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     with Path(args.output_file).open("w") as f:
         for chan in channels:
