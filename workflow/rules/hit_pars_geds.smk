@@ -36,6 +36,9 @@ rule build_qc:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         qc_file=temp(get_pattern_pars_tmp_channel(config, "hit", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "qc")),
@@ -51,7 +54,7 @@ rule build_qc:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--configs {configs} "
-        "--metadata {meta} "
+        "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--save-path {output.qc_file} "
         "--pulser-file {input.pulser} "
@@ -78,6 +81,9 @@ rule build_energy_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
         results_file=temp(
@@ -99,6 +105,7 @@ rule build_energy_calibration:
         "--channel {params.channel} "
         "--configs {configs} "
         "--metadata {meta} "
+        "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
         "--save-path {output.ecal_file} "
@@ -125,6 +132,9 @@ rule build_aoe_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit", "aoe_cal")),
         aoe_results=temp(
@@ -142,15 +152,15 @@ rule build_aoe_calibration:
     shell:
         execenv_pyexe(config, "par-geds-hit-aoe") + "--log {log} "
         "--configs {configs} "
-        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--inplots {input.inplots} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--aoe-results {output.aoe_results} "
-        "--eres-file {input.eres_file} "
         "--hit-pars {output.hit_pars} "
         "--plot-file {output.plot_file} "
+        "--inplots {input.inplots} "
+        "--eres-file {input.eres_file} "
         "--pulser-file {input.pulser} "
         "--ecal-file {input.ecal_file} "
         "{input.files}"
@@ -172,6 +182,9 @@ rule build_lq_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit")),
         lq_results=temp(
@@ -187,15 +200,15 @@ rule build_lq_calibration:
     shell:
         execenv_pyexe(config, "par-geds-hit-lq") + "--log {log} "
         "--configs {configs} "
-        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--inplots {input.inplots} "
         "--channel {params.channel} "
-        "--lq-results {output.lq_results} "
-        "--eres-file {input.eres_file} "
+        "--table-name {params.dsp_table_name} "
         "--hit-pars {output.hit_pars} "
         "--plot-file {output.plot_file} "
+        "--lq-results {output.lq_results} "
         "--pulser-file {input.pulser} "
         "--ecal-file {input.ecal_file} "
+        "--inplots {input.inplots} "
+        "--eres-file {input.eres_file} "
         "{input.files}"

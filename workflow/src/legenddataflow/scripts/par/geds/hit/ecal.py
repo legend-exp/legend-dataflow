@@ -23,10 +23,9 @@ from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
-from ....convert_np import convert_dict_np_to_float
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 mpl.use("agg")
 sto = lh5.LH5Store()
@@ -451,12 +450,13 @@ def par_geds_hit_ecal() -> None:
     argparser.add_argument("--in-hit-dict", help="in_hit_dict", required=False)
     argparser.add_argument("--inplot-dict", help="inplot_dict", required=False)
 
-    argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
-    argparser.add_argument("--tier", help="tier", type=str, default="hit")
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
+    argparser.add_argument("--tier", help="tier", type=str, default="hit")
+    argparser.add_argument("--configs", help="config", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -469,7 +469,7 @@ def par_geds_hit_ecal() -> None:
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
+    config_dict = configs["snakemake_rules"]
     if args.tier == "hit":
         config_dict = config_dict["pars_hit_ecal"]
     elif args.tier == "pht":
@@ -479,8 +479,6 @@ def par_geds_hit_ecal() -> None:
         raise ValueError(msg)
 
     build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     chmap = LegendMetadata(args.metadata).channelmap(
         args.timestamp, system=args.datatype
@@ -498,7 +496,7 @@ def par_geds_hit_ecal() -> None:
 
     database_dic = Props.read_from(db_files)
 
-    hit_dict.update(database_dic[channel]["ctc_params"])
+    hit_dict.update(database_dic[args.channel]["ctc_params"])
 
     channel_dict = config_dict["inputs"]["ecal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -519,7 +517,7 @@ def par_geds_hit_ecal() -> None:
     # load data in
     data, threshold_mask = load_data(
         files,
-        f"{channel}/dsp",
+        args.table_name,
         hit_dict,
         params=[
             *kwarg_dict["energy_params"],
@@ -534,9 +532,6 @@ def par_geds_hit_ecal() -> None:
 
     mask = get_pulser_mask(
         pulser_file=args.pulser_file,
-        tcm_filelist=args.tcm_filelist,
-        channel=channel,
-        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
     )
 
     data["is_pulser"] = mask[threshold_mask]
@@ -722,14 +717,14 @@ def par_geds_hit_ecal() -> None:
 
     if "monitoring_parameters" in kwarg_dict:
         monitor_dict = monitor_parameters(
-            files, f"{channel}/dsp", kwarg_dict["monitoring_parameters"]
+            files, args.table_name, kwarg_dict["monitoring_parameters"]
         )
         results_dict.update({"monitoring_parameters": monitor_dict})
 
     # get baseline plots and save all plots to file
     if args.plot_path:
         common_dict = baseline_tracking_plots(
-            sorted(files), f"{channel}/dsp", plot_options=bl_plots
+            sorted(files), args.table_name, plot_options=bl_plots
         )
 
         for plot in list(common_dict):

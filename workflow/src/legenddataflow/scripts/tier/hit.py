@@ -53,17 +53,14 @@ def build_tier_hit() -> None:
     channels_present = lh5.ls(args.input)
     for channel in pars_dict:
         chan_pars = pars_dict[channel].copy()
-        try:
-            detector = chan_map.map("daq.rawid")[int(channel[2:])].name
-            if detector in channel_dict:
-                cfg_dict = Props.read_from(channel_dict[detector])
-                Props.add_to(cfg_dict, chan_pars)
-                chan_pars = cfg_dict
 
-            if channel in channels_present:
-                hit_dict[f"{channel}/dsp"] = chan_pars
-        except KeyError:
-            pass
+        if channel in channel_dict:
+            cfg_dict = Props.read_from(channel_dict[channel])
+            Props.add_to(cfg_dict, chan_pars)
+            chan_pars = cfg_dict
+
+        if f"ch{chan_map[channel].daq.rawid}" in channels_present:
+            hit_dict[f"ch{chan_map[channel].daq.rawid}/dsp"] = chan_pars
 
     t_start = time.time()
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)

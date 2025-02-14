@@ -14,10 +14,9 @@ from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
-from ....convert_np import convert_dict_np_to_float
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -60,12 +59,12 @@ def par_geds_hit_lq() -> None:
     argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
     argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument("--plot-file", help="plot_file", type=str, required=False)
     argparser.add_argument("--hit-pars", help="hit_pars", type=str)
@@ -78,8 +77,6 @@ def par_geds_hit_lq() -> None:
     config_dict = configs["snakemake_rules"]["pars_hit_lqcal"]
 
     log = build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -126,7 +123,7 @@ def par_geds_hit_lq() -> None:
         # load data in
         data, threshold_mask = load_data(
             files,
-            f"{channel}/dsp",
+            args.table_name,
             cal_dict,
             params=params,
             threshold=kwarg_dict.pop("threshold"),
@@ -135,11 +132,6 @@ def par_geds_hit_lq() -> None:
 
         mask = get_pulser_mask(
             pulser_file=args.pulser_file,
-            tcm_filelist=args.tcm_filelist,
-            channel=channel,
-            pulser_multiplicity_threshold=kwarg_dict.get(
-                "pulser_multiplicity_threshold"
-            ),
         )
 
         data["is_pulser"] = mask[threshold_mask]
@@ -151,7 +143,7 @@ def par_geds_hit_lq() -> None:
             eres_func,
             cdf,
             selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
-            debug_mode=args.debug_mode | kwarg_dict.get("debug_mode", False),
+            debug_mode=args.debug | kwarg_dict.get("debug_mode", False),
         )
 
         data["LQ_Ecorr"] = np.divide(data["lq80"], data[kwarg_dict["energy_param"]])

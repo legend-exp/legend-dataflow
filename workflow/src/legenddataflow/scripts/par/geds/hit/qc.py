@@ -17,10 +17,9 @@ from pygama.pargen.data_cleaning import (
 )
 from pygama.pargen.utils import load_data
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
-from ....convert_np import convert_dict_np_to_float
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -45,12 +44,12 @@ def par_geds_hit_qc() -> None:
     )
 
     argparser.add_argument("--configs", help="config", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
     argparser.add_argument("--log", help="log_file", type=str)
 
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
     argparser.add_argument("--tier", help="tier", type=str, default="hit")
 
     argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
@@ -58,11 +57,15 @@ def par_geds_hit_qc() -> None:
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_hit_qc"]
+    if args.tier == "hit":
+        config_dict = configs["snakemake_rules"]["pars_hit_qc"]
+    elif args.tier == "pht":
+        config_dict = configs["snakemake_rules"]["pars_pht_qc"]
+    else:
+        msg = f"tier {args.tier} not recognized"
+        raise ValueError(msg)
 
     log = build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     # get metadata dictionary
     channel_dict = config_dict["inputs"]["qc_config"][args.channel]
@@ -70,8 +73,8 @@ def par_geds_hit_qc() -> None:
 
     if args.overwrite_files:
         overwrite = Props.read_from(args.overwrite_files)
-        if channel in overwrite:
-            overwrite = overwrite[channel]["pars"]["operations"]
+        if args.channel in overwrite:
+            overwrite = overwrite[args.channel]["pars"]["operations"]
         else:
             overwrite = None
     else:
@@ -89,19 +92,20 @@ def par_geds_hit_qc() -> None:
     else:
         cal_files = args.fft_files
 
+    search_name = (
+        args.table_name if args.table_name[-1] == "/" else args.table_name + "/"
+    )
+
     kwarg_dict_fft = kwarg_dict["fft_fields"]
     if len(fft_files) > 0:
         fft_fields = get_keys(
-            [
-                key.replace(f"{channel}/dsp/", "")
-                for key in ls(fft_files[0], f"{channel}/dsp/")
-            ],
+            [key.replace(args.table_name, "") for key in ls(fft_files[0], search_name)],
             kwarg_dict_fft["cut_parameters"],
         )
 
         fft_data = load_data(
             fft_files,
-            f"{channel}/dsp",
+            args.table_name,
             {},
             [*fft_fields, "timestamp", "trapTmax"],
         )
@@ -169,26 +173,20 @@ def par_geds_hit_qc() -> None:
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
-        [
-            key.replace(f"{channel}/dsp/", "")
-            for key in ls(cal_files[0], f"{channel}/dsp/")
-        ],
+        [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
         kwarg_dict_cal["cut_parameters"],
     )
+
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         cut_fields += get_keys(
-            [
-                key.replace(f"{channel}/dsp/", "")
-                for key in ls(cal_files[0], f"{channel}/dsp/")
-            ],
+            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
             init_cal["cut_parameters"],
         )
-
     # load data in
     data, threshold_mask = load_data(
         cal_files,
-        f"{channel}/dsp",
+        args.table_name,
         {},
         [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
@@ -198,9 +196,6 @@ def par_geds_hit_qc() -> None:
 
     mask = get_pulser_mask(
         pulser_file=args.pulser_file,
-        tcm_filelist=args.tcm_filelist,
-        channel=channel,
-        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
     )
 
     data["is_pulser"] = mask[threshold_mask]
