@@ -26,7 +26,7 @@ rule build_evt:
             config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            tier="evt", wildcards=wildcards, name="xtc"
+            setup=config, tier="evt", wildcards=wildcards, name="xtc"
         ),
     output:
         get_pattern_tier(config, "evt", check_in_cycle=check_in_cycle),
@@ -77,7 +77,7 @@ rule build_pet:
             config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            tier="pet", wildcards=wildcards, name="xtc"
+            setup=config, tier="pet", wildcards=wildcards, name="xtc"
         ),
     output:
         get_pattern_tier(config, "pet", check_in_cycle=check_in_cycle),
