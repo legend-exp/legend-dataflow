@@ -214,10 +214,12 @@ rule build_pars_dsp_eopt_geds:
 rule build_svm_dsp_geds:
     input:
         hyperpars=lambda wildcards: get_input_par_file(
-            wildcards, "dsp", "svm_hyperpars"
+            setup=config, wildcards=wildcards, tier="dsp", name="svm_hyperpars"
         ),
         train_data=lambda wildcards: str(
-            get_input_par_file(wildcards, "dsp", "svm_hyperpars")
+            get_input_par_file(
+                setup=config, wildcards=wildcards, tier="dsp", name="svm_hyperpars"
+            )
         ).replace("hyperpars.yaml", "train.lh5"),
     params:
         timestamp="{timestamp}",
