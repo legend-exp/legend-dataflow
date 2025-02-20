@@ -15,7 +15,9 @@ from legenddataflow.execenv import execenv_pyexe
 rule build_ann:
     input:
         dsp_file=get_pattern_tier(config, "dsp", check_in_cycle=False),
-        pars_file=lambda wildcards: get_input_par_file(wildcards, "ann", "cuts"),
+        pars_file=lambda wildcards: get_input_par_file(
+            setup=config, wildcards=wildcards, tier="ann", name="cuts"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -45,7 +47,9 @@ rule build_ann:
 rule build_pan:
     input:
         dsp_file=get_pattern_tier(config, "psp", check_in_cycle=False),
-        pars_file=lambda wildcards: get_input_par_file(wildcards, "ann", "cuts"),
+        pars_file=lambda wildcards: get_input_par_file(
+            setup=config, wildcards=wildcards, tier="ann", name="cuts"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
