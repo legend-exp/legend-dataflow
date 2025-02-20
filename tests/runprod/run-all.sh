@@ -6,6 +6,6 @@
 
 for test in tests/runprod/test-*.sh; do
     echo "::group::test $test"
-    ./"$test"
+    ./"$test" || exit 1
     echo "::endgroup::"
 done
