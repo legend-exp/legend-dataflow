@@ -72,7 +72,7 @@ def get_input_par_file(setup, wildcards, tier, name):
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
         wildcards.timestamp,
-        category=wildcards.datatype,
+        category=wildcards.datatype if hasattr(wildcards, "datatype") else "all",
     )
     for pars_file in pars_files_overwrite:
         if name in str(pars_file):
