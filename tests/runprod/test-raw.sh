@@ -32,6 +32,7 @@ _smk_opts=(
     --forcerun
     --touch
     --config system=bare
+    --cores all
     --workflow-profile workflow/profiles/lngs-build-raw
 )
 

@@ -44,8 +44,7 @@ touch "$inputs/dataprod/overrides/dsp/cal/p04/r000/l200-p04-r000-cal-20230414T21
 
 _smk_opts=(
     --touch
-    --config system=bare
-    --workflow-profile workflow/profiles/lngs
+    --workflow-profile workflow/profiles/default
 )
 
 run_test_command snakemake "${_smk_opts[@]}" "all-*-evt.gen" || exit 1
