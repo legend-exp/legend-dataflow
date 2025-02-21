@@ -244,7 +244,7 @@ def install(args) -> None:
         )
         has_uv = True
         # we'll use the existing uv
-        uv_expr = [*cmd_prefix, "uv", "--version"]
+        uv_expr = [*cmd_prefix, "uv"]
     except (subprocess.CalledProcessError, FileNotFoundError):
         # we'll use uv from the virtualenv (installed below)
         uv_expr = [*python_venv, "-m", "uv", "--quiet"]
@@ -269,6 +269,7 @@ def install(args) -> None:
             "--no-cache-dir",
             "install",
             "--upgrade",
+            "--",
             "pip",
         ]
 
@@ -284,6 +285,7 @@ def install(args) -> None:
             "--no-cache-dir",
             "install",
             "--no-warn-script-location",
+            "--",
             "uv",
         ]
 
@@ -298,6 +300,9 @@ def install(args) -> None:
         "pip",
         "--no-cache",
         "install",
+        "--prefix",
+        path_install,
+        "--",
         str(config_loc),
     ]
     if args.editable:

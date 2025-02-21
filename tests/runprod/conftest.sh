@@ -10,6 +10,8 @@ function get_dataflow_config_value() {
 }
 
 run_test_command() {
+    echo "::notice::$*"
+
     output=$("$@" 2>&1)
     status=$?
 
