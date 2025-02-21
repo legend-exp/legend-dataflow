@@ -51,10 +51,10 @@ dynamic = ["version"]
 
 dependencies = [
     "colorlog",
-    "dbetto>=1.2.0",
+    "dbetto>=1.2",
     "pygama>=2",
     "dspeed>=1.6",
-    "pylegendmeta==1.2.0a2",
+    "pylegendmeta>=1.2",
     "legend-pydataobj>=1.11.6",
     "legend-daq2lh5>=1.4",
     "pip",
