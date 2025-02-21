@@ -66,16 +66,21 @@ def set_last_rule_name(workflow, new_name):
     workflow.check_localrules()
 
 
-def get_input_par_file(wildcards, tier, name):
+def get_input_par_file(setup, wildcards, tier, name):
+    allow_none = setup.get("allow_none", False)
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
         wildcards.timestamp,
+        category=wildcards.datatype if hasattr(wildcards, "datatype") else "all",
     )
     for pars_file in pars_files_overwrite:
         if name in str(pars_file):
             return Path(patt.par_overwrite_path(config)) / tier / pars_file
-    raise ValueError(f"Could not find model in {pars_files_overwrite}")
+    if allow_none or (wildcards.datatype != "phy"):
+        return []
+    else:
+        raise ValueError(f"Could not find model in {pars_files_overwrite}")
 
 
 def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):

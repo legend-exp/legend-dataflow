@@ -80,10 +80,11 @@ localrules:
 onstart:
     print("INFO: starting workflow")
     # Make sure some packages are initialized before we begin to avoid race conditions
-    for pkg in ["dspeed", "lgdo", "matplotlib"]:
-        shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
+    if not workflow.touch:
+        for pkg in ["dspeed", "lgdo", "matplotlib"]:
+            shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
 
-        # Log parameter catalogs in validity files
+            # Log parameter catalogs in validity files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()
@@ -122,29 +123,11 @@ onstart:
 
 
 onsuccess:
-    from snakemake.report import auto_report
-
-
-    rep_dir = f"{log_path(config)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
-    Path(rep_dir).mkdir(parents=True, exist_ok=True)
-    # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
-    auto_report(workflow.persistence.dag, report_plugin, report_settings)
-
-    with open(os.path.join(rep_dir, "dag.txt"), "w") as f:
-        f.writelines(str(workflow.persistence.dag))
-        # shell(f"cat {rep_dir}/dag.txt | dot -Tpdf > {rep_dir}/dag.pdf")
-
-    with open(f"{rep_dir}/rg.txt", "w") as f:
-        f.writelines(str(workflow.persistence.dag.rule_dot()))
-        # shell(f"cat {rep_dir}/rg.txt | dot -Tpdf > {rep_dir}/rg.pdf")
-
-        # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
 
-            # remove filelists
     files = glob.glob(os.path.join(utils.filelist_path(config), "*"))
     for file in files:
         if os.path.isfile(file):

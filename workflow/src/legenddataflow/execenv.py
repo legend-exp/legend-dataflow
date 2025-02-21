@@ -53,7 +53,7 @@ def execenv_prefix(
     cmdline = []
     cmdenv = {}
     if "execenv" in config and "env" in config.execenv:
-        cmdenv = config.execenv.env
+        cmdenv |= config.execenv.env
 
     if "execenv" in config and "cmd" in config.execenv and "arg" in config.execenv:
         cmdline = shlex.split(config.execenv.cmd)
@@ -137,7 +137,12 @@ def dataprod() -> None:
         "config_file", help="production cycle configuration file"
     )
     parser_install.add_argument(
-        "--system", help="system running on", default="local", type=str, required=False
+        "-s",
+        "--system",
+        help="system running on",
+        default="bare",
+        type=str,
+        required=False,
     )
     parser_install.add_argument(
         "-r",
@@ -222,7 +227,7 @@ def install(args) -> None:
         msg = "running: " + _execenv2str(cmd_expr, cmd_env)
         log.debug(msg)
 
-        subprocess.run(cmd_expr, env=cmd_env, check=True, **kwargs)
+        subprocess.run(cmd_expr, env=os.environ | cmd_env, check=True, **kwargs)
 
     cmd_prefix, cmd_env = execenv_prefix(config_dict, as_string=False)
     # HACK: get the full path to this python interpreter in case there is no execenv prefix
@@ -239,15 +244,15 @@ def install(args) -> None:
         )
         has_uv = True
         # we'll use the existing uv
-        uv_expr = [*cmd_prefix, "uv", "--version"]
+        uv_expr = [*cmd_prefix, "uv"]
     except (subprocess.CalledProcessError, FileNotFoundError):
         # we'll use uv from the virtualenv (installed below)
-        uv_expr = [*python_venv, "-m", "uv"]
+        uv_expr = [*python_venv, "-m", "uv", "--quiet"]
 
     # configure venv
     if has_uv:
         # if uv is available, just use it to create the venv
-        cmd_expr = [*cmd_prefix, "uv", "venv", path_install]
+        cmd_expr = [*cmd_prefix, "uv", "--quiet", "venv", path_install]
     else:
         # otherwise use python-venv
         cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
@@ -260,9 +265,11 @@ def install(args) -> None:
             *python_venv,
             "-m",
             "pip",
+            "--quiet",
             "--no-cache-dir",
             "install",
             "--upgrade",
+            "--",
             "pip",
         ]
 
@@ -274,9 +281,11 @@ def install(args) -> None:
             *python_venv,
             "-m",
             "pip",
+            "--quiet",
             "--no-cache-dir",
             "install",
             "--no-warn-script-location",
+            "--",
             "uv",
         ]
 
@@ -291,6 +300,9 @@ def install(args) -> None:
         "pip",
         "--no-cache",
         "install",
+        "--prefix",
+        path_install,
+        "--",
         str(config_loc),
     ]
     if args.editable:
@@ -319,4 +331,4 @@ def cmdexec(args) -> None:
     msg = "running: " + _execenv2str(cmd_expr, cmd_env)
     log.debug(msg)
 
-    subprocess.run(cmd_expr, env=cmd_env, check=True)
+    subprocess.run(cmd_expr, env=os.environ | cmd_env, check=True)
