@@ -5,7 +5,7 @@
 # shellcheck disable=SC1091
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)/conftest.sh"
 
-rawdir=$(get_dataflow_config_value paths.tier_raw)
+rawdir="$(get_dataflow_config_value paths.tier_raw)"
 mkdir -p "${rawdir}" || exit 1
 
 function mkdir_n_touch() {
@@ -35,6 +35,12 @@ rawfiles=(
         mkdir_n_touch "$file"
     done
 )
+
+inputs="$(get_dataflow_config_value paths.metadata)"
+
+# FIXME: remove these at some point
+touch "$inputs/dataprod/overrides/dsp/cal/p03/r000/l200-p03-r000-cal-20230311T235840Z-par_dsp_svm_train.lh5"
+touch "$inputs/dataprod/overrides/dsp/cal/p04/r000/l200-p04-r000-cal-20230414T215158Z-par_dsp_svm_train.lh5"
 
 _smk_opts=(
     --touch
