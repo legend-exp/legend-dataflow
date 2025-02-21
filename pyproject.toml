@@ -116,6 +116,7 @@ par-geds-psp-average    = "legenddataflow.scripts.par.geds.psp.average:par_geds_
 par-geds-raw-blindcal   = "legenddataflow.scripts.par.geds.raw.blindcal:par_geds_raw_blindcal"
 par-geds-raw-blindcheck = "legenddataflow.scripts.par.geds.raw.blindcheck:par_geds_raw_blindcheck"
 par-geds-tcm-pulser     = "legenddataflow.scripts.par.geds.tcm.pulser:par_geds_tcm_pulser"
+par-spms-dsp-trg-thr    = "legenddataflow.scripts.par.spms.dsp.trigger_threshold:par_spms_trg_thr"
 
 [tool.uv.workspace]
 exclude = ["generated", "inputs", "software", "workflow"]

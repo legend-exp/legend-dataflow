@@ -1,0 +1,92 @@
+import argparse
+from pathlib import Path
+
+import hist
+import numpy as np
+from dbetto import Props, TextDB, utils
+from dspeed import run_one_dsp
+from lgdo import lh5
+
+from ..... import cfgtools
+from .....log import build_log
+
+
+def par_spms_dsp_trig_thr() -> None:
+    # CLI interface
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--raw-files", nargs="*")
+    argparser.add_argument("--raw-table-name", required=True)
+    argparser.add_argument("--output-file", required=True)
+    argparser.add_argument("--config-path", required=True)
+    argparser.add_argument("--datatype", required=True)
+    argparser.add_argument("--timestamp", required=True)
+    argparser.add_argument("--sipm-name", required=True)
+    argparser.add_argument("--dsp-db")
+    argparser.add_argument("--logfile")
+    args = argparser.parse_args()
+
+    # dataflow configs
+    df_configs = TextDB(args.config_path, lazy=True).on(
+        args.timestamp, system=args.datatype
+    )
+
+    # setup logging
+    log = build_log(df_configs, args.logfile)
+
+    log.debug("reading in the configuration files")
+    config = df_configs.snakemake_rules.pars_spms_dsp_trg_thr.inputs
+    dsp_config = utils.load_dict(
+        cfgtools.get_channel_config(config.processing_chain, args.sipm_name)
+    )
+    settings = utils.load_dict(
+        cfgtools.get_channel_config(config.settings, args.sipm_name)
+    )
+
+    # read raw file list
+    log.debug("reading in the raw waveforms")
+    with Path(args.raw_files[0]).open() as f:
+        input_file = f.read().splitlines()
+
+    data = lh5.read(
+        args.raw_table_name,
+        input_file,
+        field_mask=["waveform"],
+        n_rows=settings.n_events,
+    )
+
+    # get DSP database from overrides
+    _db_dict = {}
+    if args.dsp_db is not None:
+        _db_dict = args.dsp_db.get(args.sipm_name, {})
+
+    # run the DSP with the provided configuration
+    log.debug("running the DSP chain")
+    dsp_output = run_one_dsp(data, dsp_config, db_dict=_db_dict)
+
+    log.debug("analyzing DSP outputs")
+    # get output of the "curr" processor
+    curr = dsp_output.curr.values.view_as("np").flatten()
+    # determine a cutoff for the histogram used to extract the FWHM
+    low_cutoff, high_cutoff = np.quantile(curr, [0.005, 0.995])
+
+    # make histogram of the curr values
+    h = (
+        hist.new.Regular(settings.n_baseline_bins, low_cutoff, high_cutoff)
+        .Double()
+        .fill(curr)
+    )
+
+    # determine FWHM
+    counts = h.view()
+    idx_over_half = np.where(counts >= np.max(counts) / 2)[0]
+
+    edges = h.axes[0].edges
+    fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
+
+    if fwhm <= 0:
+        msg = "determined FWHM of baseline derivative distribution is zero or negative"
+        raise RuntimeError(msg)
+
+    log.debug("writing out baseline_curr_fwhm = {fwhm}")
+    Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
+    Props.write_to(args.output_file, {"baseline_curr_fwhm": fwhm})

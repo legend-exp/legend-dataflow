@@ -11,13 +11,6 @@ import re
 import string
 from pathlib import Path
 
-# from dateutil import parser
-
-# For testing/debugging, use
-# from scripts.utils import *
-# import snakemake as smk
-# setup = smk.load_configfile("config.json")["setups"]["l200"]
-
 
 def sandbox_path(setup):
     if "sandbox_path" in setup["paths"]:
