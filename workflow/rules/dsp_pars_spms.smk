@@ -10,7 +10,7 @@ rule build_pars_dsp_tau_spms:
     input:
         filelist=Path(utils.filelist_path(config))
         / "all-{experiment}-{period}-{run}-{datatype}-raw.filelist",
-        pardb=lambda wildcards: get_overwrite_file("dsp", wildcards),
+        pardb=lambda wildcards: get_input_par_file(config, wildcards, "dsp", "par_dsp"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -26,15 +26,9 @@ rule build_pars_dsp_tau_spms:
     wildcard_constraints:
         datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     output:
-        temp(
-            patt.get_pattern_pars_tmp_channel(
-                config, "dsp", "spms_trigger_threshold", datatype="{datatype}"
-            )
-        ),
+        temp(patt.get_pattern_pars_tmp_channel(config, "dsp", datatype="{datatype}")),
     log:
-        patt.get_pattern_log_channel(
-            config, "spms_trigger_threshold", time, datatype="{datatype}"
-        ),
+        patt.get_pattern_log_channel(config, "pars_spms", time, datatype="{datatype}"),
     group:
         "par-dsp"
     shell:
