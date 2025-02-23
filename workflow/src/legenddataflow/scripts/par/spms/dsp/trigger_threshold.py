@@ -21,7 +21,7 @@ def par_spms_dsp_trig_thr() -> None:
     argparser.add_argument("--datatype", required=True)
     argparser.add_argument("--timestamp", required=True)
     argparser.add_argument("--sipm-name", required=True)
-    argparser.add_argument("--dsp-db")
+    argparser.add_argument("--dsp-db", nargs="*", default=[])
     argparser.add_argument("--logfile")
     args = argparser.parse_args()
 
@@ -55,9 +55,7 @@ def par_spms_dsp_trig_thr() -> None:
     )
 
     # get DSP database from overrides
-    _db_dict = {}
-    if args.dsp_db is not None:
-        _db_dict = args.dsp_db.get(args.sipm_name, {})
+    _db_dict = Props.read_from(args.dsp_db).get(args.sipm_name, {})
 
     # run the DSP with the provided configuration
     log.debug("running the DSP chain")

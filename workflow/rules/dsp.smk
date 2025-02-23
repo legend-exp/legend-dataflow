@@ -27,7 +27,13 @@ rule build_dsp:
                 config, wildcards.timestamp, "dsp"
             )
         ),
-        pars_file_spms=patt.get_pattern_pars(config, "dsp", datatype="{datatype}"),
+        pars_file_spms=ancient(
+            lambda wildcards: (
+                patt.get_pattern_pars(config, "dsp", datatype="{datatype}")
+                if wildcards.datatype not in ("cal", "xtc")
+                else []
+            )
+        ),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
