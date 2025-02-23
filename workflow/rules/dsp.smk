@@ -10,13 +10,10 @@ from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow.execenv import execenv_pyexe
 
-# FIXME: this seems quite stupid
-dtypes_w_pars = ("lac", "cal", "acs", "anc", "anp", "ant", "aph", "ath", "tst")
-
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
-    [f"-*-*-*-{dt}" for dt in dtypes_w_pars],
-    patt.get_pattern_tier(config, "raw", check_in_cycle=False),
-    {dt: ["par_dsp"] for dt in dtypes_w_pars},
+    ["-*-*-*-cal"],
+    get_pattern_tier(config, "raw", check_in_cycle=False),
+    {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
 build_merge_rules("dsp", lh5_merge=True)
