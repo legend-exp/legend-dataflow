@@ -86,6 +86,34 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
 
         set_last_rule_name(workflow, f"build_pars_{tier}_db")
 
+        rule:
+            """Merge pars for SiPM channels in a single pars file."""
+            input:
+                lambda wildcards: get_par_chanlist(
+                    config,
+                    f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
+                    tier,
+                    basedir,
+                    det_status,
+                    chan_maps,
+                    datatype=wildcards.datatype,
+                    system="spms"
+                ),
+            output:
+                patterns.get_pattern_pars(
+                    config,
+                    tier,
+                    datatype="{datatype}",
+                ),
+            group:
+                f"merge-{tier}"
+            shell:
+                execenv_pyexe(config, "merge-channels") + \
+                "--input {input} "
+                "--output {output} "
+
+        set_last_rule_name(workflow, f"build_pars_spms_{tier}_db")
+
     rule:
         input:
             in_files=lambda wildcards: get_par_chanlist(

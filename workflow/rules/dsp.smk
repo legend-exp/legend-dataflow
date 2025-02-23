@@ -27,6 +27,7 @@ rule build_dsp:
                 config, wildcards.timestamp, "dsp"
             )
         ),
+        pars_file_spms=patt.get_pattern_pars(config, "dsp", datatype="{datatype}"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -52,3 +53,4 @@ rule build_dsp:
         "--output {output.tier_file} "
         "--db-file {output.db_file} "
         "--pars-file {params.ro_input[pars_file]} "
+        "--pars-file_spms {params.ro_input[pars_file_spms]} "

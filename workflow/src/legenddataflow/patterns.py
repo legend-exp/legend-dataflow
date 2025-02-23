@@ -121,27 +121,35 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         return file_pattern
 
 
-def get_pattern_pars(setup, tier, name=None, extension="yaml", check_in_cycle=True):
+def get_pattern_pars(
+    setup, tier, name=None, datatype="cal", extension="yaml", check_in_cycle=True
+):
+    if datatype is None:
+        datatype = "{datatype}"
     if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet"]:
         if name is not None:
             return (
                 Path(get_pars_path(setup, tier))
-                / "cal"
+                / datatype
                 / "{period}"
                 / "{run}"
                 / (
-                    "{experiment}-{period}-{run}-cal-{timestamp}-par_"
+                    "{experiment}-{period}-{run}-"
+                    + datatype
+                    + "-{timestamp}-par_"
                     + f"{tier}_{name}.{extension}"
                 )
             )
         else:
             file_pattern = (
                 Path(get_pars_path(setup, tier))
-                / "cal"
+                / datatype
                 / "{period}"
                 / "{run}"
                 / (
-                    "{experiment}-{period}-{run}-cal-{timestamp}-par_"
+                    "{experiment}-{period}-{run}-"
+                    + datatype
+                    + "-{timestamp}-par_"
                     + f"{tier}.{extension}"
                 )
             )
@@ -154,12 +162,14 @@ def get_pattern_pars(setup, tier, name=None, extension="yaml", check_in_cycle=Tr
     ):
         if name is None:
             return (
-                "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-"
+                "/tmp/{experiment}-{period}-{run}-"
+                + datatype
+                + "-{timestamp}-"
                 + f"par_{tier}.{extension}"
             )
         else:
             return (
-                "/tmp/{experiment}-{period}-{run}-cal-{timestamp}-"
+                "/tmp/{experiment}-{period}-{run}-" + datatype + "-{timestamp}-"
                 f"par_{tier}_{name}.{extension}"
             )
     else:
@@ -237,15 +247,23 @@ def get_pattern_pars_tmp(setup, tier, name=None, datatype=None, extension="yaml"
         )
 
 
-def get_pattern_pars_tmp_channel(setup, tier, name=None, extension="yaml"):
+def get_pattern_pars_tmp_channel(
+    setup, tier, name=None, datatype="cal", extension="yaml"
+):
+    if datatype is None:
+        datatype = "{datatype}"
     if name is None:
         return Path(f"{tmp_par_path(setup)}") / (
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
+            "{experiment}-{period}-{run}-"
+            + datatype
+            + "-{timestamp}-{channel}-par_"
             + f"{tier}.{extension}"
         )
     else:
         return Path(f"{tmp_par_path(setup)}") / (
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-par_"
+            "{experiment}-{period}-{run}-"
+            + datatype
+            + "-{timestamp}-{channel}-par_"
             + f"{tier}_{name}.{extension}"
         )
 
@@ -303,13 +321,15 @@ def get_pattern_log(setup, processing_step, time):
     )
 
 
-def get_pattern_log_channel(setup, processing_step, time):
+def get_pattern_log_channel(setup, processing_step, time, datatype="cal"):
     return (
         Path(f"{tmp_log_path(setup)}")
         / time
         / processing_step
         / (
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-"
+            "{experiment}-{period}-{run}-"
+            + datatype
+            + "-{timestamp}-{channel}-"
             + processing_step
             + ".log"
         )

@@ -2,30 +2,38 @@ import argparse
 from pathlib import Path
 
 from dbetto import TextDB
-from legendmeta import LegendMetadata
 
 
 def create_chankeylist() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--det-status", help="det_status", type=str, required=True)
-    argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
-    argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
-    argparser.add_argument("--channelmap", help="Channel Map", type=str, required=True)
 
-    argparser.add_argument("--output-file", help="output_file", type=str, required=True)
+    argparser.add_argument("--det-status", help="det_status", required=True)
+    argparser.add_argument("--datatype", help="Datatype", required=True)
+    argparser.add_argument("--timestamp", help="Timestamp", required=True)
+    argparser.add_argument("--channelmap", help="Channel Map", required=True)
+    argparser.add_argument("--system", help="geds, spms, pmts, ...", required=True)
+    argparser.add_argument("--output-file", required=True)
+
     args = argparser.parse_args()
 
-    det_status = TextDB(args.det_status, lazy=True)
-    status_map = det_status.statuses.on(args.timestamp, system=args.datatype)
+    status_map = TextDB(args.det_status, lazy=True).statuses.on(
+        args.timestamp, system=args.datatype
+    )
+    chmap = TextDB(args.channelmap, lazy=True).channelmaps.on(args.timestamp)
 
-    channel_map = LegendMetadata(args.channelmap, lazy=True)
-    chmap = channel_map.channelmaps.on(args.timestamp)
+    # only restrict to a certain system (geds, spms, ...)
+    channels = []
+    for channel, status in status_map.items():
+        # start with channels marked as processable in the status map
+        if status.processable is False:
+            continue
 
-    channels = [
-        chan
-        for chan in status_map
-        if status_map[chan]["processable"] is True and chmap[chan].system == "geds"
-    ]
+        if channel not in chmap:
+            msg = f"{channel} is marked as processable but is not found in the channel map (on {args.timestamp})"
+            raise RuntimeError(msg)
+
+        if chmap[channel].system == args.system:
+            channels.append(channel)
 
     if len(channels) == 0:
         print("WARNING: No channels found")  # noqa: T201

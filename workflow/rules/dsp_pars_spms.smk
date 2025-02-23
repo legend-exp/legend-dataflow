@@ -26,9 +26,15 @@ rule build_pars_dsp_tau_spms:
     wildcard_constraints:
         datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     output:
-        temp(patt.get_pattern_pars_tmp_channel(config, "dsp", "spms_trigger_threshold")),
+        temp(
+            patt.get_pattern_pars_tmp_channel(
+                config, "dsp", "spms_trigger_threshold", datatype="{datatype}"
+            )
+        ),
     log:
-        patt.get_pattern_log_channel(config, "spms_trigger_threshold", time),
+        patt.get_pattern_log_channel(
+            config, "spms_trigger_threshold", time, datatype="{datatype}"
+        ),
     group:
         "par-dsp"
     shell:
