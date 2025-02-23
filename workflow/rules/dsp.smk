@@ -29,7 +29,7 @@ rule build_dsp:
         ),
         pars_file_spms=ancient(
             lambda wildcards: (
-                patt.get_pattern_pars(config, "dsp", datatype="{datatype}")
+                [patt.get_pattern_pars(config, "dsp", datatype="{datatype}")]
                 if wildcards.datatype not in ("cal", "xtc")
                 else []
             )
@@ -38,6 +38,7 @@ rule build_dsp:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        all_pars_files=lambda _, input: ro(input.pars_file + input.pars_file_spms),
     output:
         tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
         db_file=patt.get_pattern_pars_tmp(config, "dsp_db"),
@@ -58,5 +59,4 @@ rule build_dsp:
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
         "--db-file {output.db_file} "
-        "--pars-file {params.ro_input[pars_file]} "
-        "--pars-file_spms {params.ro_input[pars_file_spms]} "
+        "--pars-file {params.all_pars_files}"

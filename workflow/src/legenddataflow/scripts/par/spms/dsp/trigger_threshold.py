@@ -3,15 +3,15 @@ from pathlib import Path
 
 import hist
 import numpy as np
-from dbetto import Props, TextDB, utils
-from dspeed import run_one_dsp
+from dbetto import AttrsDict, Props, TextDB, utils
 from lgdo import lh5
+from pygama.pargen.dsp_optimize import run_one_dsp
 
 from ..... import cfgtools
 from .....log import build_log
 
 
-def par_spms_dsp_trig_thr() -> None:
+def par_spms_dsp_trg_thr() -> None:
     # CLI interface
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw-files", nargs="*")
@@ -26,20 +26,22 @@ def par_spms_dsp_trig_thr() -> None:
     args = argparser.parse_args()
 
     # dataflow configs
-    df_configs = TextDB(args.config_path, lazy=True).on(
-        args.timestamp, system=args.datatype
+    df_configs = (
+        TextDB(args.config_path, lazy=True)
+        .on(args.timestamp, system=args.datatype)
+        .snakemake_rules.pars_spms_dsp_trg_thr
     )
 
     # setup logging
     log = build_log(df_configs, args.logfile)
 
     log.debug("reading in the configuration files")
-    config = df_configs.snakemake_rules.pars_spms_dsp_trg_thr.inputs
+    config = df_configs.inputs
     dsp_config = utils.load_dict(
         cfgtools.get_channel_config(config.processing_chain, args.sipm_name)
     )
-    settings = utils.load_dict(
-        cfgtools.get_channel_config(config.settings, args.sipm_name)
+    settings = AttrsDict(
+        utils.load_dict(cfgtools.get_channel_config(config.settings, args.sipm_name))
     )
 
     # read raw file list
@@ -47,10 +49,10 @@ def par_spms_dsp_trig_thr() -> None:
     with Path(args.raw_files[0]).open() as f:
         input_file = f.read().splitlines()
 
-    data = lh5.read(
+    data, _ = lh5.read(
         args.raw_table_name,
         input_file,
-        field_mask=["waveform"],
+        field_mask=["waveform_bit_drop"],
         n_rows=settings.n_events,
     )
 
@@ -87,4 +89,4 @@ def par_spms_dsp_trig_thr() -> None:
 
     log.debug("writing out baseline_curr_fwhm = {fwhm}")
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.output_file, {"baseline_curr_fwhm": fwhm})
+    Props.write_to(args.output_file, {"baseline_curr_fwhm": float(fwhm)})

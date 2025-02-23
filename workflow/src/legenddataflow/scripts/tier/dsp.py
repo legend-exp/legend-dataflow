@@ -38,7 +38,7 @@ def build_tier_dsp() -> None:
     argparser.add_argument("--tier", help="tier", required=True)
 
     argparser.add_argument(
-        "--pars-file", help="database file for detector", nargs="*", default=[]
+        "--pars-file", help="database file for HPGes", nargs="*", default=[]
     )
     argparser.add_argument("--input", help="input file")
 

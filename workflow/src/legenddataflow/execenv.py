@@ -298,7 +298,7 @@ def install(args) -> None:
     cmd_expr = [
         *uv_expr,
         "pip",
-        "--no-cache",
+        # "--no-cache",
         "install",
         "--prefix",
         path_install,
