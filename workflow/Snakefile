@@ -51,6 +51,7 @@ wildcard_constraints:
     timestamp=r"\d{8}T\d{6}Z",
 
 
+include: "rules/channel_merge.smk"
 include: "rules/filelist_gen.smk"
 include: "rules/chanlist_gen.smk"
 include: "rules/common.smk"

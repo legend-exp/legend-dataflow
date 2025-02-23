@@ -7,13 +7,7 @@ Snakemake rules for processing dsp tier.
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from legenddataflow.patterns import (
-    get_pattern_plts,
-    get_pattern_tier,
-    get_pattern_pars_tmp,
-    get_pattern_log,
-    get_pattern_pars,
-)
+from legenddataflow import patterns as patt
 from legenddataflow.execenv import execenv_pyexe
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
@@ -22,16 +16,12 @@ dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
-
-include: "channel_merge.smk"
-
-
 build_merge_rules("dsp", lh5_merge=True)
 
 
 rule build_dsp:
     input:
-        raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
+        raw_file=patt.get_pattern_tier(config, "raw", check_in_cycle=False),
         pars_file=ancient(
             lambda wildcards: dsp_par_catalog.get_par_file(
                 config, wildcards.timestamp, "dsp"
@@ -42,10 +32,10 @@ rule build_dsp:
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
-        tier_file=get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(config, "dsp_db"),
+        tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
+        db_file=patt.get_pattern_pars_tmp(config, "dsp_db"),
     log:
-        get_pattern_log(config, "tier_dsp", time),
+        patt.get_pattern_log(config, "tier_dsp", time),
     group:
         "tier-dsp"
     resources:

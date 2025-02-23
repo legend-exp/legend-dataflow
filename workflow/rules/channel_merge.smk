@@ -1,14 +1,9 @@
-from legenddataflow.patterns import (
-    get_pattern_pars_tmp_channel,
-    get_pattern_plts_tmp_channel,
-    get_pattern_plts,
-    get_pattern_tier,
-    get_pattern_pars_tmp,
-    get_pattern_pars,
-)
-from legenddataflow.utils import set_last_rule_name
 import inspect
+
+from legenddataflow import patterns
+from legenddataflow.utils import set_last_rule_name
 from legenddataflow.execenv import execenv_pyexe
+
 
 def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
     if lh5_tier is None:
@@ -24,7 +19,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 chan_maps,
             ),
         output:
-            get_pattern_plts(config, tier),
+            patterns.get_pattern_plts(config, tier),
         group:
             f"merge-{tier}"
         shell:
@@ -47,7 +42,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 extension="pkl",
             ),
         output:
-            get_pattern_pars(
+            patterns.get_pattern_pars(
                 config,
                 tier,
                 name="objects",
@@ -76,7 +71,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 ),
             output:
                 temp(
-                    get_pattern_pars_tmp(
+                    patterns.get_pattern_pars_tmp(
                         config,
                         tier,
                         datatype="cal",
@@ -102,13 +97,13 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 chan_maps,
                 extension="lh5" if lh5_merge is True else inspect.signature(get_par_chanlist).parameters['extension'].default,
             ),
-            in_db=get_pattern_pars_tmp(
+            in_db=patterns.get_pattern_pars_tmp(
                 config,
                 tier,
                 datatype="cal",
             ) if lh5_merge is True else [],
-            plts=get_pattern_plts(config, tier),
-            objects=get_pattern_pars(
+            plts=patterns.get_pattern_plts(config, tier),
+            objects=patterns.get_pattern_pars(
                 config,
                 tier,
                 name="objects",
@@ -116,13 +111,13 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 check_in_cycle=check_in_cycle,
             ),
         output:
-            out_file=get_pattern_pars(
+            out_file=patterns.get_pattern_pars(
                 config,
                 tier,
-                extension="lh5" if lh5_merge is True else inspect.signature(get_pattern_pars).parameters['extension'].default,
+                extension="lh5" if lh5_merge is True else inspect.signature(patterns.get_pattern_pars).parameters['extension'].default,
                 check_in_cycle=check_in_cycle,
             ),
-            out_db=get_pattern_pars(config, tier, check_in_cycle=check_in_cycle) if lh5_merge is True else [],
+            out_db=patterns.get_pattern_pars(config, tier, check_in_cycle=check_in_cycle) if lh5_merge is True else [],
         group:
             f"merge-{tier}"
         run:

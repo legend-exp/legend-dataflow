@@ -302,7 +302,6 @@ def install(args) -> None:
         "install",
         "--prefix",
         path_install,
-        "--",
         str(config_loc),
     ]
     if args.editable:
