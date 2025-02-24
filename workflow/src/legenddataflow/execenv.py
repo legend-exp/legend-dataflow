@@ -234,63 +234,45 @@ def install(args) -> None:
     python = sys.executable if cmd_prefix == [] else "python"
     python_venv, _ = execenv_pyexe(config_dict, "python", as_string=False)
 
-    has_uv = False
-    try:
-        # is uv already available?
-        _runcmd(
-            [*cmd_prefix, "uv", "--version"],
-            cmd_env,
-            capture_output=True,
-        )
-        has_uv = True
-        # we'll use the existing uv
-        uv_expr = [*cmd_prefix, "uv"]
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # we'll use uv from the virtualenv (installed below)
-        uv_expr = [*python_venv, "-m", "uv", "--quiet"]
+    # we'll use uv from the virtualenv (installed below)
+    uv_expr = [*python_venv, "-m", "uv", "--quiet"]
 
-    # configure venv
-    if has_uv:
-        # if uv is available, just use it to create the venv
-        cmd_expr = [*cmd_prefix, "uv", "--quiet", "venv", path_install]
-    else:
-        # otherwise use python-venv
-        cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
+    # otherwise use python-venv
+    cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
 
     log.info(f"configuring virtual environment in {path_install}")
     _runcmd(cmd_expr, cmd_env)
 
-    if not has_uv:
-        cmd_expr = [
-            *python_venv,
-            "-m",
-            "pip",
-            "--quiet",
-            "--no-cache-dir",
-            "install",
-            "--upgrade",
-            "--",
-            "pip",
-        ]
+    cmd_expr = [
+        *python_venv,
+        "-m",
+        "pip",
+        "--quiet",
+        "--no-cache-dir",
+        "install",
+        "--upgrade",
+        "--",
+        "pip",
+    ]
 
-        log.info("upgrading pip")
-        _runcmd(cmd_expr, cmd_env)
+    log.info("upgrading pip")
+    _runcmd(cmd_expr, cmd_env)
 
-        # install uv
-        cmd_expr = [
-            *python_venv,
-            "-m",
-            "pip",
-            "--quiet",
-            "--no-cache-dir",
-            "install",
-            "--no-warn-script-location",
-            "--",
-            "uv",
-        ]
+    # install uv
+    cmd_expr = [
+        *python_venv,
+        "-m",
+        "pip",
+        "--quiet",
+        "--no-cache-dir",
+        "install",
+        "--no-warn-script-location",
+        "--",
+        "uv",
+    ]
 
-        log.info("installing uv")
-        _runcmd(cmd_expr, cmd_env)
+    log.info("installing uv")
+    _runcmd(cmd_expr, cmd_env)
 
     # and finally install legenddataflow with all dependencies
     # this must be done within the execenv, since jobs will be run within it
