@@ -83,6 +83,7 @@ onstart:
     print("INFO: starting workflow")
 
     # Make sure some packages are initialized before we begin to avoid race conditions
+    # https://numba.readthedocs.io/en/stable/developer/caching.html#cache-sharing
     if not workflow.touch:
         shell(
             execenv.execenv_pyexe(config, "python")

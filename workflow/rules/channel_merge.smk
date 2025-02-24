@@ -103,6 +103,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 patterns.get_pattern_pars(
                     config,
                     tier,
+                    name="spms",
                     datatype="{datatype}",
                 ),
             group:

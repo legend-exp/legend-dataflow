@@ -14,7 +14,7 @@ from .....log import build_log
 def par_spms_dsp_trg_thr() -> None:
     # CLI interface
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--raw-files", nargs="*")
+    argparser.add_argument("--raw-file", required=True)
     argparser.add_argument("--raw-table-name", required=True)
     argparser.add_argument("--output-file", required=True)
     argparser.add_argument("--config-path", required=True)
@@ -46,12 +46,9 @@ def par_spms_dsp_trg_thr() -> None:
 
     # read raw file list
     log.debug("reading in the raw waveforms")
-    with Path(args.raw_files[0]).open() as f:
-        input_file = f.read().splitlines()
-
     data, _ = lh5.read(
         args.raw_table_name,
-        input_file,
+        args.raw_file,
         field_mask=["waveform_bit_drop"],
         n_rows=settings.n_events,
     )
@@ -87,6 +84,6 @@ def par_spms_dsp_trg_thr() -> None:
         msg = "determined FWHM of baseline derivative distribution is zero or negative"
         raise RuntimeError(msg)
 
-    log.debug("writing out baseline_curr_fwhm = {fwhm}")
+    log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(args.output_file, {"baseline_curr_fwhm": float(fwhm)})

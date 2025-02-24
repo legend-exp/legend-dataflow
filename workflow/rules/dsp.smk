@@ -10,35 +10,37 @@ from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow.execenv import execenv_pyexe
 
+build_merge_rules("dsp", lh5_merge=True)
+
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
 )
 
-build_merge_rules("dsp", lh5_merge=True)
+
+def _make_input_pars_file(wildcards):
+    """Prepare the input pars files for the `build_dsp` rule."""
+    # first get the files from the catalog
+    filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
+
+    # then add the spms par files
+    if wildcards.datatype not in ("cal", "xtc"):
+        filelist += [
+            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}")
+        ]
+
+    return filelist
 
 
 rule build_dsp:
     input:
         raw_file=patt.get_pattern_tier(config, "raw", check_in_cycle=False),
-        pars_file=ancient(
-            lambda wildcards: dsp_par_catalog.get_par_file(
-                config, wildcards.timestamp, "dsp"
-            )
-        ),
-        pars_file_spms=ancient(
-            lambda wildcards: (
-                [patt.get_pattern_pars(config, "dsp", datatype="{datatype}")]
-                if wildcards.datatype not in ("cal", "xtc")
-                else []
-            )
-        ),
+        pars_files=ancient(lambda wildcards: _make_input_pars_file(wildcards)),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-        all_pars_files=lambda _, input: ro(input.pars_file + input.pars_file_spms),
     output:
         tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
         db_file=patt.get_pattern_pars_tmp(config, "dsp_db"),
@@ -59,4 +61,4 @@ rule build_dsp:
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
         "--db-file {output.db_file} "
-        "--pars-file {params.all_pars_files}"
+        "--pars-file {params.ro_input[pars_files]}"
