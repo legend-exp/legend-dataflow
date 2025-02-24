@@ -12,6 +12,7 @@ from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv, ParsKeyResolve
 from datetime import datetime
 from dbetto import AttrsDict
+from legendmeta import LegendMetadata
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
