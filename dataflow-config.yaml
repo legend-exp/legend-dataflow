@@ -75,7 +75,6 @@ execenv:
     env:
       PRODENV: $PRODENV
       NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
-      # LGDO_CACHE: "false"
       LGDO_BOUNDSCHECK: "false"
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"

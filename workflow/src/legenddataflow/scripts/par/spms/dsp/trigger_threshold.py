@@ -46,7 +46,7 @@ def par_spms_dsp_trg_thr() -> None:
 
     # read raw file list
     log.debug("reading in the raw waveforms")
-    data, _ = lh5.read(
+    data = lh5.read(
         args.raw_table_name,
         args.raw_file,
         field_mask=["waveform_bit_drop"],

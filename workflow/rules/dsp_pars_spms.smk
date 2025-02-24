@@ -6,19 +6,9 @@ from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv_pyexe
 
 
-def _get_first_raw_file(wildcards):
-    w = wildcards
-    flist = (
-        Path(utils.filelist_path(config))
-        / f"all-{w.experiment}-{w.period}-{w.run}-{w.datatype}-raw.filelist"
-    )
-    with flist.open() as f:
-        return f.read().splitlines()[0]
-
-
 rule build_pars_dsp_tau_spms:
     input:
-        raw_file=lambda wildcards: _get_first_raw_file(wildcards),
+        raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pardb=lambda wildcards: get_input_par_file(config, wildcards, "dsp", "par_dsp"),
     params:
         timestamp="{timestamp}",
