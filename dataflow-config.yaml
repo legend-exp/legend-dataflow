@@ -1,4 +1,5 @@
-legend_metadata_version: main
+# legend_metadata_version: main
+allow_none_par: false
 
 paths:
   sandbox_path: $_/sandbox
