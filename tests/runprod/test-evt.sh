@@ -24,9 +24,6 @@ rawfiles=(
     cal/p03/r001/l200-p03-r001-cal-20230317T211819Z-tier_raw.lh5
     cal/p03/r000/l200-p03-r000-cal-20230311T235840Z-tier_raw.lh5
     cal/p03/r002/l200-p03-r002-cal-20230324T161401Z-tier_raw.lh5
-    anp/p13/r002/l200-p13-r002-anp-20241217T094846Z-tier_raw.lh5
-    anc/p13/r006/l200-p13-r006-anc-20241221T150249Z-tier_raw.lh5
-    acs/p13/r006/l200-p13-r006-acs-20241221T150307Z-tier_raw.lh5
 )
 
 (
@@ -47,4 +44,5 @@ _smk_opts=(
     --workflow-profile workflow/profiles/default
 )
 
-run_test_command snakemake "${_smk_opts[@]}" "all-*-evt.gen" || exit 1
+run_test_command snakemake "${_smk_opts[@]}" "all-p03-*-evt.gen" || exit 1
+run_test_command snakemake "${_smk_opts[@]}" "all-p04-*-evt.gen" || exit 1
