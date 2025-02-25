@@ -35,10 +35,10 @@ basedir = workflow.basedir
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
-if not Path(meta).exists():
-    LegendMetadata(meta).checkout(config.legend_metadata_version)
-
-metadata = LegendMetadata(meta, lazy=True)
+# NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
+metadata = LegendMetadata(meta)
+if "legend_metadata_version" in config:
+    metadata.checkout(config.legend_metadata_version)
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
