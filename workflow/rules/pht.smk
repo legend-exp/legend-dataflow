@@ -25,10 +25,6 @@ pht_par_catalog = ParsKeyResolve.get_par_catalog(
 
 intier = "psp"
 
-
-include: "channel_merge.smk"
-
-
 build_merge_rules("pht", lh5_merge=False)
 
 

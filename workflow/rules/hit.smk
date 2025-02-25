@@ -22,10 +22,6 @@ hit_par_catalog = ParsKeyResolve.get_par_catalog(
     {"cal": ["par_hit"], "lar": ["par_hit"]},
 )
 
-
-include: "channel_merge.smk"
-
-
 build_merge_rules("hit", lh5_merge=False)
 
 
@@ -52,11 +48,11 @@ rule build_hit:
     shell:
         execenv_pyexe(config, "build-tier-hit") + f"--configs {ro(configs)} "
         "--metadata {meta} "
-        "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--pars-file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
         "--input {params.ro_input[dsp_file]} "
-        "--db-file {output.db_file}"
+        "--db-file {output.db_file} "
+        "--log {log}"

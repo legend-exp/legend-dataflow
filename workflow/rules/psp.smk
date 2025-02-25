@@ -22,10 +22,6 @@ psp_par_catalog = ParsKeyResolve.get_par_catalog(
     {"cal": ["par_psp"], "lar": ["par_psp"]},
 )
 
-
-include: "channel_merge.smk"
-
-
 build_merge_rules("psp", lh5_merge=True, lh5_tier="dsp")
 
 

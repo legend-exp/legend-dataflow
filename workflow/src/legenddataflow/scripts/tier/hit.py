@@ -1,10 +1,8 @@
 import argparse
-import time
 from pathlib import Path
 
 from dbetto.catalog import Props
 from legendmeta import LegendMetadata, TextDB
-from lgdo import lh5
 from pygama.hit.build_hit import build_hit
 
 from ...log import build_log
@@ -12,65 +10,76 @@ from ...log import build_log
 
 def build_tier_hit() -> None:
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--input", help="input file", type=str)
-    argparser.add_argument("--pars-file", help="hit pars file", nargs="*")
+    argparser.add_argument("--input")
+    argparser.add_argument("--pars-file", nargs="*")
 
-    argparser.add_argument("--configs", help="configs", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
-    argparser.add_argument("--log", help="log_file", type=str)
+    argparser.add_argument("--configs", required=True)
+    argparser.add_argument("--metadata", required=True)
+    argparser.add_argument("--log")
 
-    argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
-    argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
-    argparser.add_argument("--tier", help="Tier", type=str, required=True)
+    argparser.add_argument("--datatype", required=True)
+    argparser.add_argument("--timestamp", required=True)
+    argparser.add_argument("--tier", required=True)
 
-    argparser.add_argument("--output", help="output file", type=str)
-    argparser.add_argument("--db-file", help="db file", type=str)
+    argparser.add_argument("--output")
+    argparser.add_argument("--db-file")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True)
-    if args.tier == "hit" or args.tier == "pht":
-        config_dict = configs.on(args.timestamp, system=args.datatype)[
-            "snakemake_rules"
-        ]["tier_hit"]
-    else:
-        msg = "unknown tier"
+    if args.tier not in ("hit", "pht"):
+        msg = f"unsupported tier {args.tier}"
         raise ValueError(msg)
 
-    log = build_log(config_dict, args.log)
+    df_config = (
+        TextDB(args.configs, lazy=True)
+        .on(args.timestamp, system=args.datatype)
+        .snakemake_rules.tier_hit
+    )
+    log = build_log(df_config, args.log)
+    log.info("initializing")
 
-    channel_dict = config_dict["inputs"]["hit_config"]
-    settings_dict = config_dict["options"].get("settings", {})
+    settings_dict = df_config.options.get("settings", {})
+
     if isinstance(settings_dict, str):
         settings_dict = Props.read_from(settings_dict)
 
-    meta = LegendMetadata(path=args.metadata)
-    chan_map = meta.channelmap(args.timestamp, system=args.datatype)
+    # mapping channel -> hit config file
+    chan_cfg_map = df_config.inputs.hit_config
+    # channel map
+    chan_map = LegendMetadata(args.metadata).channelmap(
+        args.timestamp, system=args.datatype
+    )
 
-    pars_dict = Props.read_from(args.pars_file)
-    pars_dict = {chan: chan_dict["pars"] for chan, chan_dict in pars_dict.items()}
+    log.info("building the build_hit config")
+    # if the mapping only contains one __default__ key, build the channel
+    # list from the (processable) channel map and assign the default config
+    if list(chan_cfg_map.keys()) == ["__default__"]:
+        chan_cfg_map = {
+            chan: chan_cfg_map.__default__
+            for chan in chan_map.group("analysis.processable")[True].map("name")
+        }
 
-    hit_dict = {}
-    channels_present = lh5.ls(args.input)
-    for channel in pars_dict:
-        chan_pars = pars_dict[channel].copy()
+    # now construct the dictionary of hit configs for build_hit()
+    channel_dict = {}
+    pars_dict = {ch: chd["pars"] for ch, chd in Props.read_from(args.pars_file).items()}
+    for chan, file in chan_cfg_map.items():
+        if chan_map[chan].analysis.processable is False:
+            msg = f"channel {chan} is set to non-processable in the channel map"
+            raise RuntimeError(msg)
 
-        if channel in channel_dict:
-            cfg_dict = Props.read_from(channel_dict[channel])
-            Props.add_to(cfg_dict, chan_pars)
-            chan_pars = cfg_dict
+        hit_cfg = Props.read_from(file)
 
-        if f"ch{chan_map[channel].daq.rawid}" in channels_present:
-            hit_dict[f"ch{chan_map[channel].daq.rawid}/dsp"] = chan_pars
+        # get pars (to override hit config)
+        Props.add_to(hit_cfg, pars_dict.get("chan", {}).copy())
 
-    t_start = time.time()
+        channel_dict[f"ch{chan_map[chan].daq.rawid}/dsp"] = hit_cfg
+
+    log.info("running build_hit()...")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    build_hit(args.input, lh5_tables_config=hit_dict, outfile=args.output)
-    t_elap = time.time() - t_start
-    log.info(f"Done!  Time elapsed: {t_elap:.2f} sec.")
+    build_hit(args.input, lh5_tables_config=channel_dict, outfile=args.output)
 
     hit_outputs = {}
     hit_channels = []
-    for channel, file in channel_dict.items():
+    for channel, file in chan_cfg_map.items():
         output = Props.read_from(file)["outputs"]
         in_dict = False
         for entry in hit_outputs:

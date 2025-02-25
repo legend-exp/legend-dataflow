@@ -35,10 +35,10 @@ basedir = workflow.basedir
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
-if not Path(meta).exists():
-    LegendMetadata(meta).checkout(config.legend_metadata_version)
-
-metadata = LegendMetadata(meta, lazy=True)
+# NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
+metadata = LegendMetadata(meta)
+if "legend_metadata_version" in config:
+    metadata.checkout(config.legend_metadata_version)
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
@@ -51,12 +51,14 @@ wildcard_constraints:
     timestamp=r"\d{8}T\d{6}Z",
 
 
+include: "rules/channel_merge.smk"
 include: "rules/filelist_gen.smk"
 include: "rules/chanlist_gen.smk"
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"
 include: "rules/dsp_pars_geds.smk"
+include: "rules/dsp_pars_spms.smk"
 include: "rules/dsp.smk"
 include: "rules/psp_pars_geds.smk"
 include: "rules/psp.smk"
@@ -79,12 +81,16 @@ localrules:
 
 onstart:
     print("INFO: starting workflow")
-    # Make sure some packages are initialized before we begin to avoid race conditions
-    if not workflow.touch:
-        for pkg in ["dspeed", "lgdo", "matplotlib"]:
-            shell(execenv.execenv_pyexe(config, "python") + "-c 'import " + pkg + "'")
 
-            # Log parameter catalogs in validity files
+    # Make sure some packages are initialized before we begin to avoid race conditions
+    # https://numba.readthedocs.io/en/stable/developer/caching.html#cache-sharing
+    if not workflow.touch:
+        shell(
+            execenv.execenv_pyexe(config, "python")
+            + "-c 'import dspeed, lgdo, matplotlib, pygama'"
+        )
+
+        # Log parameter catalogs in validity files
     hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()

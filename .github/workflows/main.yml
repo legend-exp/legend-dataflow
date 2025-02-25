@@ -59,6 +59,7 @@ jobs:
       - name: Set LEGEND_METADATA variable
         run: |
           echo "LEGEND_METADATA=$GITHUB_WORKSPACE/inputs" >> $GITHUB_ENV
+
       - name: Clone legend-metadata
         uses: actions/checkout@v4
         with:
@@ -67,6 +68,10 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CLONE_LEGEND_METADATA }}
           path: ${{ env.LEGEND_METADATA }}
+
+      - name: Recursively update legend-metadata submodules
+        run: |
+          cd "$LEGEND_METADATA" && git submodule update --recursive --remote
 
       - name: Run data production tests
         run: ./tests/runprod/run-all.sh

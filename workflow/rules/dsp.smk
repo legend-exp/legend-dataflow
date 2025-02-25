@@ -7,14 +7,10 @@ Snakemake rules for processing dsp tier.
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from legenddataflow.patterns import (
-    get_pattern_plts,
-    get_pattern_tier,
-    get_pattern_pars_tmp,
-    get_pattern_log,
-    get_pattern_pars,
-)
+from legenddataflow import patterns as patt
 from legenddataflow.execenv import execenv_pyexe
+
+build_merge_rules("dsp", lh5_merge=True)
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
@@ -23,29 +19,33 @@ dsp_par_catalog = ParsKeyResolve.get_par_catalog(
 )
 
 
-include: "channel_merge.smk"
+def _make_input_pars_file(wildcards):
+    """Prepare the input pars files for the `build_dsp` rule."""
+    # first get the files from the catalog
+    filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
 
+    # then add the spms par files
+    if wildcards.datatype not in ("cal", "xtc"):
+        filelist += [
+            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}")
+        ]
 
-build_merge_rules("dsp", lh5_merge=True)
+    return filelist
 
 
 rule build_dsp:
     input:
-        raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
-        pars_file=ancient(
-            lambda wildcards: dsp_par_catalog.get_par_file(
-                config, wildcards.timestamp, "dsp"
-            )
-        ),
+        raw_file=patt.get_pattern_tier(config, "raw", check_in_cycle=False),
+        pars_files=ancient(lambda wildcards: _make_input_pars_file(wildcards)),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     output:
-        tier_file=get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(config, "dsp_db"),
+        tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
+        db_file=patt.get_pattern_pars_tmp(config, "dsp_db"),
     log:
-        get_pattern_log(config, "tier_dsp", time),
+        patt.get_pattern_log(config, "tier_dsp", time),
     group:
         "tier-dsp"
     resources:
@@ -61,4 +61,4 @@ rule build_dsp:
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
         "--db-file {output.db_file} "
-        "--pars-file {params.ro_input[pars_file]} "
+        "--pars-file {params.ro_input[pars_files]}"

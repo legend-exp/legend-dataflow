@@ -1,7 +1,6 @@
 import argparse
 import re
 import time
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -13,13 +12,11 @@ from lgdo import lh5
 
 from ...log import build_log
 
-warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
-
-def replace_list_with_array(dic):
+def _replace_list_with_array(dic):
     for key, value in dic.items():
         if isinstance(value, dict):
-            dic[key] = replace_list_with_array(value)
+            dic[key] = _replace_list_with_array(value)
         elif isinstance(value, list):
             dic[key] = np.array(value, dtype="float32")
         else:
@@ -28,62 +25,77 @@ def replace_list_with_array(dic):
 
 
 def build_tier_dsp() -> None:
+    # CLI config
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--configs", help="configs path", type=str, required=True)
-    argparser.add_argument("--metadata", help="metadata", type=str, required=True)
-    argparser.add_argument("--log", help="log file", type=str)
+    argparser.add_argument(
+        "--configs", help="path to dataflow config files", required=True
+    )
+    argparser.add_argument("--metadata", help="metadata repository path", required=True)
+    argparser.add_argument("--log", help="log file name")
 
-    argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
-    argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
-    argparser.add_argument("--tier", help="Tier", type=str, required=True)
+    argparser.add_argument("--datatype", help="datatype", required=True)
+    argparser.add_argument("--timestamp", help="timestamp", required=True)
+    argparser.add_argument("--tier", help="tier", required=True)
 
     argparser.add_argument(
-        "--pars-file", help="database file for detector", nargs="*", default=[]
+        "--pars-file", help="database file for HPGes", nargs="*", default=[]
     )
-    argparser.add_argument("--input", help="input file", type=str)
+    argparser.add_argument("--input", help="input file")
 
-    argparser.add_argument("--output", help="output file", type=str)
-    argparser.add_argument("--db-file", help="db file", type=str)
+    argparser.add_argument("--output", help="output file")
+    argparser.add_argument("--db-file", help="database file")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True)
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"]
+    df_configs = TextDB(args.configs, lazy=True)
+    config_dict = df_configs.on(args.timestamp, system=args.datatype).snakemake_rules
+
     if args.tier in ["dsp", "psp"]:
-        config_dict = config_dict["tier_dsp"]
+        config_dict = config_dict.tier_dsp
     elif args.tier in ["ann", "pan"]:
-        config_dict = config_dict["tier_ann"]
+        config_dict = config_dict.tier_ann
     else:
-        msg = f"Tier {args.tier} not supported"
+        msg = f"tier {args.tier} not supported"
         raise ValueError(msg)
 
     log = build_log(config_dict, args.log)
 
-    channel_dict = config_dict["inputs"]["processing_chain"]
-    settings_dict = config_dict["options"].get("settings", {})
+    settings_dict = config_dict.options.get("settings", {})
     if isinstance(settings_dict, str):
         settings_dict = Props.read_from(settings_dict)
 
-    meta = LegendMetadata(path=args.metadata)
-    chan_map = meta.channelmap(args.timestamp, system=args.datatype)
+    chan_map = LegendMetadata(args.metadata).channelmap(
+        args.timestamp, system=args.datatype
+    )
+    chan_cfg_map = config_dict.inputs.processing_chain
 
-    if args.tier in ["ann", "pan"]:
-        channel_dict = {
-            f"ch{chan_map[chan].daq.rawid:07}/dsp": Props.read_from(file)
-            for chan, file in channel_dict.items()
+    # if the dictionary only contains one __default__ key, build the channel
+    # list from the (processable) channel map and assign the default config
+    if list(chan_cfg_map.keys()) == ["__default__"]:
+        chan_cfg_map = {
+            chan: chan_cfg_map.__default__
+            for chan in chan_map.group("analysis.processable")[True].map("name")
         }
-    else:
-        channel_dict = {
-            f"ch{chan_map[chan].daq.rawid:07}/raw": Props.read_from(file)
-            for chan, file in channel_dict.items()
-        }
+
+    # now construct the dictionary of DSP configs for build_dsp()
+    channel_dict = {}
+    for chan, file in chan_cfg_map.items():
+        if chan_map[chan].analysis.processable is False:
+            msg = f"channel {chan} is set to non-processable in the channel map"
+            raise RuntimeError(msg)
+
+        tbl = "dsp" if args.tier in ["ann", "pan"] else "raw"
+        channel_dict[f"ch{chan_map[chan].daq.rawid:07}/{tbl}"] = Props.read_from(file)
+
+    # par files
     db_files = [
         par_file
         for par_file in args.pars_file
         if Path(par_file).suffix in (".json", ".yaml", ".yml")
     ]
 
-    database_dic = Props.read_from(db_files, subst_pathvar=True)
-    database_dic = replace_list_with_array(database_dic)
+    database_dic = _replace_list_with_array(
+        Props.read_from(db_files, subst_pathvar=True)
+    )
     database_dic = {
         (f"ch{chan_map[chan].daq.rawid:07}" if chan in chan_map else chan): dic
         for chan, dic in database_dic.items()

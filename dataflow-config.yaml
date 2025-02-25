@@ -1,4 +1,5 @@
-legend_metadata_version: main
+# legend_metadata_version: main
+allow_none_par: false
 
 paths:
   sandbox_path: $_/sandbox
@@ -74,8 +75,8 @@ execenv:
     arg: /data2/public/prodenv/containers/legendexp_legend-base_latest_20241110203225.sif
     env:
       PRODENV: $PRODENV
+      NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
       LGDO_BOUNDSCHECK: "false"
-      # LGDO_CACHE: "false"
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
       PYGAMA_FASTMATH: "false"
@@ -86,6 +87,7 @@ execenv:
     arg: --image legendexp/legend-base:latest
     env:
       PRODENV: $PRODENV
+      NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
       HDF5_USE_FILE_LOCKING: "false"
       LGDO_BOUNDSCHECK: "false"
       DSPEED_BOUNDSCHECK: "false"
