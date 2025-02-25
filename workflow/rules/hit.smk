@@ -22,10 +22,6 @@ hit_par_catalog = ParsKeyResolve.get_par_catalog(
     {"cal": ["par_hit"], "lar": ["par_hit"]},
 )
 
-
-include: "channel_merge.smk"
-
-
 build_merge_rules("hit", lh5_merge=False)
 
 
