@@ -4,8 +4,8 @@ from pathlib import Path
 import hist
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB, utils
+from dspeed import build_processing_chain
 from lgdo import lh5
-from pygama.pargen.dsp_optimize import run_one_dsp
 
 from ..... import cfgtools
 from .....log import build_log
@@ -58,19 +58,20 @@ def par_spms_dsp_trg_thr() -> None:
 
     # run the DSP with the provided configuration
     log.debug("running the DSP chain")
-    dsp_output = run_one_dsp(data, dsp_config, db_dict=_db_dict)
+    chain, _, dsp_output = build_processing_chain(data, dsp_config, db_dict=_db_dict)
+    chain.execute()
 
     log.debug("analyzing DSP outputs")
-    # get output of the "curr" processor
-    curr = dsp_output.curr.values.view_as("np").flatten()
+    # get output of the current processor
+    wf_current = dsp_output.wf_current.values.view_as("np").flatten()
     # determine a cutoff for the histogram used to extract the FWHM
-    low_cutoff, high_cutoff = np.quantile(curr, [0.005, 0.995])
+    low_cutoff, high_cutoff = np.quantile(wf_current, [0.005, 0.995])
 
     # make histogram of the curr values
     h = (
         hist.new.Regular(settings.n_baseline_bins, low_cutoff, high_cutoff)
         .Double()
-        .fill(curr)
+        .fill(wf_current)
     )
 
     # determine FWHM
