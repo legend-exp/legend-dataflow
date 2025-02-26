@@ -44,47 +44,70 @@ def par_spms_dsp_trg_thr() -> None:
         utils.load_dict(cfgtools.get_channel_config(config.settings, args.sipm_name))
     )
 
-    # read raw file list
-    log.debug("reading in the raw waveforms")
-    data = lh5.read(
-        args.raw_table_name,
-        args.raw_file,
-        field_mask=["waveform_bit_drop"],
-        n_rows=settings.n_events,
-    )
-
     # get DSP database from overrides
     _db_dict = Props.read_from(args.dsp_db).get(args.sipm_name, {})
 
-    # run the DSP with the provided configuration
-    log.debug("running the DSP chain")
-    chain, _, dsp_output = build_processing_chain(data, dsp_config, db_dict=_db_dict)
-    chain.execute()
+    fwhm = None
 
-    log.debug("analyzing DSP outputs")
-    # get output of the current processor
-    wf_current = dsp_output.wf_current.values.view_as("np").flatten()
-    # determine a cutoff for the histogram used to extract the FWHM
-    low_cutoff, high_cutoff = np.quantile(wf_current, [0.005, 0.995])
+    # read raw file list
+    log.debug("reading in the raw waveforms")
+    if len(lh5.ls(args.raw_file, f"{args.raw_table_name}/waveform_bit_drop")) == 0:
+        msg = (
+            f"could not find waveform '{args.raw_table_name}/waveform_bit_drop' "
+            "in {args.raw_file}, returning null pars"
+        )
+        log.warning(msg)
 
-    # make histogram of the curr values
-    h = (
-        hist.new.Regular(settings.n_baseline_bins, low_cutoff, high_cutoff)
-        .Double()
-        .fill(wf_current)
-    )
+    else:
+        data = lh5.read(
+            args.raw_table_name,
+            args.raw_file,
+            field_mask=["waveform_bit_drop"],
+            n_rows=settings.n_events,
+        )
 
-    # determine FWHM
-    counts = h.view()
-    idx_over_half = np.where(counts >= np.max(counts) / 2)[0]
+        if len(data) == 0:
+            msg = (
+                f"could not find any waveforms '{args.raw_table_name}/waveform_bit_drop' "
+                "in {args.raw_file}, returning null pars"
+            )
+            log.warning(msg)
 
-    edges = h.axes[0].edges
-    fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
+        else:
+            # run the DSP with the provided configuration
+            log.debug("running the DSP chain")
+            chain, _, dsp_output = build_processing_chain(
+                data, dsp_config, db_dict=_db_dict
+            )
+            chain.execute()
 
-    if fwhm <= 0:
-        msg = "determined FWHM of baseline derivative distribution is zero or negative"
-        raise RuntimeError(msg)
+            log.debug("analyzing DSP outputs")
+            # get output of the current processor
+            wf_current = dsp_output.wf_current.values.view_as("np").flatten()
+            # determine a cutoff for the histogram used to extract the FWHM
+            low_cutoff, high_cutoff = np.quantile(wf_current, [0.005, 0.995])
+
+            # make histogram of the curr values
+            h = (
+                hist.new.Regular(settings.n_baseline_bins, low_cutoff, high_cutoff)
+                .Double()
+                .fill(wf_current)
+            )
+
+            # determine FWHM
+            counts = h.view()
+            idx_over_half = np.where(counts >= np.max(counts) / 2)[0]
+
+            edges = h.axes[0].edges
+            fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
+
+            if fwhm <= 0:
+                msg = "determined FWHM of baseline derivative distribution is zero or negative"
+                raise RuntimeError(msg)
 
     log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.output_file, {"baseline_curr_fwhm": float(fwhm)})
+    Props.write_to(
+        args.output_file,
+        {"baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm},
+    )
