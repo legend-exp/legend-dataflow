@@ -143,8 +143,6 @@ onsuccess:
         report_plugin = ReportPluginRegistry().get_plugin(form)
         report_settings = report_plugin.settings_cls
         report_settings.path = rep_dir / f"report.{form}"
-        # get_settings(path=rep_dir / f"report.{form}")
-        # report_settings.path = rep_dir / f"report.{form}"
         asyncio.run(
             auto_report(workflow.persistence.dag, report_plugin, report_settings)
         )
@@ -152,7 +150,7 @@ onsuccess:
     with (rep_dir / "dag.txt").open("w") as f:
         f.writelines(str(workflow.persistence.dag))
 
-    with (rep_dir / "rg.txt").open("w") as f:
+    with (rep_dir / "rulegraph.txt").open("w") as f:
         f.writelines(str(workflow.persistence.dag.rule_dot()))
 
         # remove .gen files
