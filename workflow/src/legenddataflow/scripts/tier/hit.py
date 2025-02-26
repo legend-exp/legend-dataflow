@@ -69,7 +69,7 @@ def build_tier_hit() -> None:
         hit_cfg = Props.read_from(file)
 
         # get pars (to override hit config)
-        Props.add_to(hit_cfg, pars_dict.get("chan", {}).copy())
+        Props.add_to(hit_cfg, pars_dict.get(chan, {}).copy())
 
         channel_dict[f"ch{chan_map[chan].daq.rawid}/dsp"] = hit_cfg
 
