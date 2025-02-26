@@ -129,6 +129,33 @@ onstart:
 
 
 onsuccess:
+    from snakemake.report import auto_report
+    from snakemake_interface_report_plugins.settings import ReportSettingsBase
+    from snakemake_interface_report_plugins.registry import ReportPluginRegistry
+    import asyncio
+
+    rep_dir = Path(
+        f"{log_path(config)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
+    )
+    rep_dir.mkdir(parents=True, exist_ok=True)
+    # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")
+    for form in ["html"]:  # , "pdf", "tex"
+        report_plugin = ReportPluginRegistry().get_plugin(form)
+        report_settings = report_plugin.settings_cls
+        report_settings.path = rep_dir / f"report.{form}"
+        # get_settings(path=rep_dir / f"report.{form}")
+        # report_settings.path = rep_dir / f"report.{form}"
+        asyncio.run(
+            auto_report(workflow.persistence.dag, report_plugin, report_settings)
+        )
+
+    with (rep_dir / "dag.txt").open("w") as f:
+        f.writelines(str(workflow.persistence.dag))
+
+    with (rep_dir / "rg.txt").open("w") as f:
+        f.writelines(str(workflow.persistence.dag.rule_dot()))
+
+        # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):
