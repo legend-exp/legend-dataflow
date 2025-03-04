@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dbetto.catalog import Props
 from legendmeta import LegendMetadata, TextDB
+from lgdo import lh5
 from pygama.hit.build_hit import build_hit
 
 from ...log import build_log
@@ -34,7 +35,7 @@ def build_tier_hit() -> None:
         .on(args.timestamp, system=args.datatype)
         .snakemake_rules.tier_hit
     )
-    log = build_log(df_config, args.log)
+    log = build_log(df_config, args.log, fallback=__name__)
     log.info("initializing")
 
     settings_dict = df_config.options.get("settings", {})
@@ -71,7 +72,14 @@ def build_tier_hit() -> None:
         # get pars (to override hit config)
         Props.add_to(hit_cfg, pars_dict.get(chan, {}).copy())
 
-        channel_dict[f"ch{chan_map[chan].daq.rawid}/dsp"] = hit_cfg
+        input_tbl_name = f"ch{chan_map[chan].daq.rawid}/dsp"
+
+        # check if the raw tables are all existing
+        if len(lh5.ls(args.input, input_tbl_name)) > 0:
+            channel_dict[input_tbl_name] = hit_cfg
+        else:
+            msg = f"table {input_tbl_name} not found in {args.input} skipping"
+            log.warning(msg)
 
     log.info("running build_hit()...")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
