@@ -103,15 +103,9 @@ def build_tier_dsp() -> None:
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
-    rng = np.random.default_rng()
-    rand_num = f"{rng.integers(0, 99999):05d}"
-    temp_output = f"{args.output}.{rand_num}"
-
-    start = time.time()
-
     build_dsp(
         args.input,
-        temp_output,
+        args.output,
         {},
         database=database_dic,
         chan_config=channel_dict,
@@ -119,9 +113,6 @@ def build_tier_dsp() -> None:
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
     )
-
-    log.info(f"build_dsp finished in {time.time()-start}")
-    Path(temp_output).rename(args.output)
 
     key = Path(args.output).name.replace(f"-tier_{args.tier}.lh5", "")
 
