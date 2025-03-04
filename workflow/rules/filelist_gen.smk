@@ -163,8 +163,10 @@ def build_filelist(
         ignore_keys = []
     if analysis_runs is None:
         analysis_runs = {}
+
     phy_filenames = []
     other_filenames = []
+
     for key in filekeys:
         if Path(search_pattern).suffix == ".*":
             search_pattern = Path(search_pattern).with_suffix(".{ext}")
@@ -198,19 +200,15 @@ def build_filelist(
                     else:
                         other_filenames += filename
                 else:
+                    # check if period in analysis_runs dicts
+                    # check if run in analysis_runs dicts
+                    # or if runs is just specified as "all"
                     if (
                         _key.datatype in analysis_runs
-                        and _key.period
-                        in analysis_runs[
-                            _key.datatype
-                        ]  # check if period in analysis_runs dicts
+                        and _key.period in analysis_runs[_key.datatype]
                         and (
-                            _key.run
-                            in analysis_runs[_key.period][
-                                _key.datatype
-                            ]  # check if run in analysis_runs dicts
-                            or analysis_runs[_key.period][_key.datatype]
-                            == "all"  # or if runs is just specified as "all"
+                            _key.run in analysis_runs[_key.datatype][_key.period]
+                            or analysis_runs[_key.datatype][_key.period] == "all"
                         )
                     ):
                         if _key.datatype in concat_datatypes:
