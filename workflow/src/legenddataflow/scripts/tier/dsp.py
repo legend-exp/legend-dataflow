@@ -1,6 +1,5 @@
 import argparse
 import re
-import time
 from pathlib import Path
 
 import numpy as np
@@ -57,7 +56,7 @@ def build_tier_dsp() -> None:
         msg = f"tier {args.tier} not supported"
         raise ValueError(msg)
 
-    log = build_log(config_dict, args.log)
+    log = build_log(config_dict, args.log, fallback=__name__)
 
     settings_dict = config_dict.options.get("settings", {})
     if isinstance(settings_dict, str):
@@ -77,14 +76,21 @@ def build_tier_dsp() -> None:
         }
 
     # now construct the dictionary of DSP configs for build_dsp()
-    channel_dict = {}
+    dsp_cfg_tbl_dict = {}
     for chan, file in chan_cfg_map.items():
         if chan_map[chan].analysis.processable is False:
             msg = f"channel {chan} is set to non-processable in the channel map"
             raise RuntimeError(msg)
 
         tbl = "dsp" if args.tier in ["ann", "pan"] else "raw"
-        channel_dict[f"ch{chan_map[chan].daq.rawid:07}/{tbl}"] = Props.read_from(file)
+        input_tbl_name = f"ch{chan_map[chan].daq.rawid:07}/{tbl}"
+
+        # check if the raw tables are all existing
+        if len(lh5.ls(args.input, input_tbl_name)) > 0:
+            dsp_cfg_tbl_dict[input_tbl_name] = Props.read_from(file)
+        else:
+            msg = f"table {input_tbl_name} not found in {args.input} skipping"
+            log.warning(msg)
 
     # par files
     db_files = [
@@ -93,35 +99,26 @@ def build_tier_dsp() -> None:
         if Path(par_file).suffix in (".json", ".yaml", ".yml")
     ]
 
-    database_dic = _replace_list_with_array(
+    database_dict = _replace_list_with_array(
         Props.read_from(db_files, subst_pathvar=True)
     )
-    database_dic = {
+    database_dict = {
         (f"ch{chan_map[chan].daq.rawid:07}" if chan in chan_map else chan): dic
-        for chan, dic in database_dic.items()
+        for chan, dic in database_dict.items()
     }
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
-    rng = np.random.default_rng()
-    rand_num = f"{rng.integers(0, 99999):05d}"
-    temp_output = f"{args.output}.{rand_num}"
-
-    start = time.time()
-
     build_dsp(
         args.input,
-        temp_output,
+        args.output,
         {},
-        database=database_dic,
-        chan_config=channel_dict,
+        database=database_dict,
+        chan_config=dsp_cfg_tbl_dict,
         write_mode="r",
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
     )
-
-    log.info(f"build_dsp finished in {time.time()-start}")
-    Path(temp_output).rename(args.output)
 
     key = Path(args.output).name.replace(f"-tier_{args.tier}.lh5", "")
 
@@ -136,7 +133,7 @@ def build_tier_dsp() -> None:
 
         outputs = {}
         channels = []
-        for channel, chan_dict in channel_dict.items():
+        for channel, chan_dict in dsp_cfg_tbl_dict.items():
             output = chan_dict["outputs"]
             in_dict = False
             for entry in outputs:
@@ -162,7 +159,7 @@ def build_tier_dsp() -> None:
     else:
         outputs = {}
         channels = []
-        for channel, chan_dict in channel_dict.items():
+        for channel, chan_dict in dsp_cfg_tbl_dict.items():
             output = chan_dict["outputs"]
             in_dict = False
             for entry in outputs:
