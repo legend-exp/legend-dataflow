@@ -21,14 +21,19 @@ def test_match_pars_files():
             MagicMock(processing_step="step3", datatype="typeC"),
         ]
 
-        result1, result2 = ParsCatalog.match_pars_files(filelist1, filelist2)
+        result1 = ParsCatalog.match_pars_files(filelist1, filelist2)
 
         assert result1 == ["file1_step1_typeA", "file3_step1_typeA"]
-        assert result2 == ["file4_step3_typeC"]
 
 
 def test_get_par_file():
-    setup = {"paths": {"par": "/pars", "overwrite": "/overwrite/path"}}
+    setup = {
+        "paths": {
+            "par": "/pars",
+            "overwrite": "/overwrite",
+            "det_status": "/det_status",
+        }
+    }
     timestamp = "20230101T000000Z"
     tier = "test_tier"
 
@@ -39,23 +44,27 @@ def test_get_par_file():
     )
     log.debug(catalog)
 
-    with patch(
+    with patch("legenddataflow.pars_loading.pars_path") as mock_pars_path, patch(
         "legenddataflow.pars_loading.get_pars_path"
     ) as mock_get_pars_path, patch(
         "legenddataflow.pars_loading.par_overwrite_path"
     ) as mock_par_overwrite_path, patch(
+        "legenddataflow.pars_loading.det_status_path"
+    ) as mock_det_status_path, patch(
         "legenddataflow.pars_loading.ParsCatalog.read_from"
     ) as mock_read_from, patch(
         "legenddataflow.pars_loading.ParsCatalog.valid_for"
     ) as mock_valid_for, patch(
         "legenddataflow.pars_loading.ParsCatalog.match_pars_files"
     ) as mock_match_pars_files:
-        mock_get_pars_path.return_value = "/pars/path"
-        mock_par_overwrite_path.return_value = "/overwrite/path"
+        mock_pars_path.return_value = setup["paths"]["par"]
+        mock_get_pars_path.return_value = setup["paths"]["par"]
+        mock_par_overwrite_path.return_value = setup["paths"]["overwrite"]
+        mock_det_status_path.return_value = setup["paths"]["det_status"]
         mock_read_from.return_value = ParsCatalog({"all": []})
         mock_valid_for.side_effect = [
-            ["file1.yaml", "file2.yaml"],  # pars_files
             ["file3.yaml"],  # pars_files_overwrite
+            None,  # run_overwrite
         ]
         mock_match_pars_files.return_value = (
             ["file1.yaml", "file2.yaml"],
@@ -63,11 +72,10 @@ def test_get_par_file():
         )
 
         result = ParsCatalog.get_par_file(catalog, setup, timestamp, tier)
-
         expected_result = [
-            Path("/pars/path/file1.yaml"),
-            Path("/pars/path/file2.yaml"),
-            Path("/overwrite/path/test_tier/file3.yaml"),
+            Path("/pars/file1.yaml"),
+            Path("/pars/file2.yaml"),
+            Path("/overwrite/test_tier/file3.yaml"),
         ]
 
         assert result == expected_result
