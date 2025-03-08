@@ -189,7 +189,7 @@ rule build_svm_psp:
         execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
-        "--output-file {output.dsp_pars}"
+        "--output-file {output.dsp_pars} "
         "--timestamp {params.timestamp} "
         "--datatype {params.datatype} "
         "--configs {configs} "

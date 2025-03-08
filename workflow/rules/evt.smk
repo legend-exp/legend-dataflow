@@ -124,9 +124,9 @@ for evt_tier in ("evt", "pet"):
                 get_filelist_full_wildcards(
                     wildcards,
                     config,
-                    get_pattern_tier_raw(config),
-                    tier,
-                    ignore_keys_file=os.path.join(configs, "ignore_keys.keylist"),
+                    get_pattern_tier(config, "raw", check_in_cycle=False),
+                    evt_tier,
+                    ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
                 )
             ),
         output:
