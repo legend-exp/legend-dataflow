@@ -119,6 +119,9 @@ def par_geds_dsp_tau() -> None:
         log.debug("Calculating pz constant")
 
         tau.get_decay_constant(slopes[idxs], tb_data[kwarg_dict["wf_field"]])
+        log.debug(
+            f"Found tau: {tau.output_dict['pz']['tau']}+- {tau.output_dict['pz']['tau_err']}"
+        )
 
         if args.plot_path:
             Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
