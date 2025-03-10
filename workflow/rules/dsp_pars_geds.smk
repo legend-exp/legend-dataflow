@@ -67,7 +67,9 @@ rule build_pars_evtsel_geds:
             metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
         ),
     output:
-        peak_file=temp(get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5")),
+        peak_file=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5")
+        ),
     log:
         get_pattern_log_channel(config, "par_dsp_event_selection", time),
     group:
@@ -135,7 +137,7 @@ rule build_pars_dsp_dplms_geds:
         fft_files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5"),
+        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5"),
         database=get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization"),
         inplots=get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization"),
     params:
@@ -174,7 +176,7 @@ rule build_pars_dsp_dplms_geds:
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt_geds:
     input:
-        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", "lh5"),
+        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5"),
         decay_const=get_pattern_pars_tmp_channel(config, "dsp", "dplms"),
         inplots=get_pattern_plts_tmp_channel(config, "dsp", "dplms"),
     params:
@@ -225,7 +227,7 @@ rule build_svm_dsp_geds:
         timestamp="{timestamp}",
         datatype="cal",
     output:
-        dsp_pars=get_pattern_pars(config, "dsp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars(config, "dsp", "svm", extension="pkl"),
     log:
         str(get_pattern_log(config, "pars_dsp_svm", time)).replace("{datatype}", "cal"),
     group:
@@ -245,7 +247,7 @@ rule build_svm_dsp_geds:
 rule build_pars_dsp_svm_geds:
     input:
         dsp_pars=get_pattern_pars_tmp_channel(config, "dsp_eopt"),
-        svm_file=get_pattern_pars(config, "dsp", "svm", "pkl"),
+        svm_file=get_pattern_pars(config, "dsp", "svm", extension="pkl"),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp")),
     log:

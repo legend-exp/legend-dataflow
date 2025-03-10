@@ -1,5 +1,6 @@
 import argparse
 import re
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +11,8 @@ from legendmeta import LegendMetadata
 from lgdo import lh5
 
 from ...log import build_log
+
+warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
 def _replace_list_with_array(dic):
@@ -78,10 +81,6 @@ def build_tier_dsp() -> None:
     # now construct the dictionary of DSP configs for build_dsp()
     dsp_cfg_tbl_dict = {}
     for chan, file in chan_cfg_map.items():
-        if chan_map[chan].analysis.processable is False:
-            msg = f"channel {chan} is set to non-processable in the channel map"
-            raise RuntimeError(msg)
-
         tbl = "dsp" if args.tier in ["ann", "pan"] else "raw"
         input_tbl_name = f"ch{chan_map[chan].daq.rawid:07}/{tbl}"
 

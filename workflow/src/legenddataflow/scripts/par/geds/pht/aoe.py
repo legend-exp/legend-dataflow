@@ -16,10 +16,9 @@ from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.utils import load_data
 
+from .....FileKey import ChannelProcKey, ProcessingFileKey
 from .....log import build_log
-from ....FileKey import ChannelProcKey, ProcessingFileKey
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -164,7 +163,7 @@ def run_aoe_calibration(
             pdf=pdf,
             mean_func=mean_func,
             sigma_func=sigma_func,
-            selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
+            selection_string=f"{kwarg_dict.pop('final_cut_field')}&(~is_pulser)",
             dt_corr=kwarg_dict.get("dt_corr", False),
             dep_correct=kwarg_dict.get("dep_correct", False),
             dt_cut=kwarg_dict.get("dt_cut", None),
@@ -184,7 +183,7 @@ def run_aoe_calibration(
         aoe.calibrate(data, "AoE_Uncorr")
 
         out_dict = get_results_dict(aoe)
-        plot_dict = fill_plot_dict(aoe, data, kwarg_dict.get("plot_options", None))
+        aoe_plot_dict = fill_plot_dict(aoe, data, kwarg_dict.get("plot_options", None))
 
         aoe.pdf = aoe.pdf.name
         # need to change eres func as can't pickle lambdas
@@ -213,7 +212,7 @@ def run_aoe_calibration(
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
-            plot_dict["common"].update(aoe_plot_dict["common"])
+            plot_dict["common"].update(common_dict)
         elif common_dict is not None:
             plot_dict["common"] = common_dict
         plot_dict.update({"aoe": aoe_plot_dict})
@@ -229,9 +228,6 @@ def par_geds_pht_aoe() -> None:
     )
     argparser.add_argument(
         "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
-    )
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
     argparser.add_argument(
         "--ecal-file", help="ecal_file", type=str, nargs="*", required=True
@@ -250,6 +246,7 @@ def par_geds_pht_aoe() -> None:
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument(
         "--plot-file", help="plot_file", type=str, nargs="*", required=False
@@ -264,8 +261,6 @@ def par_geds_pht_aoe() -> None:
     config_dict = configs["snakemake_rules"]["pars_pht_aoecal"]
 
     build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     channel_dict = config_dict["inputs"]["par_pht_aoecal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -337,21 +332,14 @@ def par_geds_pht_aoe() -> None:
         # load data in
         data, threshold_mask = load_data(
             final_dict,
-            f"{channel}/dsp",
+            args.table_name,
             cal_dict,
             params=params,
             threshold=kwarg_dict.pop("threshold"),
             return_selection_mask=True,
         )
 
-        mask = get_pulser_mask(
-            pulser_file=args.pulser_files,
-            tcm_filelist=args.tcm_filelist,
-            channel=channel,
-            pulser_multiplicity_threshold=kwarg_dict.get(
-                "pulser_multiplicity_threshold"
-            ),
-        )
+        mask = get_pulser_mask(pulser_file=args.pulser_files)
         if "pulser_multiplicity_threshold" in kwarg_dict:
             kwarg_dict.pop("pulser_multiplicity_threshold")
 

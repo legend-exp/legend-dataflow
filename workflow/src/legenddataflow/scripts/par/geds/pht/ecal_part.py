@@ -18,10 +18,9 @@ from pygama.math.distributions import nb_poly
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 
+from .....FileKey import ChannelProcKey, ProcessingFileKey
 from .....log import build_log
-from ....FileKey import ChannelProcKey, ProcessingFileKey
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
@@ -159,6 +158,7 @@ def calibrate_partition(
     channel,
     datatype,
     gen_plots=True,
+    debug_mode=False,
 ):
     det_status = chmap[channel]["analysis"]["usability"]
 
@@ -233,7 +233,7 @@ def calibrate_partition(
             1,
             kwarg_dict.get("deg", 0),
             debug_mode=kwarg_dict.get("debug_mode", False)
-            | args.debug,  # , fixed={1: 1}
+            | debug_mode,  # , fixed={1: 1}
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
             energy,
@@ -422,16 +422,13 @@ def calibrate_partition(
     return cal_dicts, out_result_dicts, out_object_dicts, out_plot_dicts
 
 
-if __name__ == "__main__":
+def par_geds_pht_ecal_part() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--input-files", help="files", type=str, nargs="*", required=True
     )
     argparser.add_argument(
         "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
-    )
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
     argparser.add_argument(
         "--ecal-file", help="ecal_file", type=str, nargs="*", required=True
@@ -446,6 +443,7 @@ if __name__ == "__main__":
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
@@ -463,9 +461,8 @@ if __name__ == "__main__":
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_pht_partcal"]
 
-    log = build_log(config_dict, args.log)
+    build_log(config_dict, args.log)
 
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
     chmap = LegendMetadata(path=args.metadata).on(args.timestamp, system=args.datatype)
 
     cal_dict = {}
@@ -521,7 +518,7 @@ if __name__ == "__main__":
     # load data in
     data, threshold_mask = load_data(
         final_dict,
-        f"{channel}/dsp",
+        args.table_name,
         cal_dict,
         params=params,
         threshold=kwarg_dict["threshold"],
@@ -529,12 +526,7 @@ if __name__ == "__main__":
         cal_energy_param=kwarg_dict["energy_params"][0],
     )
 
-    mask = get_pulser_mask(
-        pulser_file=args.pulser_files,
-        tcm_filelist=args.tcm_filelist,
-        channel=channel,
-        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
-    )
+    mask = get_pulser_mask(pulser_file=args.pulser_files)
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 
@@ -561,6 +553,7 @@ if __name__ == "__main__":
         args.channel,
         args.datatype,
         gen_plots=bool(args.plot_file),
+        debug_mode=args.debug,
     )
 
     if args.plot_file:

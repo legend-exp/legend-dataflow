@@ -104,7 +104,7 @@ def build_tier_evt() -> None:
     }
 
     if len(args.ann_file) > 0:
-        file_table["ann"] = (args.ann_file, "dsp", "ch{}")
+        file_table["ann"] = (args.ann_file[0], "dsp", "ch{}")
 
     table = build_evt(
         file_table,

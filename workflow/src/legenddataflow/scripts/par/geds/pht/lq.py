@@ -18,10 +18,9 @@ from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 
+from .....FileKey import ChannelProcKey, ProcessingFileKey
 from .....log import build_log
-from ....FileKey import ChannelProcKey, ProcessingFileKey
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -122,7 +121,7 @@ def lq_calibration(
         eres_func,
         cdf,
         selection_string,
-        debug_mode=debug_mode | args.debug,
+        debug_mode=debug_mode,
     )
 
     data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
@@ -137,7 +136,6 @@ def lq_calibration(
     )
 
     lq.calibrate(data, "LQ_Ecorr")
-    log.info("Calibrated LQ")
     return cal_dicts, get_results_dict(lq), fill_plot_dict(lq, data, plot_options), lq
 
 
@@ -151,6 +149,7 @@ def run_lq_calibration(
     configs,
     channel,
     datatype,
+    debug_mode=False,
     # gen_plots=True,
 ):
     configs = LegendMetadata(path=configs)
@@ -200,11 +199,15 @@ def run_lq_calibration(
 
         cal_dicts, out_dict, lq_plot_dict, lq_obj = lq_calibration(
             data,
-            selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
             cal_dicts=cal_dicts,
+            energy_param=kwarg_dict["energy_param"],
+            cal_energy_param=kwarg_dict["cal_energy_param"],
+            dt_param=kwarg_dict["dt_param"],
             eres_func=eres_func,
             cdf=cdf,
-            **kwarg_dict,
+            selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
+            plot_options=kwarg_dict.get("plot_options", None),
+            debug_mode=debug_mode | kwarg_dict.get("debug_mode", False),
         )
         # need to change eres func as can't pickle lambdas
         try:
@@ -230,7 +233,7 @@ def run_lq_calibration(
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
-            plot_dict["common"].update(lq_plot_dict["common"])
+            plot_dict["common"].update(common_dict)
         elif common_dict is not None:
             plot_dict["common"] = common_dict
         plot_dict.update({"lq": lq_plot_dict})
@@ -239,16 +242,13 @@ def run_lq_calibration(
     return cal_dicts, out_result_dicts, out_object_dicts, out_plot_dicts
 
 
-if __name__ == "__main__":
+def par_geds_pht_lq() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--input-files", help="files", type=str, nargs="*", required=True
     )
     argparser.add_argument(
         "--pulser-files", help="pulser_file", type=str, nargs="*", required=False
-    )
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
     argparser.add_argument(
         "--ecal-file", help="ecal_file", type=str, nargs="*", required=True
@@ -267,6 +267,7 @@ if __name__ == "__main__":
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument(
         "--plot-file", help="plot_file", type=str, nargs="*", required=False
@@ -280,9 +281,7 @@ if __name__ == "__main__":
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_pht_lqcal"]
 
-    log = build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
+    build_log(config_dict, args.log)
 
     channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -345,21 +344,14 @@ if __name__ == "__main__":
         # load data in
         data, threshold_mask = load_data(
             final_dict,
-            f"{channel}/dsp",
+            args.table_name,
             cal_dict,
             params=params,
             threshold=kwarg_dict.pop("threshold"),
             return_selection_mask=True,
         )
 
-        mask = get_pulser_mask(
-            pulser_file=args.pulser_files,
-            tcm_filelist=args.tcm_filelist,
-            channel=channel,
-            pulser_multiplicity_threshold=kwarg_dict.get(
-                "pulser_multiplicity_threshold"
-            ),
-        )
+        mask = get_pulser_mask(pulser_file=args.pulser_files)
         if "pulser_multiplicity_threshold" in kwarg_dict:
             kwarg_dict.pop("pulser_multiplicity_threshold")
 

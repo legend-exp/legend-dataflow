@@ -175,7 +175,7 @@ rule build_svm_psp:
             )
         ).replace("hyperpars.yaml", "train.lh5"),
     output:
-        dsp_pars=get_pattern_pars(config, "psp", "svm", "pkl"),
+        dsp_pars=get_pattern_pars(config, "psp", "svm", extension="pkl"),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -198,7 +198,7 @@ rule build_svm_psp:
 rule build_pars_psp_svm:
     input:
         dsp_pars=get_pattern_pars_tmp_channel(config, "psp_eopt"),
-        svm_model=get_pattern_pars(config, "psp", "svm", "pkl"),
+        svm_model=get_pattern_pars(config, "psp", "svm", extension="pkl"),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "psp")),
     log:
