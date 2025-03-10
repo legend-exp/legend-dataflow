@@ -63,6 +63,7 @@ dependencies = [
 [project.optional-dependencies]
 # these are needed to run the data production
 runprod = [
+    "pygments",
     "snakemake>=8.16",
 ]
 test = [
