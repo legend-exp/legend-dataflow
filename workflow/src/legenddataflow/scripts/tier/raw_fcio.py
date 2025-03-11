@@ -2,7 +2,6 @@ import argparse
 from copy import deepcopy
 from pathlib import Path
 
-import numpy as np
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
@@ -62,11 +61,4 @@ def build_tier_raw_fcio() -> None:
     if "muon_config" in channel_dict:
         raise NotImplementedError()
 
-    rng = np.random.default_rng()
-    rand_num = f"{rng.integers(0,99999):05d}"
-    temp_output = f"{args.output}.{rand_num}"
-
-    build_raw(args.input, out_spec=all_config, filekey=temp_output, **settings)
-
-    # rename the temp file
-    Path(temp_output).rename(args.output)
+    build_raw(args.input, out_spec=all_config, filekey=args.output, **settings)

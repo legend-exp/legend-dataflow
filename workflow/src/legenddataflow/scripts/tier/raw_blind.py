@@ -11,7 +11,6 @@ is not found). This script itself does not check for the existence of such a fil
 """
 
 import argparse
-from pathlib import Path
 
 import numexpr as ne
 import numpy as np
@@ -111,12 +110,6 @@ def build_tier_raw_blind() -> None:
     # gets events that should not be blinded
     tokeep = allind[np.logical_not(np.isin(allind, toblind))]
 
-    # make some temp file to write the output to before renaming it
-    rng = np.random.default_rng()
-    rand_num = f"{rng.integers(0,99999):05d}"
-    temp_output = f"{args.output}.{rand_num}"
-    Path(temp_output).parent.mkdir(parents=True, exist_ok=True)
-
     for channel in all_channels:
         try:
             chnum = int(channel[2::])
@@ -126,7 +119,7 @@ def build_tier_raw_blind() -> None:
             store.write_object(
                 chobj,
                 channel,
-                lh5_file=temp_output,
+                lh5_file=args.output,
                 wo_mode="w",
                 **hdf_settings,
             )
@@ -139,7 +132,7 @@ def build_tier_raw_blind() -> None:
                 chobj,
                 group=channel,
                 name="raw",
-                lh5_file=temp_output,
+                lh5_file=args.output,
                 wo_mode="w",
                 **hdf_settings,
             )
@@ -157,11 +150,7 @@ def build_tier_raw_blind() -> None:
             blinded_chobj,
             group=channel,
             name="raw",
-            lh5_file=temp_output,
+            lh5_file=args.output,
             wo_mode="w",
             **hdf_settings,
         )
-
-    # rename the temp file
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    Path(temp_output).rename(args.output)
