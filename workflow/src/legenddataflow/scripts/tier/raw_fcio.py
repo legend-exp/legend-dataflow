@@ -1,5 +1,4 @@
 import argparse
-from copy import deepcopy
 from pathlib import Path
 
 from daq2lh5 import build_raw
@@ -35,24 +34,11 @@ def build_tier_raw_fcio() -> None:
     channel_dict = channel_dict.out_spec
     all_config = Props.read_from(channel_dict.gen_config)
 
-    chmap = (
-        TextDB(args.chan_maps, lazy=True).channelmaps.on(args.timestamp).group("system")
-    )
-
     if "geds_config" in channel_dict:
         raise NotImplementedError()
 
     if "spms_config" in channel_dict:
         spm_config = Props.read_from(channel_dict.spms_config)
-        spm_channels = chmap.spms.map("daq.rawid")
-
-        for rawid, chinfo in spm_channels.items():
-            cfg_block = deepcopy(spm_config["FCEventDecoder"]["__output_table_name__"])
-            cfg_block["key_list"] = [chinfo.daq.fc_channel]
-            spm_config["FCEventDecoder"][f"ch{rawid:07d}/raw"] = cfg_block
-
-        spm_config["FCEventDecoder"].pop("__output_table_name__")
-
         Props.add_to(all_config, spm_config)
 
     if "auxs_config" in channel_dict:
