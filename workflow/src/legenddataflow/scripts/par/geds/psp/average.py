@@ -7,9 +7,10 @@ import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-from dbetto.catalog import Props, TextDB
+from dbetto import Props, TextDB
 
-from ....FileKey import ChannelProcKey
+from .....convert_np import convert_dict_np_to_float
+from .....FileKey import ChannelProcKey
 
 mpl.use("Agg")
 
@@ -123,7 +124,7 @@ def par_geds_psp_average() -> None:
 
     for file in args.output:
         tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
-        Props.write_to(file, in_dicts[tstamp])
+        Props.write_to(file, convert_dict_np_to_float(in_dicts[tstamp]))
 
     if args.out_plots:
         for file in args.out_plots:

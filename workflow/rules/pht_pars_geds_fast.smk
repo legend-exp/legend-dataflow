@@ -61,6 +61,14 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    metadata,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                ),
             output:
                 hit_pars=[
                     temp(file)
@@ -113,6 +121,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
+                "--table-name {params.dsp_table_name} "
                 "--metadata {meta} "
                 "--fit-results {output.partcal_results} "
                 "--eres-file {input.eres_file} "
@@ -149,6 +158,9 @@ rule par_pht_fast:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         partcal_results=temp(
@@ -169,6 +181,7 @@ rule par_pht_fast:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--metadata {meta} "
         "--inplots {input.inplots} "
         "--fit-results {output.partcal_results} "

@@ -13,13 +13,14 @@ from dbetto.catalog import Props
 from legendmeta import LegendMetadata
 from pygama.pargen.utils import load_data
 from workflow.src.legenddataflow.scripts.par.geds.pht.aoe import run_aoe_calibration
+from workflow.src.legenddataflow.scripts.par.geds.pht.ecal_part import (
+    calibrate_partition,
+)
 from workflow.src.legenddataflow.scripts.par.geds.pht.lq import run_lq_calibration
-from workflow.src.legenddataflow.scripts.par.geds.pht.partcal import calibrate_partition
 
+from .....FileKey import ChannelProcKey, ProcessingFileKey
 from .....log import build_log
-from ....FileKey import ChannelProcKey, ProcessingFileKey
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
@@ -67,6 +68,7 @@ def par_geds_pht_fast() -> None:
     argparser.add_argument("--timestamp", help="Datatype", type=str, required=True)
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument("--configs", help="configs", type=str, required=True)
     argparser.add_argument("--metadata", help="metadata path", type=str, required=True)
@@ -86,7 +88,6 @@ def par_geds_pht_fast() -> None:
 
     build_log(config_dict["pars_pht_partcal"], args.log)
 
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
     chmap = LegendMetadata(args.metadata).channelmap(
         args.timestamp, system=args.datatype
     )
@@ -180,7 +181,7 @@ def par_geds_pht_fast() -> None:
     # load data in
     data, threshold_mask = load_data(
         final_dict,
-        f"{channel}/dsp",
+        args.table_name,
         cal_dict,
         params=params,
         threshold=kwarg_dict["threshold"],
@@ -188,12 +189,7 @@ def par_geds_pht_fast() -> None:
         cal_energy_param=kwarg_dict["energy_params"][0],
     )
 
-    mask = get_pulser_mask(
-        pulser_file=args.pulser_files,
-        tcm_filelist=args.tcm_filelist,
-        channel=channel,
-        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
-    )
+    mask = get_pulser_mask(pulser_file=args.pulser_files)
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 
@@ -220,6 +216,7 @@ def par_geds_pht_fast() -> None:
         args.channel,
         args.datatype,
         gen_plots=bool(args.plot_file),
+        debug_mode=args.debug,
     )
 
     cal_dicts, results_dicts, object_dicts, plot_dicts = run_aoe_calibration(
@@ -232,6 +229,7 @@ def par_geds_pht_fast() -> None:
         args.configs,
         args.channel,
         args.datatype,
+        debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
 
@@ -245,6 +243,7 @@ def par_geds_pht_fast() -> None:
         args.configs,
         args.channel,
         args.datatype,
+        debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
 

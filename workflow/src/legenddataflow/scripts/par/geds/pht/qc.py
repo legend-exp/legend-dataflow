@@ -17,22 +17,18 @@ from pygama.pargen.data_cleaning import (
 )
 from pygama.pargen.utils import load_data
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
-from ....convert_np import convert_dict_np_to_float
 from ....pulser_removal import get_pulser_mask
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
-if __name__ == "__main__":
+def par_geds_pht_qc() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--cal-files", help="cal_files", nargs="*", type=str)
     argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
 
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", nargs="*", type=str, required=False
-    )
     argparser.add_argument(
         "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
     )
@@ -47,6 +43,7 @@ if __name__ == "__main__":
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
 
     argparser.add_argument(
         "--plot-path", help="plot_path", type=str, nargs="*", required=False
@@ -63,8 +60,6 @@ if __name__ == "__main__":
     config_dict = configs["snakemake_rules"]["pars_pht_qc"]
 
     log = build_log(config_dict, args.log)
-
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     # get metadata dictionary
     channel_dict = config_dict["inputs"]["qc_config"][args.channel]
@@ -86,8 +81,8 @@ if __name__ == "__main__":
 
     if args.overwrite_files:
         overwrite = Props.read_from(args.overwrite_files)
-        if channel in overwrite:
-            overwrite = overwrite[channel]["pars"]["operations"]
+        if args.channel in overwrite:
+            overwrite = overwrite[args.channel]["pars"]["operations"]
         else:
             overwrite = None
     else:
@@ -109,18 +104,19 @@ if __name__ == "__main__":
             np.unique(fft_files)
         )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
 
+        search_name = (
+            args.table_name if args.table_name[-1] == "/" else args.table_name + "/"
+        )
+
         if len(fft_files) > 0:
             fft_fields = get_keys(
-                [
-                    key.replace(f"{channel}/dsp/", "")
-                    for key in ls(fft_files[0], f"{channel}/dsp/")
-                ],
+                [key.replace(search_name, "") for key in ls(fft_files[0], search_name)],
                 kwarg_dict_fft["cut_parameters"],
             )
 
             fft_data = load_data(
                 fft_files,
-                f"{channel}/dsp",
+                args.table_name,
                 {},
                 [*fft_fields, "timestamp", "trapTmax", "t_sat_lo"],
             )
@@ -191,26 +187,20 @@ if __name__ == "__main__":
     kwarg_dict_cal = kwarg_dict["cal_fields"]
 
     cut_fields = get_keys(
-        [
-            key.replace(f"{channel}/dsp/", "")
-            for key in ls(cal_files[0], f"{channel}/dsp/")
-        ],
+        [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
         kwarg_dict_cal["cut_parameters"],
     )
     if "initial_cal_cuts" in kwarg_dict:
         init_cal = kwarg_dict["initial_cal_cuts"]
         cut_fields += get_keys(
-            [
-                key.replace(f"{channel}/dsp/", "")
-                for key in ls(cal_files[0], f"{channel}/dsp/")
-            ],
+            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
             init_cal["cut_parameters"],
         )
 
     # load data in
     data, threshold_mask = load_data(
         cal_files,
-        f"{channel}/dsp",
+        args.table_name,
         {},
         [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
@@ -218,12 +208,7 @@ if __name__ == "__main__":
         cal_energy_param="trapTmax",
     )
 
-    total_mask = get_pulser_mask(
-        pulser_file=args.pulser_files,
-        tcm_filelist=args.tcm_filelist,
-        channel=channel,
-        pulser_multiplicity_threshold=kwarg_dict.get("pulser_multiplicity_threshold"),
-    )
+    total_mask = get_pulser_mask(args.pulser_files)
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 

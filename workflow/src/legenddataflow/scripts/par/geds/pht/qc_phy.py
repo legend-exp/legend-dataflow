@@ -17,14 +17,13 @@ from pygama.pargen.data_cleaning import (
     get_keys,
 )
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
-from ....convert_np import convert_dict_np_to_float
-from ....table_name import get_table_name
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
-if __name__ == "__main__":
+def par_geds_pht_qc_phy() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--phy-files", help="cal_files", nargs="*", type=str)
 
@@ -35,6 +34,11 @@ if __name__ == "__main__":
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument(
+        "--baseline-name", help="table name", type=str, required=True
+    )
+    argparser.add_argument("--pulser-name", help="table name", type=str, required=True)
 
     argparser.add_argument(
         "--plot-path", help="plot_path", type=str, nargs="*", required=False
@@ -52,8 +56,6 @@ if __name__ == "__main__":
 
     log = build_log(config_dict, args.log)
 
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
-
     # get metadata dictionary
     channel_dict = config_dict["qc_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -69,39 +71,41 @@ if __name__ == "__main__":
                 run_files = f.read().splitlines()
             if len(run_files) == 0:
                 continue
-            else:
-                run_files = sorted(np.unique(run_files))
-                phy_files += run_files
-                bls = sto.read(
-                    "ch1027200/dsp/", run_files, field_mask=["wf_max", "bl_mean"]
-                )[0]
-                puls = sto.read("ch1027201/dsp/", run_files, field_mask=["trapTmax"])[0]
-                bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
-                    puls["trapTmax"].nda < 200
-                )
-                bl_mask = np.append(bl_mask, bl_idxs)
+            run_files = sorted(np.unique(run_files))
+            phy_files += run_files
+            bls = sto.read(
+                args.baseline_name, run_files, field_mask=["wf_max", "bl_mean"]
+            )[0]
+            puls = sto.read(args.pulser_name, run_files, field_mask=["trapTmax"])[0]
+            bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
+                puls["trapTmax"].nda < 200
+            )
+            bl_mask = np.append(bl_mask, bl_idxs)
     else:
         with Path(args.phy_files).open() as f:
             phy_files = f.read().splitlines()
         phy_files = sorted(np.unique(phy_files))
-        bls = sto.read("ch1027200/dsp/", phy_files, field_mask=["wf_max", "bl_mean"])[0]
-        puls = sto.read("ch1027201/dsp/", phy_files, field_mask=["trapTmax"])[0]
+        bls = sto.read(args.baseline_name, phy_files, field_mask=["wf_max", "bl_mean"])[
+            0
+        ]
+        puls = sto.read(args.pulser_name, phy_files, field_mask=["trapTmax"])[0]
         bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
             puls["trapTmax"].nda < 200
         )
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
 
+    search_name = (
+        args.table_name if args.table_name[-1] == "/" else args.table_name + "/"
+    )
+
     cut_fields = get_keys(
-        [
-            key.replace(f"{channel}/dsp/", "")
-            for key in ls(phy_files[0], f"{channel}/dsp/")
-        ],
+        [key.replace(search_name, "") for key in ls(phy_files[0], search_name)],
         kwarg_dict_fft["cut_parameters"],
     )
 
     data = sto.read(
-        f"{channel}/dsp/",
+        args.table_name,
         phy_files,
         field_mask=[*cut_fields, "daqenergy", "t_sat_lo", "timestamp"],
         idx=np.where(bl_mask)[0],

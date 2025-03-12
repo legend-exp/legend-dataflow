@@ -7,6 +7,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from snakemake.script import snakemake
+
 from legenddataflow import FileKey, patterns
 from legenddataflow import utils as ut
 from legenddataflow.execenv import _execenv2str, execenv_pyexe

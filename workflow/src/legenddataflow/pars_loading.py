@@ -7,10 +7,10 @@ from pathlib import Path
 
 from dbetto.catalog import Catalog
 
-from .FileKey import ProcessingFileKey
+from .FileKey import FileKey, ProcessingFileKey
 
 # from .patterns import
-from .utils import get_pars_path, par_overwrite_path, pars_path
+from .utils import det_status_path, get_pars_path, par_overwrite_path, pars_path
 
 
 class ParsCatalog(Catalog):
@@ -25,16 +25,14 @@ class ParsCatalog(Catalog):
         ----------
 
         filelist1 : list
-            List of files
+            List of files to be overridden
         filelist2 : list
-            List of files
+            List of files to override with
 
         Returns
         -------
 
-        filelist1 : list
-            List of files
-        filelist2 : list
+        filelist : list
             List of files
         """
         if (
@@ -43,7 +41,7 @@ class ParsCatalog(Catalog):
             or len(filelist1) == 0
             or len(filelist2) == 0
         ):
-            return filelist1, filelist2
+            return filelist1
         for file2 in filelist2:
             fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)
             for j, file1 in enumerate(filelist1):
@@ -57,7 +55,7 @@ class ParsCatalog(Catalog):
                         filelist2.remove(file2)
                     else:
                         filelist2 = []
-        return filelist1, filelist2
+        return filelist1
 
     def get_par_file(self, setup: dict, timestamp: str, tier: str) -> list:
         """
@@ -91,23 +89,22 @@ class ParsCatalog(Catalog):
         pars_files_overwrite = overwrite_catalog.valid_for(
             timestamp, allow_none=allow_none
         )
-        pars_files, pars_files_overwrite = ParsCatalog.match_pars_files(
-            pars_files, pars_files_overwrite
-        )
-        if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
-            pars_files_overwrite = [
-                Path(par_overwrite_path(setup)) / tier / file
-                for file in pars_files_overwrite
-            ]
-        if pars_files is not None:
-            pars_files = [
-                Path(get_pars_path(setup, tier)) / file for file in pars_files
-            ]
-            if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
-                pars_files += pars_files_overwrite
-        else:
-            if pars_files_overwrite is not None and len(pars_files_overwrite) > 0:
-                pars_files = pars_files_overwrite
-            else:
-                pars_files = []
+
+        run_overwrite_validity = Path(det_status_path(setup)) / "run_override.yaml"
+        run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
+        run_overwrite = run_overwrite_catalog.valid_for(timestamp, allow_none=True)
+        if run_overwrite is not None:
+            run_overwrite_files = []
+            for file in run_overwrite:
+                fk = FileKey.get_filekey_from_pattern(file)
+                run_overwrite_files.append(
+                    f"{fk.datatype}/{fk.period}/{fk.run}/{file}-par_{tier}.yaml"
+                )
+            pars_files = ParsCatalog.match_pars_files(pars_files, run_overwrite_files)
+        pars_files = [Path(get_pars_path(setup, tier)) / file for file in pars_files]
+        pars_files_overwrite = [
+            Path(par_overwrite_path(setup)) / tier / file
+            for file in pars_files_overwrite
+        ]
+        pars_files += pars_files_overwrite
         return pars_files

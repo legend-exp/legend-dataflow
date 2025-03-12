@@ -65,6 +65,14 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    metadata,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                ),
             output:
                 hit_pars=[
                     temp(file)
@@ -107,6 +115,7 @@ for key, dataset in part.datasets.items():
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
+                "--table-name {params.dsp_table_name} "
                 "--save-path {output.hit_pars} "
                 "--plot-path {output.plot_file} "
                 "--overwrite-files {input.overwrite_files} "
@@ -140,6 +149,9 @@ rule build_pht_qc:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qc")),
@@ -157,6 +169,7 @@ rule build_pht_qc:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--save-path {output.hit_pars} "
         "--plot-path {output.plot_file} "
         "--overwrite-files {input.overwrite_files} "
@@ -199,6 +212,9 @@ rule build_per_energy_calibration:
         datatype="cal",
         channel="{channel}",
         tier="pht",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
         results_file=temp(
@@ -218,6 +234,7 @@ rule build_per_energy_calibration:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--configs {configs} "
         "--tier {params.tier} "
         "--metadata {meta} "
@@ -278,6 +295,14 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    metadata,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                ),
             output:
                 hit_pars=[
                     temp(file)
@@ -331,6 +356,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
+                "--table-name {params.dsp_table_name} "
                 "--metadata {meta} "
                 "--fit-results {output.partcal_results} "
                 "--eres-file {input.eres_file} "
@@ -368,6 +394,9 @@ rule build_pht_energy_super_calibrations:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "partcal")),
         partcal_results=temp(
@@ -389,6 +418,7 @@ rule build_pht_energy_super_calibrations:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--metadata {meta} "
         "--inplots {input.inplots} "
         "--fit-results {output.partcal_results} "
@@ -457,6 +487,14 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    metadata,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                ),
             output:
                 hit_pars=[
                     temp(file)
@@ -511,6 +549,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
+                "--table-name {params.dsp_table_name} "
                 "--aoe-results {output.aoe_results} "
                 "--eres-file {input.eres_file} "
                 "--hit-pars {output.hit_pars} "
@@ -547,6 +586,9 @@ rule build_pht_aoe_calibrations:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "aoecal")),
         aoe_results=temp(
@@ -570,6 +612,7 @@ rule build_pht_aoe_calibrations:
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--aoe-results {output.aoe_results} "
         "--eres-file {input.eres_file} "
         "--hit-pars {output.hit_pars} "
@@ -636,6 +679,14 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    metadata,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                ),
             output:
                 hit_pars=[
                     temp(file)
@@ -688,6 +739,7 @@ for key, dataset in part.datasets.items():
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
+                "--table-name {params.dsp_table_name} "
                 "--lq-results {output.lq_results} "
                 "--eres-file {input.eres_file} "
                 "--hit-pars {output.hit_pars} "
@@ -721,6 +773,9 @@ rule build_pht_lq_calibration:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+        ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         lq_results=temp(
@@ -742,6 +797,7 @@ rule build_pht_lq_calibration:
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
         "--channel {params.channel} "
+        "--table-name {params.dsp_table_name} "
         "--lq-results {output.lq_results} "
         "--eres-file {input.eres_file} "
         "--hit-pars {output.hit_pars} "

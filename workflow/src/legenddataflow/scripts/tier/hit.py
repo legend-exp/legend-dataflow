@@ -63,10 +63,6 @@ def build_tier_hit() -> None:
     channel_dict = {}
     pars_dict = {ch: chd["pars"] for ch, chd in Props.read_from(args.pars_file).items()}
     for chan, file in chan_cfg_map.items():
-        if chan_map[chan].analysis.processable is False:
-            msg = f"channel {chan} is set to non-processable in the channel map"
-            raise RuntimeError(msg)
-
         hit_cfg = Props.read_from(file)
 
         # get pars (to override hit config)
