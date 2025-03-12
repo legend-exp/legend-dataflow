@@ -73,6 +73,12 @@ def par_spms_dsp_trg_thr() -> None:
             )
             log.warning(msg)
 
+        elif len(data) < settings.n_events:
+            msg = (
+                f"number of waveforms '{args.raw_table_name}/waveform_bit_drop' < {settings.n_events}"
+                "in {args.raw_file}, can't build histogram"
+            )
+            raise RuntimeError(msg)
         else:
             # run the DSP with the provided configuration
             log.debug("running the DSP chain")
@@ -103,7 +109,7 @@ def par_spms_dsp_trg_thr() -> None:
             fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
 
             if fwhm <= 0:
-                msg = "determined FWHM of baseline derivative distribution is zero or negative"
+                msg = f"determined FWHM of baseline derivative distribution is so <= 0: {fwhm:.3f}"
                 raise RuntimeError(msg)
 
     log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
