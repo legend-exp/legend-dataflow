@@ -100,17 +100,10 @@ def build_tier_raw_orca() -> None:
         )
         Props.add_to(all_config, aux_config)
 
-    if "muon_config" in list(channel_dict):
-        muon_config = Props.read_from(channel_dict["muon_config"])
-        muon_channels = list(
-            chmap.channelmaps.on(args.timestamp)
-            .map("system", unique=False)["muon"]
-            .map("daq.rawid")
-        )
-        top_key = next(iter(muon_config))
-        muon_config[top_key][next(iter(muon_config[top_key]))]["key_list"] = sorted(
-            muon_channels
-        )
-        Props.add_to(all_config, muon_config)
-
-    build_raw(args.input, out_spec=all_config, filekey=args.output, **settings)
+    build_raw(
+        args.input,
+        out_spec=all_config,
+        in_stream_type="ORCA",
+        filekey=args.output,
+        **settings,
+    )

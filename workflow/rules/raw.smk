@@ -48,6 +48,62 @@ rule build_raw_orca:
         "{params.ro_input} {output}"
 
 
+rule build_raw_orca_bz2:
+    """
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
+    """
+    input:
+        get_pattern_tier_daq(config, extension="orca.bz2"),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        ro_input=lambda _, input: ro(input),
+    output:
+        get_pattern_tier(config, "raw", check_in_cycle=check_in_cycle),
+    log:
+        get_pattern_log(config, "tier_raw", time),
+    group:
+        "tier-raw"
+    resources:
+        mem_swap=110,
+        runtime=300,
+    shell:
+        execenv_pyexe(config, "build-tier-raw-orca") + "--log {log} "
+        f"--configs {ro(configs)} "
+        f"--chan-maps {ro(chan_maps)} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "{params.ro_input} {output}"
+
+
+rule build_raw_orca_gzip:
+    """
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
+    """
+    input:
+        get_pattern_tier_daq(config, extension="orca.gz"),
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        ro_input=lambda _, input: ro(input),
+    output:
+        get_pattern_tier(config, "raw", check_in_cycle=check_in_cycle),
+    log:
+        get_pattern_log(config, "tier_raw", time),
+    group:
+        "tier-raw"
+    resources:
+        mem_swap=110,
+        runtime=300,
+    shell:
+        execenv_pyexe(config, "build-tier-raw-orca") + "--log {log} "
+        f"--configs {ro(configs)} "
+        f"--chan-maps {ro(chan_maps)} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "{params.ro_input} {output}"
+
+
 rule build_raw_fcio:
     """
     This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
