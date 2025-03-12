@@ -27,7 +27,7 @@ def build_tier_raw_orca() -> None:
 
     configs = TextDB(args.configs, lazy=True)
     config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_raw"
+        "tier_raw_orca"
     ]
 
     build_log(config_dict, args.log)
@@ -63,11 +63,25 @@ def build_tier_raw_orca() -> None:
         spm_config[next(iter(spm_config))]["spms"]["key_list"] = sorted(spm_channels)
         Props.add_to(all_config, spm_config)
 
+    if "muon_config" in list(channel_dict):
+        muon_config = Props.read_from(channel_dict["muon_config"])
+        muon_channels = list(
+            chmap.channelmaps.on(args.timestamp)
+            .map("system", unique=False)["muon"]
+            .map("daq.rawid")
+        )
+        top_key = next(iter(muon_config))
+        muon_config[top_key][next(iter(muon_config[top_key]))]["key_list"] = sorted(
+            muon_channels
+        )
+        Props.add_to(all_config, muon_config)
+
     if "auxs_config" in list(channel_dict):
         aux_config = Props.read_from(channel_dict["auxs_config"])
         aux_channels = list(
             chmap.channelmaps.on(args.timestamp)
             .map("system", unique=False)["auxs"]
+            .map("daq.crate", unique=False)[1]
             .map("daq.rawid")
         )
         aux_channels += list(
