@@ -73,6 +73,12 @@ def par_spms_dsp_trg_thr() -> None:
             )
             log.warning(msg)
 
+        elif len(data) < settings.n_events:
+            msg = (
+                f"number of waveforms '{args.raw_table_name}/waveform_bit_drop' < {settings.n_events}"
+                "in {args.raw_file}, can't build histogram"
+            )
+            raise RuntimeError(msg)
         else:
             # run the DSP with the provided configuration
             log.debug("running the DSP chain")
@@ -87,12 +93,13 @@ def par_spms_dsp_trg_thr() -> None:
             # determine a cutoff for the histogram used to extract the FWHM
             low_cutoff, high_cutoff = np.quantile(wf_current, [0.005, 0.995])
 
-            # make histogram of the curr values
-            h = (
-                hist.new.Regular(settings.n_baseline_bins, low_cutoff, high_cutoff)
-                .Double()
-                .fill(wf_current)
+            # determine hist edges with Friedmann Diaconis Estimator
+            bin_edges = np.histogram_bin_edges(
+                wf_current, bins="fd", range=(low_cutoff, high_cutoff)
             )
+
+            # make histogram of the curr values
+            h = hist.new.Variable(bin_edges).Double().fill(wf_current)
 
             # determine FWHM
             counts = h.view()
@@ -102,7 +109,7 @@ def par_spms_dsp_trg_thr() -> None:
             fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
 
             if fwhm <= 0:
-                msg = "determined FWHM of baseline derivative distribution is zero or negative"
+                msg = f"determined FWHM of baseline derivative distribution is so <= 0: {fwhm:.3f}"
                 raise RuntimeError(msg)
 
     log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
