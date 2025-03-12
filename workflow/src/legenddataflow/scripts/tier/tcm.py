@@ -1,8 +1,6 @@
 import argparse
-from pathlib import Path
 
 import lgdo.lh5 as lh5
-import numpy as np
 from daq2lh5.orca import orca_flashcam
 from dbetto import TextDB
 from dbetto.catalog import Props
@@ -28,10 +26,6 @@ def build_tier_tcm() -> None:
 
     settings = Props.read_from(config_dict["inputs"]["config"])
 
-    rng = np.random.default_rng()
-    temp_output = f"{args.output}.{rng.integers(0, 99999):05d}"
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-
     # get the list of channels by fcid
     ch_list = lh5.ls(args.input, "/ch*")
     fcid_channels = {}
@@ -46,10 +40,8 @@ def build_tier_tcm() -> None:
     for fcid, fcid_dict in fcid_channels.items():
         build_tcm(
             [(args.input, fcid_dict)],
-            out_file=temp_output,
+            out_file=args.output,
             out_name=f"hardware_tcm_{fcid}",
             wo_mode="o",
             **settings,
         )
-
-    Path(temp_output).rename(args.output)
