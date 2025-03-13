@@ -48,6 +48,16 @@ rule build_raw_orca:
         "{params.ro_input} {output}"
 
 
+use rule build_raw_orca as build_raw_orca_bz2 with:
+    input:
+        get_pattern_tier_daq(config, extension="orca.bz2"),
+
+
+use rule build_raw_orca as build_raw_orca_gz with:
+    input:
+        get_pattern_tier_daq(config, extension="orca.gz"),
+
+
 rule build_raw_fcio:
     """
     This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file

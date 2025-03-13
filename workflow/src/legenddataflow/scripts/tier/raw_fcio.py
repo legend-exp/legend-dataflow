@@ -47,4 +47,10 @@ def build_tier_raw_fcio() -> None:
     if "muon_config" in channel_dict:
         raise NotImplementedError()
 
-    build_raw(args.input, out_spec=all_config, filekey=args.output, **settings)
+    build_raw(
+        args.input,
+        out_spec=all_config,
+        in_stream_type="Flashcam",
+        filekey=args.output,
+        **settings,
+    )

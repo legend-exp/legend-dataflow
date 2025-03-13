@@ -32,7 +32,12 @@ def regex_from_filepattern(filepattern):
             f.append(f"(?P={wildcard})")
         else:
             wildcards.append(wildcard)
-            f.append(f"(?P<{wildcard}>.+)")
+            if wildcard == "ext":
+                f.append(
+                    f"(?P<{wildcard}>.*)"
+                )  # this means ext will capture everything after 1st dot
+            else:
+                f.append(f"(?P<{wildcard}>" + r"[^\.\/]+)")
         last = match.end()
     f.append(re.escape(filepattern[last:]))
     f.append("$")

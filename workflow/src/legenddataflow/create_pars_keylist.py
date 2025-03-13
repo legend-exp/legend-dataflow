@@ -53,9 +53,14 @@ class ParsKeyResolve(ParsCatalog):
 
     @staticmethod
     def match_entries(entry1, entry2):
-        datatype2 = ProcessingFileKey.get_filekey_from_filename(entry2.file[0]).datatype
+        datatype2 = ProcessingFileKey.get_filekey_from_filename(
+            Path(entry2.file[0]).name
+        ).datatype
         for entry in entry1.file:
-            if ProcessingFileKey.get_filekey_from_filename(entry).datatype == datatype2:
+            if (
+                ProcessingFileKey.get_filekey_from_filename(Path(entry).name).datatype
+                == datatype2
+            ):
                 pass
             else:
                 entry2.file.append(entry)
