@@ -13,30 +13,47 @@ rule build_pars_dsp_tau_spms:
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
-        channel="{channel}",
-        raw_table_name=lambda wildcards: get_table_name(
-            metadata,
+        channels=lambda wildcards: get_chanlist(
             config,
-            wildcards.datatype,
-            wildcards.timestamp,
-            wildcards.channel,
-            "raw",
+            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
+            workflow,
+            det_status,
+            chan_maps,
+            system="spms",
         ),
+        raw_table_names=lambda wildcards: [
+            get_table_name(
+                metadata,
+                config,
+                wildcards.datatype,
+                wildcards.timestamp,
+                channel,
+                "raw",
+            )
+            for channel in get_chanlist(
+                config,
+                f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
+                workflow,
+                det_status,
+                chan_maps,
+                system="spms",
+            )
+        ],
     wildcard_constraints:
         datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     output:
-        temp(patt.get_pattern_pars_tmp_channel(config, "dsp", datatype="{datatype}")),
+        patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}"),
     log:
-        patt.get_pattern_log_channel(config, "pars_spms", time, datatype="{datatype}"),
+        patt.get_pattern_log(config, "pars_spms", time, datatype="{datatype}"),
     group:
         "par-dsp"
     shell:
-        execenv_pyexe(config, "par-spms-dsp-trg-thr") + "--config-path {configs} "
+        execenv_pyexe(config, "par-spms-dsp-trg-thr-multi") + "--config-path {configs} "
         "--raw-file {input.raw_file} "
         "--dsp-db {input.pardb} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "--sipm-name {params.channel} "
-        "--raw-table-name {params.raw_table_name} "
+        "--sipm-names {params.channels} "
+        "--raw-table-names {params.raw_table_names} "
         "--output-file {output} "
         "--logfile {log} "

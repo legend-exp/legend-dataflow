@@ -13,13 +13,10 @@ from legenddataflow import execenv_pyexe
 from legenddataflow.utils import filelist_path
 
 
-# FIXME: the system argument should always be explicitly supplied
-def get_chanlist(
-    setup, keypart, workflow, config, det_status, chan_maps, system="geds"
-):
+def get_chanlist(config, keypart, workflow, det_status, chan_maps, system):
     key = ChannelProcKey.parse_keypart(keypart)
 
-    flist_path = filelist_path(setup)
+    flist_path = filelist_path(config)
     os.makedirs(flist_path, exist_ok=True)
     output_file = os.path.join(
         flist_path,
@@ -45,15 +42,13 @@ def get_par_chanlist(
     basedir,
     det_status,
     chan_maps,
+    system,
     datatype="cal",
-    system="geds",
     name=None,
     extension="yaml",
 ):
 
-    chan_list = get_chanlist(
-        setup, keypart, workflow, config, det_status, chan_maps, system
-    )
+    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
 
     par_pattern = get_pattern_pars_tmp_channel(
         setup, tier, name, datatype=datatype, extension=extension
@@ -64,9 +59,18 @@ def get_par_chanlist(
     return filenames
 
 
-def get_plt_chanlist(setup, keypart, tier, basedir, det_status, chan_maps, name=None):
+def get_plt_chanlist(
+    setup,
+    keypart,
+    tier,
+    basedir,
+    det_status,
+    chan_maps,
+    system,
+    name=None,
+):
 
-    chan_list = get_chanlist(setup, keypart, workflow, config, det_status, chan_maps)
+    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
 
     par_pattern = get_pattern_plts_tmp_channel(setup, tier, name)
 
