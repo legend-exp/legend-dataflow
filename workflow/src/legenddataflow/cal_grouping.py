@@ -2,10 +2,9 @@
 This module uses the partition database files to the necessary inputs for partition calibrations
 """
 
-import json
 from pathlib import Path
 
-import yaml
+from dbetto import Props
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .patterns import (
@@ -19,12 +18,7 @@ from .utils import filelist_path
 
 class CalGrouping:
     def __init__(self, setup, input_file):
-        if Path(input_file).suffix == ".json":
-            with Path(input_file).open() as r:
-                self.datasets = json.load(r)
-        elif Path(input_file).suffix in (".yaml", ".yml"):
-            with Path(input_file).open() as r:
-                self.datasets = yaml.safe_load(r)
+        self.datasets = Props.read_from(input_file)
         self.expand_runs()
         self.setup = setup
 
