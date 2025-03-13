@@ -17,13 +17,13 @@ rule build_pars_dsp_tau_spms:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
             workflow,
-            det_status,
-            chan_maps,
+            det_status_textdb,
+            channelmap_textdb,
             system="spms",
         ),
         raw_table_names=lambda wildcards: [
             get_table_name(
-                metadata,
+                channelmap_textdb,
                 config,
                 wildcards.datatype,
                 wildcards.timestamp,
@@ -34,8 +34,8 @@ rule build_pars_dsp_tau_spms:
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
                 workflow,
-                det_status,
-                chan_maps,
+                det_status_textdb,
+                channelmap_textdb,
                 system="spms",
             )
         ],
@@ -44,7 +44,7 @@ rule build_pars_dsp_tau_spms:
     output:
         patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}"),
     log:
-        patt.get_pattern_log(config, "pars_spms", time, datatype="{datatype}"),
+        patt.get_pattern_log(config, "pars_spms", time),
     group:
         "par-dsp"
     shell:

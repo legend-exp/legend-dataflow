@@ -122,5 +122,8 @@ def get_search_pattern(tier):
 
 
 def get_table_name(metadata, config, datatype, timestamp, detector, tier):
-    chmap = metadata.channelmap(timestamp, system=datatype)
+    if isinstance(metadata, str):
+        chmap = metadata.channelmap(timestamp, system=datatype)
+    elif isinstance(metadata, Catalog):
+        chmap = metadata.valid_for(timestamp, system=datatype)
     return config.table_format[tier].format(ch=chmap[detector].daq.rawid)
