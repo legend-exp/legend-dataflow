@@ -15,8 +15,6 @@ from .....log import build_log
 
 
 def par_geds_dsp_nopt() -> None:
-    sto = lh5.LH5Store()
-
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
     argparser.add_argument("--database", help="database", type=str, required=True)
@@ -56,13 +54,13 @@ def par_geds_dsp_nopt() -> None:
 
         raw_files = sorted(files)
 
-        energies = sto.read(
-            f"{args.raw_table_name}", raw_files, field_mask=["daqenergy"]
-        )["daqenergy"][0]
-        idxs = np.where(energies.nda == 0)[0]
-        tb_data = sto.read(
-            "args.raw_table_name", raw_files, n_rows=opt_dict["n_events"], idx=idxs
-        )[0]
+        energies = lh5.read_as(
+            f"{args.raw_table_name}/daqenergy", raw_files, library="np"
+        )
+        idxs = np.where(energies == 0)[0]
+        tb_data = lh5.read(
+            args.raw_table_name, raw_files, n_rows=opt_dict["n_events"], idx=idxs
+        )
         t1 = time.time()
         log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
 
@@ -70,12 +68,12 @@ def par_geds_dsp_nopt() -> None:
         dsp_data = run_one_dsp(tb_data, dsp_config)
         cut_dict = generate_cuts(dsp_data, cut_dict=opt_dict.pop("cut_pars"))
         cut_idxs = get_cut_indexes(dsp_data, cut_dict)
-        tb_data = sto.read(
+        tb_data = lh5.read(
             args.raw_table_name,
             raw_files,
             n_rows=opt_dict.pop("n_events"),
             idx=idxs[cut_idxs],
-        )[0]
+        )
         log.info(f"... {len(tb_data)} baselines after cuts")
 
         if isinstance(dsp_config, (str, list)):
