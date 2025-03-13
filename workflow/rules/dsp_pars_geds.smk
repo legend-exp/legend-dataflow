@@ -27,7 +27,12 @@ rule build_pars_dsp_tau_geds:
         datatype="cal",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     output:
         decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
@@ -57,14 +62,19 @@ rule build_pars_evtsel_geds:
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
         pulser_file=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        database=get_pattern_pars_tmp_channel(config, "dsp", "decay_constant"),
+        database=rules.build_pars_dsp_tau_geds.output.decay_const,
         raw_cal_curve=get_blinding_curve_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     output:
         peak_file=temp(
@@ -97,14 +107,19 @@ rule build_pars_dsp_nopt_geds:
         files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        database=get_pattern_pars_tmp_channel(config, "dsp", "decay_constant"),
-        inplots=get_pattern_plts_tmp_channel(config, "dsp", "decay_constant"),
+        database=rules.build_pars_dsp_tau_geds.output.decay_const,
+        inplots=rules.build_pars_dsp_tau_geds.output.plots,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     output:
         dsp_pars_nopt=temp(
@@ -137,15 +152,20 @@ rule build_pars_dsp_dplms_geds:
         fft_files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5"),
-        database=get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization"),
-        inplots=get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization"),
+        peak_file=rules.build_pars_evtsel_geds.output.peak_file,
+        database=rules.build_pars_dsp_nopt_geds.output.dsp_pars_nopt,
+        inplots=rules.build_pars_dsp_nopt_geds.output.plots,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
@@ -176,15 +196,20 @@ rule build_pars_dsp_dplms_geds:
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt_geds:
     input:
-        peak_file=get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5"),
-        decay_const=get_pattern_pars_tmp_channel(config, "dsp", "dplms"),
-        inplots=get_pattern_plts_tmp_channel(config, "dsp", "dplms"),
+        peak_file=rules.build_pars_evtsel_geds.output.peak_file,
+        decay_const=rules.build_pars_dsp_dplms_geds.output.dsp_pars,
+        inplots=rules.build_pars_dsp_dplms_geds.output.plots,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "raw"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
         ),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
@@ -246,8 +271,8 @@ rule build_svm_dsp_geds:
 
 rule build_pars_dsp_svm_geds:
     input:
-        dsp_pars=get_pattern_pars_tmp_channel(config, "dsp_eopt"),
-        svm_file=get_pattern_pars(config, "dsp", "svm", extension="pkl"),
+        dsp_pars=rules.build_pars_dsp_eopt_geds.output.dsp_pars,
+        svm_file=rules.build_svm_dsp_geds.output.dsp_pars,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp")),
     log:

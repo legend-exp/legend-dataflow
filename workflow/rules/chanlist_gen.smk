@@ -3,6 +3,7 @@
 import os
 import random
 import re
+from pathlib import Path
 
 from legenddataflow.FileKey import ChannelProcKey
 from legenddataflow.patterns import (
@@ -11,31 +12,42 @@ from legenddataflow.patterns import (
 )
 from legenddataflow import execenv_pyexe
 from legenddataflow.utils import filelist_path
+from dbetto import TextDB
+from dbetto.catalog import Catalog
 
 
-# FIXME: the system argument should always be explicitly supplied
-def get_chanlist(
-    setup, keypart, workflow, config, det_status, chan_maps, system="geds"
-):
+def get_chanlist(config, keypart, workflow, det_status, channelmap, system):
     key = ChannelProcKey.parse_keypart(keypart)
 
-    flist_path = filelist_path(setup)
-    os.makedirs(flist_path, exist_ok=True)
-    output_file = os.path.join(
-        flist_path,
-        f"all-{key.experiment}-{key.period}-{key.run}-{key.datatype}-{key.timestamp}-channels.chankeylist.{random.randint(0,99999):05d}",
-    )
+    if isinstance(det_status, (str, Path)):
+        det_status = TextDB(det_status, lazy=True)
 
-    os.system(
-        execenv_pyexe(config, "create-chankeylist")
-        + f"--det-status {det_status} --channelmap {chan_maps} --timestamp {key.timestamp} "
-        f"--datatype {key.datatype} --output-file {output_file} --system {system}"
-    )
+    if isinstance(channelmap, (str, Path)):
+        channelmap = TextDB(channelmap, lazy=True)
 
-    with open(output_file) as r:
-        chan_list = r.read().splitlines()
-    os.remove(output_file)
-    return chan_list
+    if isinstance(det_status, TextDB):
+        status_map = det_status.statuses.on(key.timestamp, system=key.datatype)
+    else:
+        status_map = det_status.valid_for(key.timestamp, system=key.datatype)
+    if isinstance(channelmap, TextDB):
+        chmap = channelmap.channelmaps.on(key.timestamp)
+    else:
+        chmap = channelmap.valid_for(key.timestamp)
+
+    # only restrict to a certain system (geds, spms, ...)
+    channels = []
+    for channel in chmap.map("system", unique=False)[system].map("name"):
+        if channel not in status_map:
+            msg = f"{channel} is not found in the status map (on {key.timestamp})"
+            raise RuntimeError(msg)
+        if status_map[channel].processable is False:
+            continue
+        channels.append(channel)
+
+    if len(channels) == 0:
+        print("WARNING: No channels found")  # noqa: T201
+
+    return channels
 
 
 def get_par_chanlist(
@@ -45,15 +57,13 @@ def get_par_chanlist(
     basedir,
     det_status,
     chan_maps,
+    system,
     datatype="cal",
-    system="geds",
     name=None,
     extension="yaml",
 ):
 
-    chan_list = get_chanlist(
-        setup, keypart, workflow, config, det_status, chan_maps, system
-    )
+    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
 
     par_pattern = get_pattern_pars_tmp_channel(
         setup, tier, name, datatype=datatype, extension=extension
@@ -64,9 +74,18 @@ def get_par_chanlist(
     return filenames
 
 
-def get_plt_chanlist(setup, keypart, tier, basedir, det_status, chan_maps, name=None):
+def get_plt_chanlist(
+    setup,
+    keypart,
+    tier,
+    basedir,
+    det_status,
+    chan_maps,
+    system,
+    name=None,
+):
 
-    chan_list = get_chanlist(setup, keypart, workflow, config, det_status, chan_maps)
+    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
 
     par_pattern = get_pattern_plts_tmp_channel(setup, tier, name)
 

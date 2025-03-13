@@ -47,9 +47,9 @@ rule build_pulser_ids:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
-        rawid=lambda wildcards: metadata.channelmap(wildcards.timestamp, system="cal")[
-            wildcards.channel
-        ].daq.rawid,
+        rawid=lambda wildcards: channelmap_textdb.valid_for(
+            wildcards.timestamp, system="cal"
+        )[wildcards.channel].daq.rawid,
     output:
         pulser=temp(get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids")),
     log:

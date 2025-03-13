@@ -11,71 +11,48 @@ from ..... import cfgtools
 from .....log import build_log
 
 
-def par_spms_dsp_trg_thr() -> None:
-    # CLI interface
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument("--raw-file", required=True)
-    argparser.add_argument("--raw-table-name", required=True)
-    argparser.add_argument("--output-file", required=True)
-    argparser.add_argument("--config-path", required=True)
-    argparser.add_argument("--datatype", required=True)
-    argparser.add_argument("--timestamp", required=True)
-    argparser.add_argument("--sipm-name", required=True)
-    argparser.add_argument("--dsp-db", nargs="*", default=[])
-    argparser.add_argument("--logfile")
-    args = argparser.parse_args()
-
-    # dataflow configs
-    df_configs = (
-        TextDB(args.config_path, lazy=True)
-        .on(args.timestamp, system=args.datatype)
-        .snakemake_rules.pars_spms_dsp_trg_thr
-    )
-
-    # setup logging
-    log = build_log(df_configs, args.logfile)
-
+def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name, log):
     log.debug("reading in the configuration files")
     config = df_configs.inputs
     dsp_config = utils.load_dict(
-        cfgtools.get_channel_config(config.processing_chain, args.sipm_name)
+        cfgtools.get_channel_config(config.processing_chain, sipm_name)
     )
     settings = AttrsDict(
-        utils.load_dict(cfgtools.get_channel_config(config.settings, args.sipm_name))
+        utils.load_dict(cfgtools.get_channel_config(config.settings, sipm_name))
     )
 
     # get DSP database from overrides
-    _db_dict = Props.read_from(args.dsp_db).get(args.sipm_name, {})
+    _db_dict = Props.read_from(dsp_db).get(sipm_name, {})
 
     fwhm = None
 
     # read raw file list
     log.debug("reading in the raw waveforms")
-    if len(lh5.ls(args.raw_file, f"{args.raw_table_name}/waveform_bit_drop")) == 0:
+    if len(lh5.ls(raw_file, f"{raw_table_name}/waveform_bit_drop")) == 0:
         msg = (
-            f"could not find waveform '{args.raw_table_name}/waveform_bit_drop' "
+            f"could not find waveform '{raw_table_name}/waveform_bit_drop' "
             "in {args.raw_file}, returning null pars"
         )
         log.warning(msg)
 
     else:
         data = lh5.read(
-            args.raw_table_name,
-            args.raw_file,
+            raw_table_name,
+            raw_file,
             field_mask=["waveform_bit_drop"],
             n_rows=settings.n_events,
         )
 
         if len(data) == 0:
             msg = (
-                f"could not find any waveforms '{args.raw_table_name}/waveform_bit_drop' "
+                f"could not find any waveforms '{raw_table_name}/waveform_bit_drop' "
                 "in {args.raw_file}, returning null pars"
             )
             log.warning(msg)
 
         elif len(data) < settings.n_events:
             msg = (
-                f"number of waveforms '{args.raw_table_name}/waveform_bit_drop' < {settings.n_events}"
+                f"number of waveforms '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
                 "in {args.raw_file}, can't build histogram"
             )
             raise RuntimeError(msg)
@@ -112,9 +89,92 @@ def par_spms_dsp_trg_thr() -> None:
                 msg = f"determined FWHM of baseline derivative distribution is so <= 0: {fwhm:.3f}"
                 raise RuntimeError(msg)
 
+            return fwhm
+    return None
+
+
+def par_spms_dsp_trg_thr() -> None:
+    # CLI interface
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--raw-file", required=True)
+    argparser.add_argument("--raw-table-name", required=True)
+    argparser.add_argument("--output-file", required=True)
+    argparser.add_argument("--config-path", required=True)
+    argparser.add_argument("--datatype", required=True)
+    argparser.add_argument("--timestamp", required=True)
+    argparser.add_argument("--sipm-name", required=True)
+    argparser.add_argument("--dsp-db", nargs="*", default=[])
+    argparser.add_argument("--logfile")
+    args = argparser.parse_args()
+
+    # dataflow configs
+    df_configs = (
+        TextDB(args.config_path, lazy=True)
+        .on(args.timestamp, system=args.datatype)
+        .snakemake_rules.pars_spms_dsp_trg_thr
+    )
+
+    # setup logging
+    log = build_log(df_configs, args.logfile)
+
+    fwhm = get_channel_trg_thr(
+        df_configs,
+        args.sipm_name,
+        args.dsp_db,
+        args.raw_file,
+        args.raw_table_name,
+        log,
+    )
+
     log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(
         args.output_file,
         {"baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm},
+    )
+
+
+def par_spms_dsp_trg_thr_multi() -> None:
+    # CLI interface
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--raw-file", required=True)
+    argparser.add_argument("--raw-table-names", required=True, nargs="*")
+    argparser.add_argument("--output-file", required=True)
+    argparser.add_argument("--config-path", required=True)
+    argparser.add_argument("--datatype", required=True)
+    argparser.add_argument("--timestamp", required=True)
+    argparser.add_argument("--sipm-names", required=True, nargs="*")
+    argparser.add_argument("--dsp-db", nargs="*", default=[])
+    argparser.add_argument("--logfile")
+    args = argparser.parse_args()
+
+    # dataflow configs
+    df_configs = (
+        TextDB(args.config_path, lazy=True)
+        .on(args.timestamp, system=args.datatype)
+        .snakemake_rules.pars_spms_dsp_trg_thr
+    )
+
+    # setup logging
+    log = build_log(df_configs, args.logfile)
+
+    out_dict = {}
+    for sipm_name, raw_table_name in zip(args.sipm_names, args.raw_table_names):
+        fwhm = get_channel_trg_thr(
+            df_configs,
+            sipm_name,
+            args.dsp_db,
+            args.raw_file,
+            raw_table_name,
+            log,
+        )
+
+        log.debug(f"baseline_curr_fwhm for {sipm_name} = {fwhm}")
+        out_dict[sipm_name] = {
+            "baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm
+        }
+    Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
+    Props.write_to(
+        args.output_file,
+        out_dict,
     )

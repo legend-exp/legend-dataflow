@@ -5,7 +5,7 @@ from legenddataflow.utils import set_last_rule_name
 from legenddataflow.execenv import execenv_pyexe
 
 
-def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
+def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
     if lh5_tier is None:
         lh5_tier = tier
     rule:
@@ -15,8 +15,9 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 tier,
                 basedir,
-                det_status,
-                chan_maps,
+                det_status_textdb,
+                channelmap_textdb,
+                system=system,
             ),
         output:
             patterns.get_pattern_plts(config, tier),
@@ -36,8 +37,9 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 tier,
                 basedir,
-                det_status,
-                chan_maps,
+                det_status_textdb,
+                channelmap_textdb,
+                system=system,
                 name="objects",
                 extension="pkl",
             ),
@@ -66,8 +68,9 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                     f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                     tier,
                     basedir,
-                    det_status,
-                    chan_maps,
+                    det_status_textdb,
+                    channelmap_textdb,
+                    system=system,
                 ),
             output:
                 temp(
@@ -86,34 +89,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
 
         set_last_rule_name(workflow, f"build_pars_{tier}_db")
 
-        rule:
-            """Merge pars for SiPM channels in a single pars file."""
-            input:
-                lambda wildcards: get_par_chanlist(
-                    config,
-                    f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
-                    tier,
-                    basedir,
-                    det_status,
-                    chan_maps,
-                    datatype=wildcards.datatype,
-                    system="spms"
-                ),
-            output:
-                patterns.get_pattern_pars(
-                    config,
-                    tier,
-                    name="spms",
-                    datatype="{datatype}",
-                ),
-            group:
-                f"merge-{tier}"
-            shell:
-                execenv_pyexe(config, "merge-channels") + \
-                "--input {input} "
-                "--output {output} "
-
-        set_last_rule_name(workflow, f"build_pars_spms_{tier}_db")
 
     rule:
         input:
@@ -122,8 +97,9 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None):
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 lh5_tier,
                 basedir,
-                det_status,
-                chan_maps,
+                det_status_textdb,
+                channelmap_textdb,
+                system=system,
                 extension="lh5" if lh5_merge is True else inspect.signature(get_par_chanlist).parameters['extension'].default,
             ),
             in_db=patterns.get_pattern_pars_tmp(

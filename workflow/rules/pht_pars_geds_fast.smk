@@ -62,7 +62,7 @@ for key, dataset in part.datasets.items():
                     pht_par_catalog, partition, key, tier="pht"
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
-                    metadata,
+                    channelmap_textdb,
                     config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
@@ -159,7 +159,12 @@ rule par_pht_fast:
         channel="{channel}",
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),

@@ -66,7 +66,7 @@ for key, dataset in part.datasets.items():
                     pht_par_catalog, partition, key, tier="pht"
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
-                    metadata,
+                    channelmap_textdb,
                     config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
@@ -150,7 +150,12 @@ rule build_pht_qc:
         channel="{channel}",
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
@@ -213,7 +218,12 @@ rule build_per_energy_calibration:
         channel="{channel}",
         tier="pht",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
@@ -296,7 +306,7 @@ for key, dataset in part.datasets.items():
                     pht_par_catalog, partition, key, tier="pht"
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
-                    metadata,
+                    channelmap_textdb,
                     config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
@@ -395,7 +405,12 @@ rule build_pht_energy_super_calibrations:
         channel="{channel}",
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "partcal")),
@@ -488,7 +503,7 @@ for key, dataset in part.datasets.items():
                     pht_par_catalog, partition, key, tier="pht"
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
-                    metadata,
+                    channelmap_textdb,
                     config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
@@ -587,7 +602,12 @@ rule build_pht_aoe_calibrations:
         channel="{channel}",
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "aoecal")),
@@ -680,7 +700,7 @@ for key, dataset in part.datasets.items():
                     pht_par_catalog, partition, key, tier="pht"
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
-                    metadata,
+                    channelmap_textdb,
                     config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
@@ -774,7 +794,12 @@ rule build_pht_lq_calibration:
         channel="{channel}",
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
