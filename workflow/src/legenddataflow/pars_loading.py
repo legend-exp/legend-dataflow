@@ -41,7 +41,7 @@ class ParsCatalog(Catalog):
             or len(filelist1) == 0
             or len(filelist2) == 0
         ):
-            return filelist1
+            return []
         for file2 in filelist2:
             fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)
             for j, file1 in enumerate(filelist1):
@@ -89,6 +89,8 @@ class ParsCatalog(Catalog):
         pars_files_overwrite = overwrite_catalog.valid_for(
             timestamp, allow_none=allow_none
         )
+        if pars_files_overwrite is None:
+            pars_files_overwrite = []
 
         run_overwrite_validity = Path(det_status_path(setup)) / "run_override.yaml"
         run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
