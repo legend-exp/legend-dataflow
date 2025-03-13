@@ -22,7 +22,7 @@ from legenddataflow.execenv import execenv_pyexe
 
 
 # This rule builds the qc using the calibration dsp files and fft files
-rule build_qc:
+rule par_hit_qc:
     input:
         files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
@@ -37,7 +37,12 @@ rule build_qc:
         datatype="cal",
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         qc_file=temp(get_pattern_pars_tmp_channel(config, "hit", "qc")),
@@ -64,7 +69,7 @@ rule build_qc:
 
 
 # This rule builds the energy calibration using the calibration dsp files
-rule build_energy_calibration:
+rule par_hit_energy_calibration:
     input:
         files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
@@ -75,14 +80,19 @@ rule build_energy_calibration:
                 dsp_par_catalog, config, wildcards.timestamp, "dsp"
             )
         ),
-        inplots=get_pattern_plts_tmp_channel(config, "hit", "qc"),
-        in_hit_dict=get_pattern_pars_tmp_channel(config, "hit", "qc"),
+        inplots=rules.par_hit_qc.output.plot_file,
+        in_hit_dict=rules.par_hit_qc.output.qc_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
@@ -117,23 +127,26 @@ rule build_energy_calibration:
 
 
 # This rule builds the a/e calibration using the calibration dsp files
-rule build_aoe_calibration:
+rule par_hit_aoe_calibration:
     input:
         files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(config, "hit", "energy_cal"),
-        eres_file=get_pattern_pars_tmp_channel(
-            config, "hit", "energy_cal_objects", extension="pkl"
-        ),
-        inplots=get_pattern_plts_tmp_channel(config, "hit", "energy_cal"),
+        ecal_file=rules.par_hit_energy_calibration.output.ecal_file,
+        eres_file=rules.par_hit_energy_calibration.output.results_file,
+        inplots=rules.par_hit_energy_calibration.output.plot_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit", "aoe_cal")),
@@ -173,17 +186,20 @@ rule build_lq_calibration:
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        ecal_file=get_pattern_pars_tmp_channel(config, "hit", "aoe_cal"),
-        eres_file=get_pattern_pars_tmp_channel(
-            config, "hit", "aoe_cal_objects", extension="pkl"
-        ),
-        inplots=get_pattern_plts_tmp_channel(config, "hit", "aoe_cal"),
+        ecal_file=rules.par_hit_aoe_calibration.output.hit_pars,
+        eres_file=rules.par_hit_aoe_calibration.output.aoe_results,
+        inplots=rules.par_hit_aoe_calibration.output.plot_file,
     params:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
-            metadata, config, "cal", wildcards.timestamp, wildcards.channel, "dsp"
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
         ),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit")),
