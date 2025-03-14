@@ -50,7 +50,7 @@ def build_tier_raw_fcio() -> None:
     build_raw(
         args.input,
         out_spec=all_config,
-        in_stream_type="Flashcam",
+        in_stream_type="FlashCam",
         filekey=args.output,
         **settings,
     )
