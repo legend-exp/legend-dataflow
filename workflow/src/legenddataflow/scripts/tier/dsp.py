@@ -91,6 +91,10 @@ def build_tier_dsp() -> None:
             msg = f"table {input_tbl_name} not found in {args.input} skipping"
             log.warning(msg)
 
+    if len(dsp_cfg_tbl_dict) == 0:
+        msg = f"could not find any of the requested channels in {args.input}"
+        raise RuntimeError(msg)
+
     # par files
     db_files = [
         par_file
