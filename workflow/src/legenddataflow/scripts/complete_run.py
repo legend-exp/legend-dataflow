@@ -305,13 +305,13 @@ if snakemake.wildcards.tier != "daq":
         snakemake.params.valid_keys_path,
     )
 
-print("INFO: ...checking log files")
-
-check_log_files(
-    ut.tmp_log_path(snakemake.params.setup),
-    snakemake.output.summary_log,
-    snakemake.output.gen_output,
-    warning_file=snakemake.output.warning_log,
-)
+if snakemake.params.setup.get("check_log_files", True):
+    print("INFO: ...checking log files")
+    check_log_files(
+        ut.tmp_log_path(snakemake.params.setup),
+        snakemake.output.summary_log,
+        snakemake.output.gen_output,
+        warning_file=snakemake.output.warning_log,
+    )
 
 Path(snakemake.output.gen_output).touch()
