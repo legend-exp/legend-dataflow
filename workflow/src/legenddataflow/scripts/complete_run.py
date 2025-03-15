@@ -244,35 +244,6 @@ def build_file_dbs(gen_tier_path, outdir):
     print(f"INFO: ...took {dt}")
 
 
-file_db_config = {}
-
-if (
-    os.getenv("PRODENV") is not None
-    and os.getenv("PRODENV") in snakemake.params.filedb_path
-):
-    prodenv = as_ro(os.getenv("PRODENV"))
-
-    def tdirs(tier):
-        return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(
-            prodenv, ""
-        )
-
-    file_db_config["data_dir"] = "$PRODENV"
-
-else:
-    print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
-
-    def tdirs(tier):
-        return as_ro(ut.get_tier_path(snakemake.params.setup, tier))
-
-    file_db_config["data_dir"] = "/"
-
-
-file_db_config["tier_dirs"] = {
-    k: tdirs(k) for k in snakemake.params.setup["table_format"]
-}
-
-
 def fformat(tier):
     abs_path = patterns.get_pattern_tier(
         snakemake.params.setup, tier, check_in_cycle=False
@@ -280,34 +251,67 @@ def fformat(tier):
     return str(abs_path).replace(ut.get_tier_path(snakemake.params.setup, tier), "")
 
 
-file_db_config |= {
-    "file_format": {k: fformat(k) for k in snakemake.params.setup["table_format"]},
-    "table_format": snakemake.params.setup["table_format"],
-}
+if snakemake.params.setup.get("build_file_dbs", True):
+    file_db_config = {}
+
+    if (
+        os.getenv("PRODENV") is not None
+        and os.getenv("PRODENV") in snakemake.params.filedb_path
+    ):
+        prodenv = as_ro(os.getenv("PRODENV"))
+
+        def tdirs(tier):
+            return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(
+                prodenv, ""
+            )
+
+        file_db_config["data_dir"] = "$PRODENV"
+
+    else:
+        print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
+
+        def tdirs(tier):
+            return as_ro(ut.get_tier_path(snakemake.params.setup, tier))
+
+        file_db_config["data_dir"] = "/"
+
+    file_db_config["tier_dirs"] = {
+        k: tdirs(k) for k in snakemake.params.setup["table_format"]
+    }
+
+    file_db_config |= {
+        "file_format": {k: fformat(k) for k in snakemake.params.setup["table_format"]},
+        "table_format": snakemake.params.setup["table_format"],
+    }
 
 if snakemake.wildcards.tier != "daq":
-    print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
+    if snakemake.params.setup.get("build_file_dbs", True):
+        print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
 
-    Path(snakemake.params.filedb_path).mkdir(parents=True, exist_ok=True)
+        Path(snakemake.params.filedb_path).mkdir(parents=True, exist_ok=True)
 
-    with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
-        json.dump(file_db_config, f, indent=2)
+        with (Path(snakemake.params.filedb_path) / "file_db_config.json").open(
+            "w"
+        ) as f:
+            json.dump(file_db_config, f, indent=2)
 
-    build_file_dbs(ut.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
-    (Path(snakemake.params.filedb_path) / "file_db_config.json").unlink()
+        build_file_dbs(
+            ut.tier_path(snakemake.params.setup), snakemake.params.filedb_path
+        )
+        (Path(snakemake.params.filedb_path) / "file_db_config.json").unlink()
 
     build_valid_keys(
         Path(ut.tmp_par_path(snakemake.params.setup)) / "*_db.json",
         snakemake.params.valid_keys_path,
     )
 
-print("INFO: ...checking log files")
-
-check_log_files(
-    ut.tmp_log_path(snakemake.params.setup),
-    snakemake.output.summary_log,
-    snakemake.output.gen_output,
-    warning_file=snakemake.output.warning_log,
-)
+if snakemake.params.setup.get("check_log_files", True):
+    print("INFO: ...checking log files")
+    check_log_files(
+        ut.tmp_log_path(snakemake.params.setup),
+        snakemake.output.summary_log,
+        snakemake.output.gen_output,
+        warning_file=snakemake.output.warning_log,
+    )
 
 Path(snakemake.output.gen_output).touch()

@@ -22,12 +22,19 @@ def build_tier_tcm() -> None:
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["tier_tcm"]
 
-    build_log(config_dict, args.log)
+    log = build_log(config_dict, args.log)
 
     settings = Props.read_from(config_dict["inputs"]["config"])
 
     # get the list of channels by fcid
     ch_list = lh5.ls(args.input, "/ch*")
+
+    if len(ch_list) == 0:
+        msg = "no tables matching /ch* found in input file"
+        raise RuntimeError(msg)
+
+    log.debug(ch_list)
+
     fcid_channels = {}
     for ch in ch_list:
         key = int(ch[2:])

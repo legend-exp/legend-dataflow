@@ -71,7 +71,7 @@ def build_filedb() -> None:
                 break
 
         if (loc_timestamps == default).all() or not found:
-            msg = "something went wrong! no valid first timestamp found"
+            msg = "something went wrong! no valid first timestamp found. Likely: the file is empty"
             raise RuntimeError(msg)
 
         timestamps[i] = np.min(loc_timestamps)
@@ -80,7 +80,7 @@ def build_filedb() -> None:
         log.info(msg)
 
         if timestamps[i] < 0 or timestamps[i] > 4102444800:
-            msg = "something went wrong! timestamp does not make sense"
+            msg = f"something went wrong! timestamp {timestamps[i]} does not make sense"
             raise RuntimeError(msg)
 
     fdb.df["first_timestamp"] = timestamps
