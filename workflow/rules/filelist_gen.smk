@@ -36,25 +36,30 @@ def get_analysis_runs(
     """
     ignore_keys = []
     analysis_runs = {}
+
     if ignore_keys_file is not None:
         if Path(ignore_keys_file).is_file():
             if Path(ignore_keys_file).suffix == ".json":
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = json.load(f)
+
             elif Path(ignore_keys_file).suffix == ".keylist":
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = f.read().splitlines()
+                ignore_keys = [  # remove any comments in the keylist
+                    key.split("#")[0].strip() if "#" in key else key.strip()
+                    for key in ignore_keys
+                ]
+
             elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = yaml.safe_load(f)
+
             else:
                 raise ValueError(
                     "ignore_keys_file file not in json, yaml or keylist format"
                 )
-            ignore_keys = [  # remove any comments in the keylist
-                key.split("#")[0].strip() if "#" in key else key.strip()
-                for key in ignore_keys
-            ]
+
         else:
             msg = f"no ignore_keys file found: {ignore_keys_file}"
             raise ValueError(msg)
@@ -80,6 +85,7 @@ def get_analysis_runs(
         else:
             msg = f"no analysis_runs file found: {analysis_runs_file}"
             raise ValueError(msg)
+
     return analysis_runs, ignore_keys
 
 
@@ -157,15 +163,22 @@ def build_filelist(
     and tier. It will ignore any keys in the ignore_keys list and only include
     the keys specified in the analysis_runs dict.
     """
-    fn_pattern = get_pattern(config, tier)
-
-    if ignore_keys is None:
+    # the ignore_keys dictionary organizes keys in sections, gather all the
+    # section contents in a single list
+    if ignore_keys is not None:
+        _ignore_keys = []
+        for item in ignore_keys.values():
+            _ignore_keys += item
+        ignore_keys = _ignore_keys
+    else:
         ignore_keys = []
+
     if analysis_runs is None:
         analysis_runs = {}
 
     phy_filenames = []
     other_filenames = []
+    fn_pattern = get_pattern(config, tier)
 
     for key in filekeys:
         if Path(search_pattern).suffix == ".*":
