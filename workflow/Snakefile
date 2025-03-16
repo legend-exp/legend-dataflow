@@ -151,13 +151,16 @@ onsuccess:
             auto_report(workflow.persistence.dag, report_plugin, report_settings)
         )
 
-    with (rep_dir / "dag.txt").open("w") as f:
-        f.writelines(str(workflow.persistence.dag))
+        # FIXME: broken with Snakemake>=9
+        # with (rep_dir / "dag.txt").open("w") as f:
+        #     if workflow.persistence.dag is not None:
+        #         f.writelines(str(workflow.persistence.dag))
 
     with (rep_dir / "rulegraph.txt").open("w") as f:
-        f.writelines(str(workflow.persistence.dag.rule_dot()))
+        if workflow.persistence.dag is not None:
+            f.writelines(str(workflow.persistence.dag.rule_dot()))
 
-        # remove .gen files
+            # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):

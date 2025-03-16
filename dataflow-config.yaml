@@ -1,5 +1,7 @@
 # legend_metadata_version: main
 allow_none_par: false
+build_file_dbs: true
+check_log_files: true
 
 paths:
   sandbox_path: $_/sandbox
