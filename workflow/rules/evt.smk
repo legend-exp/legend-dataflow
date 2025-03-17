@@ -36,31 +36,26 @@ rule build_evt:
         tier="evt",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(config, f"tier_evt", time),
+        get_pattern_log(config, "tier_evt", time),
     group:
         "tier-evt"
     resources:
         runtime=300,
         mem_swap=50,
-    run:
-        shell_string = (
-            execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
-            f"--metadata {ro(meta)} "
-            "--log {log} "
-            "--tier {params.tier} "
-            "--datatype {params.datatype} "
-            "--timestamp {params.timestamp} "
-            "--xtc-file {params.ro_input[xtalk_matrix]} "
-            "--par-files {params.ro_input[par_files]} "
-            "--hit-file {params.ro_input[hit_file]} "
-            "--tcm-file {params.ro_input[tcm_file]} "
-            "--dsp-file {params.ro_input[dsp_file]} "
-            "--output {output} "
-        )
-        if input.ann_file is not None:
-            shell_string += "--ann-file {params.ro_input[ann_file]} "
-
-        shell(shell_string)
+    shell:
+        execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
+        f"--metadata {ro(meta)} "
+        "--log {log} "
+        "--tier {params.tier} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--xtc-file {params.ro_input[xtalk_matrix]} "
+        "--par-files {params.ro_input[par_files]} "
+        "--hit-file {params.ro_input[hit_file]} "
+        "--tcm-file {params.ro_input[tcm_file]} "
+        "--dsp-file {params.ro_input[dsp_file]} "
+        "--output {output} "
+        "--ann-file {params.ro_input[ann_file]} "
 
 
 rule build_pet:
@@ -87,31 +82,26 @@ rule build_pet:
         tier="pet",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
     log:
-        get_pattern_log(config, f"tier_pet", time),
+        get_pattern_log(config, "tier_pet", time),
     group:
         "tier-evt"
     resources:
         runtime=300,
         mem_swap=50,
-    run:
-        shell_string = (
-            execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
-            f"--metadata {ro(meta)} "
-            "--log {log} "
-            "--tier {params.tier} "
-            "--datatype {params.datatype} "
-            "--timestamp {params.timestamp} "
-            "--xtc-file {params.ro_input[xtalk_matrix]} "
-            "--par-files {params.ro_input[par_files]} "
-            "--hit-file {params.ro_input[hit_file]} "
-            "--tcm-file {params.ro_input[tcm_file]} "
-            "--dsp-file {params.ro_input[dsp_file]} "
-            "--output {output} "
-        )
-        if input.ann_file is not None:
-            shell_string += "--ann-file {params.ro_input[ann_file]} "
-
-        shell(shell_string)
+    shell:
+        execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
+        f"--metadata {ro(meta)} "
+        "--log {log} "
+        "--tier {params.tier} "
+        "--datatype {params.datatype} "
+        "--timestamp {params.timestamp} "
+        "--xtc-file {params.ro_input[xtalk_matrix]} "
+        "--par-files {params.ro_input[par_files]} "
+        "--hit-file {params.ro_input[hit_file]} "
+        "--tcm-file {params.ro_input[tcm_file]} "
+        "--dsp-file {params.ro_input[dsp_file]} "
+        "--output {output} "
+        "--ann-file {params.ro_input[ann_file]} "
 
 
 for evt_tier in ("evt", "pet"):
