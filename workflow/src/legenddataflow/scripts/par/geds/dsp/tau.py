@@ -102,7 +102,7 @@ def par_geds_dsp_tau() -> None:
             input_file,
             idx=cuts,
             n_rows=kwarg_dict.pop("n_events"),
-        )[0]
+        )
 
         tb_out = run_one_dsp(tb_data, dsp_config)
         log.debug("Processed Data")

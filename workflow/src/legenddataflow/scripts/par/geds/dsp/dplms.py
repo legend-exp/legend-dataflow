@@ -10,6 +10,7 @@ from dbetto.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
 
 
@@ -55,10 +56,12 @@ def par_geds_dsp_dplms() -> None:
 
         t0 = time.time()
         log.info("\nLoad fft data")
-        energies = lh5.read(f"{args.raw_table_name}/daqenergy", fft_files)
-        idxs = np.where(energies.nda == 0)[0]
+        energies = lh5.read_as(
+            f"{args.raw_table_name}/daqenergy", fft_files, library="np"
+        )
+        idxs = np.where(energies == 0)[0]
         raw_fft = lh5.read(
-            f"{args.raw_table_name}/raw",
+            args.raw_table_name,
             fft_files,
             n_rows=dplms_dict["n_baselines"],
             idx=idxs,
@@ -71,9 +74,7 @@ def par_geds_dsp_dplms() -> None:
         # kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = lh5.read(args.raw_table_name, args.peak_file, field_mask=["peak"])[
-            "peak"
-        ].nda
+        peaks = lh5.read_as(f"{args.raw_table_name}/peak", args.peak_file, library="np")
         ids = np.isin(peaks, peaks_rounded)
         peaks = peaks[ids]
         # idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
@@ -136,7 +137,7 @@ def par_geds_dsp_dplms() -> None:
     )
 
     Path(args.dsp_pars).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.dsp_pars, db_dict)
+    Props.write_to(args.dsp_pars, convert_dict_np_to_float(db_dict))
 
     if args.plot_path:
         Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)

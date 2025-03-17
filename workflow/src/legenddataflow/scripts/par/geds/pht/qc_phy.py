@@ -60,8 +60,6 @@ def par_geds_pht_qc_phy() -> None:
     channel_dict = config_dict["qc_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
 
-    sto = lh5.LH5Store()
-
     # sort files in dictionary where keys are first timestamp from run
     bl_mask = np.array([], dtype=bool)
     if isinstance(args.phy_files, list):
@@ -73,10 +71,10 @@ def par_geds_pht_qc_phy() -> None:
                 continue
             run_files = sorted(np.unique(run_files))
             phy_files += run_files
-            bls = sto.read(
+            bls = lh5.read(
                 args.baseline_name, run_files, field_mask=["wf_max", "bl_mean"]
-            )[0]
-            puls = sto.read(args.pulser_name, run_files, field_mask=["trapTmax"])[0]
+            )
+            puls = lh5.read(args.pulser_name, run_files, field_mask=["trapTmax"])
             bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
                 puls["trapTmax"].nda < 200
             )
@@ -85,10 +83,8 @@ def par_geds_pht_qc_phy() -> None:
         with Path(args.phy_files).open() as f:
             phy_files = f.read().splitlines()
         phy_files = sorted(np.unique(phy_files))
-        bls = sto.read(args.baseline_name, phy_files, field_mask=["wf_max", "bl_mean"])[
-            0
-        ]
-        puls = sto.read(args.pulser_name, phy_files, field_mask=["trapTmax"])[0]
+        bls = lh5.read(args.baseline_name, phy_files, field_mask=["wf_max", "bl_mean"])
+        puls = lh5.read(args.pulser_name, phy_files, field_mask=["trapTmax"])
         bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
             puls["trapTmax"].nda < 200
         )
@@ -104,12 +100,13 @@ def par_geds_pht_qc_phy() -> None:
         kwarg_dict_fft["cut_parameters"],
     )
 
-    data = sto.read(
+    data = lh5.read_as(
         args.table_name,
         phy_files,
         field_mask=[*cut_fields, "daqenergy", "t_sat_lo", "timestamp"],
         idx=np.where(bl_mask)[0],
-    )[0].view_as("pd")
+        library="pd",
+    )
 
     discharges = data["t_sat_lo"] > 0
     discharge_timestamps = np.where(data["timestamp"][discharges])[0]

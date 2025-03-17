@@ -99,7 +99,7 @@ def par_geds_hit_qc() -> None:
     kwarg_dict_fft = kwarg_dict["fft_fields"]
     if len(fft_files) > 0:
         fft_fields = get_keys(
-            [key.replace(args.table_name, "") for key in ls(fft_files[0], search_name)],
+            [key.replace(search_name, "") for key in ls(fft_files[0], search_name)],
             kwarg_dict_fft["cut_parameters"],
         )
 
@@ -107,7 +107,7 @@ def par_geds_hit_qc() -> None:
             fft_files,
             args.table_name,
             {},
-            [*fft_fields, "timestamp", "trapTmax"],
+            [*fft_fields, "t_sat_lo", "timestamp", "trapTmax"],
         )
 
         discharges = fft_data["t_sat_lo"] > 0

@@ -53,7 +53,7 @@ def par_geds_raw_blindcal() -> None:
         [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
     )
 
-    E_uncal = lh5.read(f"{channel}/raw/daqenergy", sorted(args.files))[0].view_as("np")
+    E_uncal = lh5.read_as(f"{channel}/raw/daqenergy", sorted(args.files), library="np")
     E_uncal = E_uncal[E_uncal > 200]
     guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 
