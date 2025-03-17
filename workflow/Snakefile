@@ -27,6 +27,8 @@ from legenddataflow.pre_compile_catalog import pre_compile_catalog
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
+os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
+
 check_in_cycle = True
 configs = utils.config_path(config)
 chan_maps = utils.chan_map_path(config)
@@ -34,15 +36,16 @@ meta = utils.metadata_path(config)
 det_status = utils.det_status_path(config)
 basedir = workflow.basedir
 
-det_status_textdb = pre_compile_catalog(Path(det_status) / "statuses")
-channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
-
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
 # NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
 metadata = LegendMetadata(meta)
 if "legend_metadata_version" in config:
     metadata.checkout(config.legend_metadata_version)
+
+
+det_status_textdb = pre_compile_catalog(Path(det_status) / "statuses")
+channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
