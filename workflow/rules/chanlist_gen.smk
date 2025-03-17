@@ -16,8 +16,7 @@ from dbetto import TextDB
 from dbetto.catalog import Catalog
 
 
-def get_chanlist(config, keypart, workflow, det_status, channelmap, system):
-    key = ChannelProcKey.parse_keypart(keypart)
+def get_chanlist(config, timestamp, datatype, workflow, det_status, channelmap, system):
 
     if isinstance(det_status, (str, Path)):
         det_status = TextDB(det_status, lazy=True)
@@ -26,19 +25,19 @@ def get_chanlist(config, keypart, workflow, det_status, channelmap, system):
         channelmap = TextDB(channelmap, lazy=True)
 
     if isinstance(det_status, TextDB):
-        status_map = det_status.statuses.on(key.timestamp, system=key.datatype)
+        status_map = det_status.statuses.on(timestamp, system=datatype)
     else:
-        status_map = det_status.valid_for(key.timestamp, system=key.datatype)
+        status_map = det_status.valid_for(timestamp, system=datatype)
     if isinstance(channelmap, TextDB):
-        chmap = channelmap.channelmaps.on(key.timestamp)
+        chmap = channelmap.channelmaps.on(timestamp, system=datatype)
     else:
-        chmap = channelmap.valid_for(key.timestamp)
+        chmap = channelmap.valid_for(timestamp, system=datatype)
 
     # only restrict to a certain system (geds, spms, ...)
     channels = []
     for channel in chmap.map("system", unique=False)[system].map("name"):
         if channel not in status_map:
-            msg = f"{channel} is not found in the status map (on {key.timestamp})"
+            msg = f"{channel} is not found in the status map (on {timestamp})"
             raise RuntimeError(msg)
         if status_map[channel].processable is False:
             continue
@@ -62,8 +61,11 @@ def get_par_chanlist(
     name=None,
     extension="yaml",
 ):
+    key = ChannelProcKey.parse_keypart(keypart)
 
-    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
+    chan_list = get_chanlist(
+        setup, key.timestamp, key.datatype, workflow, det_status, chan_maps, system
+    )
 
     par_pattern = get_pattern_pars_tmp_channel(
         setup, tier, name, datatype=datatype, extension=extension
@@ -84,6 +86,8 @@ def get_plt_chanlist(
     system,
     name=None,
 ):
+
+    key = ChannelProcKey.parse_keypart(keypart)
 
     chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
 
