@@ -235,7 +235,7 @@ def install(args) -> None:
     python_venv, _ = execenv_pyexe(config_dict, "python", as_string=False)
 
     # we'll use uv from the virtualenv (installed below)
-    uv_expr = [*python_venv, "-m", "uv", "--quiet"]
+    uv_expr = [*python_venv, "-m", "uv"]  # , "--quiet"
 
     # otherwise use python-venv
     cmd_expr = [*cmd_prefix, python, "-m", "venv", path_install]
@@ -280,7 +280,7 @@ def install(args) -> None:
     cmd_expr = [
         *uv_expr,
         "pip",
-        # "--no-cache",
+        "--no-cache",
         "install",
         "--prefix",
         path_install,
