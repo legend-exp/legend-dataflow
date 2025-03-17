@@ -14,6 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
 )
 from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.scripts.table_name import get_table_name
 
 
 rule build_pars_dsp_tau_geds:
