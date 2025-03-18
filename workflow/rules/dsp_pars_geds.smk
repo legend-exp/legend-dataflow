@@ -14,7 +14,6 @@ from legenddataflow.patterns import (
     get_pattern_pars,
 )
 from legenddataflow.execenv import execenv_pyexe
-from legenddataflow.scripts.table_name import get_table_name
 
 
 rule build_pars_dsp_tau_geds:
@@ -29,7 +28,6 @@ rule build_pars_dsp_tau_geds:
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -71,7 +69,6 @@ rule build_pars_evtsel_geds:
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -116,7 +113,6 @@ rule build_pars_dsp_nopt_geds:
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -162,7 +158,6 @@ rule build_pars_dsp_dplms_geds:
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -206,7 +201,6 @@ rule build_pars_dsp_eopt_geds:
         channel="{channel}",
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,

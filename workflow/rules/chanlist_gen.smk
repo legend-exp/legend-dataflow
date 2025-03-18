@@ -89,7 +89,9 @@ def get_plt_chanlist(
 
     key = ChannelProcKey.parse_keypart(keypart)
 
-    chan_list = get_chanlist(setup, keypart, workflow, det_status, chan_maps, system)
+    chan_list = get_chanlist(
+        setup, key.timestamp, key.datatype, workflow, det_status, chan_maps, system
+    )
 
     par_pattern = get_pattern_plts_tmp_channel(setup, tier, name)
 

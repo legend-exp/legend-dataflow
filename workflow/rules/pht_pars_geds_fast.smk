@@ -63,7 +63,6 @@ for key, dataset in part.datasets.items():
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
                     channelmap_textdb,
-                    config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
                     wildcards.channel,
@@ -160,7 +159,6 @@ rule par_pht_fast:
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
-            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,

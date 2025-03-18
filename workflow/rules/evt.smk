@@ -19,7 +19,7 @@ rule build_evt:
         tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
             []
-            if int(wildcards["period"][1:]) > 11
+            if int(wildcards["period"][1:]) > 9
             else get_pattern_tier(config, "ann", check_in_cycle=False)
         ),
         par_files=lambda wildcards: hit_par_catalog.get_par_file(

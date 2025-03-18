@@ -9,7 +9,6 @@ from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow.execenv import execenv_pyexe
-from legenddataflow.scripts.table_name import get_table_mapping
 
 build_merge_rules("dsp", lh5_merge=True)
 

@@ -15,7 +15,8 @@ rule build_pars_dsp_tau_spms:
         datatype="{datatype}",
         channels=lambda wildcards: get_chanlist(
             config,
-            f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
+            wildcards.timestamp,
+            wildcards.datatype,
             workflow,
             det_status_textdb,
             channelmap_textdb,
@@ -24,7 +25,6 @@ rule build_pars_dsp_tau_spms:
         raw_table_names=lambda wildcards: [
             get_table_name(
                 channelmap_textdb,
-                config,
                 wildcards.datatype,
                 wildcards.timestamp,
                 channel,
@@ -32,7 +32,8 @@ rule build_pars_dsp_tau_spms:
             )
             for channel in get_chanlist(
                 config,
-                f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}-{wildcards.timestamp}-channels",
+                wildcards.timestamp,
+                wildcards.datatype,
                 workflow,
                 det_status_textdb,
                 channelmap_textdb,
