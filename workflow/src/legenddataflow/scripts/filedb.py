@@ -62,7 +62,7 @@ def build_filedb() -> None:
                     fdb.table_format["raw"].format(ch=table) + "/timestamp",
                     row.raw_file.strip("/"),
                     n_rows=1,
-                )[0][0]
+                )[0]
                 found = True
             except KeyError:
                 pass
