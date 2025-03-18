@@ -68,7 +68,10 @@ def build_tier_dsp() -> None:
     # now construct the dictionary of DSP configs for build_dsp()
     dsp_cfg_tbl_dict = {}
     for chan, file in chan_cfg_map.items():
-        input_tbl_name = table_map[chan] if table_map is not None else chan + "/raw"
+        if chan in table_map:
+            input_tbl_name = table_map[chan] if table_map is not None else chan + "/raw"
+        else:
+            continue
 
         # check if the raw tables are all existing
         if len(lh5.ls(args.input, input_tbl_name)) > 0:

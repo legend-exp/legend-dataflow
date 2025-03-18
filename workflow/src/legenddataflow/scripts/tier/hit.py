@@ -59,7 +59,10 @@ def build_tier_hit() -> None:
         # get pars (to override hit config)
         Props.add_to(hit_cfg, pars_dict.get(chan, {}).copy())
 
-        input_tbl_name = table_map[chan] if table_map is not None else chan + "/dsp"
+        if chan in table_map:
+            input_tbl_name = table_map[chan] if table_map is not None else chan + "/dsp"
+        else:
+            continue
 
         # check if the raw tables are all existing
         if len(lh5.ls(args.input, input_tbl_name)) > 0:
