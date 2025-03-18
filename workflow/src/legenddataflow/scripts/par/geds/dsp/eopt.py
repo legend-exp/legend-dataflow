@@ -57,7 +57,6 @@ def par_geds_dsp_eopt() -> None:
 
     log = build_log(config_dict, args.log)
 
-    sto = lh5.LH5Store()
     t0 = time.time()
 
     dsp_config = config_dict["inputs"]["processing_chain"][args.channel]
@@ -106,14 +105,12 @@ def par_geds_dsp_eopt() -> None:
             )
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = sto.read(args.raw_table_name, args.peak_file, field_mask=["peak"])[0][
-            "peak"
-        ].nda
+        peaks = lh5.read_as(f"{args.raw_table_name}/peak", args.peak_file, library="np")
         ids = np.isin(peaks, peaks_rounded)
         peaks = peaks[ids]
         idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-        tb_data = sto.read(args.raw_table_name, args.peak_file, idx=ids)[0]
+        tb_data = lh5.read(args.raw_table_name, args.peak_file, idx=ids)
 
         t1 = time.time()
         log.info(f"Data Loaded in {(t1-t0)/60} minutes")

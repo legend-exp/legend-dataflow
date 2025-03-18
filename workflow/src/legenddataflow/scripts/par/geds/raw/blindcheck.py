@@ -58,8 +58,8 @@ def par_geds_raw_blindcheck() -> None:
     blind_curve = Props.read_from(args.blind_curve)[channel]["pars"]["operations"]
 
     # load in the data
-    daqenergy = lh5.read(f"{channel}/raw/daqenergy", sorted(args.files))[0].view_as(
-        "np"
+    daqenergy = lh5.read_as(
+        f"{channel}/raw/daqenergy", sorted(args.files), library="np"
     )
 
     # calibrate daq energy using pre existing curve

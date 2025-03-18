@@ -33,12 +33,14 @@ rule build_hit:
         ),
     output:
         tier_file=get_pattern_tier(config, "hit", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(config, "hit_db"),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
         tier="hit",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        table_map=lambda wildcards: get_table_mapping(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
+        ),
     log:
         get_pattern_log(config, "tier_hit", time),
     group:
@@ -47,12 +49,11 @@ rule build_hit:
         runtime=300,
     shell:
         execenv_pyexe(config, "build-tier-hit") + f"--configs {ro(configs)} "
-        "--metadata {meta} "
+        "--table-map '{params.table_map}' "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--pars-file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
         "--input {params.ro_input[dsp_file]} "
-        "--db-file {output.db_file} "
         "--log {log}"

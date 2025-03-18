@@ -41,9 +41,11 @@ rule build_dsp:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        table_map=lambda wildcards: get_table_mapping(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
+        ),
     output:
         tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
-        db_file=patt.get_pattern_pars_tmp(config, "dsp_db"),
     log:
         patt.get_pattern_log(config, "tier_dsp", time),
     group:
@@ -55,10 +57,9 @@ rule build_dsp:
         execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--tier dsp "
         f"--configs {ro(configs)} "
-        "--metadata {meta} "
+        "--table-map '{params.table_map}' "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
-        "--db-file {output.db_file} "
         "--pars-file {params.ro_input[pars_files]}"

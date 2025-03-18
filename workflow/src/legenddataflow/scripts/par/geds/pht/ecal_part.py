@@ -179,12 +179,13 @@ def calibrate_partition(
     pk_pars = [
         # (238.632, (10, 10), pgf.gauss_on_step), #double line, Pb-212
         # (240.986, (10, 10), pgf.gauss_on_step), #double line, Ra-224
-        (277.371, (10, 7), pgf.gauss_on_linear),  # Tl-208
-        (288.2, (7, 10), pgf.gauss_on_linear),  # Bi-212
-        (300.087, (10, 10), pgf.gauss_on_linear),  # Pb-212
-        (452.98, (10, 10), pgf.gauss_on_linear),  # Bi-212
-        # (511, (20, 20), pgf.gauss_on_step), double line, #e+e-
-        (549.73, (10, 10), pgf.gauss_on_linear),  # Rn-220
+        # enable these when understand non linearity more
+        # (277.371, (10, 7), pgf.gauss_on_linear),  # Tl-208
+        # (288.2, (7, 10), pgf.gauss_on_linear),  # Bi-212
+        # (300.087, (10, 10), pgf.gauss_on_linear),  # Pb-212
+        # (452.98, (10, 10), pgf.gauss_on_linear),  # Bi-212
+        # # (511, (20, 20), pgf.gauss_on_step), double line, #e+e-
+        # (549.73, (10, 10), pgf.gauss_on_linear),  # Rn-220
         (583.187, (20, 20), pgf.hpge_peak),  # Tl-208
         (727.330, (20, 20), pgf.hpge_peak),  # Bi-212
         (763.13, (20, 10), pgf.gauss_on_linear),  # Tl-208

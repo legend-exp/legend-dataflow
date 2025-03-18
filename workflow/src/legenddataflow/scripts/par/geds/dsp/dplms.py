@@ -10,6 +10,7 @@ from dbetto.catalog import Props
 from lgdo import Array, Table
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 
+from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
 
 
@@ -40,7 +41,6 @@ def par_geds_dsp_dplms() -> None:
     config_dict = configs["snakemake_rules"]["pars_dsp_dplms"]
 
     log = build_log(config_dict, args.log)
-    sto = lh5.LH5Store()
 
     configs = TextDB(args.configs).on(args.timestamp, system=args.datatype)
     dsp_config = config_dict["inputs"]["proc_chain"][args.channel]
@@ -56,14 +56,16 @@ def par_geds_dsp_dplms() -> None:
 
         t0 = time.time()
         log.info("\nLoad fft data")
-        energies = sto.read(f"{args.raw_table_name}/daqenergy", fft_files)[0]
-        idxs = np.where(energies.nda == 0)[0]
-        raw_fft = sto.read(
-            f"{args.raw_table_name}/raw",
+        energies = lh5.read_as(
+            f"{args.raw_table_name}/daqenergy", fft_files, library="np"
+        )
+        idxs = np.where(energies == 0)[0]
+        raw_fft = lh5.read(
+            args.raw_table_name,
             fft_files,
             n_rows=dplms_dict["n_baselines"],
             idx=idxs,
-        )[0]
+        )
         t1 = time.time()
         log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
 
@@ -72,14 +74,12 @@ def par_geds_dsp_dplms() -> None:
         # kev_widths = [tuple(kev_width) for kev_width in dplms_dict["kev_widths"]]
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = sto.read(args.raw_table_name, args.peak_file, field_mask=["peak"])[0][
-            "peak"
-        ].nda
+        peaks = lh5.read_as(f"{args.raw_table_name}/peak", args.peak_file, library="np")
         ids = np.isin(peaks, peaks_rounded)
         peaks = peaks[ids]
         # idx_list = [np.where(peaks == peak)[0] for peak in peaks_rounded]
 
-        raw_cal = sto.read(args.raw_table_name, args.peak_file, idx=ids)[0]
+        raw_cal = lh5.read(args.raw_table_name, args.peak_file, idx=ids)
         log.info(
             f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}"
         )
@@ -129,7 +129,7 @@ def par_geds_dsp_dplms() -> None:
     db_dict.update(out_dict)
 
     Path(args.lh5_path).parent.mkdir(parents=True, exist_ok=True)
-    sto.write(
+    lh5.write(
         Table(col_dict={"dplms": dplms_pars}),
         name=args.channel,
         lh5_file=args.lh5_path,
@@ -137,7 +137,7 @@ def par_geds_dsp_dplms() -> None:
     )
 
     Path(args.dsp_pars).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.dsp_pars, db_dict)
+    Props.write_to(args.dsp_pars, convert_dict_np_to_float(db_dict))
 
     if args.plot_path:
         Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)

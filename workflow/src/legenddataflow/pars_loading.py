@@ -35,13 +35,10 @@ class ParsCatalog(Catalog):
         filelist : list
             List of files
         """
-        if (
-            filelist1 is None
-            or filelist2 is None
-            or len(filelist1) == 0
-            or len(filelist2) == 0
-        ):
-            return []
+        if filelist2 is None or len(filelist2) == 0:
+            return filelist1 if filelist1 is not None else []
+        if filelist1 is None or len(filelist1) == 0:
+            return filelist2 if filelist2 is not None else []
         for file2 in filelist2:
             fk2 = ProcessingFileKey.get_filekey_from_pattern(file2)
             for j, file1 in enumerate(filelist1):
@@ -84,6 +81,9 @@ class ParsCatalog(Catalog):
             pars_files = catalog.valid_for(timestamp, allow_none=allow_none)
         else:
             pars_files = self.valid_for(timestamp, allow_none=allow_none)
+        if pars_files is None:
+            pars_files = []
+
         par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
         overwrite_catalog = ParsCatalog.read_from(par_overwrite_file)
         pars_files_overwrite = overwrite_catalog.valid_for(
@@ -95,7 +95,7 @@ class ParsCatalog(Catalog):
         run_overwrite_validity = Path(det_status_path(setup)) / "run_override.yaml"
         run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
         run_overwrite = run_overwrite_catalog.valid_for(timestamp, allow_none=True)
-        if run_overwrite is not None:
+        if run_overwrite is not None and len(run_overwrite) > 0:
             run_overwrite_files = []
             for file in run_overwrite:
                 fk = FileKey.get_filekey_from_pattern(file)
@@ -103,6 +103,7 @@ class ParsCatalog(Catalog):
                     f"{fk.datatype}/{fk.period}/{fk.run}/{file}-par_{tier}.yaml"
                 )
             pars_files = ParsCatalog.match_pars_files(pars_files, run_overwrite_files)
+
         pars_files = [Path(get_pars_path(setup, tier)) / file for file in pars_files]
         pars_files_overwrite = [
             Path(par_overwrite_path(setup)) / tier / file

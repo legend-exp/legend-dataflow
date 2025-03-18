@@ -131,3 +131,39 @@ def get_table_name(metadata, config, datatype, timestamp, detector, tier):
             f"metadata must be a string or a Catalog object, not {type(metadata)}"
         )
     return config.table_format[tier].format(ch=chmap[detector].daq.rawid)
+
+
+def get_all_channels(channelmap, timestamp, datatype):
+    if isinstance(channelmap, (str, Path)):
+        channelmap = TextDB(channelmap, lazy=True)
+
+    if isinstance(channelmap, TextDB):
+        chmap = channelmap.channelmaps.on(timestamp, system=datatype)
+    else:
+        chmap = channelmap.valid_for(timestamp, system=datatype)
+
+    channels = list(chmap)
+
+    if len(channels) == 0:
+        print("WARNING: No channels found")  # noqa: T201
+
+    return channels
+
+
+def get_table_mapping(channelmap, timestamp, datatype, tier):
+    if isinstance(channelmap, (str, Path)):
+        channelmap = TextDB(channelmap, lazy=True)
+    channel_dict = channelmap.valid_for(timestamp, system=datatype)
+    detectors = get_all_channels(channelmap, timestamp, datatype)
+    return json.dumps(
+        {
+            detector: f"ch{channel_dict[detector].daq.rawid:07}/{tier}"
+            for detector in detectors
+        }
+    )
+
+
+def strip_channel_wildcard_constraint(files):
+    if isinstance(files, str):
+        files = [files]
+    return [re.sub(r"\{channel,[^}]+\}", "{channel}", file) for file in files]

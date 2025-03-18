@@ -200,6 +200,7 @@ def build_file_dbs(gen_tier_path, outdir):
         outfile = outdir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
         logfile = (
             Path(ut.tmp_log_path(snakemake.params.setup))
+            / "filedb"
             / outfile.with_suffix(".log").name
         )
 

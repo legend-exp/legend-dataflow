@@ -53,6 +53,9 @@ rule build_pan:
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
+        table_map=lambda wildcards: get_table_mapping(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
+        ),
     output:
         tier_file=get_pattern_tier(config, "pan", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(config, "pan_db"),
@@ -66,7 +69,7 @@ rule build_pan:
     shell:
         execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--configs {configs} "
-        "--metadata {meta} "
+        "--table-map '{params.table_map}' "
         "--tier pan "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "

@@ -1,8 +1,9 @@
 import argparse
+import json
 from pathlib import Path
 
 from dbetto.catalog import Props
-from legendmeta import LegendMetadata, TextDB
+from legendmeta import TextDB
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
 
@@ -15,7 +16,7 @@ def build_tier_hit() -> None:
     argparser.add_argument("--pars-file", nargs="*")
 
     argparser.add_argument("--configs", required=True)
-    argparser.add_argument("--metadata", required=True)
+    argparser.add_argument("--table-map", required=False, type=str)
     argparser.add_argument("--log")
 
     argparser.add_argument("--datatype", required=True)
@@ -23,17 +24,14 @@ def build_tier_hit() -> None:
     argparser.add_argument("--tier", required=True)
 
     argparser.add_argument("--output")
-    argparser.add_argument("--db-file")
     args = argparser.parse_args()
 
-    if args.tier not in ("hit", "pht"):
-        msg = f"unsupported tier {args.tier}"
-        raise ValueError(msg)
+    table_map = json.loads(args.table_map) if args.table_map is not None else None
 
     df_config = (
         TextDB(args.configs, lazy=True)
         .on(args.timestamp, system=args.datatype)
-        .snakemake_rules.tier_hit
+        .snakemake_rules[f"tier_{args.tier}"]
     )
     log = build_log(df_config, args.log, fallback=__name__)
     log.info("initializing")
@@ -45,19 +43,12 @@ def build_tier_hit() -> None:
 
     # mapping channel -> hit config file
     chan_cfg_map = df_config.inputs.hit_config
-    # channel map
-    chan_map = LegendMetadata(args.metadata).channelmap(
-        args.timestamp, system=args.datatype
-    )
 
     log.info("building the build_hit config")
     # if the mapping only contains one __default__ key, build the channel
     # list from the (processable) channel map and assign the default config
     if list(chan_cfg_map.keys()) == ["__default__"]:
-        chan_cfg_map = {
-            chan: chan_cfg_map.__default__
-            for chan in chan_map.group("analysis.processable")[True].map("name")
-        }
+        chan_cfg_map = {chan: chan_cfg_map.__default__ for chan in table_map}
 
     # now construct the dictionary of hit configs for build_hit()
     channel_dict = {}
@@ -68,7 +59,10 @@ def build_tier_hit() -> None:
         # get pars (to override hit config)
         Props.add_to(hit_cfg, pars_dict.get(chan, {}).copy())
 
-        input_tbl_name = f"ch{chan_map[chan].daq.rawid}/dsp"
+        if chan in table_map:
+            input_tbl_name = table_map[chan] if table_map is not None else chan + "/dsp"
+        else:
+            continue
 
         # check if the raw tables are all existing
         if len(lh5.ls(args.input, input_tbl_name)) > 0:
@@ -80,29 +74,3 @@ def build_tier_hit() -> None:
     log.info("running build_hit()...")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     build_hit(args.input, lh5_tables_config=channel_dict, outfile=args.output)
-
-    hit_outputs = {}
-    hit_channels = []
-    for channel, file in chan_cfg_map.items():
-        output = Props.read_from(file)["outputs"]
-        in_dict = False
-        for entry in hit_outputs:
-            if hit_outputs[entry]["fields"] == output:
-                hit_outputs[entry]["channels"].append(channel)
-                in_dict = True
-        if in_dict is False:
-            hit_outputs[f"group{len(list(hit_outputs))+1}"] = {
-                "channels": [channel],
-                "fields": output,
-            }
-        hit_channels.append(channel)
-
-    key = args.output.replace(f"-tier_{args.tier}.lh5", "")
-
-    full_dict = {
-        "valid_fields": {args.tier: hit_outputs},
-        "valid_keys": {key: {"valid_channels": {args.tier: hit_channels}}},
-    }
-
-    Path(args.db_file).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.db_file, full_dict)

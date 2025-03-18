@@ -156,9 +156,9 @@ def par_geds_dsp_evtsel() -> None:
         if lh5_path[-1] != "/":
             lh5_path += "/"
 
-        tb = sto.read(
+        tb = lh5.read(
             lh5_path, raw_files, field_mask=["daqenergy", "t_sat_lo", "timestamp"]
-        )[0]
+        )
 
         if args.no_pulse is False:
             mask = get_pulser_mask(
@@ -196,9 +196,9 @@ def par_geds_dsp_evtsel() -> None:
             masks[peak] = np.where(e_mask & (~is_recovering))[0]
             log.debug(f"{len(masks[peak])} events found in energy range for {peak}")
 
-        input_data = sto.read(
+        input_data = lh5.read(
             f"{lh5_path}", raw_files, n_rows=10000, idx=np.where(~mask)[0]
-        )[0]
+        )
 
         if isinstance(dsp_config, str):
             dsp_config = Props.read_from(dsp_config)
@@ -242,7 +242,7 @@ def par_geds_dsp_evtsel() -> None:
                         peak_dict["idxs"][0][n_rows_to_read_i:] - n_rows_i,
                     )
                     if len(idx_i[0]) > 0:
-                        peak_dict["obj_buf"], n_rows_read_i = sto.read(
+                        peak_dict["obj_buf"] = lh5.read(
                             lh5_path,
                             file,
                             start_row=0,
@@ -250,6 +250,7 @@ def par_geds_dsp_evtsel() -> None:
                             obj_buf=peak_dict["obj_buf"],
                             obj_buf_start=peak_dict["obj_buf_start"],
                         )
+                        n_rows_read_i = len(peak_dict["obj_buf"])
 
                         peak_dict["n_rows_read"] += n_rows_read_i
                         log.debug(f'{peak}: {peak_dict["n_rows_read"]}')
@@ -342,7 +343,7 @@ def par_geds_dsp_evtsel() -> None:
                                 final_cut_field=final_cut_field,
                                 energy_param=energy_parameter,
                             )
-                            sto.write(
+                            lh5.write(
                                 out_tbl,
                                 name=lh5_path,
                                 lh5_file=temp_output,
@@ -375,7 +376,7 @@ def par_geds_dsp_evtsel() -> None:
                                     energy_param=energy_parameter,
                                 )
                                 peak_dict["n_events"] += n_wfs
-                                sto.write(
+                                lh5.write(
                                     out_tbl,
                                     name=lh5_path,
                                     lh5_file=temp_output,
