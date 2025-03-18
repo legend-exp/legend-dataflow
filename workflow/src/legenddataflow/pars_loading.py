@@ -81,6 +81,8 @@ class ParsCatalog(Catalog):
             pars_files = catalog.valid_for(timestamp, allow_none=allow_none)
         else:
             pars_files = self.valid_for(timestamp, allow_none=allow_none)
+        if pars_files is None:
+            pars_files = []
 
         par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
         overwrite_catalog = ParsCatalog.read_from(par_overwrite_file)
