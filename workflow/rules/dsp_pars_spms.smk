@@ -25,6 +25,7 @@ rule build_pars_dsp_tau_spms:
         raw_table_names=lambda wildcards: [
             get_table_name(
                 channelmap_textdb,
+                config,
                 wildcards.datatype,
                 wildcards.timestamp,
                 channel,

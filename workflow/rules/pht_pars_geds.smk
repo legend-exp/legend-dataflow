@@ -71,6 +71,7 @@ for key, dataset in part.datasets.items():
                 ),
                 dsp_table_name=lambda wildcards: get_table_name(
                     channelmap_textdb,
+                    config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
                     wildcards.channel,
@@ -168,6 +169,7 @@ for key, dataset in part.datasets.items():
                 timestamp=tstamp,
                 dsp_table_name=lambda wildcards: get_table_name(
                     channelmap_textdb,
+                    config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
                     wildcards.channel,
@@ -267,6 +269,7 @@ for key, dataset in part.datasets.items():
                 timestamp=tstamp,
                 dsp_table_name=lambda wildcards: get_table_name(
                     channelmap_textdb,
+                    config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
                     wildcards.channel,
@@ -366,6 +369,7 @@ for key, dataset in part.datasets.items():
                 timestamp=tstamp,
                 dsp_table_name=lambda wildcards: get_table_name(
                     channelmap_textdb,
+                    config,
                     "cal",
                     part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
                     wildcards.channel,
@@ -460,6 +464,7 @@ rule build_pht_qc:
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -527,6 +532,7 @@ rule build_per_energy_calibration:
         tier="pht",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -583,6 +589,7 @@ rule build_pht_energy_super_calibrations:
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -650,6 +657,7 @@ rule build_pht_aoe_calibrations:
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -716,6 +724,7 @@ rule build_pht_lq_calibration:
         timestamp="{timestamp}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,

@@ -38,6 +38,7 @@ rule par_hit_qc:
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -87,6 +88,7 @@ rule par_hit_energy_calibration:
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -140,6 +142,7 @@ rule par_hit_aoe_calibration:
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
@@ -192,6 +195,7 @@ rule build_lq_calibration:
         channel="{channel}",
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
+            config,
             "cal",
             wildcards.timestamp,
             wildcards.channel,
