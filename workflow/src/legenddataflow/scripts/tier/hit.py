@@ -74,3 +74,62 @@ def build_tier_hit() -> None:
     log.info("running build_hit()...")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     build_hit(args.input, lh5_tables_config=channel_dict, outfile=args.output)
+
+
+def build_tier_hit_single_channel() -> None:
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--input")
+    argparser.add_argument("--pars-file", nargs="*")
+
+    argparser.add_argument("--configs", required=True)
+    argparser.add_argument("--log")
+
+    argparser.add_argument(
+        "--channel",
+        help="channel to process",
+        required=False,
+        type=str,
+    )
+    argparser.add_argument("--datatype", required=True)
+    argparser.add_argument("--timestamp", required=True)
+    argparser.add_argument("--tier", required=True)
+
+    argparser.add_argument("--output")
+    args = argparser.parse_args()
+
+    df_config = (
+        TextDB(args.configs, lazy=True)
+        .on(args.timestamp, system=args.datatype)
+        .snakemake_rules[f"tier_{args.tier}"]
+    )
+    log = build_log(df_config, args.log, fallback=__name__)
+    log.info("initializing")
+
+    settings_dict = df_config.options.get("settings", {})
+
+    if isinstance(settings_dict, str):
+        settings_dict = Props.read_from(settings_dict)
+
+    # mapping channel -> hit config file
+    chan_cfg_map = df_config.inputs.hit_config
+    chan_cfg_map = (
+        chan_cfg_map[args.channel]
+        if args.channel is not None and args.channel in chan_cfg_map
+        else chan_cfg_map
+    )
+
+    # now construct the dictionary of hit configs for build_hit()
+    channel_dict = {}
+    pars_dict = Props.read_from(args.pars_file)
+    pars_dict = (
+        pars_dict[args.channel]
+        if args.channel is not None and args.channel in pars_dict
+        else pars_dict
+    )
+
+    hit_cfg = Props.read_from(chan_cfg_map)
+    Props.add_to(hit_cfg, pars_dict.copy())
+
+    log.info("running build_hit()...")
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    build_hit(args.input, hit_config=channel_dict, outfile=args.output)

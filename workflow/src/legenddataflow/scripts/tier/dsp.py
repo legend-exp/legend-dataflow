@@ -111,3 +111,75 @@ def build_tier_dsp() -> None:
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
     )
+
+
+def build_tier_dsp_single_channel() -> None:
+    # CLI config
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--configs", help="path to dataflow config files", required=True
+    )
+    argparser.add_argument(
+        "--channel",
+        help="channel to process",
+        required=False,
+        type=str,
+    )
+    argparser.add_argument("--log", help="log file name")
+
+    argparser.add_argument("--datatype", help="datatype", required=True)
+    argparser.add_argument("--timestamp", help="timestamp", required=True)
+    argparser.add_argument("--tier", help="tier", required=True)
+
+    argparser.add_argument(
+        "--pars-file", help="database file for HPGes", nargs="*", default=[]
+    )
+    argparser.add_argument("--input", help="input file")
+
+    argparser.add_argument("--output", help="output file")
+    args = argparser.parse_args()
+
+    df_configs = TextDB(args.configs, lazy=True)
+    config_dict = df_configs.on(args.timestamp, system=args.datatype).snakemake_rules
+    config_dict = config_dict[f"tier_{args.tier}"]
+    config_dict = (
+        config_dict[args.channel]
+        if args.channel is not None and args.channel in config_dict
+        else config_dict
+    )
+
+    build_log(config_dict, args.log, fallback=__name__)
+
+    settings_dict = config_dict.options.get("settings", {})
+    if isinstance(settings_dict, str):
+        settings_dict = Props.read_from(settings_dict)
+
+    proc_chain = config_dict.inputs.processing_chain
+
+    # par files
+    db_files = [
+        par_file
+        for par_file in args.pars_file
+        if Path(par_file).suffix in (".json", ".yaml", ".yml")
+    ]
+
+    database_dict = _replace_list_with_array(
+        Props.read_from(db_files, subst_pathvar=True)
+    )
+    database_dict = (
+        database_dict[args.channel]
+        if args.channel is not None and args.channel in database_dict
+        else database_dict
+    )
+
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+
+    build_dsp(
+        args.input,
+        args.output,
+        proc_chain,
+        database=database_dict,
+        write_mode="r",
+        buffer_len=settings_dict.get("buffer_len", 1000),
+        block_width=settings_dict.get("block_width", 16),
+    )
