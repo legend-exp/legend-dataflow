@@ -1,6 +1,7 @@
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.utils import filelist_path, set_last_rule_name
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.paths import filelist_path
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,

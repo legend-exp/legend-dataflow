@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from legenddataflow.utils import (
+from legenddataflow.paths import (
     filelist_path,
     log_path,
     tmp_par_path,

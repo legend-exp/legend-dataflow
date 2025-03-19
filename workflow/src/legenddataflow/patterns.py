@@ -4,7 +4,7 @@ This module contains all the patterns needed for the data production
 
 from pathlib import Path
 
-from .utils import (
+from .paths import (
     get_pars_path,
     get_tier_path,
     par_overwrite_path,

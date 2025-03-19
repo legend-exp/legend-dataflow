@@ -10,6 +10,7 @@ import os, sys
 from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv, ParsKeyResolve
+import legenddataflow.paths as paths
 from datetime import datetime
 from dbetto import AttrsDict
 from legendmeta import LegendMetadata
@@ -19,11 +20,11 @@ config = AttrsDict(config)
 
 check_in_cycle = True
 swenv = execenv.execenv_prefix(config)
-meta_path = utils.metadata_path(config)
-det_status = utils.det_status_path(config)
-configs = utils.config_path(config)
-chan_maps = utils.chan_map_path(config)
-meta = utils.metadata_path(config)
+meta_path = paths.metadata_path(config)
+det_status = paths.det_status_path(config)
+configs = paths.config_path(config)
+chan_maps = paths.chan_map_path(config)
+meta = paths.metadata_path(config)
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
@@ -62,7 +63,7 @@ onstart:
             execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'"
         )
 
-    raw_par_cat_file = Path(utils.pars_path(config)) / "raw" / "validity.yaml"
+    raw_par_cat_file = Path(paths.pars_path(config)) / "raw" / "validity.yaml"
     if raw_par_cat_file.is_file():
         raw_par_cat_file.unlink()
     try:
@@ -74,7 +75,7 @@ onstart:
 
 onsuccess:
     shell("rm -f *.gen")
-    shell(f"rm -rf {utils.filelist_path(config)}/*")
+    shell(f"rm -rf {paths.filelist_path(config)}/*")
 
 
 rule gen_filelist:
@@ -87,7 +88,7 @@ rule gen_filelist:
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
-        temp(Path(utils.filelist_path(config)) / "{label}-{tier}.filelist"),
+        temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
     script:
         "src/legenddataflow/scripts/write_filelist.py"
 

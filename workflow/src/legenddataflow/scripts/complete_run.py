@@ -9,6 +9,7 @@ from pathlib import Path
 
 from snakemake.script import snakemake
 
+from legenddataflow import paths as pat
 from legenddataflow import patterns
 from legenddataflow import utils as ut
 from legenddataflow.execenv import _execenv2str, execenv_pyexe
@@ -123,7 +124,7 @@ def build_file_dbs(gen_tier_path, outdir):
         # TODO: replace l200 with {experiment}
         outfile = outdir / f"l200-{speck[1]}-{speck[2]}-{speck[0]}-filedb.h5"
         logfile = (
-            Path(ut.tmp_log_path(snakemake.params.setup))
+            Path(pat.tmp_log_path(snakemake.params.setup))
             / "filedb"
             / outfile.with_suffix(".log").name
         )
@@ -173,7 +174,7 @@ def fformat(tier):
     abs_path = patterns.get_pattern_tier(
         snakemake.params.setup, tier, check_in_cycle=False
     )
-    return str(abs_path).replace(ut.get_tier_path(snakemake.params.setup, tier), "")
+    return str(abs_path).replace(pat.get_tier_path(snakemake.params.setup, tier), "")
 
 
 if snakemake.params.setup.get("build_file_dbs", True):
@@ -186,7 +187,7 @@ if snakemake.params.setup.get("build_file_dbs", True):
         prodenv = as_ro(os.getenv("PRODENV"))
 
         def tdirs(tier):
-            return as_ro(ut.get_tier_path(snakemake.params.setup, tier)).replace(
+            return as_ro(pat.get_tier_path(snakemake.params.setup, tier)).replace(
                 prodenv, ""
             )
 
@@ -196,7 +197,7 @@ if snakemake.params.setup.get("build_file_dbs", True):
         print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
 
         def tdirs(tier):
-            return as_ro(ut.get_tier_path(snakemake.params.setup, tier))
+            return as_ro(pat.get_tier_path(snakemake.params.setup, tier))
 
         file_db_config["data_dir"] = "/"
 
@@ -219,13 +220,13 @@ if (snakemake.wildcards.tier != "daq") and snakemake.params.setup.get(
     with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
         json.dump(file_db_config, f, indent=2)
 
-    build_file_dbs(ut.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
+    build_file_dbs(pat.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
     (Path(snakemake.params.filedb_path) / "file_db_config.json").unlink()
 
 if snakemake.params.setup.get("check_log_files", True):
     print("INFO: ...checking log files")
     check_log_files(
-        ut.tmp_log_path(snakemake.params.setup),
+        pat.tmp_log_path(snakemake.params.setup),
         snakemake.output.summary_log,
         snakemake.output.gen_output,
         warning_file=snakemake.output.warning_log,

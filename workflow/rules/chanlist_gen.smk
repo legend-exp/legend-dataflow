@@ -11,7 +11,7 @@ from legenddataflow.patterns import (
     get_pattern_plts_tmp_channel,
 )
 from legenddataflow import execenv_pyexe
-from legenddataflow.utils import filelist_path
+from legenddataflow.paths import filelist_path
 from dbetto import TextDB
 from dbetto.catalog import Catalog
 
