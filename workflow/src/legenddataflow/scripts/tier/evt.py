@@ -9,6 +9,7 @@ from legendmeta import LegendMetadata
 from lgdo.types import Array
 from pygama.evt import build_evt
 
+from .....FileKey import ProcessingFileKey
 from ...log import build_log
 
 sto = lh5.LH5Store()
@@ -163,6 +164,15 @@ def build_tier_evt() -> None:
         table[field_config["output_field"]["table"]].add_column(
             field_config["output_field"]["field"], Array(muon_flag)
         )
+
+    fk = ProcessingFileKey.get_filekey_from_pattern(Path(args.output).name)
+    per = np.full(len(table), fk.period)
+    run = np.full(len(table), fk.run)
+    cycle = np.full(len(table), fk.timestamp)
+
+    table["evt"].add_column("period", Array(per))
+    table["evt"].add_column("run", Array(run))
+    table["evt"].add_column("cycle", Array(cycle))
 
     sto.write(obj=table, name="evt", lh5_file=args.output, wo_mode="a")
 
