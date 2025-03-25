@@ -1,8 +1,8 @@
 import argparse
+import copy
 import pickle as pkl
 from pathlib import Path
 
-import lgdo
 import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
@@ -64,7 +64,6 @@ def par_geds_dsp_tau() -> None:
         else:
             input_file = args.raw_files
 
-        log.debug(lgdo.__version__)
         log.debug(f"Reading Data for {args.raw_table_name} from:")
         log.debug(input_file)
 
@@ -104,7 +103,15 @@ def par_geds_dsp_tau() -> None:
             n_rows=kwarg_dict["n_events"] * 2,
         )
 
-        tb_out = run_one_dsp(tb_data, dsp_config)
+        dsp_config_optimise_removed = copy.deepcopy(dsp_config)
+        if "tau1" in dsp_config["outputs"]:
+            dsp_config_optimise_removed["outputs"].remove("tau1")
+        if "tau2" in dsp_config["outputs"]:
+            dsp_config_optimise_removed["outputs"].remove("tau2")
+        if "frac" in dsp_config["outputs"]:
+            dsp_config_optimise_removed["outputs"].remove("frac")
+
+        tb_out = run_one_dsp(tb_data, dsp_config_optimise_removed)
         log.debug("Processed Data")
         cut_parameters = kwarg_dict.get("cut_parameters", None)
         if cut_parameters is not None:
@@ -114,7 +121,7 @@ def par_geds_dsp_tau() -> None:
             tb_data = lh5.read(
                 args.raw_table_name,
                 input_file,
-                idx=cuts[idxs],
+                idx=cuts[: 2 * kwarg_dict["n_events"]][idxs],
                 n_rows=kwarg_dict.pop("n_events"),
             )
 
@@ -148,6 +155,7 @@ def par_geds_dsp_tau() -> None:
         else:
             msg = f"Unknown mode: {kwarg_dict['mode']}, must be either single or double"
             raise ValueError(msg)
+        tau.dsp_config = dsp_config_optimise_removed
 
         if args.plot_path:
             Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)
