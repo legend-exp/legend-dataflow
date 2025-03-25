@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 import yaml
+from legenddataflow.paths import tier_path
 from legenddataflow.utils import (
     subst_vars,
     subst_vars_impl,
     subst_vars_in_snakemake_config,
-    tier_path,
 )
 
 testprod = Path(__file__).parent / "dummy_cycle"

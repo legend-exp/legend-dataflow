@@ -1,12 +1,7 @@
 from pathlib import Path
 
 import yaml
-from legenddataflow import (
-    FileKey,
-    patterns,
-    subst_vars,
-    utils,
-)
+from legenddataflow import FileKey, paths, patterns, subst_vars
 
 testprod = Path(__file__).parent / "dummy_cycle"
 
@@ -30,7 +25,7 @@ def test_filekey():
     assert key.name == "l200-p00-r000-cal-20230101T123456Z"
     assert (
         key.get_path_from_filekey(patterns.get_pattern_tier(setup, "dsp"))[0]
-        == f"{utils.get_tier_path(setup, 'dsp')}/cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-tier_dsp.lh5"
+        == f"{paths.get_tier_path(setup, 'dsp')}/cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-tier_dsp.lh5"
     )
     assert (
         FileKey.get_filekey_from_pattern(
