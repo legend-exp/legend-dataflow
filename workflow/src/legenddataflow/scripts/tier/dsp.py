@@ -65,6 +65,11 @@ def build_tier_dsp() -> None:
 
     chan_cfg_map = config_dict.inputs.processing_chain
 
+    # if the dictionary only contains one __default__ key, build the channel
+    # list from the (processable) channel map and assign the default config
+    if list(chan_cfg_map.keys()) == ["__default__"]:
+        chan_cfg_map = {chan: chan_cfg_map.__default__ for chan in table_map}
+
     # now construct the dictionary of DSP configs for build_dsp()
     dsp_cfg_tbl_dict = {}
     for chan, file in chan_cfg_map.items():
@@ -104,7 +109,6 @@ def build_tier_dsp() -> None:
     build_dsp(
         args.input,
         args.output,
-        chan_cfg_map.get("__default__", {}),
         database=database_dict,
         chan_config=dsp_cfg_tbl_dict,
         write_mode="r",
