@@ -113,7 +113,7 @@ def par_geds_dsp_eopt() -> None:
         tb_data = lh5.read(args.raw_table_name, args.peak_file, idx=ids)
 
         t1 = time.time()
-        log.info(f"Data Loaded in {(t1-t0)/60} minutes")
+        log.info(f"Data Loaded in {(t1 - t0) / 60} minutes")
 
         if isinstance(dsp_config, (str, list)):
             dsp_config = Props.read_from(dsp_config)
@@ -183,7 +183,7 @@ def par_geds_dsp_eopt() -> None:
             db_dict["zac"]["sigma"] = f"{x[0]}*us"
             db_dict["etrap"]["rise"] = f"{x[0]}*us"
 
-            log.info(f"Initialising values {i+1} : {db_dict}")
+            log.info(f"Initialising values {i + 1} : {db_dict}")
 
             tb_out = run_one_dsp(tb_data, dsp_config, db_dict=db_dict, verbosity=0)
 
@@ -202,7 +202,7 @@ def par_geds_dsp_eopt() -> None:
             sample_y_trap.append(res[out_field])
             err_y_trap.append(res[out_err_field])
 
-            log.info(f"{i+1} Finished")
+            log.info(f"{i + 1} Finished")
 
         if np.isnan(sample_y_cusp).all():
             max_cusp = opt_dict["nan_default"]
@@ -318,7 +318,7 @@ def par_geds_dsp_eopt() -> None:
         # db_dict.update(out_param_dict)
 
         t2 = time.time()
-        log.info(f"Optimiser finished in {(t2-t1)/60} minutes")
+        log.info(f"Optimiser finished in {(t2 - t1) / 60} minutes")
 
         out_alpha_dict = {}
         out_alpha_dict["cuspEmax_ctc"] = {

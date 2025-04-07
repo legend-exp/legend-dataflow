@@ -67,7 +67,9 @@ def par_geds_dsp_dplms() -> None:
             idx=idxs,
         )
         t1 = time.time()
-        log.info(f"Time to load fft data {(t1-t0):.2f} s, total events {len(raw_fft)}")
+        log.info(
+            f"Time to load fft data {(t1 - t0):.2f} s, total events {len(raw_fft)}"
+        )
 
         log.info("\nRunning event selection")
         peaks_kev = np.array(dplms_dict["peaks_kev"])
@@ -81,7 +83,7 @@ def par_geds_dsp_dplms() -> None:
 
         raw_cal = lh5.read(args.raw_table_name, args.peak_file, idx=ids)
         log.info(
-            f"Time to run event selection {(time.time()-t1):.2f} s, total events {len(raw_cal)}"
+            f"Time to run event selection {(time.time() - t1):.2f} s, total events {len(raw_cal)}"
         )
 
         if isinstance(dsp_config, (str, list)):
@@ -116,7 +118,7 @@ def par_geds_dsp_dplms() -> None:
             f"loadlh5('{args.lh5_path}', '{args.channel}/dplms/coefficients')"
         )
 
-        log.info(f"DPLMS creation finished in {(time.time()-t0)/60} minutes")
+        log.info(f"DPLMS creation finished in {(time.time() - t0) / 60} minutes")
     else:
         out_dict = {}
         dplms_pars = Table(col_dict={"coefficients": Array([])})

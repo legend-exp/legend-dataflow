@@ -128,7 +128,7 @@ def par_geds_dsp_evtsel() -> None:
 
     Path(args.peak_file).parent.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng()
-    rand_num = f"{rng.integers(0,99999):05d}"
+    rand_num = f"{rng.integers(0, 99999):05d}"
     temp_output = f"{args.peak_file}.{rand_num}"
     if peak_dict.pop("run_selection") is True:
         log.debug("Starting peak selection")
@@ -253,7 +253,7 @@ def par_geds_dsp_evtsel() -> None:
                         n_rows_read_i = len(peak_dict["obj_buf"])
 
                         peak_dict["n_rows_read"] += n_rows_read_i
-                        log.debug(f'{peak}: {peak_dict["n_rows_read"]}')
+                        log.debug(f"{peak}: {peak_dict['n_rows_read']}")
                         peak_dict["obj_buf_start"] += n_rows_read_i
                     if peak_dict["n_rows_read"] >= 10000 or file == raw_files[-1]:
                         if "e_lower_lim" not in peak_dict:
@@ -353,7 +353,7 @@ def par_geds_dsp_evtsel() -> None:
                             peak_dict["obj_buf_start"] = 0
                             peak_dict["n_events"] = n_wfs
                             log.debug(
-                                f'found {peak_dict["n_events"]} events for {peak}'
+                                f"found {peak_dict['n_events']} events for {peak}"
                             )
                         else:
                             if (
@@ -385,7 +385,7 @@ def par_geds_dsp_evtsel() -> None:
                                 peak_dict["obj_buf"] = None
                                 peak_dict["obj_buf_start"] = 0
                                 log.debug(
-                                    f'found {peak_dict["n_events"]} events for {peak}'
+                                    f"found {peak_dict['n_events']} events for {peak}"
                                 )
                                 if peak_dict["n_events"] >= n_events:
                                     peak_dict["idxs"] = None
@@ -396,5 +396,5 @@ def par_geds_dsp_evtsel() -> None:
     else:
         Path(temp_output).touch()
 
-    log.debug(f"event selection completed in {time.time()-t0} seconds")
+    log.debug(f"event selection completed in {time.time() - t0} seconds")
     Path(temp_output).rename(args.peak_file)
