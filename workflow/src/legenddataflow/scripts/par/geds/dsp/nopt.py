@@ -62,7 +62,7 @@ def par_geds_dsp_nopt() -> None:
             args.raw_table_name, raw_files, n_rows=opt_dict["n_events"], idx=idxs
         )
         t1 = time.time()
-        log.info(f"Time to open raw files {t1-t0:.2f} s, n. baselines {len(tb_data)}")
+        log.info(f"Time to open raw files {t1 - t0:.2f} s, n. baselines {len(tb_data)}")
 
         log.info(f"Select baselines {len(tb_data)}")
         dsp_data = run_one_dsp(tb_data, dsp_config)
@@ -94,7 +94,7 @@ def par_geds_dsp_nopt() -> None:
             )
 
         t2 = time.time()
-        log.info(f"Optimiser finished in {(t2-t0)/60} minutes")
+        log.info(f"Optimiser finished in {(t2 - t0) / 60} minutes")
     else:
         out_dict = {}
         plot_dict = {}
