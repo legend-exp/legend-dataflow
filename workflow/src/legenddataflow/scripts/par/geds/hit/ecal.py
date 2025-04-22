@@ -38,7 +38,7 @@ def plot_2614_timemap(
     data,
     cal_energy_param,
     selection_string,
-    figsize=(12, 8),
+    figsize=(8, 6),
     fontsize=12,
     erange=(2580, 2630),
     dx=1,
@@ -88,7 +88,7 @@ def plot_pulser_timemap(
     cal_energy_param,
     selection_string,  # noqa: ARG001
     pulser_field="is_pulser",
-    figsize=(12, 8),
+    figsize=(8, 6),
     fontsize=12,
     dx=0.2,
     time_dx=180,
@@ -273,7 +273,7 @@ def bin_survival_fraction(
 
 def plot_baseline_timemap(
     data,
-    figsize=(12, 8),
+    figsize=(8, 6),
     fontsize=12,
     parameter="bl_mean",
     dx=1,

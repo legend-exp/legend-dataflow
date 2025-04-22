@@ -53,6 +53,7 @@ def par_geds_dsp_svm_build() -> None:
         class_weight=hyperpars["class_weight"],
         C=float(hyperpars["C"]),
         gamma=float(hyperpars["gamma"]),
+        cache_size=1000,
     )
 
     svm.fit(dwts_norm, labels)

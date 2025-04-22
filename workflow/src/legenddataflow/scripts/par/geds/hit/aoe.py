@@ -136,7 +136,7 @@ def par_geds_hit_aoe() -> None:
         if "dt_param" in kwarg_dict:
             params += kwarg_dict["dt_param"]
         else:
-            params += "dt_eff"
+            params.append("dt_eff")
 
         if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
             cal_dict.update(kwarg_dict["dt_cut"]["cut"])
