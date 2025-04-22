@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 import warnings
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from dbetto.catalog import Props
 from dspeed import build_dsp
 from lgdo import lh5
 
+from ...alias_table import alias_table
 from ...log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -38,6 +40,9 @@ def build_tier_dsp() -> None:
         type=str,
     )
     argparser.add_argument("--log", help="log file name")
+    argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
+
+    argparser.add_argument("--n-processes", help="log file name", default=1, type=int)
 
     argparser.add_argument("--datatype", help="datatype", required=True)
     argparser.add_argument("--timestamp", help="timestamp", required=True)
@@ -50,6 +55,9 @@ def build_tier_dsp() -> None:
 
     argparser.add_argument("--output", help="output file")
     args = argparser.parse_args()
+
+    # set number of threads to use
+    # set_num_threads(1)
 
     table_map = json.loads(args.table_map) if args.table_map is not None else None
 
@@ -83,7 +91,7 @@ def build_tier_dsp() -> None:
             dsp_cfg_tbl_dict[input_tbl_name] = Props.read_from(file)
         else:
             msg = f"table {input_tbl_name} not found in {args.input} skipping"
-            log.warning(msg)
+            log.info(msg)
 
     if len(dsp_cfg_tbl_dict) == 0:
         msg = f"could not find any of the requested channels in {args.input}"
@@ -103,8 +111,11 @@ def build_tier_dsp() -> None:
         (table_map[chan].split("/")[0] if chan in table_map else chan): dic
         for chan, dic in database_dict.items()
     }
+    log.info("loaded database files")
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+
+    start = time.time()
 
     build_dsp(
         args.input,
@@ -114,7 +125,13 @@ def build_tier_dsp() -> None:
         write_mode="r",
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
+        # n_processes=args.n_processes,
     )
+
+    log.info(f"Finished building DSP in {time.time()- start:.2f} seconds")
+    if args.alias_table is not None:
+        log.info("Creating alias table")
+        alias_table(args.output, args.alias_table)
 
 
 def build_tier_dsp_single_channel() -> None:
@@ -152,7 +169,7 @@ def build_tier_dsp_single_channel() -> None:
         else config_dict
     )
 
-    build_log(config_dict, args.log, fallback=__name__)
+    log = build_log(config_dict, args.log, fallback=__name__)
 
     settings_dict = config_dict.options.get("settings", {})
     if isinstance(settings_dict, str):
@@ -178,6 +195,8 @@ def build_tier_dsp_single_channel() -> None:
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
+    start = time.time()
+
     build_dsp(
         args.input,
         args.output,
@@ -187,3 +206,4 @@ def build_tier_dsp_single_channel() -> None:
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
     )
+    log.info(f"Finished building DSP in {time.time()- start:.2f} seconds")

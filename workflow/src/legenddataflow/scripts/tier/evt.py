@@ -9,10 +9,8 @@ from legendmeta import LegendMetadata
 from lgdo.types import Array
 from pygama.evt import build_evt
 
-from .....FileKey import ProcessingFileKey
+from ...FileKey import ProcessingFileKey
 from ...log import build_log
-
-sto = lh5.LH5Store()
 
 
 def build_tier_evt() -> None:
@@ -95,6 +93,10 @@ def build_tier_evt() -> None:
 
     log.debug(json.dumps(evt_config.channels, indent=2))
 
+    evt_config["channel_mapping"] = {
+        f"ch{chan}": dic.name for chan, dic in chmap.map("daq.rawid").items()
+    }
+
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     file_table = {
@@ -147,6 +149,9 @@ def build_tier_evt() -> None:
                 },
                 muon_config,
             )
+            lh5.write(
+                obj=muon_table, name="evt_muon", lh5_file=args.output, wo_mode="a"
+            )
 
             muon_timestamp = muon_table[field_config["muon_timestamp"]["field"]].nda
             muon_tbl_flag = muon_table[field_config["muon_flag"]["field"]].nda
@@ -166,15 +171,14 @@ def build_tier_evt() -> None:
         )
 
     fk = ProcessingFileKey.get_filekey_from_pattern(Path(args.output).name)
-    per = np.full(len(table), fk.period)
-    run = np.full(len(table), fk.run)
-    cycle = np.full(len(table), fk.timestamp)
+    per = np.full(len(table), fk.period, dtype="S3")
+    run = np.full(len(table), fk.run[1:], dtype="S4")
+    cycle = np.full(len(table), fk.timestamp, dtype="S16")
+    table["trigger"].add_column("period", Array(per))
+    table["trigger"].add_column("run", Array(run))
+    table["trigger"].add_column("cycle", Array(cycle))
 
-    table["evt"].add_column("period", Array(per))
-    table["evt"].add_column("run", Array(run))
-    table["evt"].add_column("cycle", Array(cycle))
-
-    sto.write(obj=table, name="evt", lh5_file=args.output, wo_mode="a")
+    lh5.write(obj=table, name="evt", lh5_file=args.output, wo_mode="a")
 
 
 def _find_matching_values_with_delay(arr1, arr2, jit_delay):

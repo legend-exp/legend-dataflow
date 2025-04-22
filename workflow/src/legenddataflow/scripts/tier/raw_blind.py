@@ -11,6 +11,7 @@ is not found). This script itself does not check for the existence of such a fil
 """
 
 import argparse
+import time
 
 import numexpr as ne
 import numpy as np
@@ -18,6 +19,7 @@ from dbetto.catalog import Props
 from legendmeta import LegendMetadata, TextDB
 from lgdo import lh5
 
+from ...alias_table import alias_table
 from ...log import build_log
 
 
@@ -34,6 +36,7 @@ def build_tier_raw_blind() -> None:
     argparser.add_argument("--chan-maps", help="chan map", type=str)
     argparser.add_argument("--metadata", help="metadata", type=str)
     argparser.add_argument("--log", help="log file", type=str)
+    argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True)
@@ -41,7 +44,7 @@ def build_tier_raw_blind() -> None:
         "tier_raw_blind"
     ]
 
-    build_log(config_dict, args.log)
+    log = build_log(config_dict, args.log)
 
     hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]
     blinding_settings = Props.read_from(config_dict["config"])
@@ -68,10 +71,11 @@ def build_tier_raw_blind() -> None:
         + list(chans["puls"])
     )
 
-    store = lh5.LH5Store()
-
     # rows that need blinding
     toblind = np.array([])
+
+    log.info("Blinding Ge channels")
+    start = time.time()
 
     # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
     for chnum in chans["geds"]:
@@ -80,7 +84,7 @@ def build_tier_raw_blind() -> None:
             continue
 
         # load in just the daqenergy for now
-        daqenergy, _ = store.read(f"ch{chnum}/raw/daqenergy", args.input)
+        daqenergy = lh5.read(f"ch{chnum}/raw/daqenergy", args.input)
 
         # read in calibration curve for this channel
         blind_curve = Props.read_from(args.blind_curve)[chmap.map("daq.rawid").name][
@@ -115,8 +119,8 @@ def build_tier_raw_blind() -> None:
             chnum = int(channel[2::])
         except ValueError:
             # if this isn't an interesting channel, just copy it to the output file
-            chobj, _ = store.read(channel, args.input, decompress=False)
-            store.write_object(
+            chobj = lh5.read(channel, args.input, decompress=False)
+            lh5.write(
                 chobj,
                 channel,
                 lh5_file=args.output,
@@ -127,8 +131,8 @@ def build_tier_raw_blind() -> None:
 
         if chnum not in main_channels:
             # if this is a PMT or not included for some reason, just copy it to the output file
-            chobj, _ = store.read(channel + "/raw", args.input, decompress=False)
-            store.write_object(
+            chobj = lh5.read(channel + "/raw", args.input, decompress=False)
+            lh5.write(
                 chobj,
                 group=channel,
                 name="raw",
@@ -141,12 +145,12 @@ def build_tier_raw_blind() -> None:
         # the rest should be the Ge and SiPM channels that need to be blinded
 
         # read in all of the data but only for the unblinded events
-        blinded_chobj, _ = store.read(
+        blinded_chobj = lh5.read(
             channel + "/raw", args.input, idx=tokeep, decompress=False
         )
 
         # now write the blinded data for this channel
-        store.write_object(
+        lh5.write(
             blinded_chobj,
             group=channel,
             name="raw",
@@ -154,3 +158,9 @@ def build_tier_raw_blind() -> None:
             wo_mode="w",
             **hdf_settings,
         )
+
+    log.info("Finished blinding Ge channels")
+    log.info(f"Time taken: {time.time() - start:.2f} seconds")
+    if args.alias_table is not None:
+        log.info("Creating alias table")
+        alias_table(args.output, args.alias_table)

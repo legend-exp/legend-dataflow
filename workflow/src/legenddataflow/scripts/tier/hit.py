@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 from pathlib import Path
 
 from dbetto.catalog import Props
@@ -7,6 +8,7 @@ from legendmeta import TextDB
 from lgdo import lh5
 from pygama.hit.build_hit import build_hit
 
+from ...alias_table import alias_table
 from ...log import build_log
 
 
@@ -18,6 +20,7 @@ def build_tier_hit() -> None:
     argparser.add_argument("--configs", required=True)
     argparser.add_argument("--table-map", required=False, type=str)
     argparser.add_argument("--log")
+    argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
 
     argparser.add_argument("--datatype", required=True)
     argparser.add_argument("--timestamp", required=True)
@@ -72,8 +75,13 @@ def build_tier_hit() -> None:
             log.warning(msg)
 
     log.info("running build_hit()...")
+    start = time.time()
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     build_hit(args.input, lh5_tables_config=channel_dict, outfile=args.output)
+    log.info(f"Hit built in {time.time() - start:.2f} seconds")
+    if args.alias_table is not None:
+        log.info("Creating alias table")
+        alias_table(args.output, args.alias_table)
 
 
 def build_tier_hit_single_channel() -> None:
@@ -131,5 +139,7 @@ def build_tier_hit_single_channel() -> None:
     Props.add_to(hit_cfg, pars_dict.copy())
 
     log.info("running build_hit()...")
+    start = time.time()
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     build_hit(args.input, hit_config=channel_dict, outfile=args.output)
+    log.info(f"Hit built in {time.time() - start:.2f} seconds")
