@@ -19,20 +19,6 @@ dsp_par_catalog = ParsKeyResolve.get_par_catalog(
 )
 
 
-def _make_input_pars_file(wildcards):
-    """Prepare the input pars files for the `build_dsp` rule."""
-    # first get the files from the catalog
-    filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
-
-    # then add the spms par files
-    if wildcards.datatype not in ("cal", "xtc"):
-        filelist += [
-            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}")
-        ]
-
-    return filelist
-
-
 rule build_dsp:
     input:
         raw_file=patt.get_pattern_tier(config, "raw", check_in_cycle=False),
@@ -44,6 +30,10 @@ rule build_dsp:
         table_map=lambda wildcards: get_table_mapping(
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
         ),
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
+        ),
+        configs=ro(config_path(config)),
     output:
         tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
     log:
@@ -52,14 +42,17 @@ rule build_dsp:
         "tier-dsp"
     resources:
         runtime=300,
-        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
+        mem_swap=lambda wildcards: 90 if wildcards.datatype == "cal" else 60,
+    threads: get_threads
     shell:
         execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--tier dsp "
-        f"--configs {ro(configs)} "
+        "--configs {params.configs} "
         "--table-map '{params.table_map}' "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
+        "--alias-table '{params.alias_table}' "
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
-        "--pars-file {params.ro_input[pars_files]}"
+        "--pars-file {params.ro_input[pars_files]} "
+        "--n-processes {threads} "

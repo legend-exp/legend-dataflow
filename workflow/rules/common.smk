@@ -3,9 +3,11 @@ Helper functions for running data production
 """
 
 from pathlib import Path
+import json
+import re
 from legenddataflow import patterns as patt
-from legenddataflow import ProcessingFileKey, ParsCatalog
 from dbetto.catalog import Catalog
+from dbetto import TextDB
 from legenddataflow import utils
 
 
@@ -66,8 +68,8 @@ def set_last_rule_name(workflow, new_name):
     workflow.check_localrules()
 
 
-def get_input_par_file(setup, wildcards, tier, name):
-    allow_none = setup.get("allow_none", False)
+def get_input_par_file(config, wildcards, tier, name):
+    allow_none = config.get("allow_none", False)
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
@@ -83,7 +85,7 @@ def get_input_par_file(setup, wildcards, tier, name):
         raise ValueError(f"Could not find model in {pars_files_overwrite}")
 
 
-def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
+def get_overwrite_file(config, tier, wildcards=None, timestamp=None, name=None):
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     if timestamp is not None:
         pars_files_overwrite = Catalog.get_files(
@@ -109,7 +111,7 @@ def get_overwrite_file(tier, wildcards=None, timestamp=None, name=None):
         return out_files
 
 
-def get_search_pattern(tier):
+def get_search_pattern(config, tier):
     """
     This func gets the search pattern for the relevant tier passed.
     """
@@ -163,7 +165,56 @@ def get_table_mapping(channelmap, timestamp, datatype, tier):
     )
 
 
+def get_alias(channelmap, timestamp, datatype, tier):
+    if isinstance(channelmap, (str, Path)):
+        channelmap = TextDB(channelmap, lazy=True)
+    channel_dict = channelmap.valid_for(timestamp, system=datatype)
+    detectors = get_all_channels(channelmap, timestamp, datatype)
+    return json.dumps(
+        {
+            f"ch{channel_dict[detector].daq.rawid:07}/{tier}": f"{detector}/{tier}"
+            for detector in detectors
+        }
+    )
+
+
 def strip_channel_wildcard_constraint(files):
     if isinstance(files, str):
         files = [files]
     return [re.sub(r"\{channel,[^}]+\}", "{channel}", file) for file in files]
+
+
+def get_threads(wildcards):
+    if config.get("multiprocess", False):
+        mode = config.get("multiprocess_mode", "max_usage")
+        if mode == "max_usage":
+            return min(config.get("max_processes", 50), workflow.cores)
+        elif mode == "single":
+            return min(
+                len(
+                    get_table_mapping(
+                        channelmap_textdb,
+                        wildcards.timestamp,
+                        wildcards.datatype,
+                        "raw",
+                    )
+                ),
+                workflow.cores,
+                64,
+            )
+    else:
+        return 1
+
+
+def _make_input_pars_file(wildcards):
+    """Prepare the input pars files for the `build_dsp` rule."""
+    # first get the files from the catalog
+    filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
+
+    # then add the spms par files
+    if wildcards.datatype not in ("cal", "xtc"):
+        filelist += [
+            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}")
+        ]
+
+    return filelist

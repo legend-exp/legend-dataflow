@@ -27,7 +27,8 @@ rule build_blinding_calibration:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
-        meta=meta,
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     output:
         par_file=temp(get_pattern_pars_tmp_channel(config, "raw_blindcal")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "raw_blindcal")),
@@ -42,7 +43,7 @@ rule build_blinding_calibration:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--meta {params.meta} "
         "--plot-file {output.plot_file} "
         "--blind-curve {output.par_file} "

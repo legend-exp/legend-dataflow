@@ -4,6 +4,8 @@ from pathlib import Path
 
 from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv_pyexe
+from legenddataflow.paths import config_path
+from legenddataflow.build_chanlist import get_chanlist
 
 
 rule build_pars_dsp_tau_spms:
@@ -14,10 +16,8 @@ rule build_pars_dsp_tau_spms:
         timestamp="{timestamp}",
         datatype="{datatype}",
         channels=lambda wildcards: get_chanlist(
-            config,
             wildcards.timestamp,
             wildcards.datatype,
-            workflow,
             det_status_textdb,
             channelmap_textdb,
             system="spms",
@@ -32,15 +32,14 @@ rule build_pars_dsp_tau_spms:
                 "raw",
             )
             for channel in get_chanlist(
-                config,
                 wildcards.timestamp,
                 wildcards.datatype,
-                workflow,
                 det_status_textdb,
                 channelmap_textdb,
                 system="spms",
             )
         ],
+        configs=ro(config_path(config)),
     wildcard_constraints:
         datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     output:
@@ -50,7 +49,8 @@ rule build_pars_dsp_tau_spms:
     group:
         "par-dsp"
     shell:
-        execenv_pyexe(config, "par-spms-dsp-trg-thr-multi") + "--config-path {configs} "
+        f'{execenv_pyexe(config, "par-spms-dsp-trg-thr-multi")} '
+        "--config-path {params.configs} "
         "--raw-file {input.raw_file} "
         "--dsp-db {input.pardb} "
         "--datatype {params.datatype} "

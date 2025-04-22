@@ -9,6 +9,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
+from legenddataflow.paths import config_path, metadata_path
 from legenddataflow.execenv import execenv_pyexe
 
 
@@ -26,7 +27,7 @@ rule build_evt:
             config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            setup=config, tier="evt", wildcards=wildcards, name="xtc"
+            config=config, tier="evt", wildcards=wildcards, name="xtc"
         ),
     output:
         get_pattern_tier(config, "evt", check_in_cycle=check_in_cycle),
@@ -35,6 +36,8 @@ rule build_evt:
         datatype="{datatype}",
         tier="evt",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     log:
         get_pattern_log(config, "tier_evt", time),
     group:
@@ -43,8 +46,8 @@ rule build_evt:
         runtime=300,
         mem_swap=50,
     shell:
-        execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
-        f"--metadata {ro(meta)} "
+        execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
@@ -72,7 +75,7 @@ rule build_pet:
             config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            setup=config, tier="pet", wildcards=wildcards, name="xtc"
+            config=config, tier="pet", wildcards=wildcards, name="xtc"
         ),
     output:
         get_pattern_tier(config, "pet", check_in_cycle=check_in_cycle),
@@ -81,6 +84,8 @@ rule build_pet:
         datatype="{datatype}",
         tier="pet",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     log:
         get_pattern_log(config, "tier_pet", time),
     group:
@@ -89,8 +94,8 @@ rule build_pet:
         runtime=300,
         mem_swap=50,
     shell:
-        execenv_pyexe(config, "build-tier-evt") + f"--configs {ro(configs)} "
-        f"--metadata {ro(meta)} "
+        execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--log {log} "
         "--tier {params.tier} "
         "--datatype {params.datatype} "

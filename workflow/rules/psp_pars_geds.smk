@@ -14,6 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_tier,
 )
+from legenddataflow.paths import config_path
 from legenddataflow.execenv import execenv_pyexe
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
@@ -55,6 +56,7 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     psp_par_catalog, partition, key, tier="psp"
                 ),
+                configs=ro(config_path(config)),
             output:
                 psp_pars=temp(
                     part.get_par_files(
@@ -98,7 +100,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
-                "--configs {configs} "
+                "--configs {params.configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
@@ -128,6 +130,7 @@ rule build_par_psp_fallback:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        configs=ro(config_path(config)),
     output:
         psp_pars=temp(get_pattern_pars_tmp_channel(config, "psp", "eopt")),
         psp_objs=temp(
@@ -142,7 +145,7 @@ rule build_par_psp_fallback:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -167,11 +170,11 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 rule build_svm_psp:
     input:
         hyperpars=lambda wildcards: get_input_par_file(
-            setup=config, wildcards=wildcards, tier="psp", name="svm_hyperpars"
+            config=config, wildcards=wildcards, tier="psp", name="svm_hyperpars"
         ),
         train_data=lambda wildcards: str(
             get_input_par_file(
-                setup=config, wildcards=wildcards, tier="psp", name="svm_hyperpars"
+                config=config, wildcards=wildcards, tier="psp", name="svm_hyperpars"
             )
         ).replace("hyperpars.yaml", "train.lh5"),
     output:
@@ -179,6 +182,7 @@ rule build_svm_psp:
     params:
         timestamp="{timestamp}",
         datatype="cal",
+        configs=ro(config_path(config)),
     log:
         str(get_pattern_log(config, "pars_psp_svm", time)).replace("{datatype}", "cal"),
     group:
@@ -192,7 +196,7 @@ rule build_svm_psp:
         "--output-file {output.dsp_pars} "
         "--timestamp {params.timestamp} "
         "--datatype {params.datatype} "
-        "--configs {configs} "
+        "--configs {params.configs} "
 
 
 rule build_pars_psp_svm:

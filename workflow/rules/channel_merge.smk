@@ -3,6 +3,7 @@ import inspect
 from legenddataflow import patterns
 from legenddataflow.utils import set_last_rule_name
 from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.build_chanlist import get_plt_chanlist, get_par_chanlist
 
 
 def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
@@ -14,7 +15,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 tier,
-                basedir,
                 det_status_textdb,
                 channelmap_textdb,
                 system=system,
@@ -36,7 +36,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 tier,
-                basedir,
                 det_status_textdb,
                 channelmap_textdb,
                 system=system,
@@ -67,7 +66,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
                     config,
                     f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                     tier,
-                    basedir,
                     det_status_textdb,
                     channelmap_textdb,
                     system=system,
@@ -96,7 +94,6 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
                 lh5_tier,
-                basedir,
                 det_status_textdb,
                 channelmap_textdb,
                 system=system,
