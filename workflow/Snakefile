@@ -24,11 +24,17 @@ from legenddataflow import CalGrouping, execenv, utils
 import legenddataflow.paths as paths
 from legenddataflow.patterns import get_pattern_tier
 from legenddataflow.pre_compile_catalog import pre_compile_catalog
+from legenddataflow.build_filelist import get_filelist
+
+
+envvars:
+    "PRODENV",
+
+
+os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
-
-os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
 check_in_cycle = True
 configs = paths.config_path(config)
@@ -60,8 +66,6 @@ wildcard_constraints:
 
 
 include: "rules/channel_merge.smk"
-include: "rules/filelist_gen.smk"
-include: "rules/chanlist_gen.smk"
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"
@@ -196,5 +200,7 @@ rule gen_filelist:
         ),
     output:
         temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
+    log:
+        Path(paths.tmp_log_path(config)) / time / "filelists" / "{label}-{tier}.log",
     script:
         "src/legenddataflow/scripts/write_filelist.py"
