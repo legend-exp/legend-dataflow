@@ -2,6 +2,7 @@ import argparse
 import json
 import time
 import warnings
+from multiprocessing import Pool
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,11 @@ def _replace_list_with_array(dic):
         else:
             pass
     return dic
+
+
+def build_dsp_wrapper(kwargs):
+    build_dsp(**kwargs)
+    return
 
 
 def build_tier_dsp() -> None:
@@ -116,17 +122,63 @@ def build_tier_dsp() -> None:
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     start = time.time()
+    if args.n_processes > 1:
+        # sort by table lengths, longest tables first
+        dsp_cfg_tbl_dict = dict(
+            sorted(
+                dsp_cfg_tbl_dict.items(),
+                key=lambda item: lh5.read_n_rows(item[0], args.input),
+                reverse=True,
+            )
+        )
 
-    build_dsp(
-        args.input,
-        args.output,
-        database=database_dict,
-        chan_config=dsp_cfg_tbl_dict,
-        write_mode="r",
-        buffer_len=settings_dict.get("buffer_len", 1000),
-        block_width=settings_dict.get("block_width", 16),
-        # n_processes=args.n_processes,
-    )
+        chan_configs = [{} for _ in range(args.n_processes)]
+        for i, key in enumerate(dsp_cfg_tbl_dict):
+            chan_configs[i % args.n_processes][key] = dsp_cfg_tbl_dict[key]
+
+        dsp_files = [
+            f"{args.output}{i}" if i > 0 else args.output
+            for i in range(args.n_processes)
+        ]
+
+        # Process arguments for each worker
+        process_kwargs_list = []
+        for i, config in enumerate(chan_configs):
+            kwargs = {
+                "f_raw": args.input,
+                "f_dsp": dsp_files[i],
+                "chan_config": config,
+                "database": database_dict,
+                "write_mode": "r",
+                "buffer_len": settings_dict.get("buffer_len", 1000),
+                "block_width": settings_dict.get("block_width", 16),
+            }
+            process_kwargs_list.append(kwargs)
+
+        # Create a multiprocessing pool
+        with Pool(processes=args.n_processes) as pool:
+            # Use starmap to pass multiple arguments to the process function
+            pool.map(build_dsp_wrapper, process_kwargs_list)
+
+        # merge the DSPs
+        log.info("Merging DSPs")
+        for i, file in enumerate(dsp_files[1:]):
+            chans = chan_configs[i + 1]
+            for chan in chans:
+                tbl = lh5.read(chan.replace("raw", "dsp"), file)
+                lh5.write(tbl, chan.replace("raw", "dsp"), args.output, wo_mode="a")
+            Path(file).unlink()
+
+    else:
+        build_dsp(
+            args.input,
+            args.output,
+            database=database_dict,
+            chan_config=dsp_cfg_tbl_dict,
+            write_mode="r",
+            buffer_len=settings_dict.get("buffer_len", 1000),
+            block_width=settings_dict.get("block_width", 16),
+        )
 
     log.info(f"Finished building DSP in {time.time()- start:.2f} seconds")
     if args.alias_table is not None:
