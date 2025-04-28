@@ -171,8 +171,8 @@ def build_tier_evt() -> None:
         )
 
     fk = ProcessingFileKey.get_filekey_from_pattern(Path(args.output).name)
-    per = np.full(len(table), fk.period, dtype="S3")
-    run = np.full(len(table), fk.run[1:], dtype="S4")
+    per = np.full(len(table), int(fk.period[1:]))
+    run = np.full(len(table), int(fk.run[1:]))
     cycle = np.full(len(table), fk.timestamp, dtype="S16")
     table["trigger"].add_column("period", Array(per))
     table["trigger"].add_column("run", Array(run))
