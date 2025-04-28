@@ -1,9 +1,11 @@
 import glob
-import json, yaml
+import json
 from pathlib import Path
 
-from .FileKey import FileKey, run_grouper
+import yaml
+
 from . import patterns as patt
+from .FileKey import FileKey, run_grouper
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -56,9 +58,8 @@ def get_analysis_runs(
                     ignore_keys = yaml.safe_load(f)
 
             else:
-                raise ValueError(
-                    "ignore_keys_file file not in json, yaml or keylist format"
-                )
+                msg = "ignore_keys_file file not in json, yaml or keylist format"
+                raise ValueError(msg)
 
         else:
             msg = f"no ignore_keys file found: {ignore_keys_file}"
@@ -90,7 +91,6 @@ def get_analysis_runs(
 
 
 def get_keys(keypart):
-
     key = FileKey.parse_keypart(keypart)
 
     item_list = []
@@ -184,7 +184,7 @@ def build_filelist(
         if Path(search_pattern).suffix == ".*":
             search_pattern = Path(search_pattern).with_suffix(".{ext}")
         fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
-        files = glob.glob(fn_glob_pattern)
+        files = glob.glob(fn_glob_pattern)  # noqa: PTH207
         for f in files:
             _key = FileKey.get_filekey_from_pattern(f, search_pattern)
             if _key.name in ignore_keys:

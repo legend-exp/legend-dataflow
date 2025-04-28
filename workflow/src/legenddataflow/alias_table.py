@@ -1,5 +1,7 @@
 import json
+
 import h5py
+
 
 def alias_table(file, mapping):
     """

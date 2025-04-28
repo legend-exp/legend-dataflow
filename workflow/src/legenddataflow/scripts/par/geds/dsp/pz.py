@@ -15,6 +15,7 @@ from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
+
 def par_geds_dsp_pz() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--configs", help="configs path", type=str, required=True)
@@ -176,8 +177,12 @@ def par_geds_dsp_pz() -> None:
             )
 
             zoomed = tau.plot_waveforms_after_correction(
-                tb_data, "wf_pz", norm_param=kwarg_dict.get("norm_param", "pz_mean"),
-                xlim = [400, 1020], ylim= [0.8,1.1])
+                tb_data,
+                "wf_pz",
+                norm_param=kwarg_dict.get("norm_param", "pz_mean"),
+                xlim=[400, 1020],
+                ylim=[0.8, 1.1],
+            )
 
             plot_dict.update({"waveforms_zoomed": zoomed["waveforms"]})
 
