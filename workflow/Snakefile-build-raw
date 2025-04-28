@@ -22,6 +22,11 @@ os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
+# NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
+metadata = LegendMetadata(meta_path, lazy=True)
+if "legend_metadata_version" in config:
+    metadata.checkout(config.legend_metadata_version)
+
 check_in_cycle = True
 swenv = execenv.execenv_prefix(config)
 meta_path = paths.metadata_path(config)
@@ -33,11 +38,6 @@ meta = paths.metadata_path(config)
 channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
-
-# NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
-metadata = LegendMetadata(meta_path, lazy=True)
-if "legend_metadata_version" in config:
-    metadata.checkout(config.legend_metadata_version)
 
 
 wildcard_constraints:
