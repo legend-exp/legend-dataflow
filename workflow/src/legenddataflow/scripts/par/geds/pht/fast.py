@@ -18,30 +18,12 @@ from workflow.src.legenddataflow.scripts.par.geds.pht.ecal_part import (
 )
 from workflow.src.legenddataflow.scripts.par.geds.pht.lq import run_lq_calibration
 
-from .....FileKey import ChannelProcKey, ProcessingFileKey
+from .....FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 warnings.filterwarnings(action="ignore", category=np.RankWarning)
-
-
-def run_splitter(files):
-    """
-    Returns list containing lists of each run
-    """
-
-    runs = []
-    run_files = []
-    for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
-        if f"{fk.period}-{fk.run}" not in runs:
-            runs.append(f"{fk.period}-{fk.run}")
-            run_files.append([])
-        for i, run in enumerate(runs):
-            if run == f"{fk.period}-{fk.run}":
-                run_files[i].append(file)
-    return run_files
 
 
 def par_geds_pht_fast() -> None:

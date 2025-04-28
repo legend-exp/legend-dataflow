@@ -52,13 +52,17 @@ dynamic = ["version"]
 dependencies = [
     "colorlog",
     "dbetto>=1.2.3",
-    "pygama>=2.0.5",
-    "dspeed>=1.6",
+    "pygama==2.1.1a1",
+    "dspeed==1.6.6a1",
     "pylegendmeta>=1.2",
-    "legend-pydataobj>=1.11.6",
-    "legend-daq2lh5>=1.4",
+    "legend-pydataobj==1.12.0a3",
+    "legend-daq2lh5",
     "pip",
 ]
+# "legend-daq2lh5 @  file:///${PROJECT_ROOT}/software/python/src/legend-daq2lh5
+# "pygama @ file:///${PROJECT_ROOT}/software/python/src/pygama",
+# "dspeed @ file:///${PROJECT_ROOT}/software/python/src/dspeed",
+# "legend-pydataobj @ file:///${PROJECT_ROOT}/software/python/src/legend-pydataobj",
 
 [project.optional-dependencies]
 # these are needed to run the data production
@@ -92,6 +96,8 @@ build-filedb            = "legenddataflow.scripts.filedb:build_filedb"
 build-tier-dsp          = "legenddataflow.scripts.tier.dsp:build_tier_dsp"
 build-tier-evt          = "legenddataflow.scripts.tier.evt:build_tier_evt"
 build-tier-hit          = "legenddataflow.scripts.tier.hit:build_tier_hit"
+build-tier-dsp-single-channel = "legenddataflow.scripts.tier.dsp:build_tier_dsp_single_channel"
+build-tier-hit-single-channel = "legenddataflow.scripts.tier.hit:build_tier_hit_single_channel"
 build-tier-raw-blind    = "legenddataflow.scripts.tier.raw_blind:build_tier_raw_blind"
 build-tier-raw-fcio     = "legenddataflow.scripts.tier.raw_fcio:build_tier_raw_fcio"
 build-tier-raw-orca     = "legenddataflow.scripts.tier.raw_orca:build_tier_raw_orca"
@@ -103,7 +109,7 @@ par-geds-dsp-evtsel     = "legenddataflow.scripts.par.geds.dsp.evtsel:par_geds_d
 par-geds-dsp-nopt       = "legenddataflow.scripts.par.geds.dsp.nopt:par_geds_dsp_nopt"
 par-geds-dsp-svm-build  = "legenddataflow.scripts.par.geds.dsp.svm_build:par_geds_dsp_svm_build"
 par-geds-dsp-svm        = "legenddataflow.scripts.par.geds.dsp.svm:par_geds_dsp_svm"
-par-geds-dsp-tau        = "legenddataflow.scripts.par.geds.dsp.tau:par_geds_dsp_tau"
+par-geds-dsp-pz        = "legenddataflow.scripts.par.geds.dsp.pz:par_geds_dsp_pz"
 par-geds-hit-aoe        = "legenddataflow.scripts.par.geds.hit.aoe:par_geds_hit_aoe"
 par-geds-hit-ecal       = "legenddataflow.scripts.par.geds.hit.ecal:par_geds_hit_ecal"
 par-geds-hit-lq         = "legenddataflow.scripts.par.geds.hit.lq:par_geds_hit_lq"

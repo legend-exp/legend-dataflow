@@ -21,19 +21,26 @@ import logging
 from dbetto import AttrsDict, TextDB
 from legendmeta import LegendMetadata
 from legenddataflow import CalGrouping, execenv, utils
+import legenddataflow.paths as paths
 from legenddataflow.patterns import get_pattern_tier
 from legenddataflow.pre_compile_catalog import pre_compile_catalog
+from legenddataflow.build_filelist import get_filelist
+
+
+envvars:
+    "PRODENV",
+
+
+os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
-os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
-
 check_in_cycle = True
-configs = utils.config_path(config)
-chan_maps = utils.chan_map_path(config)
-meta = utils.metadata_path(config)
-det_status = utils.det_status_path(config)
+configs = paths.config_path(config)
+chan_maps = paths.chan_map_path(config)
+meta = paths.metadata_path(config)
+det_status = paths.det_status_path(config)
 basedir = workflow.basedir
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
@@ -59,8 +66,6 @@ wildcard_constraints:
 
 
 include: "rules/channel_merge.smk"
-include: "rules/filelist_gen.smk"
-include: "rules/chanlist_gen.smk"
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"
@@ -98,7 +103,7 @@ onstart:
         )
 
         # Log parameter catalogs in validity files
-    hit_par_cat_file = Path(utils.pars_path(config)) / "hit" / "validity.yaml"
+    hit_par_cat_file = Path(paths.pars_path(config)) / "hit" / "validity.yaml"
     if hit_par_cat_file.is_file():
         hit_par_cat_file.unlink()
     try:
@@ -107,7 +112,7 @@ onstart:
     except NameError:
         print("No hit parameter catalog found")
 
-    pht_par_cat_file = Path(utils.pars_path(config)) / "pht" / "validity.yaml"
+    pht_par_cat_file = Path(paths.pars_path(config)) / "pht" / "validity.yaml"
     if pht_par_cat_file.is_file():
         pht_par_cat_file.unlink()
     try:
@@ -116,7 +121,7 @@ onstart:
     except NameError:
         print("No pht parameter catalog found")
 
-    dsp_par_cat_file = Path(utils.pars_path(config)) / "dsp" / "validity.yaml"
+    dsp_par_cat_file = Path(paths.pars_path(config)) / "dsp" / "validity.yaml"
     if dsp_par_cat_file.is_file():
         dsp_par_cat_file.unlink()
     try:
@@ -125,7 +130,7 @@ onstart:
     except NameError:
         print("No dsp parameter catalog found")
 
-    psp_par_cat_file = Path(utils.pars_path(config)) / "psp" / "validity.yaml"
+    psp_par_cat_file = Path(paths.pars_path(config)) / "psp" / "validity.yaml"
     if psp_par_cat_file.is_file():
         psp_par_cat_file.unlink()
     try:
@@ -169,12 +174,12 @@ onsuccess:
         if os.path.isfile(file):
             os.remove(file)
 
-    files = glob.glob(os.path.join(utils.filelist_path(config), "*"))
+    files = glob.glob(os.path.join(paths.filelist_path(config), "*"))
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
-    if os.path.exists(utils.filelist_path(config)):
-        os.rmdir(utils.filelist_path(config))
+    if os.path.exists(paths.filelist_path(config)):
+        os.rmdir(paths.filelist_path(config))
 
 
 rule gen_filelist:
@@ -194,6 +199,8 @@ rule gen_filelist:
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
-        temp(Path(utils.filelist_path(config)) / "{label}-{tier}.filelist"),
+        temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
+    log:
+        Path(paths.tmp_log_path(config)) / time / "filelists" / "{label}-{tier}.log",
     script:
         "src/legenddataflow/scripts/write_filelist.py"

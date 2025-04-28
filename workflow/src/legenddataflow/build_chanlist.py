@@ -1,23 +1,17 @@
 # ruff: noqa: F821, T201
 
-import os
-import random
-import re
 from pathlib import Path
+
+from dbetto import TextDB
 
 from legenddataflow.FileKey import ChannelProcKey
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from legenddataflow import execenv_pyexe
-from legenddataflow.utils import filelist_path
-from dbetto import TextDB
-from dbetto.catalog import Catalog
 
 
-def get_chanlist(config, timestamp, datatype, workflow, det_status, channelmap, system):
-
+def get_chanlist(timestamp, datatype, det_status, channelmap, system):
     if isinstance(det_status, (str, Path)):
         det_status = TextDB(det_status, lazy=True)
 
@@ -44,7 +38,7 @@ def get_chanlist(config, timestamp, datatype, workflow, det_status, channelmap, 
         channels.append(channel)
 
     if len(channels) == 0:
-        print("WARNING: No channels found")  # noqa: T201
+        print("WARNING: No channels found")
 
     return channels
 
@@ -53,7 +47,6 @@ def get_par_chanlist(
     setup,
     keypart,
     tier,
-    basedir,
     det_status,
     chan_maps,
     system,
@@ -63,38 +56,28 @@ def get_par_chanlist(
 ):
     key = ChannelProcKey.parse_keypart(keypart)
 
-    chan_list = get_chanlist(
-        setup, key.timestamp, key.datatype, workflow, det_status, chan_maps, system
-    )
+    chan_list = get_chanlist(key.timestamp, key.datatype, det_status, chan_maps, system)
 
     par_pattern = get_pattern_pars_tmp_channel(
         setup, tier, name, datatype=datatype, extension=extension
     )
 
-    filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
-
-    return filenames
+    return ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
 
 
 def get_plt_chanlist(
     setup,
     keypart,
     tier,
-    basedir,
     det_status,
     chan_maps,
     system,
     name=None,
 ):
-
     key = ChannelProcKey.parse_keypart(keypart)
 
-    chan_list = get_chanlist(
-        setup, key.timestamp, key.datatype, workflow, det_status, chan_maps, system
-    )
+    chan_list = get_chanlist(key.timestamp, key.datatype, det_status, chan_maps, system)
 
     par_pattern = get_pattern_plts_tmp_channel(setup, tier, name)
 
-    filenames = ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)
-
-    return filenames
+    return ChannelProcKey.get_channel_files(keypart, par_pattern, chan_list)

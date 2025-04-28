@@ -1,6 +1,11 @@
+"""
+Helper rule for building qc using physics data where fft data is not available
+"""
+
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.utils import filelist_path, set_last_rule_name
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.paths import filelist_path, config_path
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -12,9 +17,9 @@ from legenddataflow.patterns import (
     get_pattern_pars,
 )
 from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.build_chanlist import get_par_chanlist, get_plt_chanlist
 
 intier = "psp"
-
 
 qc_pht_rules = {}
 for key, dataset in part.datasets.items():
@@ -31,6 +36,7 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
+                configs=config_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -68,7 +74,7 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
-                "--configs {configs} "
+                "--configs {params.configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
@@ -88,14 +94,15 @@ for key, dataset in part.datasets.items():
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_pht_qc_phy:
     input:
-        phy_files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-phy-" + f"{intier}.filelist",
+        phy_files=(
+            Path(filelist_path(config))
+            / f"all-{{experiment}}-{{period}}-{{run}}-phy-{intier}.filelist",
         ),
     params:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
+        configs=config_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qcphy")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qcphy")),
@@ -108,7 +115,7 @@ rule build_pht_qc_phy:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -134,15 +141,18 @@ rule build_plts_pht_phy:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
-            basedir,
             det_status,
             chan_maps,
             name="qcphy",
         ),
     output:
         get_pattern_plts(config, "pht", "qc_phy"),
+    log:
+        str(get_pattern_log(config, "plts_pht_qc_phy_merge", time)).replace(
+            "{datatype}", "phy"
+        ),
     group:
-        "merge-hit"
+        "merge-pht"
     shell:
         execenv_pyexe(config, "merge-channels") + "--input {input} "
         "--output {output} "
@@ -154,7 +164,6 @@ rule build_pars_pht_phy:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
-            basedir,
             det_status,
             chan_maps,
             name="qcphy",
@@ -162,8 +171,12 @@ rule build_pars_pht_phy:
         plts=get_pattern_plts(config, "pht", "qc_phy"),
     output:
         get_pattern_pars(config, "pht", name="qc_phy", check_in_cycle=check_in_cycle),
+    log:
+        str(get_pattern_log(config, "pars_pht_qc_phy_merge", time)).replace(
+            "{datatype}", "phy"
+        ),
     group:
-        "merge-hit"
+        "merge-pht"
     shell:
         execenv_pyexe(config, "merge-channels") + "--input {input.infiles} "
         "--output {output} "

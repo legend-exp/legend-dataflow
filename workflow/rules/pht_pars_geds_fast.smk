@@ -1,6 +1,13 @@
+"""
+This file serves as an override for the normal pht pars building where all
+the rules are done in one step to minimize i/o.
+"""
+
+from pathlib import Path
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.utils import filelist_path, set_last_rule_name
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.paths import filelist_path, config_path, metadata_path
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -69,6 +76,8 @@ for key, dataset in part.datasets.items():
                     wildcards.channel,
                     "dsp",
                 ),
+                configs=config_path(config),
+                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -115,14 +124,13 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-fast") + "--log {log} "
-                "--configs {configs} "
-                "--metadata {meta} "
+                "--configs {params.configs} "
+                "--metadata {params.meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
                 "--table-name {params.dsp_table_name} "
-                "--metadata {meta} "
                 "--fit-results {output.partcal_results} "
                 "--eres-file {input.eres_file} "
                 "--hit-pars {output.hit_pars} "
@@ -144,9 +152,9 @@ for key, dataset in part.datasets.items():
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule par_pht_fast:
     input:
-        files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal" + f"-{intier}.filelist",
+        files=(
+            Path(filelist_path(config))
+            / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         ),
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ecal_file=get_pattern_pars_tmp_channel(config, "pht", "energy_cal"),
@@ -166,6 +174,8 @@ rule par_pht_fast:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         partcal_results=temp(
@@ -181,13 +191,12 @@ rule par_pht_fast:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-fast") + "--log {log} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--table-name {params.dsp_table_name} "
-        "--metadata {meta} "
         "--inplots {input.inplots} "
         "--fit-results {output.partcal_results} "
         "--eres-file {input.eres_file} "

@@ -18,6 +18,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.paths import config_path, metadata_path
 from legenddataflow.execenv import execenv_pyexe
 
 
@@ -31,7 +32,7 @@ rule par_hit_qc:
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        overwrite_files=lambda wildcards: get_overwrite_file("hit", wildcards),
+        overwrite_files=lambda wildcards: get_overwrite_file(config, "hit", wildcards),
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -44,6 +45,7 @@ rule par_hit_qc:
             wildcards.channel,
             "dsp",
         ),
+        configs=ro(config_path(config)),
     output:
         qc_file=temp(get_pattern_pars_tmp_channel(config, "hit", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "qc")),
@@ -58,7 +60,7 @@ rule par_hit_qc:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--save-path {output.qc_file} "
@@ -94,6 +96,8 @@ rule par_hit_energy_calibration:
             wildcards.channel,
             "dsp",
         ),
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
         results_file=temp(
@@ -113,8 +117,8 @@ rule par_hit_energy_calibration:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
@@ -148,6 +152,7 @@ rule par_hit_aoe_calibration:
             wildcards.channel,
             "dsp",
         ),
+        configs=ro(config_path(config)),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit", "aoe_cal")),
         aoe_results=temp(
@@ -164,7 +169,7 @@ rule par_hit_aoe_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-aoe") + "--log {log} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -201,6 +206,7 @@ rule build_lq_calibration:
             wildcards.channel,
             "dsp",
         ),
+        configs=ro(config_path(config)),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit")),
         lq_results=temp(
@@ -215,7 +221,7 @@ rule build_lq_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-lq") + "--log {log} "
-        "--configs {configs} "
+        "--configs {params.configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "

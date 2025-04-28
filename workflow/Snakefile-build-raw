@@ -10,20 +10,27 @@ import os, sys
 from pathlib import Path
 from legenddataflow import patterns as patt
 from legenddataflow import utils, execenv, ParsKeyResolve
+import legenddataflow.paths as paths
 from datetime import datetime
-from dbetto import AttrsDict
+from dbetto import AttrsDict, TextDB
 from legendmeta import LegendMetadata
+from legenddataflow.pre_compile_catalog import pre_compile_catalog
+from legenddataflow.build_filelist import get_filelist
+
+os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
 utils.subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
 check_in_cycle = True
 swenv = execenv.execenv_prefix(config)
-meta_path = utils.metadata_path(config)
-det_status = utils.det_status_path(config)
-configs = utils.config_path(config)
-chan_maps = utils.chan_map_path(config)
-meta = utils.metadata_path(config)
+meta_path = paths.metadata_path(config)
+det_status = paths.det_status_path(config)
+configs = paths.config_path(config)
+chan_maps = paths.chan_map_path(config)
+meta = paths.metadata_path(config)
+
+channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
@@ -47,7 +54,6 @@ localrules:
 
 
 include: "rules/common.smk"
-include: "rules/filelist_gen.smk"
 include: "rules/main.smk"
 include: "rules/raw.smk"
 include: "rules/blinding_check.smk"
@@ -62,7 +68,7 @@ onstart:
             execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'"
         )
 
-    raw_par_cat_file = Path(utils.pars_path(config)) / "raw" / "validity.yaml"
+    raw_par_cat_file = Path(paths.pars_path(config)) / "raw" / "validity.yaml"
     if raw_par_cat_file.is_file():
         raw_par_cat_file.unlink()
     try:
@@ -74,7 +80,7 @@ onstart:
 
 onsuccess:
     shell("rm -f *.gen")
-    shell(f"rm -rf {utils.filelist_path(config)}/*")
+    shell(f"rm -rf {paths.filelist_path(config)}/*")
 
 
 rule gen_filelist:
@@ -82,35 +88,40 @@ rule gen_filelist:
         lambda wildcards: get_filelist(
             wildcards,
             config,
-            get_search_pattern(wildcards.tier),
+            get_search_pattern(config, wildcards.tier),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
         ),
     output:
-        temp(Path(utils.filelist_path(config)) / "{label}-{tier}.filelist"),
+        temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
     script:
         "src/legenddataflow/scripts/write_filelist.py"
 
 
 rule sort_data:
-    """Move DAQ data from sandbox to organized folder.
+    """
+    Move DAQ data from sandbox to organized folder.
 
     This rules moves the DAQ data from the unsorted sandbox directory to the
     correct location in the `tier_raw` folder.
     """
     input:
-        patt.get_pattern_tier_daq_unsorted(config),
+        patt.get_pattern_tier_daq_unsorted(config, extension="{ext}"),
     output:
-        patt.get_pattern_tier_daq(config),
+        patt.get_pattern_tier_daq(config, extension="{ext}"),
     shell:
         "mv {input} {output}"
 
 
-use rule sort_data as sort_data_fcio with:
+rule compress_data:
+    """
+    Compress raw data. It uses pbzip2 to compress the data in parallel.
+    Currently only for ORCA data.
+    """
     input:
-        patt.get_pattern_tier_daq_unsorted(config, extension="fcio"),
+        patt.get_pattern_tier_daq(config, extension="orca"),
     output:
-        patt.get_pattern_tier_daq(config, extension="fcio"),
-
-
-# vim: filetype=snakemake
+        patt.get_pattern_tier_daq(config, extension="orca.bz2"),
+    threads: 10
+    shell:
+        "pbzip2 -p{threads} -z {input}"

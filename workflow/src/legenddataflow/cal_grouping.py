@@ -7,13 +7,13 @@ from pathlib import Path
 from dbetto import Props
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
+from .paths import filelist_path
 from .patterns import (
     get_pattern_log_channel,
     get_pattern_pars,
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
-from .utils import filelist_path
 
 
 class CalGrouping:

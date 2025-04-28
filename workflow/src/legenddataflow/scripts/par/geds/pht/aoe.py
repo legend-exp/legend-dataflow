@@ -16,29 +16,11 @@ from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.AoE_cal import CalAoE, Pol1, SigmaFit, aoe_peak
 from pygama.pargen.utils import load_data
 
-from .....FileKey import ChannelProcKey, ProcessingFileKey
+from .....FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-
-
-def run_splitter(files):
-    """
-    Returns list containing lists of each run
-    """
-
-    runs = []
-    run_files = []
-    for file in files:
-        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
-        if f"{fk.period}-{fk.run}" not in runs:
-            runs.append(f"{fk.period}-{fk.run}")
-            run_files.append([])
-        for i, run in enumerate(runs):
-            if run == f"{fk.period}-{fk.run}":
-                run_files[i].append(file)
-    return run_files
 
 
 def get_results_dict(aoe_class):

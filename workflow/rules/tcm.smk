@@ -8,6 +8,7 @@ from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_log_channel,
 )
+from legenddataflow.paths import metadata_path
 from legenddataflow.execenv import execenv_pyexe
 
 
@@ -50,6 +51,7 @@ rule build_pulser_ids:
         rawid=lambda wildcards: channelmap_textdb.valid_for(
             wildcards.timestamp, system="cal"
         )[wildcards.channel].daq.rawid,
+        metadata=metadata_path(config),
     output:
         pulser=temp(get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids")),
     log:
@@ -67,4 +69,4 @@ rule build_pulser_ids:
         "--rawid {params.rawid} "
         "--tcm-files {params.input} "
         "--pulser-file {output.pulser} "
-        "--metadata {meta} "
+        "--metadata {params.metadata} "

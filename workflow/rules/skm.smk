@@ -8,6 +8,7 @@ from legenddataflow.patterns import (
     get_pattern_pars,
     get_pattern_log_concat,
 )
+from legenddataflow.paths import config_path
 from legenddataflow.execenv import execenv_pyexe
 
 
@@ -20,6 +21,7 @@ rule build_skm:
         timestamp="20230410T000000Z",
         datatype="phy",
         ro_input=lambda _, input: ro(input),
+        configs=ro(config_path(config)),
     log:
         get_pattern_log_concat(config, "tier_skm", time),
     group:
@@ -27,7 +29,7 @@ rule build_skm:
     resources:
         runtime=300,
     shell:
-        execenv_pyexe(config, "build-tier-skm") + f"--configs {ro(configs)} "
+        execenv_pyexe(config, "build-tier-skm") + "--configs {params.configs} "
         "--timestamp {params.timestamp} "
         "--log {log} "
         "--datatype {params.datatype} "

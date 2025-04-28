@@ -5,6 +5,11 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_tier_raw_blind,
 )
+from legenddataflow.paths import (
+    config_path,
+    chan_map_path,
+    metadata_path,
+)
 from legenddataflow.utils import set_last_rule_name
 from legenddataflow.create_pars_keylist import ParsKeyResolve
 from legenddataflow.execenv import execenv_pyexe
@@ -30,6 +35,11 @@ rule build_raw_orca:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: ro(input),
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
+        ),
+        configs=ro(config_path(config)),
+        chan_maps=ro(chan_map_path(config)),
     output:
         get_pattern_tier(config, "raw", check_in_cycle=check_in_cycle),
     log:
@@ -41,11 +51,12 @@ rule build_raw_orca:
         runtime=300,
     shell:
         execenv_pyexe(config, "build-tier-raw-orca") + "--log {log} "
-        f"--configs {ro(configs)} "
-        f"--chan-maps {ro(chan_maps)} "
+        "--configs {params.configs} "
+        "--chan-maps {params.chan_maps} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
-        "{params.ro_input} {output}"
+        "--alias-table '{params.alias_table}' "
+        "{params.ro_input} {output} "
 
 
 use rule build_raw_orca as build_raw_orca_bz2 with:
@@ -68,6 +79,11 @@ rule build_raw_fcio:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: ro(input),
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
+        ),
+        configs=ro(config_path(config)),
+        chan_maps=ro(chan_map_path(config)),
     output:
         get_pattern_tier(config, "raw", check_in_cycle=check_in_cycle),
     log:
@@ -79,10 +95,11 @@ rule build_raw_fcio:
         runtime=300,
     shell:
         execenv_pyexe(config, "build-tier-raw-fcio") + "--log {log} "
-        f"--configs {ro(configs)} "
-        f"--chan-maps {ro(chan_maps)} "
+        "--configs {params.configs} "
+        "--chan-maps {params.chan_maps} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
+        "--alias-table '{params.alias_table}' "
         "{params.ro_input} {output}"
 
 
@@ -100,6 +117,12 @@ rule build_raw_blind:
         timestamp="{timestamp}",
         datatype="phy",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
+        ),
+        configs=ro(config_path(config)),
+        chan_maps=ro(chan_map_path(config)),
+        metadata=ro(metadata_path(config)),
     output:
         get_pattern_tier_raw_blind(config),
     log:
@@ -113,11 +136,12 @@ rule build_raw_blind:
         runtime=300,
     shell:
         execenv_pyexe(config, "build-tier-raw-blind") + "--log {log} "
-        f"--configs {ro(configs)} "
-        f"--chan-maps {ro(chan_maps)} "
-        f"--metadata {ro(meta)} "
+        "--configs {params.configs} "
+        "--chan-maps {params.chan_maps} "
+        "--metadata {params.metadata} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
+        "--alias-table '{params.alias_table}' "
         "--blind-curve {params.ro_input[blind_file]} "
         "--input {params.ro_input[tier_file]} "
         "--output {output}"

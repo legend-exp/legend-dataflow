@@ -1,9 +1,11 @@
 import glob
-import json, yaml
+import json
 from pathlib import Path
 
-from legenddataflow.FileKey import FileKey, run_grouper
-from legenddataflow import patterns as patt
+import yaml
+
+from . import patterns as patt
+from .FileKey import FileKey, run_grouper
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -20,8 +22,8 @@ def expand_runs(in_dict):
     """
     for per, datalist in in_dict.items():
         for datatype, run_list in datalist.items():
-            if isinstance(run_list, str) and ".." in runs:
-                start, end = runs.split("..")
+            if isinstance(run_list, str) and ".." in run_list:
+                start, end = run_list.split("..")
                 in_dict[per][datatype] = [
                     f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
                 ]
@@ -56,9 +58,8 @@ def get_analysis_runs(
                     ignore_keys = yaml.safe_load(f)
 
             else:
-                raise ValueError(
-                    "ignore_keys_file file not in json, yaml or keylist format"
-                )
+                msg = "ignore_keys_file file not in json, yaml or keylist format"
+                raise ValueError(msg)
 
         else:
             msg = f"no ignore_keys file found: {ignore_keys_file}"
@@ -90,7 +91,6 @@ def get_analysis_runs(
 
 
 def get_keys(keypart):
-
     key = FileKey.parse_keypart(keypart)
 
     item_list = []
@@ -123,7 +123,7 @@ def get_pattern(config, tier):
         fn_pattern = patt.get_pattern_tier(config, "pet", check_in_cycle=False)
     elif tier == "evt_concat":
         fn_pattern = patt.get_pattern_tier(config, "evt", check_in_cycle=False)
-    elif tier == "daq":
+    elif tier in ("daq", "daq_compress"):
         fn_pattern = patt.get_pattern_tier_daq(config, extension="{ext}")
     else:
         fn_pattern = patt.get_pattern_tier(config, tier, check_in_cycle=False)
@@ -184,7 +184,7 @@ def build_filelist(
         if Path(search_pattern).suffix == ".*":
             search_pattern = Path(search_pattern).with_suffix(".{ext}")
         fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
-        files = glob.glob(fn_glob_pattern)
+        files = glob.glob(fn_glob_pattern)  # noqa: PTH207
         for f in files:
             _key = FileKey.get_filekey_from_pattern(f, search_pattern)
             if _key.name in ignore_keys:
@@ -202,6 +202,15 @@ def build_filelist(
                     filename = FileKey.get_path_from_filekey(
                         _key, fn_pattern.with_suffix(Path(f).suffix)
                     )
+                elif tier == "daq_compress":
+                    if Path(f).suffix == "orca":
+                        filename = FileKey.get_path_from_filekey(
+                            _key, fn_pattern.with_suffix(".orca.bz2")
+                        )
+                    else:
+                        filename = FileKey.get_path_from_filekey(
+                            _key, fn_pattern.with_suffix(Path(f).suffix)
+                        )
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
 
@@ -245,7 +254,7 @@ def get_filelist(
 ):
     file_selection = wildcards.label.split("-", 1)[0]
     # remove the file selection from the keypart
-    keypart = f'-{wildcards.label.split("-",1)[1]}'
+    keypart = f"-{wildcards.label.split('-', 1)[1]}"
     analysis_runs, ignore_keys = get_analysis_runs(
         ignore_keys_file, analysis_runs_file, file_selection
     )

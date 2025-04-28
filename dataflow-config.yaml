@@ -2,6 +2,9 @@
 allow_none_par: false
 build_file_dbs: true
 check_log_files: true
+multiprocess: false
+mutliprocess_mode: max_usage
+max_processes: 1
 
 paths:
   sandbox_path: $_/sandbox
@@ -77,7 +80,7 @@ execenv:
     arg: /data2/public/prodenv/containers/legendexp_legend-base_latest_20241110203225.sif
     env:
       PRODENV: $PRODENV
-      NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
+      NUMBA_CACHE_DIR: $_/.snakemake/legend-dataflow/cache
       LGDO_BOUNDSCHECK: "false"
       DSPEED_BOUNDSCHECK: "false"
       PYGAMA_PARALLEL: "false"
@@ -89,7 +92,7 @@ execenv:
     arg: --image legendexp/legend-base:latest
     env:
       PRODENV: $PRODENV
-      NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
+      NUMBA_CACHE_DIR: $_/.snakemake/legend-dataflow/cache
       HDF5_USE_FILE_LOCKING: "false"
       LGDO_BOUNDSCHECK: "false"
       DSPEED_BOUNDSCHECK: "false"

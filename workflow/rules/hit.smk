@@ -14,6 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars_tmp,
 )
+from legenddataflow.paths import config_path
 from legenddataflow.execenv import execenv_pyexe
 
 hit_par_catalog = ParsKeyResolve.get_par_catalog(
@@ -41,6 +42,10 @@ rule build_hit:
         table_map=lambda wildcards: get_table_mapping(
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
         ),
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "hit"
+        ),
+        configs=ro(config_path(config)),
     log:
         get_pattern_log(config, "tier_hit", time),
     group:
@@ -48,11 +53,12 @@ rule build_hit:
     resources:
         runtime=300,
     shell:
-        execenv_pyexe(config, "build-tier-hit") + f"--configs {ro(configs)} "
+        execenv_pyexe(config, "build-tier-hit") + "--configs {params.configs} "
         "--table-map '{params.table_map}' "
         "--tier {params.tier} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
+        "--alias-table '{params.alias_table}' "
         "--pars-file {params.ro_input[pars_file]} "
         "--output {output.tier_file} "
         "--input {params.ro_input[dsp_file]} "

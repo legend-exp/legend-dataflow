@@ -290,3 +290,21 @@ def run_grouper(files):
             if run == f"{fk.experiment}-{fk.period}-{fk.run}":
                 run_files[i].append(file)
     return run_files
+
+
+def run_splitter(files):
+    """
+    Returns list containing lists of each run
+    """
+
+    runs = []
+    run_files = []
+    for file in files:
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(file).name)
+        if f"{fk.period}-{fk.run}" not in runs:
+            runs.append(f"{fk.period}-{fk.run}")
+            run_files.append([])
+        for i, run in enumerate(runs):
+            if run == f"{fk.period}-{fk.run}":
+                run_files[i].append(file)
+    return run_files

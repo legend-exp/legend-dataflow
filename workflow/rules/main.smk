@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
-from legenddataflow.utils import (
+from pathlib import Path
+from legenddataflow.paths import (
     filelist_path,
     log_path,
     tmp_par_path,
@@ -38,16 +39,20 @@ rule autogen_output:
     - generate lists of valid keys
     """
     input:
-        filelist=os.path.join(filelist_path(config), "{label}-{tier}.filelist"),
+        filelist=Path(filelist_path(config)) / "{label}-{tier}.filelist",
     output:
         gen_output="{label}-{tier}.gen",
-        summary_log=log_path(config) + "/summary-{label}-{tier}-" + timestamp + ".log",
-        warning_log=log_path(config) + "/warning-{label}-{tier}-" + timestamp + ".log",
+        summary_log=Path(log_path(config))
+        / f"summary-{{label}}-{{tier}}-{timestamp}.log",
+        warning_log=Path(log_path(config))
+        / f"warning-{{label}}-{{tier}}-{timestamp}.log",
     params:
-        valid_keys_path=os.path.join(pars_path(config), "valid_keys"),
-        filedb_path=os.path.join(pars_path(config), "filedb"),
+        valid_keys_path=Path(pars_path(config)) / "valid_keys",
+        filedb_path=Path(pars_path(config)) / "filedb",
         setup=lambda wildcards: config,
         basedir=workflow.basedir,
+    log:
+        Path(tmp_log_path(config)) / time / "{label}-{tier}-complete_run.log",
     threads: min(workflow.cores, 64)
     script:
         "../src/legenddataflow/scripts/complete_run.py"

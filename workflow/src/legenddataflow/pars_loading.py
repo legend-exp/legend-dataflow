@@ -10,7 +10,7 @@ from dbetto.catalog import Catalog
 from .FileKey import FileKey, ProcessingFileKey
 
 # from .patterns import
-from .utils import det_status_path, get_pars_path, par_overwrite_path, pars_path
+from .paths import det_status_path, get_pars_path, par_overwrite_path, pars_path
 
 
 class ParsCatalog(Catalog):

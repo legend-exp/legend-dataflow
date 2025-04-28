@@ -1,10 +1,12 @@
 import argparse
+import time
 from pathlib import Path
 
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
 
+from ...alias_table import alias_table
 from ...log import build_log
 
 
@@ -17,6 +19,7 @@ def build_tier_raw_fcio() -> None:
     argparser.add_argument("--configs", help="config file", type=str)
     argparser.add_argument("--chan-maps", help="chan map", type=str)
     argparser.add_argument("--log", help="log file", type=str)
+    argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
     args = argparser.parse_args()
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
@@ -27,7 +30,7 @@ def build_tier_raw_fcio() -> None:
         .snakemake_rules.tier_raw_fcio
     )
 
-    build_log(config_dict, args.log)
+    log = build_log(config_dict, args.log)
 
     channel_dict = config_dict.inputs
     settings = Props.read_from(channel_dict.settings)
@@ -47,6 +50,10 @@ def build_tier_raw_fcio() -> None:
     if "muon_config" in channel_dict:
         raise NotImplementedError()
 
+    log.info("Built raw config")
+    log.info("Starting build raw")
+    start = time.time()
+
     build_raw(
         args.input,
         out_spec=all_config,
@@ -54,3 +61,9 @@ def build_tier_raw_fcio() -> None:
         filekey=args.output,
         **settings,
     )
+
+    log.info(f"Built raw in {time.time() - start:.2f} seconds")
+
+    if args.alias_table is not None:
+        log.info("Creating alias table")
+        alias_table(args.output, args.alias_table)

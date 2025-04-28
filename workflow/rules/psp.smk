@@ -4,9 +4,9 @@ Snakemake rules for processing psp (partition dsp) tier data.
 - running build hit over all channels using par file
 """
 
+from pathlib import Path
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
-from pathlib import Path
 from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_tier,
@@ -14,6 +14,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
+from legenddataflow.paths import config_path
 from legenddataflow.execenv import execenv_pyexe
 
 psp_par_catalog = ParsKeyResolve.get_par_catalog(
@@ -37,6 +38,13 @@ rule build_psp:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        table_map=lambda wildcards: get_table_mapping(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
+        ),
+        alias_table=lambda wildcards: get_alias(
+            channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
+        ),
+        configs=ro(config_path(config)),
     output:
         tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
         db_file=get_pattern_pars_tmp(config, "psp_db"),
@@ -47,10 +55,13 @@ rule build_psp:
     resources:
         runtime=300,
         mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
+    threads: get_threads
     shell:
         execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--tier psp "
-        f"--configs {ro(configs)} "
+        "--configs {params.configs} "
+        "--table-map '{params.table_map}' "
+        "--alias-table '{params.alias_table}' "
         "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
@@ -58,3 +69,4 @@ rule build_psp:
         "--output {output.tier_file} "
         "--db-file {output.db_file} "
         "--pars-file {params.ro_input[pars_file]} "
+        "--n-processes {threads} "

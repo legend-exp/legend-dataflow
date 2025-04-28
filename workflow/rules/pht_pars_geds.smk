@@ -6,10 +6,12 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 - running build hit over all channels using par file
 """
 
+from pathlib import Path
 from legenddataflow.pars_loading import ParsCatalog
 from legenddataflow.create_pars_keylist import ParsKeyResolve
 from pathlib import Path
-from legenddataflow.utils import filelist_path, set_last_rule_name
+from legenddataflow.utils import set_last_rule_name
+from legenddataflow.paths import filelist_path, config_path, metadata_path
 from legenddataflow.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
@@ -53,6 +55,7 @@ for key, dataset in part.datasets.items():
                 fft_files=part.get_filelists(partition, key, intier, datatype="fft"),
                 pulser_files=pulser_files,
                 overwrite_files=get_overwrite_file(
+                    config,
                     "pht",
                     timestamp=part.get_timestamp(
                         pht_par_catalog,
@@ -77,6 +80,8 @@ for key, dataset in part.datasets.items():
                     wildcards.channel,
                     "dsp",
                 ),
+                configs=config_path(config),
+                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -114,8 +119,8 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
-                "--configs {configs} "
-                "--metadata {meta} "
+                "--configs {params.configs} "
+                "--metadata {params.meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
@@ -175,6 +180,8 @@ for key, dataset in part.datasets.items():
                     wildcards.channel,
                     "dsp",
                 ),
+                configs=config_path(config),
+                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -223,13 +230,13 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
-                "--configs {configs} "
+                "--configs {params.configs} "
+                "--metadata {params.meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
                 "--channel {params.channel} "
                 "--table-name {params.dsp_table_name} "
-                "--metadata {meta} "
                 "--fit-results {output.partcal_results} "
                 "--eres-file {input.eres_file} "
                 "--hit-pars {output.hit_pars} "
@@ -275,6 +282,8 @@ for key, dataset in part.datasets.items():
                     wildcards.channel,
                     "dsp",
                 ),
+                configs=config_path(config),
+                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -323,8 +332,8 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
-                "--configs {configs} "
-                "--metadata {meta} "
+                "--configs {params.configs} "
+                "--metadata {params.meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
@@ -375,6 +384,8 @@ for key, dataset in part.datasets.items():
                     wildcards.channel,
                     "dsp",
                 ),
+                configs=config_path(config),
+                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -421,8 +432,8 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
-                "--configs {configs} "
-                "--metadata {meta} "
+                "--configs {params.configs} "
+                "--metadata {params.meta} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--inplots {input.inplots} "
@@ -448,13 +459,13 @@ for key, dataset in part.datasets.items():
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_pht_qc:
     input:
-        cal_files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
+        cal_files=(
+            Path(filelist_path(config))
+            / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         ),
-        fft_files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-fft-" + f"{intier}.filelist",
+        fft_files=(
+            Path(filelist_path(config))
+            / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         ),
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         overwrite_files=lambda wildcards: get_overwrite_file("pht", wildcards=wildcards),
@@ -470,6 +481,8 @@ rule build_pht_qc:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qc")),
@@ -482,8 +495,8 @@ rule build_pht_qc:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
@@ -510,10 +523,8 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 # This rule builds the energy calibration using the calibration dsp files
 rule build_per_energy_calibration:
     input:
-        files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
-        ),
+        files=Path(filelist_path(config))
+        / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         pht_dict=rules.build_pht_qc.output.hit_pars,
         inplots=rules.build_pht_qc.output.plot_file,
@@ -538,6 +549,8 @@ rule build_per_energy_calibration:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
         results_file=temp(
@@ -558,9 +571,9 @@ rule build_per_energy_calibration:
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--table-name {params.dsp_table_name} "
-        "--configs {configs} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--tier {params.tier} "
-        "--metadata {meta} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
         "--save-path {output.ecal_file} "
@@ -575,10 +588,8 @@ rule build_per_energy_calibration:
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_pht_energy_super_calibrations:
     input:
-        files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal" + f"-{intier}.filelist",
-        ),
+        files=Path(filelist_path(config))
+        / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ecal_file=rules.build_per_energy_calibration.output.ecal_file,
         eres_file=rules.build_per_energy_calibration.output.results_file,
@@ -595,6 +606,8 @@ rule build_pht_energy_super_calibrations:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "partcal")),
         partcal_results=temp(
@@ -612,12 +625,12 @@ rule build_pht_energy_super_calibrations:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
-        "--configs {configs} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
         "--table-name {params.dsp_table_name} "
-        "--metadata {meta} "
         "--inplots {input.inplots} "
         "--fit-results {output.partcal_results} "
         "--eres-file {input.eres_file} "
@@ -643,10 +656,8 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_pht_aoe_calibrations:
     input:
-        files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
-        ),
+        files=Path(filelist_path(config))
+        / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ecal_file=rules.build_pht_energy_super_calibrations.output.hit_pars,
         eres_file=rules.build_pht_energy_super_calibrations.output.partcal_results,
@@ -663,6 +674,8 @@ rule build_pht_aoe_calibrations:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "aoecal")),
         aoe_results=temp(
@@ -680,8 +693,8 @@ rule build_pht_aoe_calibrations:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "
@@ -710,10 +723,8 @@ workflow._ruleorder.add(*rule_order_list)  # [::-1]
 # This rule builds the lq calibration using the calibration dsp files for the whole partition
 rule build_pht_lq_calibration:
     input:
-        files=os.path.join(
-            filelist_path(config),
-            "all-{experiment}-{period}-{run}-cal-" + f"{intier}.filelist",
-        ),
+        files=Path(filelist_path(config))
+        / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         ecal_file=rules.build_pht_aoe_calibrations.output.hit_pars,
         eres_file=rules.build_pht_aoe_calibrations.output.aoe_results,
@@ -730,6 +741,8 @@ rule build_pht_lq_calibration:
             wildcards.channel,
             "dsp",
         ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
         lq_results=temp(
@@ -745,8 +758,8 @@ rule build_pht_lq_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--inplots {input.inplots} "

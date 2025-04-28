@@ -12,7 +12,9 @@ from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_pars,
 )
+from legenddataflow.paths import config_path, metadata_path
 from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.build_chanlist import get_par_chanlist, get_plt_chanlist
 from pathlib import Path
 
 
@@ -29,6 +31,8 @@ rule build_blinding_check:
         timestamp="{timestamp}",
         datatype="cal",
         channel="{channel}",
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     output:
         check_file=temp(get_pattern_pars_tmp_channel(config, "raw")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "raw")),
@@ -43,8 +47,8 @@ rule build_blinding_check:
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--configs {configs} "
-        "--metadata {meta} "
+        "--configs {params.configs} "
+        "--metadata {params.meta} "
         "--output {output.check_file} "
         "--blind-curve {input.par_file} "
         "--plot-file {output.plot_file} "
@@ -57,7 +61,6 @@ rule build_plts_raw:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
-            basedir,
             det_status,
             chan_maps,
         ),
@@ -76,7 +79,6 @@ rule build_pars_raw:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
-            basedir,
             det_status,
             chan_maps,
         ),
