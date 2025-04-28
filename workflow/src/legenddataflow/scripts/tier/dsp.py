@@ -82,7 +82,7 @@ def build_tier_dsp() -> None:
     # if the dictionary only contains one __default__ key, build the channel
     # list from the (processable) channel map and assign the default config
     if list(chan_cfg_map.keys()) == ["__default__"]:
-        chan_cfg_map = {chan: chan_cfg_map.__default__ for chan in table_map}
+        chan_cfg_map = dict.fromkeys(table_map, chan_cfg_map.__default__)
 
     # now construct the dictionary of DSP configs for build_dsp()
     dsp_cfg_tbl_dict = {}
@@ -180,7 +180,7 @@ def build_tier_dsp() -> None:
             block_width=settings_dict.get("block_width", 16),
         )
 
-    log.info(f"Finished building DSP in {time.time()- start:.2f} seconds")
+    log.info(f"Finished building DSP in {time.time() - start:.2f} seconds")
     if args.alias_table is not None:
         log.info("Creating alias table")
         alias_table(args.output, args.alias_table)
@@ -258,4 +258,4 @@ def build_tier_dsp_single_channel() -> None:
         buffer_len=settings_dict.get("buffer_len", 1000),
         block_width=settings_dict.get("block_width", 16),
     )
-    log.info(f"Finished building DSP in {time.time()- start:.2f} seconds")
+    log.info(f"Finished building DSP in {time.time() - start:.2f} seconds")

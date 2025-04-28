@@ -254,7 +254,7 @@ def get_filelist(
 ):
     file_selection = wildcards.label.split("-", 1)[0]
     # remove the file selection from the keypart
-    keypart = f'-{wildcards.label.split("-",1)[1]}'
+    keypart = f"-{wildcards.label.split('-', 1)[1]}"
     analysis_runs, ignore_keys = get_analysis_runs(
         ignore_keys_file, analysis_runs_file, file_selection
     )
