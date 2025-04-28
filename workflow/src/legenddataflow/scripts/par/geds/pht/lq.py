@@ -199,7 +199,7 @@ def run_lq_calibration(
         except KeyError:
             lq_obj.eres_func = {}
     else:
-        out_dict = {tstamp: None for tstamp in cal_dicts}
+        out_dict = dict.fromkeys(cal_dicts)
         lq_plot_dict = {}
         lq_obj = None
 

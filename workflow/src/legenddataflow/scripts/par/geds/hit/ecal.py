@@ -653,7 +653,7 @@ def par_geds_hit_ecal() -> None:
             hit_dict.update(
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param.replace('ctc','noctc')}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "expression": f"where({cal_energy_param.replace('ctc', 'noctc')}>{kwarg_dict.get('dt_theshold_kev', 100)}, {cal_energy_param}, {cal_energy_param.replace('ctc', 'noctc')})",
                         "parameters": {},
                     }
                 }

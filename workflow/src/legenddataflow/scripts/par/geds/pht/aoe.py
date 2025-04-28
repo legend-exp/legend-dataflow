@@ -176,7 +176,7 @@ def run_aoe_calibration(
         except KeyError:
             aoe.eres_func = {}
     else:
-        out_dict = {tstamp: None for tstamp in cal_dicts}
+        out_dict = dict.fromkeys(cal_dicts)
         aoe_plot_dict = {}
         aoe = None
 

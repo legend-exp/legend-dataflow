@@ -274,7 +274,7 @@ def calibrate_partition(
                     bin_width_kev=0.2 if nruns > 3 else 0.5,
                 )
             else:
-                err = f"2614.511 peak not found in {cal_energy_param} fit, reduced csqr {csqr[0]/csqr[1]} not below 10, check fit"
+                err = f"2614.511 peak not found in {cal_energy_param} fit, reduced csqr {csqr[0] / csqr[1]} not below 10, check fit"
                 raise ValueError(err)
 
         full_object_dict[cal_energy_param].get_energy_res_curve(
@@ -310,7 +310,7 @@ def calibrate_partition(
                 cal_dicts,
                 {
                     cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param.replace('ctc', 'noctc')}>{kwarg_dict.get('dt_theshold_kev',100)}, {cal_energy_param}, {cal_energy_param.replace('ctc','noctc')})",
+                        "expression": f"where({cal_energy_param.replace('ctc', 'noctc')}>{kwarg_dict.get('dt_theshold_kev', 100)}, {cal_energy_param}, {cal_energy_param.replace('ctc', 'noctc')})",
                         "parameters": {},
                     }
                 },

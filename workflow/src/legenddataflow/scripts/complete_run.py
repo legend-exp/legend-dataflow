@@ -85,7 +85,7 @@ def check_log_files(log_path, output_file, gen_output, warning_file=None):
                 )
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
-        if len(os.listdir(path)) == 0:
+        if len(list(Path(path).iterdir())) == 0:
             Path(path).rmdir()
 
 
