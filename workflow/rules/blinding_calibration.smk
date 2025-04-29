@@ -29,6 +29,14 @@ rule build_blinding_calibration:
         channel="{channel}",
         configs=ro(config_path(config)),
         meta=ro(metadata_path(config)),
+        raw_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
+        ),
     output:
         par_file=temp(get_pattern_pars_tmp_channel(config, "raw_blindcal")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "raw_blindcal")),
@@ -45,6 +53,7 @@ rule build_blinding_calibration:
         "--channel {params.channel} "
         "--configs {params.configs} "
         "--meta {params.meta} "
+        "--raw-table-name {params.raw_table_name} "
         "--plot-file {output.plot_file} "
         "--blind-curve {output.par_file} "
         "--files {input.files} "
@@ -56,9 +65,9 @@ rule build_plts_blinding:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
-            basedir,
-            det_status,
-            chan_maps,
+            det_status_textdb,
+            channelmap_textdb,
+            system="geds",
             name="blindcal",
         ),
     output:
@@ -76,9 +85,10 @@ rule build_pars_blinding:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "raw",
-            basedir,
-            det_status,
-            chan_maps,
+            det_status_textdb,
+            channelmap_textdb,
+            extension="yaml",
+            system="geds",
             name="blindcal",
         ),
         plts=get_pattern_plts(config, "raw", name="blindcal"),

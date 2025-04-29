@@ -5,18 +5,18 @@ and deriving a simple scaling relation from adc to keV.
 """
 
 import argparse
-import logging
 import pickle as pkl
 from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from dbetto import TextDB
 from dbetto.catalog import Props
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
 
-from ....table_name import get_table_name
+from .....log import build_log
 
 mpl.use("agg")
 
@@ -35,25 +35,31 @@ def par_geds_raw_blindcal() -> None:
     argparser.add_argument("--timestamp", help="timestamp", type=str)
     argparser.add_argument("--datatype", help="datatype", type=str)
     argparser.add_argument("--channel", help="channel", type=str)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
 
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename=args.log, filemode="w")
-    logging.getLogger("numba").setLevel(logging.INFO)
-    logging.getLogger("parse").setLevel(logging.INFO)
-    logging.getLogger("lgdo").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
-    log = logging.getLogger(__name__)
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs["snakemake_rules"]["tier_raw_blind_check"]
 
-    channel = get_table_name(args.meta, args.timestamp, args.datatype, args.channel)
+    log = build_log(config_dict, args.log)
 
     # peaks to search for
     peaks_keV = np.array(
         [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
     )
 
-    E_uncal = lh5.read_as(f"{channel}/raw/daqenergy", sorted(args.files), library="np")
+    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
+        input_file = args.files[0]
+        with Path(input_file).open() as f:
+            input_file = f.read().splitlines()
+    else:
+        input_file = args.files
+
+    E_uncal = lh5.read_as(f"{args.raw_table_name}/daqenergy", input_file, library="np")
     E_uncal = E_uncal[E_uncal > 200]
     guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
 
@@ -69,9 +75,10 @@ def par_geds_raw_blindcal() -> None:
     )
 
     # Run the rough peak search
-    detected_peaks_locs, detected_peaks_keV, roughpars = hpge_cal.hpge_find_E_peaks(
-        E_uncal
-    )
+    hpge_cal.hpge_find_energy_peaks(E_uncal, etol_kev=5)
+    detected_peaks_locs = hpge_cal.peak_locs
+    detected_peaks_keV = hpge_cal.peaks_kev
+    roughpars = hpge_cal.pars
 
     log.info(f"{len(detected_peaks_locs)} peaks found:")
     log.info("\t   Energy   | Position  ")
@@ -84,7 +91,7 @@ def par_geds_raw_blindcal() -> None:
             "operations": {
                 "daqenergy_cal": {
                     "expression": "daqenergy*a",
-                    "parameters": {"a": round(roughpars[0], 5)},
+                    "parameters": {"a": round(float(roughpars[1]), 5)},
                 }
             }
         }
@@ -93,13 +100,13 @@ def par_geds_raw_blindcal() -> None:
     # plot to check thagt the calibration is correct with zoom on 2.6 peak
     fig = plt.figure(figsize=(8, 10))
     ax = plt.subplot(211)
-    ax.hist(E_uncal * roughpars[0], bins=np.arange(0, 3000, 1), histtype="step")
+    ax.hist(E_uncal * roughpars[1], bins=np.arange(0, 3000, 1), histtype="step")
     ax.set_ylabel("counts")
     ax.set_yscale("log")
     ax2 = plt.subplot(212)
     ax2.hist(
-        E_uncal * roughpars[0],
-        bins=np.arange(2600, 2630, 1 * roughpars[0]),
+        E_uncal * roughpars[1],
+        bins=np.arange(2600, 2630, 1 * roughpars[1]),
         histtype="step",
     )
     ax2.set_xlabel("energy (keV)")
@@ -109,4 +116,4 @@ def par_geds_raw_blindcal() -> None:
         pkl.dump(fig, w, protocol=pkl.HIGHEST_PROTOCOL)
     plt.close()
 
-    Props.write_to_file(args.blind_curve, out_dict)
+    Props.write_to(args.blind_curve, out_dict)

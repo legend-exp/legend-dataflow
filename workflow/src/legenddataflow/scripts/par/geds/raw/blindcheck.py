@@ -22,7 +22,6 @@ from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 
 from .....log import build_log
-from ....table_name import get_table_name
 
 mpl.use("Agg")
 
@@ -37,6 +36,10 @@ def par_geds_raw_blindcheck() -> None:
     )
     argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
     argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+    argparser.add_argument(
+        "--raw-table-name", help="raw table name", type=str, required=True
+    )
+
     argparser.add_argument("--configs", help="config file", type=str)
     argparser.add_argument("--channel", help="channel", type=str)
     argparser.add_argument("--metadata", help="channel", type=str)
@@ -44,22 +47,28 @@ def par_geds_raw_blindcheck() -> None:
     args = argparser.parse_args()
 
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["tier_raw_blindcheck"]
+    config_dict = configs["snakemake_rules"]["tier_raw_blind_check"]
 
     log = build_log(config_dict, args.log)
 
     # get the usability status for this channel
-    channel = get_table_name(args.metadata, args.timestamp, args.datatype, args.channel)
 
     chmap = LegendMetadata(args.meta).channelmap(args.timestamp, system=args.datatype)
     det_status = chmap[args.channel]["analysis"]["is_blinded"]
 
     # read in calibration curve for this channel
-    blind_curve = Props.read_from(args.blind_curve)[channel]["pars"]["operations"]
+    blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
+
+    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
+        input_file = args.files[0]
+        with Path(input_file).open() as f:
+            input_file = f.read().splitlines()
+    else:
+        input_file = args.files
 
     # load in the data
     daqenergy = lh5.read_as(
-        f"{channel}/raw/daqenergy", sorted(args.files), library="np"
+        f"{args.raw_table_name}/daqenergy", input_file, library="np"
     )
 
     # calibrate daq energy using pre existing curve

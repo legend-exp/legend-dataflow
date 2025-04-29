@@ -33,6 +33,14 @@ rule build_blinding_check:
         channel="{channel}",
         configs=ro(config_path(config)),
         meta=ro(metadata_path(config)),
+        raw_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
+        ),
     output:
         check_file=temp(get_pattern_pars_tmp_channel(config, "raw")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "raw")),
@@ -49,6 +57,7 @@ rule build_blinding_check:
         "--channel {params.channel} "
         "--configs {params.configs} "
         "--metadata {params.meta} "
+        "--raw-table-name {params.raw_table_name} "
         "--output {output.check_file} "
         "--blind-curve {input.par_file} "
         "--plot-file {output.plot_file} "

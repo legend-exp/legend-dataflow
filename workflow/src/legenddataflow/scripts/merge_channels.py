@@ -3,7 +3,6 @@ import pickle as pkl
 import shelve
 from pathlib import Path
 
-import numpy as np
 from dbetto.catalog import Props
 from lgdo import lh5
 
@@ -55,9 +54,6 @@ def merge_channels() -> None:
     else:
         out_file = args.output
 
-    rng = np.random.default_rng()
-    temp_output = f"{out_file}.{rng.integers(0, 99999):05d}"
-
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     if file_extension in (".json", ".yaml", ".yml"):
@@ -81,10 +77,10 @@ def merge_channels() -> None:
             fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
             out_dict[fkey.channel] = channel_dict
 
-        with Path(temp_output).open("wb") as w:
+        with Path(out_file).open("wb") as w:
             pkl.dump(out_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
-        Path(temp_output).rename(out_file)
+        Path(out_file).rename(out_file)
 
     elif file_extension == ".dat" or file_extension == ".dir":
         common_dict = {}
@@ -92,9 +88,7 @@ def merge_channels() -> None:
             for channel in channel_files:
                 with Path(channel).open("rb") as r:
                     channel_dict = pkl.load(r)
-                fkey = ChannelProcKey.get_filekey_from_pattern(
-                    Path(channel_files[0]).name
-                )
+                fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
                 if isinstance(channel_dict, dict) and "common" in list(channel_dict):
                     chan_common_dict = channel_dict.pop("common")
                     common_dict[fkey.channel] = chan_common_dict
@@ -113,7 +107,7 @@ def merge_channels() -> None:
                 lh5.write(
                     tb_in,
                     name=fkey.channel,
-                    lh5_file=temp_output,
+                    lh5_file=out_file,
                     wo_mode="a",
                 )
                 if args.in_db:
@@ -125,5 +119,3 @@ def merge_channels() -> None:
                 raise RuntimeError(msg)
         if args.out_db:
             Props.write_to(args.out_db, db_dict)
-
-        Path(temp_output).rename(out_file)
