@@ -258,11 +258,26 @@ rule build_svm_dsp_geds:
         hyperpars=lambda wildcards: get_input_par_file(
             config=config, wildcards=wildcards, tier="dsp", name="svm_hyperpars"
         ),
-        train_data=lambda wildcards: str(
-            get_input_par_file(
-                config=config, wildcards=wildcards, tier="dsp", name="svm_hyperpars"
+        train_data=lambda wildcards: (
+            str(
+                get_input_par_file(
+                    config=config,
+                    wildcards=wildcards,
+                    tier="dsp",
+                    name="svm_hyperpars",
+                )
+            ).replace("hyperpars.yaml", "train.lh5")
+            if not isinstance(
+                get_input_par_file(
+                    config=config,
+                    wildcards=wildcards,
+                    tier="dsp",
+                    name="svm_hyperpars",
+                ),
+                list,
             )
-        ).replace("hyperpars.yaml", "train.lh5"),
+            else []
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",

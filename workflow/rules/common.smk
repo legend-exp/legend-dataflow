@@ -79,10 +79,14 @@ def get_input_par_file(config, wildcards, tier, name):
     for pars_file in pars_files_overwrite:
         if name in str(pars_file):
             return Path(patt.par_overwrite_path(config)) / tier / pars_file
-    if allow_none or (hasattr(wildcards, "datatype") & (wildcards.datatype != "phy")):
+    if (
+        allow_none
+        or not hasattr(wildcards, "datatype")
+        or (wildcards.datatype != "phy")
+    ):
         return []
     else:
-        raise ValueError(f"Could not find model in {pars_files_overwrite}")
+        raise ValueError(f"Could not find {name} file in {pars_files_overwrite}")
 
 
 def get_overwrite_file(config, tier, wildcards=None, timestamp=None, name=None):
