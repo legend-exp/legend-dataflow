@@ -55,7 +55,7 @@ def par_geds_dsp_pz() -> None:
     if kwarg_dict["run_tau"] is True:
         dsp_config = Props.read_from(channel_dict)
         kwarg_dict.pop("run_tau")
-        if args.pz_files is not None:
+        if args.pz_files is not None and len(args.pz_files) > 0:
             if (
                 isinstance(args.pz_files, list)
                 and args.pz_files[0].split(".")[-1] == "filelist"
@@ -86,7 +86,9 @@ def par_geds_dsp_pz() -> None:
         ).view_as("pd")
         threshold = kwarg_dict.pop("threshold")
 
-        if args.no_pulse is False:
+        if args.no_pulse is False and (
+            args.pz_files is None or len(args.pz_files) == 0
+        ):
             mask = get_pulser_mask(args.pulser_file)
         else:
             mask = np.full(len(data), False)
