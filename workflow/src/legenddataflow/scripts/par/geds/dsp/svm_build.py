@@ -22,10 +22,10 @@ def par_geds_dsp_svm_build() -> None:
         "--output-file", help="output SVM file", type=str, required=True
     )
     argparser.add_argument(
-        "--train-data", help="input data file", type=str, required=True
+        "--train-data", help="input data file", nargs="*", default=None
     )
     argparser.add_argument(
-        "--train-hyperpars", help="input hyperparameter file", required=True
+        "--train-hyperpars", help="input hyperparameter file", nargs="*", default=None
     )
     args = argparser.parse_args()
 
@@ -34,30 +34,33 @@ def par_geds_dsp_svm_build() -> None:
 
     log = build_log(config_dict, args.log)
 
-    # Load files
-    tb = lh5.read("ml_train/dsp", args.train_data)
-    log.debug("loaded data")
+    if args.train_data is not None and len(args.train_data) > 0:
+        # Load files
+        tb = lh5.read("ml_train/dsp", args.train_data)
+        log.debug("loaded data")
 
-    hyperpars = Props.read_from(args.train_hyperpars)
+        hyperpars = Props.read_from(args.train_hyperpars)
 
-    # Define training inputs
-    dwts_norm = tb["dwt_norm"].nda
-    labels = tb["dc_label"].nda
+        # Define training inputs
+        dwts_norm = tb["dwt_norm"].nda
+        labels = tb["dc_label"].nda
 
-    log.debug("training model")
-    # Initialize and train SVM
-    svm = SVC(
-        random_state=int(hyperpars["random_state"]),
-        kernel=hyperpars["kernel"],
-        decision_function_shape=hyperpars["decision_function_shape"],
-        class_weight=hyperpars["class_weight"],
-        C=float(hyperpars["C"]),
-        gamma=float(hyperpars["gamma"]),
-        cache_size=1000,
-    )
+        log.debug("training model")
+        # Initialize and train SVM
+        svm = SVC(
+            random_state=int(hyperpars["random_state"]),
+            kernel=hyperpars["kernel"],
+            decision_function_shape=hyperpars["decision_function_shape"],
+            class_weight=hyperpars["class_weight"],
+            C=float(hyperpars["C"]),
+            gamma=float(hyperpars["gamma"]),
+            cache_size=1000,
+        )
 
-    svm.fit(dwts_norm, labels)
-    log.debug("trained model")
+        svm.fit(dwts_norm, labels)
+        log.debug("trained model")
+    else:
+        svm = None
 
     # Save trained model with pickle
     with Path(args.output_file).open("wb") as svm_file:
