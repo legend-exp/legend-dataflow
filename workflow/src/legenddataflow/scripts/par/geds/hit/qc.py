@@ -103,7 +103,7 @@ def par_geds_hit_qc() -> None:
         [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
         kwarg_dict_cal["cut_parameters"],
     )
-    cut_fields = get_keys(
+    cut_fields += get_keys(
         [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
         kwarg_dict_fft["cut_parameters"],
     )
@@ -155,7 +155,7 @@ def par_geds_hit_qc() -> None:
                 f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
             )
 
-            ct_mask = np.full(len(cut_data), True, dtype=bool)
+            ct_mask = np.full(len(fft_data), True, dtype=bool)
             for outname, info in cut_dict.items():
                 # convert to pandas eval
                 exp = info["expression"]
@@ -163,12 +163,12 @@ def par_geds_hit_qc() -> None:
                     exp = re.sub(
                         f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp
                     )
-                cut_data[outname] = cut_data.eval(
+                fft_data[outname] = fft_data.eval(
                     exp, local_dict=info.get("parameters", None)
                 )
                 if "_classifier" not in outname:
-                    ct_mask = ct_mask & cut_data[outname]
-            cut_data = cut_data[ct_mask]
+                    ct_mask = ct_mask & fft_data[outname]
+            cut_data = fft_data[ct_mask]
 
         log.debug("fft cuts applied")
         log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
@@ -270,32 +270,33 @@ def par_geds_hit_qc() -> None:
 
     hit_dict = convert_dict_np_to_float(hit_dict)
 
-    for outname, info in hit_dict_init_cal.items():
+    for outname, info in hit_dict.items():
         # convert to pandas eval
         exp = info["expression"]
         for key in info.get("parameters", None):
             exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
-        fft_data[outname] = fft_data.eval(exp, local_dict=info.get("parameters", None))
-        data[outname] = data.eval(exp, local_dict=info.get("parameters", None))
+        if outname not in fft_data:
+            fft_data[outname] = fft_data.eval(
+                exp, local_dict=info.get("parameters", None)
+            )
+        if outname not in data:
+            data[outname] = data.eval(exp, local_dict=info.get("parameters", None))
 
     qc_results = {}
     for entry in hit_dict:
         if "classifier" not in entry:
-            sf_cal = len(
-                data.query(f"{entry}& ~is_pulser & ~is_recovering")
-                / len(data.query("~is_pulser & ~is_recovering"))
+            sf_cal = len(data.query(f"{entry}& ~is_pulser & ~is_recovering")) / len(
+                data.query("~is_pulser & ~is_recovering")
             )
             sf_cal_err = 100 * np.sqrt(
                 ((sf_cal) * (1 - sf_cal))
                 / len(data.query("~is_pulser & ~is_recovering"))
             )
-            sf_fft = len(
-                fft_data.query(f"{entry}& ~is_pulser & ~is_recovering")
-                / len(fft_data.query("~is_pulser & ~is_recovering"))
+            sf_fft = len(fft_data.query(f"{entry} & ~is_recovering")) / len(
+                fft_data.query("~is_recovering")
             )
             sf_fft_err = 100 * np.sqrt(
-                ((sf_fft) * (1 - sf_fft))
-                / len(fft_data.query("~is_pulser & ~is_recovering"))
+                ((sf_fft) * (1 - sf_fft)) / len(fft_data.query("~is_recovering"))
             )
             sf_cal *= 100
             sf_fft *= 100
