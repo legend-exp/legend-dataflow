@@ -270,8 +270,36 @@ def par_geds_hit_qc() -> None:
 
     hit_dict = convert_dict_np_to_float(hit_dict)
 
+    for outname, info in hit_dict_init_cal.items():
+        # convert to pandas eval
+        exp = info["expression"]
+        for key in info.get("parameters", None):
+            exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
+        fft_data[outname] = fft_data.eval(exp, local_dict=info.get("parameters", None))
+        data[outname] = data.eval(exp, local_dict=info.get("parameters", None))
+    
+
+    qc_results = {}
+    for entry in hit_dict:
+        if "classifier" not in entry:
+            sf_cal = len(data.query(f"{entry}& ~is_pulser & ~is_recovering")/len(data.query("~is_pulser & ~is_recovering")))
+            sf_cal_err = 100*((sf_cal) * (1 - sf_cal)) / len(data.query("~is_pulser & ~is_recovering"))
+            sf_fft = len(fft_data.query(f"{entry}& ~is_pulser & ~is_recovering")/len(fft_data.query("~is_pulser & ~is_recovering")))
+            sf_fft_err = 100*((sf_fft) * (1 - sf_fft)) / len(fft_data.query("~is_pulser & ~is_recovering"))
+            sf_cal *=100
+            sf_fft *=100
+            log.info(
+                f"{entry} cut applied: {sf_cal:.2f}% of events passed the cut for cal data, {sf_fft:.2f}% for fft data"
+            )
+            qc_results[entry] = {
+                "sf_cal": sf_cal,
+                "sf_cal_err": sf_cal_err,
+                "sf_fft": sf_fft,
+                "sf_fft_err": sf_fft_err,
+            }
+
     Path(args.save_path).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.save_path, hit_dict)
+    Props.write_to(args.save_path, {"operations":hit_dict, "results":{"qc": qc_results}})
 
     if args.plot_path:
         Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)

@@ -487,6 +487,9 @@ def par_geds_hit_ecal() -> None:
 
     if args.in_hit_dict:
         hit_dict = Props.read_from(args.in_hit_dict)
+        in_results_dict = hit_dict.get("results", {})
+        hit_dict = hit_dict.get("operations", hit_dict)
+
 
     db_files = [
         par_file
@@ -759,7 +762,7 @@ def par_geds_hit_ecal() -> None:
 
     # save output dictionary
     output_dict = convert_dict_np_to_float(
-        {"pars": hit_dict, "results": {"ecal": results_dict}}
+        {"pars": hit_dict, "results": dict(**in_results_dict, ecal=results_dict)}
     )
     Props.write_to(args.save_path, output_dict)
 
