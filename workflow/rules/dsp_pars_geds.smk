@@ -256,7 +256,11 @@ rule build_pars_dsp_eopt_geds:
 rule build_svm_dsp_geds:
     input:
         hyperpars=lambda wildcards: get_input_par_file(
-            config=config, wildcards=wildcards, tier="dsp", name="svm_hyperpars"
+            config=config,
+            wildcards=wildcards,
+            tier="dsp",
+            name="svm_hyperpars",
+            allow_none=True,
         ),
         train_data=lambda wildcards: (
             str(
@@ -265,6 +269,7 @@ rule build_svm_dsp_geds:
                     wildcards=wildcards,
                     tier="dsp",
                     name="svm_hyperpars",
+                    allow_none=True,
                 )
             ).replace("hyperpars.yaml", "train.lh5")
             if not isinstance(
@@ -273,6 +278,7 @@ rule build_svm_dsp_geds:
                     wildcards=wildcards,
                     tier="dsp",
                     name="svm_hyperpars",
+                    allow_none=True,
                 ),
                 list,
             )
