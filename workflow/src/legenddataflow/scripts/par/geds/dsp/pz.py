@@ -203,7 +203,7 @@ def par_geds_dsp_pz() -> None:
             )
 
             with Path(args.plot_path).open("wb") as f:
-                pkl.dump({"tau": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
+                pkl.dump({"pz": plot_dict}, f, protocol=pkl.HIGHEST_PROTOCOL)
         out_dict = convert_dict_np_to_float(tau.output_dict)
     else:
         out_dict = {}
