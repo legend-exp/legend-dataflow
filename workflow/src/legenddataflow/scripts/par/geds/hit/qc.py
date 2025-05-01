@@ -247,13 +247,14 @@ def par_geds_hit_qc() -> None:
         hit_dict_init_cal = {}
         plot_dict_init_cal = {}
 
-    if len(data.query("is_pulser & ~is_recovering")) < 500:
-        data = data.query("is_pulser & ~is_recovering")
+    if len(data.query("~is_pulser & ~is_recovering")) < 500:
+        log.info("Less than 500 pulser events")
+        cal_data = data.query("~is_pulser & ~is_recovering")
     else:
-        data = data.query("~is_pulser & ~is_recovering")[mask]
+        cal_data = data.query("~is_pulser & ~is_recovering")[mask]
 
     hit_dict_cal, plot_dict_cal = generate_cut_classifiers(
-        data,
+        cal_data,
         kwarg_dict_cal["cut_parameters"],
         kwarg_dict.get("rounding", 4),
         display=1 if args.plot_path else 0,
