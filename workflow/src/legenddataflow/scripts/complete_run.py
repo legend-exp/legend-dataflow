@@ -180,9 +180,8 @@ def fformat(tier):
 if snakemake.params.setup.get("build_file_dbs", True):
     file_db_config = {}
 
-    if (
-        os.getenv("PRODENV") is not None
-        and os.getenv("PRODENV") in snakemake.params.filedb_path
+    if os.getenv("PRODENV") is not None and os.getenv("PRODENV") in str(
+        snakemake.params.filedb_path
     ):
         prodenv = as_ro(os.getenv("PRODENV"))
 
