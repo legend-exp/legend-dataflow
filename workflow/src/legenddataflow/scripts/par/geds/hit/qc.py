@@ -314,6 +314,7 @@ def par_geds_hit_qc() -> None:
                 "sf_fft": sf_fft,
                 "sf_fft_err": sf_fft_err,
             }
+    qc_results = convert_dict_np_to_float(qc_results)
 
     Path(args.save_path).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(
