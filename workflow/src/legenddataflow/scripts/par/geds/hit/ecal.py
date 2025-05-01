@@ -414,12 +414,20 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
             "total_fep": len(
                 data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")
             ),
+            "total_sep": len(
+                data.query(f"{cal_energy_param}>2095&{cal_energy_param}<2115")
+            ),
             "total_dep": len(
                 data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")
             ),
             "pass_fep": len(
                 data.query(
                     f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}"
+                )
+            ),
+            "pass_sep": len(
+                data.query(
+                    f"{cal_energy_param}>2095&{cal_energy_param}<2115&{selection_string}"
                 )
             ),
             "pass_dep": len(
