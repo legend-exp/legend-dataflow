@@ -196,7 +196,7 @@ def par_geds_hit_lq() -> None:
     final_hit_dict = convert_dict_np_to_float(
         {
             "pars": {"operations": cal_dict},
-            "results": dict(**eres_dict, lq=out_dict),
+            "results": dict(**ecal_dict["results"], lq=out_dict),
         }
     )
     Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
