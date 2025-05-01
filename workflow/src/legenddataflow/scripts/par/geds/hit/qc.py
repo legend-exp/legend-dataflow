@@ -152,7 +152,7 @@ def par_geds_hit_qc() -> None:
             plot_dict_fft.update(cut_plots)
 
             log.debug(
-                f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
+                f"{name} calculated cut_dict is: {json.dumps(convert_dict_np_to_float(cut_dict), indent=2)}"
             )
 
             ct_mask = np.full(len(fft_data), True, dtype=bool)
@@ -171,7 +171,9 @@ def par_geds_hit_qc() -> None:
             cut_data = fft_data[ct_mask]
 
         log.debug("fft cuts applied")
-        log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
+        log.debug(
+            f"cut_dict is: {json.dumps(convert_dict_np_to_float(hit_dict_fft), indent=2)}"
+        )
 
     else:
         hit_dict_fft = {}
@@ -241,7 +243,9 @@ def par_geds_hit_qc() -> None:
         mask = mask[ct_mask[(~data["is_pulser"] & ~data["is_recovering"]).to_numpy()]]
         data = data[ct_mask]
         log.debug("initial cal cuts applied")
-        log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
+        log.debug(
+            f"cut_dict is: {json.dumps(convert_dict_np_to_float(hit_dict_init_cal), indent=2)}"
+        )
 
     else:
         hit_dict_init_cal = {}
