@@ -97,17 +97,30 @@ def par_geds_hit_qc() -> None:
     )
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
-    if len(fft_files) > 0:
-        fft_fields = get_keys(
-            [key.replace(search_name, "") for key in ls(fft_files[0], search_name)],
-            kwarg_dict_fft["cut_parameters"],
+    kwarg_dict_cal = kwarg_dict["cal_fields"]
+
+    cut_fields = get_keys(
+        [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
+        kwarg_dict_cal["cut_parameters"],
+    )
+    cut_fields = get_keys(
+        [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
+        kwarg_dict_fft["cut_parameters"],
+    )
+
+    if "initial_cal_cuts" in kwarg_dict:
+        init_cal = kwarg_dict["initial_cal_cuts"]
+        cut_fields += get_keys(
+            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
+            init_cal["cut_parameters"],
         )
 
+    if len(fft_files) > 0:
         fft_data = load_data(
             fft_files,
             args.table_name,
             {},
-            [*fft_fields, "t_sat_lo", "timestamp", "trapTmax"],
+            [*cut_fields, "t_sat_lo", "timestamp", "trapTmax"],
         )
 
         discharges = fft_data["t_sat_lo"] > 0
@@ -170,19 +183,6 @@ def par_geds_hit_qc() -> None:
                 if name in cut_name:
                     hit_dict_fft.update({cut_name: cut_dict})
 
-    kwarg_dict_cal = kwarg_dict["cal_fields"]
-
-    cut_fields = get_keys(
-        [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
-        kwarg_dict_cal["cut_parameters"],
-    )
-
-    if "initial_cal_cuts" in kwarg_dict:
-        init_cal = kwarg_dict["initial_cal_cuts"]
-        cut_fields += get_keys(
-            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
-            init_cal["cut_parameters"],
-        )
     # load data in
     data, threshold_mask = load_data(
         cal_files,
