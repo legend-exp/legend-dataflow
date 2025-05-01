@@ -277,17 +277,28 @@ def par_geds_hit_qc() -> None:
             exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
         fft_data[outname] = fft_data.eval(exp, local_dict=info.get("parameters", None))
         data[outname] = data.eval(exp, local_dict=info.get("parameters", None))
-    
 
     qc_results = {}
     for entry in hit_dict:
         if "classifier" not in entry:
-            sf_cal = len(data.query(f"{entry}& ~is_pulser & ~is_recovering")/len(data.query("~is_pulser & ~is_recovering")))
-            sf_cal_err = 100*((sf_cal) * (1 - sf_cal)) / len(data.query("~is_pulser & ~is_recovering"))
-            sf_fft = len(fft_data.query(f"{entry}& ~is_pulser & ~is_recovering")/len(fft_data.query("~is_pulser & ~is_recovering")))
-            sf_fft_err = 100*((sf_fft) * (1 - sf_fft)) / len(fft_data.query("~is_pulser & ~is_recovering"))
-            sf_cal *=100
-            sf_fft *=100
+            sf_cal = len(
+                data.query(f"{entry}& ~is_pulser & ~is_recovering")
+                / len(data.query("~is_pulser & ~is_recovering"))
+            )
+            sf_cal_err = 100 * np.sqrt(
+                ((sf_cal) * (1 - sf_cal))
+                / len(data.query("~is_pulser & ~is_recovering"))
+            )
+            sf_fft = len(
+                fft_data.query(f"{entry}& ~is_pulser & ~is_recovering")
+                / len(fft_data.query("~is_pulser & ~is_recovering"))
+            )
+            sf_fft_err = 100 * np.sqrt(
+                ((sf_fft) * (1 - sf_fft))
+                / len(fft_data.query("~is_pulser & ~is_recovering"))
+            )
+            sf_cal *= 100
+            sf_fft *= 100
             log.info(
                 f"{entry} cut applied: {sf_cal:.2f}% of events passed the cut for cal data, {sf_fft:.2f}% for fft data"
             )
@@ -299,7 +310,9 @@ def par_geds_hit_qc() -> None:
             }
 
     Path(args.save_path).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(args.save_path, {"operations":hit_dict, "results":{"qc": qc_results}})
+    Props.write_to(
+        args.save_path, {"operations": hit_dict, "results": {"qc": qc_results}}
+    )
 
     if args.plot_path:
         Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)

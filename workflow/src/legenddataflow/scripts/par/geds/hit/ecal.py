@@ -490,7 +490,6 @@ def par_geds_hit_ecal() -> None:
         in_results_dict = hit_dict.get("results", {})
         hit_dict = hit_dict.get("operations", hit_dict)
 
-
     db_files = [
         par_file
         for par_file in args.ctc_dict
