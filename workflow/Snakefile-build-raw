@@ -125,3 +125,6 @@ rule compress_data:
     threads: 10
     shell:
         "pbzip2 -p{threads} -z {input}"
+
+
+ruleorder: compress_data > sort_data
