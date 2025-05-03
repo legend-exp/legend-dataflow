@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import argparse
 import copy
+import logging
 import pickle as pkl
 import warnings
 from datetime import datetime
 from pathlib import Path
-import logging
 
 import lgdo.lh5 as lh5
 import matplotlib as mpl
@@ -641,8 +641,10 @@ def par_geds_hit_ecal() -> None:
             energy = np.concatenate(e_uncal)
 
         if len(energy) < len(data):
-            logging.warning('len(energy) and len(data) are not the same')
-            energy = np.pad(energy, (0, len(data) - len(energy)), constant_values=np.nan)
+            logging.warning("len(energy) and len(data) are not the same")
+            energy = np.pad(
+                energy, (0, len(data) - len(energy)), constant_values=np.nan
+            )
 
         if len(data) < len(energy):
             energy = energy[: len(data)]
