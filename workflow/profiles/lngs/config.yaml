@@ -1,4 +1,4 @@
-cores: 125
+cores: 90
 restart-times: 2
 resources:
   - mem_swap=3500
