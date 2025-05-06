@@ -598,7 +598,8 @@ def par_geds_hit_ecal() -> None:
                         np.nanpercentile(e_uncal, 99.9),
                     ],
                 )
-        else: raise ValueError("e_uncal should not be empty!")
+        else:
+            raise ValueError("e_uncal should not be empty!")
         guess = 2614.511 / bins[np.nanargmax(hist)]
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param,
