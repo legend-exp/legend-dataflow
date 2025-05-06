@@ -578,17 +578,17 @@ def par_geds_hit_ecal() -> None:
                 ],
                 dx=1,
                 range=[np.nanpercentile(flattened_e_uncal, 95), np.nanpercentile(flattened_e_uncal, 99.9)],
-            )
+                )
 
             else:
-            hist, bins, bar = pgh.get_hist(
-                e_uncal[
-                    (e_uncal > np.nanpercentile(e_uncal, 95))
-                    & (e_uncal < np.nanpercentile(e_uncal, 99.9))
-                ],
-                dx=1,
-                range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
-            )
+                hist, bins, bar = pgh.get_hist(
+                    e_uncal[
+                        (e_uncal > np.nanpercentile(e_uncal, 95))
+                        & (e_uncal < np.nanpercentile(e_uncal, 99.9))
+                    ],
+                    dx=1,
+                    range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
+                )
 
         guess = 2614.511 / bins[np.nanargmax(hist)]
         full_object_dict[cal_energy_param] = HPGeCalibration(
