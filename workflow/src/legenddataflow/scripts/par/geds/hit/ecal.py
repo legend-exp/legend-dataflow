@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import logging
 import pickle as pkl
 import warnings
 from datetime import datetime
@@ -575,16 +576,40 @@ def par_geds_hit_ecal() -> None:
         kwarg_dict["energy_params"], cal_energy_params
     ):
         e_uncal = data.query(selection_string)[energy_param].to_numpy()
+        if len(e_uncal) > 0:
+            if isinstance(e_uncal[0], (np.ndarray, list)):
+                flattened_e_uncal = np.concatenate(
+                    [arr for arr in e_uncal if len(arr) > 0]
+                )
+                hist, bins, bar = pgh.get_hist(
+                    flattened_e_uncal[
+                        (flattened_e_uncal > np.nanpercentile(flattened_e_uncal, 95))
+                        & (
+                            flattened_e_uncal
+                            < np.nanpercentile(eflattened_e_uncal, 99.9)
+                        )
+                    ],
+                    dx=1,
+                    range=[
+                        np.nanpercentile(flattened_e_uncal, 95),
+                        np.nanpercentile(flattened_e_uncal, 99.9),
+                    ],
+                )
 
-        hist, bins, bar = pgh.get_hist(
-            e_uncal[
-                (e_uncal > np.nanpercentile(e_uncal, 95))
-                & (e_uncal < np.nanpercentile(e_uncal, 99.9))
-            ],
-            dx=1,
-            range=[np.nanpercentile(e_uncal, 95), np.nanpercentile(e_uncal, 99.9)],
-        )
-
+            else:
+                hist, bins, bar = pgh.get_hist(
+                    e_uncal[
+                        (e_uncal > np.nanpercentile(e_uncal, 95))
+                        & (e_uncal < np.nanpercentile(e_uncal, 99.9))
+                    ],
+                    dx=1,
+                    range=[
+                        np.nanpercentile(e_uncal, 95),
+                        np.nanpercentile(e_uncal, 99.9),
+                    ],
+                )
+        else:
+            raise ValueError("e_uncal should not be empty!")
         guess = 2614.511 / bins[np.nanargmax(hist)]
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param,
@@ -645,8 +670,21 @@ def par_geds_hit_ecal() -> None:
             interp_energy_kev={"Qbb": 2039.0},
         )
 
+        energy = data[energy_param].to_numpy()
+        if isinstance(energy[0], (np.ndarray, list)):
+            energy = np.concatenate(e_uncal)
+
+        if len(energy) < len(data):
+            logging.warning("len(energy) and len(data) are not the same")
+            energy = np.pad(
+                energy, (0, len(data) - len(energy)), constant_values=np.nan
+            )
+
+        if len(data) < len(energy):
+            energy = energy[: len(data)]
+
         data[cal_energy_param] = nb_poly(
-            data[energy_param].to_numpy(), full_object_dict[cal_energy_param].pars
+            energy, full_object_dict[cal_energy_param].pars
         )
 
         results_dict[cal_energy_param] = get_results_dict(
