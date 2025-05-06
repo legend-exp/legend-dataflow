@@ -566,9 +566,11 @@ def par_geds_hit_ecal() -> None:
         kwarg_dict["energy_params"], cal_energy_params
     ):
         e_uncal = data.query(selection_string)[energy_param].to_numpy()
-        if len(e_uncal)>0:
-            if (isinstance(e_uncal[0], (np.ndarray, list))):  
-                flattened_e_uncal = np.concatenate([arr for arr in e_uncal if len(arr) > 0])
+        if len(e_uncal) > 0:
+            if isinstance(e_uncal[0], (np.ndarray, list)):
+                flattened_e_uncal = np.concatenate(
+                    [arr for arr in e_uncal if len(arr) > 0]
+                )
 
         hist, bins, bar = pgh.get_hist(
             e_uncal[
