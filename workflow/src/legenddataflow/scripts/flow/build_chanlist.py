@@ -1,21 +1,22 @@
 # ruff: noqa: F821, T201
+from __future__ import annotations
 
 from pathlib import Path
 
 from dbetto import TextDB
 
-from legenddataflow.FileKey import ChannelProcKey
-from legenddataflow.patterns import (
+from legenddataflow.methods import ChannelProcKey
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )
 
 
 def get_chanlist(timestamp, datatype, det_status, channelmap, system):
-    if isinstance(det_status, (str, Path)):
+    if isinstance(det_status, str | Path):
         det_status = TextDB(det_status, lazy=True)
 
-    if isinstance(channelmap, (str, Path)):
+    if isinstance(channelmap, str | Path):
         channelmap = TextDB(channelmap, lazy=True)
 
     if isinstance(det_status, TextDB):

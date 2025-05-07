@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+
 from legenddataflow.convert_np import convert_dict_np_to_float
 
 

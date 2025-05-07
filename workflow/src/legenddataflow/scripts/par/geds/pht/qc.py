@@ -10,16 +10,17 @@ from pathlib import Path
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import (
+    build_log,
+    convert_dict_np_to_float,
+    get_pulser_mask,
+)
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
 )
 from pygama.pargen.utils import load_data
-
-from .....convert_np import convert_dict_np_to_float
-from .....log import build_log
-from ....pulser_removal import get_pulser_mask
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -138,7 +139,8 @@ def par_geds_pht_qc() -> None:
             hit_dict_fft = {}
             plot_dict_fft = {}
             cut_data = fft_data.query("is_recovering==0")
-            log.debug(f"cut_data shape: {len(cut_data)}")
+            msg = f"cut_data shape: {len(cut_data)}"
+            log.debug(msg)
             for name, cut in kwarg_dict_fft["cut_parameters"].items():
                 cut_dict, cut_plots = generate_cut_classifiers(
                     cut_data,
@@ -149,9 +151,8 @@ def par_geds_pht_qc() -> None:
                 hit_dict_fft.update(cut_dict)
                 plot_dict_fft.update(cut_plots)
 
-                log.debug(
-                    f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
-                )
+                msg = f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
+                log.debug(msg)
 
                 ct_mask = np.full(len(cut_data), True, dtype=bool)
                 for outname, info in cut_dict.items():
@@ -169,7 +170,8 @@ def par_geds_pht_qc() -> None:
                 cut_data = cut_data[ct_mask]
 
             log.debug("fft cuts applied")
-            log.debug(f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}")
+            msg = f"cut_dict is: {json.dumps(hit_dict_fft, indent=2)}"
+            log.debug(msg)
 
         else:
             hit_dict_fft = {}
@@ -259,7 +261,8 @@ def par_geds_pht_qc() -> None:
         mask = mask[ct_mask[(~data["is_pulser"] & ~data["is_recovering"]).to_numpy()]]
         data = data[ct_mask]
         log.debug("initial cal cuts applied")
-        log.debug(f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}")
+        msg = f"cut_dict is: {json.dumps(hit_dict_init_cal, indent=2)}"
+        log.debug(msg)
 
     else:
         hit_dict_init_cal = {}
@@ -275,7 +278,8 @@ def par_geds_pht_qc() -> None:
     )
 
     log.debug("initial cuts applied")
-    log.debug(f"cut_dict is: {json.dumps(hit_dict_cal, indent=2)}")
+    msg = f"cut_dict is: {json.dumps(hit_dict_cal, indent=2)}"
+    log.debug(msg)
 
     if overwrite is not None:
         for name in kwarg_dict_cal["cut_parameters"]:

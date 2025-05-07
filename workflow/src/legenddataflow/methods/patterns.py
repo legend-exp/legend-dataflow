@@ -2,6 +2,8 @@
 This module contains all the patterns needed for the data production
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from .paths import (
@@ -60,8 +62,7 @@ def get_pattern_tier_daq_unsorted(setup, extension="orca"):
         return Path(f"{sandbox_path(setup)}") / (
             "{experiment}-{period}-{run}-{datatype}-{timestamp}." + extension
         )
-    else:
-        return None
+    return None
 
 
 def get_pattern_tier_daq(setup, extension="orca"):
@@ -117,8 +118,7 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
         and check_in_cycle is True
     ):
         return "/tmp/" + file_pattern.name
-    else:
-        return file_pattern
+    return file_pattern
 
 
 def get_pattern_pars(
@@ -140,19 +140,18 @@ def get_pattern_pars(
                     + f"{tier}_{name}.{extension}"
                 )
             )
-        else:
-            file_pattern = (
-                Path(get_pars_path(setup, tier))
-                / datatype
-                / "{period}"
-                / "{run}"
-                / (
-                    "{experiment}-{period}-{run}-"
-                    + datatype
-                    + "-{timestamp}-par_"
-                    + f"{tier}.{extension}"
-                )
+        file_pattern = (
+            Path(get_pars_path(setup, tier))
+            / datatype
+            / "{period}"
+            / "{run}"
+            / (
+                "{experiment}-{period}-{run}-"
+                + datatype
+                + "-{timestamp}-par_"
+                + f"{tier}.{extension}"
             )
+        )
     else:
         msg = "invalid tier"
         raise Exception(msg)
@@ -167,13 +166,11 @@ def get_pattern_pars(
                 + "-{timestamp}-"
                 + f"par_{tier}.{extension}"
             )
-        else:
-            return (
-                "/tmp/{experiment}-{period}-{run}-" + datatype + "-{timestamp}-"
-                f"par_{tier}_{name}.{extension}"
-            )
-    else:
-        return file_pattern
+        return (
+            "/tmp/{experiment}-{period}-{run}-" + datatype + "-{timestamp}-"
+            f"par_{tier}_{name}.{extension}"
+        )
+    return file_pattern
 
 
 def get_pattern_pars_inputs(setup, tier, name=None, ext="yaml"):
@@ -189,15 +186,14 @@ def get_pattern_pars_inputs(setup, tier, name=None, ext="yaml"):
                 + f"par_{tier}_{name}.{ext}"
             )
         )
-    else:
-        return (
-            Path(f"{par_overwrite_path(setup)}")
-            / tier
-            / "cal"
-            / "{period}"
-            / "{run}"
-            / ("{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{ext}")
-        )
+    return (
+        Path(f"{par_overwrite_path(setup)}")
+        / tier
+        / "cal"
+        / "{period}"
+        / "{run}"
+        / ("{experiment}-{period}-{run}-cal-{timestamp}-" + f"par_{tier}.{ext}")
+    )
 
 
 def get_pattern_pars_overwrite(setup, tier, name=None, extension="yaml"):
@@ -213,19 +209,18 @@ def get_pattern_pars_overwrite(setup, tier, name=None, extension="yaml"):
                 f"{tier}_{name}-overwrite.{extension}"
             )
         )
-    else:
-        return (
-            Path(f"{par_overwrite_path(setup)}")
-            / tier
-            / "{datatype}"
-            / "{period}"
-            / "{run}"
-            / (
-                "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
-                + tier
-                + f"-overwrite.{extension}"
-            )
+    return (
+        Path(f"{par_overwrite_path(setup)}")
+        / tier
+        / "{datatype}"
+        / "{period}"
+        / "{run}"
+        / (
+            "{experiment}-{period}-{run}-{datatype}-{timestamp}-par_"
+            + tier
+            + f"-overwrite.{extension}"
         )
+    )
 
 
 def get_pattern_pars_tmp(setup, tier, name=None, datatype=None, extension="yaml"):
@@ -238,13 +233,12 @@ def get_pattern_pars_tmp(setup, tier, name=None, datatype=None, extension="yaml"
             + "-{timestamp}-par_"
             + f"{tier}.{extension}"
         )
-    else:
-        return Path(f"{tmp_par_path(setup)}") / (
-            "{experiment}-{period}-{run}-"
-            + datatype
-            + "-{timestamp}"
-            + f"par_{tier}_{name}.{extension}"
-        )
+    return Path(f"{tmp_par_path(setup)}") / (
+        "{experiment}-{period}-{run}-"
+        + datatype
+        + "-{timestamp}"
+        + f"par_{tier}_{name}.{extension}"
+    )
 
 
 def get_pattern_pars_tmp_channel(
@@ -259,13 +253,12 @@ def get_pattern_pars_tmp_channel(
             + "-{timestamp}-{channel}-par_"
             + f"{tier}.{extension}"
         )
-    else:
-        return Path(f"{tmp_par_path(setup)}") / (
-            "{experiment}-{period}-{run}-"
-            + datatype
-            + "-{timestamp}-{channel}-par_"
-            + f"{tier}_{name}.{extension}"
-        )
+    return Path(f"{tmp_par_path(setup)}") / (
+        "{experiment}-{period}-{run}-"
+        + datatype
+        + "-{timestamp}-{channel}-par_"
+        + f"{tier}_{name}.{extension}"
+    )
 
 
 def get_pattern_plts_tmp_channel(setup, tier, name=None, extension="pkl"):
@@ -274,11 +267,10 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None, extension="pkl"):
             "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
             + f"{tier}.{extension}"
         )
-    else:
-        return Path(f"{tmp_plts_path(setup)}") / (
-            "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
-            + f"{tier}_{name}.{extension}"
-        )
+    return Path(f"{tmp_plts_path(setup)}") / (
+        "{experiment}-{period}-{run}-cal-{timestamp}-{channel}-plt_"
+        + f"{tier}_{name}.{extension}"
+    )
 
 
 def get_pattern_plts(setup, tier, name=None):
@@ -291,21 +283,20 @@ def get_pattern_plts(setup, tier, name=None):
             / "{run}"
             / ("{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir")
         )
-    else:
-        return (
-            Path(f"{plts_path(setup)}")
-            / tier
-            / "cal"
-            / "{period}"
-            / "{run}"
-            / (
-                "{experiment}-{period}-{run}-cal-{timestamp}-plt_"
-                + tier
-                + "_"
-                + name
-                + ".dir"
-            )
+    return (
+        Path(f"{plts_path(setup)}")
+        / tier
+        / "cal"
+        / "{period}"
+        / "{run}"
+        / (
+            "{experiment}-{period}-{run}-cal-{timestamp}-plt_"
+            + tier
+            + "_"
+            + name
+            + ".dir"
         )
+    )
 
 
 def get_pattern_log(setup, processing_step, time):

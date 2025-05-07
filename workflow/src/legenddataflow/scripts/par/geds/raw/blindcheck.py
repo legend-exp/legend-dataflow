@@ -6,6 +6,8 @@ there are peaks within 5keV of the 583 and 2614 peaks. If the detector is in ac 
 then it will skip the check.
 """
 
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 from pathlib import Path
@@ -16,12 +18,11 @@ import numexpr as ne
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log
 from legendmeta import LegendMetadata
 from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
-
-from .....log import build_log
 
 mpl.use("Agg")
 
@@ -82,7 +83,8 @@ def par_geds_raw_blindcheck() -> None:
     # bin with 1 keV bins and get maxs
     hist, bins, var = get_hist(daqenergy_cal, np.arange(0, 3000, 1))
     maxs = get_i_local_maxima(hist, delta=25)
-    log.info(f"peaks found at : {maxs}")
+    msg = f"peaks found at : {maxs}"
+    log.info(msg)
 
     # plot the energy spectrum to check calibration
     fig = plt.figure(figsize=(8, 10))

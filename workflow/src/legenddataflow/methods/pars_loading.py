@@ -3,6 +3,8 @@ This module uses the time validity resolving in calibcatalog
 to determine the par and par overwrite for a particular timestamp
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from dbetto.catalog import Catalog

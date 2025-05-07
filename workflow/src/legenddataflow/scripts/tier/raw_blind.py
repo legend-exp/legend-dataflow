@@ -10,17 +10,17 @@ but this is controlled by the Snakemake flow (presumably an error is thrown if t
 is not found). This script itself does not check for the existence of such a file.
 """
 
+from __future__ import annotations
+
 import argparse
 import time
 
 import numexpr as ne
 import numpy as np
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import alias_table, build_log
 from legendmeta import LegendMetadata, TextDB
 from lgdo import lh5
-
-from ...alias_table import alias_table
-from ...log import build_log
 
 
 def build_tier_raw_blind() -> None:
@@ -160,7 +160,8 @@ def build_tier_raw_blind() -> None:
         )
 
     log.info("Finished blinding Ge channels")
-    log.info(f"Time taken: {time.time() - start:.2f} seconds")
+    msg = f"Time taken: {time.time() - start:.2f} seconds"
+    log.info(msg)
     if args.alias_table is not None:
         log.info("Creating alias table")
         alias_table(args.output, args.alias_table)

@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
-
-from .....log import build_log
 
 
 def par_geds_tcm_pulser() -> None:

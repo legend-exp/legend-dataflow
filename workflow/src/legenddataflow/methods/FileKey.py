@@ -2,6 +2,8 @@
 This module contains classes to convert between keys and files using the patterns defined in patterns.py
 """
 
+from __future__ import annotations
+
 import re
 import string
 from collections import namedtuple
@@ -86,15 +88,14 @@ class FileKey(
 
         if key_pattern_rx.match(filename) is None:
             return None
-        else:
-            d = key_pattern_rx.match(filename).groupdict()
-            for entry in list(d):
-                if entry not in cls._fields:
-                    d.pop(entry)
-            for wildcard in cls._fields:
-                if wildcard not in d:
-                    d[wildcard] = "*"
-            return cls(**d)
+        d = key_pattern_rx.match(filename).groupdict()
+        for entry in list(d):
+            if entry not in cls._fields:
+                d.pop(entry)
+        for wildcard in cls._fields:
+            if wildcard not in d:
+                d[wildcard] = "*"
+        return cls(**d)
 
     @classmethod
     def unix_time_from_string(cls, value):
@@ -128,23 +129,22 @@ class FileKey(
         formatter = string.Formatter()
         result = []
         for combo in product(*wildcard_dict.values()):
-            substitution = dict(zip(list(wildcard_dict), combo))
+            substitution = dict(zip(list(wildcard_dict), combo, strict=False))
             result.append(formatter.vformat(file_pattern, (), substitution))
         return result
 
     def get_path_from_filekey(self, pattern, **kwargs):
         if kwargs is None:
             return self.expand(pattern, **kwargs)
-        else:
-            for entry, value in kwargs.items():
-                if isinstance(value, dict):
-                    if len(next(iter(set(value).intersection(self._list())))) > 0:
-                        kwargs[entry] = value[
-                            next(iter(set(value).intersection(self._list())))
-                        ]
-                    else:
-                        kwargs.pop(entry)
-            return self.expand(pattern, **kwargs)
+        for entry, value in kwargs.items():
+            if isinstance(value, dict):
+                if len(next(iter(set(value).intersection(self._list())))) > 0:
+                    kwargs[entry] = value[
+                        next(iter(set(value).intersection(self._list())))
+                    ]
+                else:
+                    kwargs.pop(entry)
+        return self.expand(pattern, **kwargs)
 
     # get_path_from_key
     @classmethod
@@ -198,8 +198,7 @@ class ProcessingFileKey(FileKey):
     def processing_step(self):
         if self.identifier is not None:
             return f"{self.processing_type}_{self.tier}_{self.identifier}"
-        else:
-            return f"{self.processing_type}_{self.tier}"
+        return f"{self.processing_type}_{self.tier}"
 
     @property
     def name(self):
@@ -212,16 +211,15 @@ class ProcessingFileKey(FileKey):
             pattern = pattern(self.tier, self.identifier)
         if kwargs is None:
             return self.expand(pattern, **kwargs)
-        else:
-            for entry, value in kwargs.items():
-                if isinstance(value, dict):
-                    if len(next(iter(set(value).intersection(self._list())))) > 0:
-                        kwargs[entry] = value[
-                            next(iter(set(value).intersection(self._list())))
-                        ]
-                    else:
-                        kwargs.pop(entry)
-            return self.expand(pattern, **kwargs)
+        for entry, value in kwargs.items():
+            if isinstance(value, dict):
+                if len(next(iter(set(value).intersection(self._list())))) > 0:
+                    kwargs[entry] = value[
+                        next(iter(set(value).intersection(self._list())))
+                    ]
+                else:
+                    kwargs.pop(entry)
+        return self.expand(pattern, **kwargs)
 
 
 class ChannelProcKey(FileKey):

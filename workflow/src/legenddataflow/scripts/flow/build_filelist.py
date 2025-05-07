@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import glob
 import json
 from pathlib import Path
 
 import yaml
 
-from . import patterns as patt
-from .FileKey import FileKey, run_grouper
+import legenddataflow.methods.patterns as patt
+from legenddataflow.methods import FileKey, run_grouper
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -214,29 +216,20 @@ def build_filelist(
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
 
-                if analysis_runs == {}:
+                if analysis_runs == {} or (
+                    _key.datatype in analysis_runs
+                    and _key.period in analysis_runs[_key.datatype]
+                    and (
+                        _key.run in analysis_runs[_key.datatype][_key.period]
+                        or analysis_runs[_key.datatype][_key.period] == "all"
+                    )
+                ):
                     if (
                         _key.datatype in concat_datatypes
                     ):  # separate out phy files as some tiers these are concatenated
                         phy_filenames += filename
                     else:
                         other_filenames += filename
-                else:
-                    # check if period in analysis_runs dicts
-                    # check if run in analysis_runs dicts
-                    # or if runs is just specified as "all"
-                    if (
-                        _key.datatype in analysis_runs
-                        and _key.period in analysis_runs[_key.datatype]
-                        and (
-                            _key.run in analysis_runs[_key.datatype][_key.period]
-                            or analysis_runs[_key.datatype][_key.period] == "all"
-                        )
-                    ):
-                        if _key.datatype in concat_datatypes:
-                            phy_filenames += filename  # separate out phy files as some tiers these are concatenated
-                        else:
-                            other_filenames += filename
 
     phy_filenames = sorted(phy_filenames)
     other_filenames = sorted(other_filenames)

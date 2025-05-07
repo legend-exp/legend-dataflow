@@ -7,18 +7,16 @@ import re
 import warnings
 from pathlib import Path
 
-import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log, convert_dict_np_to_float
+from lgdo import lh5
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
 )
-
-from .....convert_np import convert_dict_np_to_float
-from .....log import build_log
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
@@ -122,12 +120,14 @@ def par_geds_pht_qc_phy() -> None:
         )
     data["is_recovering"] = is_recovering
 
-    log.debug(f"{len(discharge_timestamps)} discharges found in {len(data)} events")
+    msg = f"{len(discharge_timestamps)} discharges found in {len(data)} events"
+    log.debug(msg)
 
     hit_dict = {}
     plot_dict = {}
     cut_data = data.query("is_recovering==0")
-    log.debug(f"cut_data shape: {len(cut_data)}")
+    msg = f"cut_data shape: {len(cut_data)}"
+    log.debug(msg)
     for name, cut in kwarg_dict_fft["cut_parameters"].items():
         cut_dict, cut_plots = generate_cut_classifiers(
             cut_data,
@@ -138,7 +138,8 @@ def par_geds_pht_qc_phy() -> None:
         hit_dict.update(cut_dict)
         plot_dict.update(cut_plots)
 
-        log.debug(f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}")
+        msg = f"{name} calculated cut_dict is: {json.dumps(cut_dict, indent=2)}"
+        log.debug(msg)
 
         ct_mask = np.full(len(cut_data), True, dtype=bool)
         for outname, info in cut_dict.items():
@@ -154,7 +155,8 @@ def par_geds_pht_qc_phy() -> None:
         cut_data = cut_data[ct_mask]
 
     log.debug("fft cuts applied")
-    log.debug(f"cut_dict is: {json.dumps(hit_dict, indent=2)}")
+    msg = f"cut_dict is: {json.dumps(hit_dict, indent=2)}"
+    log.debug(msg)
 
     hit_dict = convert_dict_np_to_float(hit_dict)
 
