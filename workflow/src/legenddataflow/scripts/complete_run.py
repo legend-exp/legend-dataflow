@@ -146,7 +146,7 @@ def build_file_dbs(gen_tier_path, outdir, ignore_keys_file=None):
             str(logfile),
         ]
         if ignore_keys_file is not None:
-            cmdline += ["--ignore-keys-file", str(ignore_keys_file)]
+            cmdline += ["--ignore-keys", str(ignore_keys_file)]
 
         if speck[0] == "phy":
             cmdline += ["--assume-nonsparse"]

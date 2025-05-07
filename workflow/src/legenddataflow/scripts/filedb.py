@@ -98,8 +98,8 @@ def build_filedb() -> None:
             msg = f"something went wrong! timestamp {timestamps[i]} does not make sense"
             raise RuntimeError(msg)
 
-    fdb.df = fdb.df.drop(drop_rows)
-
     fdb.df["first_timestamp"] = timestamps
+
+    fdb.df = fdb.df.drop(drop_rows)
 
     fdb.to_disk(args.output, wo_mode="of")
