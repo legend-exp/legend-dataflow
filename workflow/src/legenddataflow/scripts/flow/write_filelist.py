@@ -1,4 +1,6 @@
 # ruff: noqa: F821, T201
+from __future__ import annotations
+
 from pathlib import Path
 
 from snakemake.script import snakemake  # snakemake > 8.16

@@ -11,20 +11,18 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log, get_pulser_mask
 from legendmeta import LegendMetadata
 from pygama.pargen.utils import load_data
-from workflow.src.legenddataflow.scripts.par.geds.pht.aoe import run_aoe_calibration
-from workflow.src.legenddataflow.scripts.par.geds.pht.ecal_part import (
-    calibrate_partition,
-)
-from workflow.src.legenddataflow.scripts.par.geds.pht.lq import run_lq_calibration
 
-from .....FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
-from .....log import build_log
-from ....pulser_removal import get_pulser_mask
+from legenddataflow.methods import ChannelProcKey, ProcessingFileKey, run_splitter
+
+from .aoe import run_aoe_calibration
+from .ecal_part import calibrate_partition
+from .lq import run_lq_calibration
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.RankWarning)
+warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
 
 
 def par_geds_pht_fast() -> None:

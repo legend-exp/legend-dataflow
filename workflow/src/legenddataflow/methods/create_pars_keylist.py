@@ -2,6 +2,8 @@
 This module creates the validity files used for determining the time validity of data
 """
 
+from __future__ import annotations
+
 import re
 import warnings
 from pathlib import Path
@@ -24,10 +26,8 @@ class ParsKeyResolve(ParsCatalog):
         ):
             if key1.get_unix_timestamp() < key2.get_unix_timestamp():
                 return key1
-            else:
-                return key2
-        else:
             return key2
+        return key2
 
     @classmethod
     def entry_from_filekey(cls, filekey, name_dict):
@@ -105,7 +105,7 @@ class ParsKeyResolve(ParsCatalog):
     def get_par_catalog(cls, keypart, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
-        if isinstance(search_patterns, (str, Path)):
+        if isinstance(search_patterns, str | Path):
             search_patterns = [search_patterns]
         keylist = []
         for search_pattern in search_patterns:

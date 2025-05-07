@@ -2,6 +2,8 @@
 This module uses the partition database files to the necessary inputs for partition calibrations
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from dbetto import Props
@@ -161,8 +163,7 @@ class CalGrouping:
             return fk.get_path_from_filekey(
                 get_pattern_log_channel(self.setup, name, processing_timestamp)
             )[0]
-        else:
-            return "log.log"
+        return "log.log"
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
@@ -179,25 +180,23 @@ class CalGrouping:
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             return fk.timestamp
-        else:
-            return "20240101T000000Z"
+        return "20240101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
         if channel == "default":
             exclude_chans = []
             default_runs = self.get_dataset(dataset, channel)
-            for channel, chan_dict in self.datasets.items():
-                if channel != "default":
+            for chan, chan_dict in self.datasets.items():
+                if chan != "default":
                     for _, dataset_dict in chan_dict.items():
                         for period, runs in dataset_dict.items():
                             if period in default_runs:
                                 for run in runs:
                                     if run in default_runs[period]:
-                                        exclude_chans.append(channel)
+                                        exclude_chans.append(chan)
             exclude_chans = set(exclude_chans)
             out_string = ""
-            for channel in exclude_chans:
-                out_string += f"(?!{channel})"
+            for chan in exclude_chans:
+                out_string += f"(?!{chan})"
             return out_string + r"[PCVB]{1}\d{1}\w{5}"
-        else:
-            return r"[PCVB]{1}\d{1}\w{5}"
+        return r"[PCVB]{1}\d{1}\w{5}"

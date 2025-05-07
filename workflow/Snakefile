@@ -21,10 +21,10 @@ import logging
 from dbetto import AttrsDict, TextDB
 from legendmeta import LegendMetadata
 from legenddataflow import CalGrouping, execenv, utils
-import legenddataflow.paths as paths
-from legenddataflow.patterns import get_pattern_tier
-from legenddataflow.pre_compile_catalog import pre_compile_catalog
-from legenddataflow.build_filelist import get_filelist
+import legenddataflow.methods.paths as paths
+from legenddataflow.methods.patterns import get_pattern_tier
+from legenddataflowscripts import pre_compile_catalog
+from legenddataflow.scripts.flow.build_filelist import get_filelist
 
 
 envvars:
@@ -146,7 +146,7 @@ onsuccess:
     import asyncio
 
     rep_dir = Path(
-        f"{log_path(config)}/report-{datetime.strftime(datetime.utcnow(), '%Y%m%dT%H%M%SZ')}"
+        f"{log_path(config)}/report-{datetime.strftime(datetime.utcnow() , '%Y%m%dT%H%M%SZ')}"
     )
     rep_dir.mkdir(parents=True, exist_ok=True)
     # auto_report(workflow.persistence.dag, f"{rep_dir}/report.html")

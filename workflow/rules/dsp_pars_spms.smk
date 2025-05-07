@@ -51,7 +51,7 @@ rule build_pars_dsp_tau_spms:
     group:
         "par-dsp"
     shell:
-        f'{execenv_pyexe(config, "par-spms-dsp-trg-thr-multi")} '
+        f'{execenv_pyexe(config , "par-spms-dsp-trg-thr-multi")} '
         "--config-path {params.configs} "
         "--raw-file {input.raw_file} "
         "--dsp-db {input.pardb} "

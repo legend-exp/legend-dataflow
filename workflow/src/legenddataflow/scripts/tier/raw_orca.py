@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import time
@@ -6,9 +8,7 @@ from pathlib import Path
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
-
-from ...alias_table import alias_table
-from ...log import build_log
+from legenddataflowscripts.utils import alias_table, build_log
 
 
 def build_tier_raw_orca() -> None:
@@ -99,7 +99,8 @@ def build_tier_raw_orca() -> None:
         **settings,
     )
 
-    log.info(f"Built raw in {time.time() - start:.2f} seconds")
+    msg = f"Built raw in {time.time() - start:.2f} seconds"
+    log.info(msg)
 
     if args.alias_table is not None:
         log.info("Creating alias table")

@@ -1,4 +1,5 @@
 # ruff: noqa: F821, T201
+from __future__ import annotations
 
 import datetime
 import json

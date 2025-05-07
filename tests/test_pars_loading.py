@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -44,19 +46,19 @@ def test_get_par_file():
     )
     log.debug(catalog)
 
-    with patch("legenddataflow.pars_loading.pars_path") as mock_pars_path, patch(
-        "legenddataflow.pars_loading.get_pars_path"
-    ) as mock_get_pars_path, patch(
-        "legenddataflow.pars_loading.par_overwrite_path"
-    ) as mock_par_overwrite_path, patch(
-        "legenddataflow.pars_loading.det_status_path"
-    ) as mock_det_status_path, patch(
-        "legenddataflow.pars_loading.ParsCatalog.read_from"
-    ) as mock_read_from, patch(
-        "legenddataflow.pars_loading.ParsCatalog.valid_for"
-    ) as mock_valid_for, patch(
-        "legenddataflow.pars_loading.ParsCatalog.match_pars_files"
-    ) as mock_match_pars_files:
+    with (
+        patch("legenddataflow.pars_loading.pars_path") as mock_pars_path,
+        patch("legenddataflow.pars_loading.get_pars_path") as mock_get_pars_path,
+        patch(
+            "legenddataflow.pars_loading.par_overwrite_path"
+        ) as mock_par_overwrite_path,
+        patch("legenddataflow.pars_loading.det_status_path") as mock_det_status_path,
+        patch("legenddataflow.pars_loading.ParsCatalog.read_from") as mock_read_from,
+        patch("legenddataflow.pars_loading.ParsCatalog.valid_for") as mock_valid_for,
+        patch(
+            "legenddataflow.pars_loading.ParsCatalog.match_pars_files"
+        ) as mock_match_pars_files,
+    ):
         mock_pars_path.return_value = setup["paths"]["par"]
         mock_get_pars_path.return_value = setup["paths"]["par"]
         mock_par_overwrite_path.return_value = setup["paths"]["overwrite"]
