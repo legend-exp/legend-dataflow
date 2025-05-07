@@ -105,7 +105,7 @@ class ParsKeyResolve(ParsCatalog):
     def get_par_catalog(cls, keypart, search_patterns, name_dict):
         if isinstance(keypart, str):
             keypart = [keypart]
-        if isinstance(search_patterns, (str, Path)):
+        if isinstance(search_patterns, str | Path):
             search_patterns = [search_patterns]
         keylist = []
         for search_pattern in search_patterns:

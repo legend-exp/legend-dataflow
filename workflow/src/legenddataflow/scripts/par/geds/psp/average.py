@@ -10,9 +10,9 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 from dbetto import Props, TextDB
+from legenddataflowscripts.utils import convert_dict_np_to_float
 
-from .....convert_np import convert_dict_np_to_float
-from .....FileKey import ChannelProcKey
+from legenddataflow.methods import ChannelProcKey
 
 mpl.use("Agg")
 

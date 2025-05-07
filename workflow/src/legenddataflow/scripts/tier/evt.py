@@ -6,13 +6,13 @@ from pathlib import Path
 
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB
+from legenddataflowscripts.utils import build_log
 from legendmeta import LegendMetadata
 from lgdo import lh5
 from lgdo.types import Array
 from pygama.evt import build_evt
 
 from ...FileKey import ProcessingFileKey
-from ...log import build_log
 
 
 def build_tier_evt() -> None:

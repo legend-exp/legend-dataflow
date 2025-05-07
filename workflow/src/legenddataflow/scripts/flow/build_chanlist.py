@@ -13,10 +13,10 @@ from legenddataflow.methods.patterns import (
 
 
 def get_chanlist(timestamp, datatype, det_status, channelmap, system):
-    if isinstance(det_status, (str, Path)):
+    if isinstance(det_status, str | Path):
         det_status = TextDB(det_status, lazy=True)
 
-    if isinstance(channelmap, (str, Path)):
+    if isinstance(channelmap, str | Path):
         channelmap = TextDB(channelmap, lazy=True)
 
     if isinstance(det_status, TextDB):

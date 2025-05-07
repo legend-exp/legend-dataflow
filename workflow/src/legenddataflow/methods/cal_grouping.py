@@ -186,17 +186,17 @@ class CalGrouping:
         if channel == "default":
             exclude_chans = []
             default_runs = self.get_dataset(dataset, channel)
-            for channel, chan_dict in self.datasets.items():
-                if channel != "default":
+            for chan, chan_dict in self.datasets.items():
+                if chan != "default":
                     for _, dataset_dict in chan_dict.items():
                         for period, runs in dataset_dict.items():
                             if period in default_runs:
                                 for run in runs:
                                     if run in default_runs[period]:
-                                        exclude_chans.append(channel)
+                                        exclude_chans.append(chan)
             exclude_chans = set(exclude_chans)
             out_string = ""
-            for channel in exclude_chans:
-                out_string += f"(?!{channel})"
+            for chan in exclude_chans:
+                out_string += f"(?!{chan})"
             return out_string + r"[PCVB]{1}\d{1}\w{5}"
         return r"[PCVB]{1}\d{1}\w{5}"
