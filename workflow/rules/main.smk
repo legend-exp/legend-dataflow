@@ -49,6 +49,7 @@ rule autogen_output:
     params:
         valid_keys_path=Path(pars_path(config)) / "valid_keys",
         filedb_path=Path(pars_path(config)) / "filedb",
+        ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
         setup=lambda wildcards: config,
         basedir=workflow.basedir,
     log:

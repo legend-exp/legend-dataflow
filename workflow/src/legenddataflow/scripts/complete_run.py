@@ -105,7 +105,7 @@ def find_gen_runs(gen_tier_path):
     return runs | runs_concat
 
 
-def build_file_dbs(gen_tier_path, outdir):
+def build_file_dbs(gen_tier_path, outdir, ignore_keys_file=None):
     tic = time.time()
 
     gen_tier_path = Path(as_ro(gen_tier_path))
@@ -145,6 +145,8 @@ def build_file_dbs(gen_tier_path, outdir):
             "--log",
             str(logfile),
         ]
+        if ignore_keys_file is not None:
+            cmdline += ["--ignore-keys-file", str(ignore_keys_file)]
 
         if speck[0] == "phy":
             cmdline += ["--assume-nonsparse"]
@@ -219,7 +221,11 @@ if (snakemake.wildcards.tier != "daq") and snakemake.params.setup.get(
     with (Path(snakemake.params.filedb_path) / "file_db_config.json").open("w") as f:
         json.dump(file_db_config, f, indent=2)
 
-    build_file_dbs(pat.tier_path(snakemake.params.setup), snakemake.params.filedb_path)
+    build_file_dbs(
+        pat.tier_path(snakemake.params.setup),
+        snakemake.params.filedb_path,
+        snakemake.params.ignore_keys_file,
+    )
     (Path(snakemake.params.filedb_path) / "file_db_config.json").unlink()
 
 if snakemake.params.setup.get("check_log_files", True):

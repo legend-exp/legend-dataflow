@@ -13,6 +13,7 @@ def build_filedb() -> None:
     argparser.add_argument("--config", required=True)
     argparser.add_argument("--scan-path", required=True)
     argparser.add_argument("--output", required=True)
+    argparser.add_argument("--ignore-keys", required=False)
     argparser.add_argument("--log")
     argparser.add_argument("--assume-nonsparse", action="store_true")
     args = argparser.parse_args()
@@ -33,6 +34,11 @@ def build_filedb() -> None:
 
     log = logging.getLogger(__name__)
 
+    if args.ignore_keys is not None:
+        ignore = Props.read_from(args.ignore_keys)["unprocessable"]
+    else:
+        ignore = []
+
     fdb = FileDB(config, scan=False)
     fdb.scan_files([args.scan_path])
     fdb.scan_tables_columns(dir_files_conform=True)
@@ -42,7 +48,12 @@ def build_filedb() -> None:
     default = np.finfo("float64").max
     timestamps = np.zeros(len(fdb.df), dtype="float64")
 
+    drop_rows = []
     for i, row in enumerate(fdb.df.itertuples()):
+        if any(key in row.raw_file for key in ignore):
+            drop_rows.append(i)
+            continue
+
         store = lh5.LH5Store(
             base_path=f"{fdb.data_dir}/{fdb.tier_dirs['raw']}", keep_open=True
         )
@@ -70,7 +81,9 @@ def build_filedb() -> None:
             if found and args.assume_nonsparse:
                 break
 
-        if (loc_timestamps == default).all() or not found:
+        if (
+            (loc_timestamps == default).all() or not found
+        ) and row.raw_file not in ignore:
             msg = "something went wrong! no valid first timestamp found. Likely: the file is empty"
             raise RuntimeError(msg)
 
@@ -79,9 +92,13 @@ def build_filedb() -> None:
         msg = f"found {timestamps[i]}"
         log.info(msg)
 
-        if timestamps[i] < 0 or timestamps[i] > 4102444800:
+        if (
+            timestamps[i] < 0 or timestamps[i] > 4102444800
+        ) and row.raw_file not in ignore:
             msg = f"something went wrong! timestamp {timestamps[i]} does not make sense"
             raise RuntimeError(msg)
+
+    fdb.df = fdb.df.drop(drop_rows)
 
     fdb.df["first_timestamp"] = timestamps
 
