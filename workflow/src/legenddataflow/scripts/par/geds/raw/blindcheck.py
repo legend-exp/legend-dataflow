@@ -6,6 +6,8 @@ there are peaks within 5keV of the 583 and 2614 peaks. If the detector is in ac 
 then it will skip the check.
 """
 
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 from pathlib import Path

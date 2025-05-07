@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
@@ -159,7 +161,9 @@ def par_spms_dsp_trg_thr_multi() -> None:
     log = build_log(df_configs, args.logfile)
 
     out_dict = {}
-    for sipm_name, raw_table_name in zip(args.sipm_names, args.raw_table_names):
+    for sipm_name, raw_table_name in zip(
+        args.sipm_names, args.raw_table_names, strict=False
+    ):
         fwhm = get_channel_trg_thr(
             df_configs,
             sipm_name,

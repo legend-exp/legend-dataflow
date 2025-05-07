@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 
 import awkward as ak
@@ -15,9 +17,8 @@ def get_all_out_fields(input_table, out_fields, current_field=""):
         key_string = f"{current_field}.{key}"
         if isinstance(field, (Table, Struct)):
             get_all_out_fields(field, out_fields, key_string)
-        else:
-            if key_string not in out_fields:
-                out_fields.append(key_string)
+        elif key_string not in out_fields:
+            out_fields.append(key_string)
     return out_fields
 
 

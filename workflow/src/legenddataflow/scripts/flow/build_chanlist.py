@@ -1,11 +1,12 @@
 # ruff: noqa: F821, T201
+from __future__ import annotations
 
 from pathlib import Path
 
 from dbetto import TextDB
 
-from legenddataflow.FileKey import ChannelProcKey
-from legenddataflow.patterns import (
+from legenddataflow.methods import ChannelProcKey
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
 )

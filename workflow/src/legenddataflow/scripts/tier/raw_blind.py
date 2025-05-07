@@ -10,6 +10,8 @@ but this is controlled by the Snakemake flow (presumably an error is thrown if t
 is not found). This script itself does not check for the existence of such a file.
 """
 
+from __future__ import annotations
+
 import argparse
 import time
 

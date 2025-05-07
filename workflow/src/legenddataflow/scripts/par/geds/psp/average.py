@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 from datetime import datetime
@@ -74,12 +76,11 @@ def par_geds_psp_average() -> None:
             for i, key in enumerate(keys):
                 if i == len(keys) - 1:
                     tmp_dict[key] = val
+                elif key in tmp_dict:
+                    tmp_dict = tmp_dict[key]
                 else:
-                    if key in tmp_dict:
-                        tmp_dict = tmp_dict[key]
-                    else:
-                        tmp_dict[key] = {}
-                        tmp_dict = tmp_dict[key]
+                    tmp_dict[key] = {}
+                    tmp_dict = tmp_dict[key]
         if isinstance(vals[0], str):
             if "*" in vals[0]:
                 unit = vals[0].split("*")[1]

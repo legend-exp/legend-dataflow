@@ -2,6 +2,8 @@
 This module uses the partition database files to the necessary inputs for partition calibrations
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from dbetto import Props
@@ -161,8 +163,7 @@ class CalGrouping:
             return fk.get_path_from_filekey(
                 get_pattern_log_channel(self.setup, name, processing_timestamp)
             )[0]
-        else:
-            return "log.log"
+        return "log.log"
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
@@ -179,8 +180,7 @@ class CalGrouping:
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             return fk.timestamp
-        else:
-            return "20240101T000000Z"
+        return "20240101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
         if channel == "default":
@@ -199,5 +199,4 @@ class CalGrouping:
             for channel in exclude_chans:
                 out_string += f"(?!{channel})"
             return out_string + r"[PCVB]{1}\d{1}\w{5}"
-        else:
-            return r"[PCVB]{1}\d{1}\w{5}"
+        return r"[PCVB]{1}\d{1}\w{5}"

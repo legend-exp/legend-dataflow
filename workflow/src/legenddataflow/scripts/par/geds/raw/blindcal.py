@@ -4,6 +4,8 @@ it does this using a peak search, matching the peaks to the given ones
 and deriving a simple scaling relation from adc to keV.
 """
 
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 from pathlib import Path
@@ -82,7 +84,9 @@ def par_geds_raw_blindcal() -> None:
 
     log.info(f"{len(detected_peaks_locs)} peaks found:")
     log.info("\t   Energy   | Position  ")
-    for i, (Li, Ei) in enumerate(zip(detected_peaks_locs, detected_peaks_keV)):
+    for i, (Li, Ei) in enumerate(
+        zip(detected_peaks_locs, detected_peaks_keV, strict=False)
+    ):
         log.info(f"\t{i}".ljust(4) + str(Ei).ljust(9) + f"| {Li:g}".ljust(5))  # noqa: G003
 
     # dictionary to pass to build hit

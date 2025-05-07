@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
 
-import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB
 from legendmeta import LegendMetadata
+from lgdo import lh5
 from lgdo.types import Array
 from pygama.evt import build_evt
 

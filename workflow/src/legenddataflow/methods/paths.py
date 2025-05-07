@@ -2,12 +2,13 @@
 This module contains resolvers for the config.json dictionary
 """
 
+from __future__ import annotations
+
 
 def sandbox_path(setup):
     if "sandbox_path" in setup["paths"]:
         return setup["paths"]["sandbox_path"]
-    else:
-        return None
+    return None
 
 
 def tier_daq_path(setup):
@@ -37,9 +38,8 @@ def get_tier_path(setup, tier):
         "skm",
     ]:
         return setup["paths"][f"tier_{tier}"]
-    else:
-        msg = f"no tier matching:{tier}"
-        raise ValueError(msg)
+    msg = f"no tier matching:{tier}"
+    raise ValueError(msg)
 
 
 def pars_path(setup):
@@ -49,9 +49,8 @@ def pars_path(setup):
 def get_pars_path(setup, tier):
     if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
         return setup["paths"][f"par_{tier}"]
-    else:
-        msg = f"no tier matching:{tier}"
-        raise ValueError(msg)
+    msg = f"no tier matching:{tier}"
+    raise ValueError(msg)
 
 
 def tmp_par_path(setup):

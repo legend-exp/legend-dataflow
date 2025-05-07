@@ -7,10 +7,10 @@ import re
 import warnings
 from pathlib import Path
 
-import lgdo.lh5 as lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from lgdo import lh5
 from lgdo.lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,

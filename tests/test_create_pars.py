@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import yaml
 from dbetto import time
+
 from legenddataflow import (
     FileKey,
     ParsKeyResolve,

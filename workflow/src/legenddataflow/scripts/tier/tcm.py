@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
-import lgdo.lh5 as lh5
 from daq2lh5.orca import orca_flashcam
 from dbetto import AttrsDict, TextDB
 from dbetto.catalog import Props
+from lgdo import lh5
 from pygama.evt.build_tcm import build_tcm
 
 from ...log import build_log
