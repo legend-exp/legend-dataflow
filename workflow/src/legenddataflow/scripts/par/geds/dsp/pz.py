@@ -176,14 +176,14 @@ def par_geds_dsp_pz() -> None:
 
             plot_dict = tau.plot_waveforms_after_correction(
                 tb_data,
-                kwarg_dict("wf_pz_field", "wf_pz"),
+                kwarg_dict.get("wf_pz_field", "wf_pz"),
                 norm_param=kwarg_dict.get("norm_param", "pz_mean"),
                 xlim=[0, len(tb_data[kwarg_dict["wf_field"]]["values"].nda[0])],
             )
 
             zoomed = tau.plot_waveforms_after_correction(
                 tb_data,
-                kwarg_dict("wf_pz_field", "wf_pz"),
+                kwarg_dict.get("wf_pz_field", "wf_pz"),
                 norm_param=kwarg_dict.get("norm_param", "pz_mean"),
                 xlim=[400, len(tb_data[kwarg_dict["wf_field"]]["values"].nda[0])],
                 ylim=[0.8, 1.1],
