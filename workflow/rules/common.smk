@@ -212,7 +212,7 @@ def _make_input_pars_file(wildcards):
     filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
 
     # then add the spms par files
-    if wildcards.datatype not in ("cal", "xtc", "fft", "pzc", "bkg"):
+    if wildcards.datatype not in ("cal", "xtc", "fft", "pzc", "bkg", "pul"):
         filelist += [
             patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}")
         ]
