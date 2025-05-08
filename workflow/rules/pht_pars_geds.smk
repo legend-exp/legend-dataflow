@@ -54,9 +54,9 @@ for key, dataset in part.datasets.items():
                 cal_files=input_files,
                 fft_files=part.get_filelists(partition, key, intier, datatype="fft"),
                 pulser_files=pulser_files,
-                overwrite_files=get_overwrite_file(
+                overwrite_files=get_input_par_file(
                     config,
-                    "pht",
+                    tier="pht",
                     timestamp=part.get_timestamp(
                         pht_par_catalog,
                         partition,
@@ -468,7 +468,9 @@ rule build_pht_qc:
             / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         ),
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        overwrite_files=lambda wildcards: get_overwrite_file("pht", wildcards=wildcards),
+        overwrite_files=lambda wildcards: get_input_par_file(
+            config, tier="pht", wildcards=wildcards
+        ),
     params:
         datatype="cal",
         channel="{channel}",

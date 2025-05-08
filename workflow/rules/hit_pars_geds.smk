@@ -32,7 +32,9 @@ rule par_hit_qc:
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-dsp.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        overwrite_files=lambda wildcards: get_overwrite_file(config, "hit", wildcards),
+        overwrite_files=lambda wildcards: get_input_par_file(
+            config, tier="hit", wildcards=wildcards, allow_none=True
+        ),
     params:
         timestamp="{timestamp}",
         datatype="cal",

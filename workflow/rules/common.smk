@@ -68,47 +68,45 @@ def set_last_rule_name(workflow, new_name):
     workflow.check_localrules()
 
 
-def get_input_par_file(config, wildcards, tier, name, allow_none=False):
+def get_input_par_file(
+    config,
+    tier,
+    wildcards=None,
+    name=None,
+    timestamp=None,
+    allow_none=False,
+    overwrite=True,
+    extension="yaml",
+):
     allow_none = config.get("allow_none", False) | allow_none
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
-        wildcards.timestamp,
-        category=wildcards.datatype if hasattr(wildcards, "datatype") else "all",
+        wildcards.timestamp if wildcards is not None else timestamp,
+        category=(
+            wildcards.datatype
+            if wildcards is not None and hasattr(wildcards, "datatype")
+            else "all"
+        ),
     )
-    for pars_file in pars_files_overwrite:
-        if name in str(pars_file):
-            return Path(patt.par_overwrite_path(config)) / tier / pars_file
-    if (
-        allow_none
-    ):  # or (hasattr(wildcards, "datatype") & (wildcards.datatype != "phy"))
-        return []
-    else:
-        raise ValueError(f"Could not find {name} file in {pars_files_overwrite}")
-
-
-def get_overwrite_file(config, tier, wildcards=None, timestamp=None, name=None):
-    par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
-    if timestamp is not None:
-        pars_files_overwrite = Catalog.get_files(
-            par_overwrite_file,
-            timestamp,
-        )
-    else:
-        pars_files_overwrite = Catalog.get_files(
-            par_overwrite_file,
-            wildcards.timestamp,
-        )
     if name is None:
-        fullname = f"{tier}-overwrite.yaml"
+        fullname = f"{tier}"
     else:
-        fullname = f"{tier}_{name}-overwrite.yaml"
+        fullname = f"{tier}_{name}"
+    if overwrite:
+        fullname += "-overwrite.yaml"
+    else:
+        fullname += f".{extension}"
+
     out_files = []
     for pars_file in pars_files_overwrite:
         if fullname in str(pars_file):
             out_files.append(Path(patt.par_overwrite_path(config)) / tier / pars_file)
-    if len(out_files) == 0:
-        raise ValueError(f"Could not find name in {pars_files_overwrite}")
+
+    if (
+        len(out_files) == 0 and not allow_none
+    ):  # | (hasattr(wildcards, "datatype") & (wildcards.datatype != "phy")))
+        raise ValueError(f"Could not find name: {fullname} in {pars_files_overwrite}")
     else:
         return out_files
 

@@ -11,7 +11,9 @@ from legenddataflow.build_chanlist import get_chanlist
 rule build_pars_dsp_tau_spms:
     input:
         raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
-        pardb=lambda wildcards: get_input_par_file(config, wildcards, "dsp", "par_dsp"),
+        pardb=lambda wildcards: get_input_par_file(
+            config, wildcards=wildcards, tier="dsp"
+        ),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",

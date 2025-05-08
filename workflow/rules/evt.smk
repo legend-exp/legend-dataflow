@@ -27,7 +27,12 @@ rule build_evt:
             config, wildcards.timestamp, "hit"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            config=config, tier="evt", wildcards=wildcards, name="xtc"
+            config=config,
+            tier="evt",
+            wildcards=wildcards,
+            name="xtc",
+            overwrite=False,
+            extension="lh5",
         ),
     output:
         get_pattern_tier(config, "evt", check_in_cycle=check_in_cycle),

@@ -270,6 +270,7 @@ rule build_svm_dsp_geds:
                     tier="dsp",
                     name="svm_hyperpars",
                     allow_none=True,
+                    overwrite=False,
                 )
             ).replace("hyperpars.yaml", "train.lh5")
             if not isinstance(
@@ -279,6 +280,7 @@ rule build_svm_dsp_geds:
                     tier="dsp",
                     name="svm_hyperpars",
                     allow_none=True,
+                    overwrite=False,
                 ),
                 list,
             )
