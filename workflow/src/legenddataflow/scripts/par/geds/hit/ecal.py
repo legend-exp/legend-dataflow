@@ -609,7 +609,8 @@ def par_geds_hit_ecal() -> None:
             debug_mode=kwarg_dict.get("debug_mode", False) | args.debug,
         )
         full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-            e_uncal, etol_kev=5 if det_status == "on" else 20
+            flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal,
+            etol_kev=5 if det_status == "on" else 20
         )
         if 2614.511 not in full_object_dict[cal_energy_param].peaks_kev:
             full_object_dict[cal_energy_param] = HPGeCalibration(
@@ -620,18 +621,18 @@ def par_geds_hit_ecal() -> None:
                 debug_mode=kwarg_dict.get("debug_mode", False),
             )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-                e_uncal, etol_kev=5 if det_status == "on" else 30, n_sigma=2
-            )
+                flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal,
+                etol_kev=5 if det_status == "on" else 30, n_sigma=2
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         if det_status != "on":
             full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
-                e_uncal,
+                flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal,
                 peaks_kev=got_peaks_kev,
                 update_cal_pars=True,
                 allowed_p_val=0,
             )
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
-            e_uncal,
+            flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal,
             peaks_kev=[2614.511],
             peak_pars=pk_pars,
             tail_weight=kwarg_dict.get("tail_weight", 0),
@@ -641,7 +642,7 @@ def par_geds_hit_ecal() -> None:
             bin_width_kev=0.5,
         )
         full_object_dict[cal_energy_param].hpge_fit_energy_peaks(
-            e_uncal,
+            flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal,
             peaks_kev=got_peaks_kev,
             peak_pars=pk_pars,
             tail_weight=kwarg_dict.get("tail_weight", 0),
@@ -701,13 +702,13 @@ def par_geds_hit_ecal() -> None:
             if ~np.isnan(full_object_dict[cal_energy_param].pars).all():
                 param_plot_dict["fwhm_fit"] = full_object_dict[
                     cal_energy_param
-                ].plot_eres_fit(e_uncal)
+                ].plot_eres_fit(flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal)
                 param_plot_dict["cal_fit"] = full_object_dict[
                     cal_energy_param
-                ].plot_cal_fit(e_uncal)
+                ].plot_cal_fit(flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal)
                 param_plot_dict["peak_fits"] = full_object_dict[
                     cal_energy_param
-                ].plot_fits(e_uncal)
+                ].plot_fits(flattened_e_uncal if isinstance(e_uncal[0], (np.ndarray, list)) else e_uncal)
 
                 if "plot_options" in kwarg_dict:
                     for key, item in kwarg_dict["plot_options"].items():
