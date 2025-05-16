@@ -34,14 +34,13 @@ def get_results_dict(aoe_class):
 
 
 def fill_plot_dict(aoe_class, data, plot_options, plot_dict=None):
-    if plot_dict is not None:
-        for key, item in plot_options.items():
-            if item["options"] is not None:
-                plot_dict[key] = item["function"](aoe_class, data, **item["options"])
-            else:
-                plot_dict[key] = item["function"](aoe_class, data)
-    else:
+    if plot_dict is None:
         plot_dict = {}
+    for key, item in plot_options.items():
+        if item["options"] is not None:
+            plot_dict[key] = item["function"](aoe_class, data, **item["options"])
+        else:
+            plot_dict[key] = item["function"](aoe_class, data)
     return plot_dict
 
 
@@ -204,7 +203,6 @@ def par_geds_hit_aoe() -> None:
         out_dict = {}
         plot_dict = {}
         aoe = None
-
     if args.plot_file:
         common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
         if args.inplots:
