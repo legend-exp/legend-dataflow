@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import pickle as pkl
 import re
+import time
 import warnings
 from pathlib import Path
 
@@ -21,83 +23,24 @@ from .....convert_np import convert_dict_np_to_float
 from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
+log = logging.getLogger(__name__)
+
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 
 
-def par_geds_hit_qc() -> None:
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument("--cal-files", help="cal_files", nargs="*", type=str)
-    argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
+def build_qc(
+    config,
+    cal_files,
+    fft_files,
+    table_name,
+    overwrite=None,
+    pulser_file=None,
+    build_plots=False,
+):
+    search_name = table_name if table_name[-1] == "/" else table_name + "/"
 
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, required=False
-    )
-    argparser.add_argument(
-        "--pulser-file", help="pulser_file", type=str, required=False
-    )
-    argparser.add_argument(
-        "--overwrite-files",
-        help="overwrite_files",
-        type=str,
-        required=False,
-        nargs="*",
-    )
-
-    argparser.add_argument("--configs", help="config", type=str, required=True)
-    argparser.add_argument("--log", help="log_file", type=str)
-
-    argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
-    argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
-    argparser.add_argument("--channel", help="Channel", type=str, required=True)
-    argparser.add_argument("--table-name", help="table name", type=str, required=True)
-    argparser.add_argument("--tier", help="tier", type=str, default="hit")
-
-    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
-    argparser.add_argument("--save-path", help="save_path", type=str)
-    args = argparser.parse_args()
-
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    if args.tier == "hit":
-        config_dict = configs["snakemake_rules"]["pars_hit_qc"]
-    elif args.tier == "pht":
-        config_dict = configs["snakemake_rules"]["pars_pht_qc"]
-    else:
-        msg = f"tier {args.tier} not recognized"
-        raise ValueError(msg)
-
-    log = build_log(config_dict, args.log)
-
-    # get metadata dictionary
-    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
-    kwarg_dict = Props.read_from(channel_dict)
-
-    if args.overwrite_files:
-        overwrite = Props.read_from(args.overwrite_files)
-        if args.channel in overwrite:
-            overwrite = overwrite[args.channel]["pars"]["operations"]
-        else:
-            overwrite = None
-    else:
-        overwrite = None
-
-    if len(args.fft_files) == 1 and Path(args.fft_files[0]).suffix == ".filelist":
-        with Path(args.fft_files[0]).open() as f:
-            fft_files = f.read().splitlines()
-    else:
-        fft_files = args.fft_files
-
-    if len(args.cal_files) == 1 and Path(args.cal_files[0]).suffix == ".filelist":
-        with Path(args.cal_files[0]).open() as f:
-            cal_files = f.read().splitlines()
-    else:
-        cal_files = args.fft_files
-
-    search_name = (
-        args.table_name if args.table_name[-1] == "/" else args.table_name + "/"
-    )
-
-    kwarg_dict_fft = kwarg_dict["fft_fields"]
-    kwarg_dict_cal = kwarg_dict["cal_fields"]
+    kwarg_dict_fft = config["fft_fields"]
+    kwarg_dict_cal = config["cal_fields"]
 
     cut_fields = get_keys(
         [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
@@ -108,8 +51,8 @@ def par_geds_hit_qc() -> None:
         kwarg_dict_fft["cut_parameters"],
     )
 
-    if "initial_cal_cuts" in kwarg_dict:
-        init_cal = kwarg_dict["initial_cal_cuts"]
+    if "initial_cal_cuts" in config:
+        init_cal = config["initial_cal_cuts"]
         cut_fields += get_keys(
             [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
             init_cal["cut_parameters"],
@@ -118,10 +61,13 @@ def par_geds_hit_qc() -> None:
     if len(fft_files) > 0:
         fft_data = load_data(
             fft_files,
-            args.table_name,
+            table_name,
             {},
             [*cut_fields, "t_sat_lo", "timestamp", "trapTmax"],
         )
+
+        msg = f"{len(fft_data)} events"
+        log.info(msg)
 
         discharges = fft_data["t_sat_lo"] > 0
         discharge_timestamps = np.where(fft_data["timestamp"][discharges])[0]
@@ -137,6 +83,9 @@ def par_geds_hit_qc() -> None:
             )
         fft_data["is_recovering"] = is_recovering
 
+        msg = f"{len(fft_data.query('is_recovering'))} discharge recovery events"
+        log.info(msg)
+
         hit_dict_fft = {}
         plot_dict_fft = {}
         cut_data = fft_data.query("is_recovering==0")
@@ -145,8 +94,8 @@ def par_geds_hit_qc() -> None:
             cut_dict, cut_plots = generate_cut_classifiers(
                 cut_data,
                 {name: cut},
-                kwarg_dict.get("rounding", 4),
-                display=1 if args.plot_path else 0,
+                config.get("rounding", 4),
+                display=build_plots,
             )
             hit_dict_fft.update(cut_dict)
             plot_dict_fft.update(cut_plots)
@@ -188,7 +137,7 @@ def par_geds_hit_qc() -> None:
     # load data in
     data, threshold_mask = load_data(
         cal_files,
-        args.table_name,
+        table_name,
         {},
         [*cut_fields, "timestamp", "trapTmax", "t_sat_lo"],
         threshold=kwarg_dict_cal.get("threshold", 0),
@@ -197,10 +146,13 @@ def par_geds_hit_qc() -> None:
     )
 
     mask = get_pulser_mask(
-        pulser_file=args.pulser_file,
+        pulser_file=pulser_file,
     )
 
     data["is_pulser"] = mask[threshold_mask]
+
+    msg = f"{len(data.query('~is_pulser'))} non pulser events"
+    log.info(msg)
 
     discharges = data["t_sat_lo"] > 0
     discharge_timestamps = np.where(data["timestamp"][discharges])[0]
@@ -216,19 +168,22 @@ def par_geds_hit_qc() -> None:
         )
     data["is_recovering"] = is_recovering
 
+    msg = f"{len(data.query('is_recovering'))} discharge recovery events"
+    log.info(msg)
+
     rng = np.random.default_rng()
     mask = np.full(len(data.query("~is_pulser & ~is_recovering")), False, dtype=bool)
     mask[
         rng.choice(len(data.query("~is_pulser & ~is_recovering")), 4000, replace=False)
     ] = True
 
-    if "initial_cal_cuts" in kwarg_dict:
-        init_cal = kwarg_dict["initial_cal_cuts"]
+    if "initial_cal_cuts" in config:
+        init_cal = config["initial_cal_cuts"]
         hit_dict_init_cal, plot_dict_init_cal = generate_cut_classifiers(
             data.query("~is_pulser & ~is_recovering")[mask],
             init_cal["cut_parameters"],
             init_cal.get("rounding", 4),
-            display=1 if args.plot_path else 0,
+            display=build_plots,
         )
         ct_mask = np.full(len(data), True, dtype=bool)
         for outname, info in hit_dict_init_cal.items():
@@ -260,8 +215,8 @@ def par_geds_hit_qc() -> None:
     hit_dict_cal, plot_dict_cal = generate_cut_classifiers(
         cal_data,
         kwarg_dict_cal["cut_parameters"],
-        kwarg_dict.get("rounding", 4),
-        display=1 if args.plot_path else 0,
+        config.get("rounding", 4),
+        display=build_plots,
     )
 
     if overwrite is not None:
@@ -272,8 +227,6 @@ def par_geds_hit_qc() -> None:
 
     hit_dict = {**hit_dict_fft, **hit_dict_init_cal, **hit_dict_cal}
     plot_dict = {**plot_dict_fft, **plot_dict_init_cal, **plot_dict_cal}
-
-    hit_dict = convert_dict_np_to_float(hit_dict)
 
     for outname, info in hit_dict.items():
         # convert to pandas eval
@@ -314,12 +267,93 @@ def par_geds_hit_qc() -> None:
                 "sf_fft": sf_fft,
                 "sf_fft_err": sf_fft_err,
             }
-    qc_results = convert_dict_np_to_float(qc_results)
+
+    out_dict = convert_dict_np_to_float(
+        {"operations": hit_dict, "results": {"qc": qc_results}}
+    )
+
+    return out_dict, plot_dict
+
+
+def par_geds_hit_qc() -> None:
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--cal-files", help="cal_files", nargs="*", type=str)
+    argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
+
+    argparser.add_argument(
+        "--tcm-filelist", help="tcm_filelist", type=str, required=False
+    )
+    argparser.add_argument(
+        "--pulser-file", help="pulser_file", type=str, required=False
+    )
+    argparser.add_argument(
+        "--overwrite-files",
+        help="overwrite_files",
+        type=str,
+        required=False,
+        nargs="*",
+    )
+
+    argparser.add_argument("--configs", help="config", type=str, required=True)
+    argparser.add_argument("--log", help="log_file", type=str)
+
+    argparser.add_argument("--datatype", help="Datatype", type=str, required=True)
+    argparser.add_argument("--timestamp", help="Timestamp", type=str, required=True)
+    argparser.add_argument("--channel", help="Channel", type=str, required=True)
+    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument("--tier", help="tier", type=str, default="hit")
+
+    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
+    argparser.add_argument("--save-path", help="save_path", type=str)
+    args = argparser.parse_args()
+
+    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = configs["snakemake_rules"]["pars_hit_qc"]
+
+    build_log(config_dict, args.log)
+
+    # get metadata dictionary
+    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
+    kwarg_dict = Props.read_from(channel_dict)
+
+    if args.overwrite_files:
+        overwrite = Props.read_from(args.overwrite_files)
+        if args.channel in overwrite:
+            overwrite = overwrite[args.channel]["pars"]["operations"]
+        else:
+            overwrite = None
+    else:
+        overwrite = None
+
+    if len(args.fft_files) == 1 and Path(args.fft_files[0]).suffix == ".filelist":
+        with Path(args.fft_files[0]).open() as f:
+            fft_files = f.read().splitlines()
+    else:
+        fft_files = args.fft_files
+
+    if len(args.cal_files) == 1 and Path(args.cal_files[0]).suffix == ".filelist":
+        with Path(args.cal_files[0]).open() as f:
+            cal_files = f.read().splitlines()
+    else:
+        cal_files = args.fft_files
+
+    start = time.time()
+    log.info("starting qc")
+
+    out_dict, plot_dict = build_qc(
+        config=kwarg_dict,
+        cal_files=cal_files,
+        fft_files=fft_files,
+        table_name=args.table_name,
+        overwrite=overwrite,
+        pulser_file=args.pulser_file,
+        build_plots=int(bool(args.plot_path)),
+    )
+    msg = f"qc took {time.time() - start:.2f} seconds"
+    log.info(msg)
 
     Path(args.save_path).parent.mkdir(parents=True, exist_ok=True)
-    Props.write_to(
-        args.save_path, {"operations": hit_dict, "results": {"qc": qc_results}}
-    )
+    Props.write_to(args.save_path, out_dict)
 
     if args.plot_path:
         Path(args.plot_path).parent.mkdir(parents=True, exist_ok=True)

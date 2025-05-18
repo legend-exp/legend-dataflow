@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import pickle as pkl
+import time
 import warnings
 from pathlib import Path
 
@@ -68,7 +69,7 @@ def par_geds_pht_fast() -> None:
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]
 
-    build_log(config_dict["pars_pht_partcal"], args.log)
+    log = build_log(config_dict["pars_pht_partcal"], args.log)
 
     chmap = LegendMetadata(args.metadata).channelmap(
         args.timestamp, system=args.datatype
@@ -170,12 +171,17 @@ def par_geds_pht_fast() -> None:
         return_selection_mask=True,
         cal_energy_param=kwarg_dict["energy_params"][0],
     )
+    msg = f"Loaded {len(data)} events"
+    log.info(msg)
 
     mask = get_pulser_mask(pulser_file=args.pulser_files)
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 
     data["is_pulser"] = mask[threshold_mask]
+
+    msg = f"{len(data.query('~is_pulser'))} non pulser events"
+    log.info(msg)
 
     for tstamp in cal_dict:
         if tstamp not in np.unique(data["run_timestamp"]):
@@ -186,6 +192,12 @@ def par_geds_pht_fast() -> None:
             row = pd.DataFrame(row)
             data = pd.concat([data, row])
 
+    configs = TextDB(path=args.configs, lazy=True).on(
+        args.timestamp, system=args.datatype
+    )["snakemake_rules"]
+
+    start = time.time()
+
     cal_dicts, results_dicts, object_dicts, plot_dicts = calibrate_partition(
         data,
         cal_dict,
@@ -194,12 +206,15 @@ def par_geds_pht_fast() -> None:
         inplots_dict,
         args.timestamp,
         chmap,
-        args.configs,
-        args.channel,
-        args.datatype,
+        config=configs["pars_pht_aoecal"]["inputs"]["par_pht_partcal_config"][
+            args.channel
+        ],
         gen_plots=bool(args.plot_file),
         debug_mode=args.debug,
     )
+    start2 = time.time()
+    msg = f"Partition calibration took {start2 - start:.2f} seconds"
+    log.info(msg)
 
     cal_dicts, results_dicts, object_dicts, plot_dicts = run_aoe_calibration(
         data,
@@ -207,13 +222,16 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        args.timestamp,
-        args.configs,
-        args.channel,
-        args.datatype,
+        config=configs["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][
+            args.channel
+        ],
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
+
+    start3 = time.time()
+    msg = f"A/E calibration took {start3 - start2:.2f} seconds"
+    log.info(msg)
 
     cal_dicts, results_dicts, object_dicts, plot_dicts = run_lq_calibration(
         data,
@@ -221,13 +239,17 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        args.timestamp,
-        args.configs,
-        args.channel,
-        args.datatype,
+        config=configs["pars_pht_aoecal"]["inputs"]["par_pht_lqcal_config"][
+            args.channel
+        ],
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
+
+    msg = f"LQ calibration took {time.time() - start3:.2f} seconds"
+    log.info(msg)
+    msg = f"Total calibration took {time.time() - start:.2f} seconds"
+    log.info(msg)
 
     if args.plot_file:
         for plot_file in args.plot_file:

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import copy
+import logging
 import pickle as pkl
+import time
 import warnings
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
 from pygama.math.distributions import gaussian
@@ -19,6 +23,7 @@ from .....log import build_log
 from ....pulser_removal import get_pulser_mask
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
+log = logging.getLogger(__name__)
 
 
 def get_results_dict(lq_class):
@@ -40,7 +45,176 @@ def fill_plot_dict(lq_class, data, plot_options, plot_dict=None):
             plot_dict[key] = item["function"](lq_class, data, **item["options"])
         else:
             plot_dict[key] = item["function"](lq_class, data)
+
     return plot_dict
+
+
+def lq_calibration(
+    data: pd.DataFrame,
+    cal_dicts: dict,
+    energy_param: str,
+    cal_energy_param: str,
+    dt_param: str,
+    eres_func: callable,
+    cdf: callable = gaussian,
+    selection_string: str = "",
+    plot_options: dict | None = None,
+    debug_mode: bool = False,
+):
+    """Loads in data from the provided files and runs the LQ calibration on said files
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        A dataframe containing the data used for calibrating LQ
+    cal_dicts: dict
+        A dict of hit-level operations to apply to the data
+    energy_param: string
+        The energy parameter of choice. Used for normalizing the
+        raw lq values
+    cal_energy_param: string
+        The calibrated energy parameter of choice
+    dt_param: string
+        The drift-time parameter of choice
+    eres_func: callable
+        The energy resolution functions
+    cdf: callable
+        The CDF used for the binned fitting of LQ distributions
+    cut_field: string
+        A string of flags to apply to the data when running the calibration
+    plot_options: dict
+        A dict containing the plot functions the user wants to run,and any
+        user options to provide those plot functions
+    Returns
+    -------
+    cal_dicts: dict
+        The user provided dict, updated with hit-level operations for LQ
+    results_dict: dict
+        A dict containing the results of the LQ calibration
+    plot_dict: dict
+        A dict containing all the figures specified by the plot options
+    lq: cal_lq class
+        The cal_lq object used for the LQ calibration
+    """
+
+    lq = LQCal(
+        cal_dicts,
+        cal_energy_param,
+        dt_param,
+        eres_func,
+        cdf,
+        selection_string,
+        debug_mode=debug_mode,
+    )
+
+    data["LQ_Ecorr"] = np.divide(data["lq80"], data[energy_param])
+
+    lq.update_cal_dicts(
+        {
+            "LQ_Ecorr": {
+                "expression": f"lq80/{energy_param}",
+                "parameters": {},
+            }
+        }
+    )
+
+    lq.calibrate(data, "LQ_Ecorr")
+    return cal_dicts, get_results_dict(lq), fill_plot_dict(lq, data, plot_options), lq
+
+
+def run_lq_calibration(
+    data,
+    cal_dicts,
+    results_dicts,
+    object_dicts,
+    plot_dicts,
+    configs,
+    debug_mode=False,
+    # gen_plots=True,
+):
+    if isinstance(configs, str | list):
+        configs = Props.read_from(configs)
+
+    if configs.pop("run_lq") is True:
+        if "plot_options" in configs:
+            for field, item in configs["plot_options"].items():
+                configs["plot_options"][field]["function"] = eval(item["function"])
+
+        try:
+            eres = copy.deepcopy(
+                results_dicts[next(iter(results_dicts))]["partition_ecal"][
+                    configs["cal_energy_param"]
+                ]["eres_linear"]
+            )
+
+            def eres_func(x):
+                return eval(eres["expression"], dict(x=x, **eres["parameters"]))
+
+            if np.isnan(eres_func(2000)):
+                raise RuntimeError
+        except (KeyError, RuntimeError):
+            try:
+                eres = copy.deepcopy(
+                    results_dicts[next(iter(results_dicts))]["ecal"][
+                        configs["cal_energy_param"]
+                    ]["eres_linear"]
+                )
+
+                def eres_func(x):
+                    return eval(eres["expression"], dict(x=x, **eres["parameters"]))
+
+            except KeyError:
+
+                def eres_func(x):
+                    return x * np.nan
+
+        log.info("starting lq calibration")
+        start = time.time()
+        cal_dicts, out_dict, lq_plot_dict, lq_obj = lq_calibration(
+            data,
+            cal_dicts=cal_dicts,
+            energy_param=configs["energy_param"],
+            cal_energy_param=configs["cal_energy_param"],
+            dt_param=configs["dt_param"],
+            eres_func=eres_func,
+            cdf=eval(configs.get("cdf", "gaussian")),
+            selection_string=f"{configs.pop('cut_field')}&(~is_pulser)",
+            plot_options=configs.get("plot_options", None),
+            debug_mode=debug_mode | configs.get("debug_mode", False),
+        )
+        msg = f"lq calibration took {time.time() - start:.2f} seconds"
+        log.info(msg)
+        # need to change eres func as can't pickle lambdas
+        try:
+            lq_obj.eres_func = results_dicts[next(iter(results_dicts))][
+                "partition_ecal"
+            ][configs["cal_energy_param"]]["eres_linear"]
+        except KeyError:
+            lq_obj.eres_func = {}
+    else:
+        out_dict = dict.fromkeys(cal_dicts)
+        lq_plot_dict = {}
+        lq_obj = None
+
+    out_result_dicts = {}
+    for tstamp, result_dict in results_dicts.items():
+        out_result_dicts[tstamp] = dict(**result_dict, lq=out_dict)
+
+    out_object_dicts = {}
+    for tstamp, object_dict in object_dicts.items():
+        out_object_dicts[tstamp] = dict(**object_dict, lq=lq_obj)
+
+    common_dict = lq_plot_dict.pop("common") if "common" in list(lq_plot_dict) else None
+    out_plot_dicts = {}
+    for tstamp, plot_dict in plot_dicts.items():
+        if "common" in list(plot_dict) and common_dict is not None:
+            plot_dict["common"].update(common_dict)
+        elif common_dict is not None:
+            plot_dict["common"] = common_dict
+        plot_dict.update({"lq": lq_plot_dict})
+        out_plot_dicts[tstamp] = plot_dict
+
+    return cal_dicts, out_result_dicts, out_object_dicts, out_plot_dicts
 
 
 def par_geds_hit_lq() -> None:
@@ -75,7 +249,7 @@ def par_geds_hit_lq() -> None:
     configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
     config_dict = configs["snakemake_rules"]["pars_hit_lqcal"]
 
-    log = build_log(config_dict, args.log)
+    build_log(config_dict, args.log)
 
     channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
@@ -84,32 +258,19 @@ def par_geds_hit_lq() -> None:
     cal_dict = ecal_dict["pars"]["operations"]
     eres_dict = ecal_dict["results"]["ecal"]
 
+    if args.inplots:
+        with Path(args.inplots).open("rb") as r:
+            plot_dict = pkl.load(r)
+    else:
+        plot_dict = {}
+
     with Path(args.eres_file).open("rb") as o:
         object_dict = pkl.load(o)
 
     if kwarg_dict["run_lq"] is True:
-        kwarg_dict.pop("run_lq")
-
-        cdf = eval(kwarg_dict.pop("cdf")) if "cdf" in kwarg_dict else gaussian
-
-        if "plot_options" in kwarg_dict:
-            for field, item in kwarg_dict["plot_options"].items():
-                kwarg_dict["plot_options"][field]["function"] = eval(item["function"])
-
         with Path(args.files[0]).open() as f:
             files = f.read().splitlines()
         files = sorted(files)
-
-        try:
-            eres = eres_dict[kwarg_dict["cal_energy_param"]]["eres_linear"].copy()
-
-            def eres_func(x):
-                return eval(eres["expression"], dict(x=x, **eres["parameters"]))
-
-        except KeyError:
-
-            def eres_func(x):
-                return x * np.nan
 
         params = [
             "lq80",
@@ -129,73 +290,46 @@ def par_geds_hit_lq() -> None:
             return_selection_mask=True,
         )
 
+        msg = f"Loaded {len(data)} events"
+        log.info(msg)
+
         mask = get_pulser_mask(
             pulser_file=args.pulser_file,
         )
 
         data["is_pulser"] = mask[threshold_mask]
 
-        lq = LQCal(
-            cal_dict,
-            kwarg_dict["cal_energy_param"],
-            kwarg_dict["dt_param"],
-            eres_func,
-            cdf,
-            selection_string=f"{kwarg_dict.pop('cut_field')}&(~is_pulser)",
-            debug_mode=args.debug | kwarg_dict.get("debug_mode", False),
+        msg = f"{len(data.query('~is_pulser'))}  non pulser events"
+        log.info(msg)
+
+        data["run_timestamp"] = args.timestamp
+
+        out_dicts, eres_dicts, plot_dicts, lq_dict = run_lq_calibration(
+            data,
+            cal_dicts={args.timestamp: cal_dict},
+            results_dicts={args.timestamp: eres_dict},
+            object_dicts={args.timestamp: object_dict},
+            plot_dicts={args.timestamp: plot_dict},
+            configs=kwarg_dict,
+            debug_mode=args.debug,
         )
+        cal_dict = out_dicts[args.timestamp]
+        eres_dict = eres_dicts[args.timestamp]
+        plot_dict = plot_dicts[args.timestamp]
+        lq = lq_dict[args.timestamp]
 
-        data["LQ_Ecorr"] = np.divide(data["lq80"], data[kwarg_dict["energy_param"]])
-
-        lq.update_cal_dicts(
-            {
-                "LQ_Ecorr": {
-                    "expression": f"lq80/{kwarg_dict['energy_param']}",
-                    "parameters": {},
-                }
-            }
-        )
-
-        lq.calibrate(data, "LQ_Ecorr")
-        log.info("Calibrated LQ")
-
-        out_dict = get_results_dict(lq)
-        plot_dict = fill_plot_dict(lq, data, kwarg_dict.get("plot_options", None))
-
-        # need to change eres func as can't pickle lambdas
-        try:
-            lq.eres_func = eres_dict[kwarg_dict["cal_energy_param"]][
-                "eres_linear"
-            ].copy()
-        except KeyError:
-            lq.eres_func = {}
     else:
-        out_dict = {}
-        plot_dict = {}
         lq = None
 
     if args.plot_file:
-        common_dict = plot_dict.pop("common") if "common" in list(plot_dict) else None
-        if args.inplots:
-            with Path(args.inplots).open("rb") as r:
-                out_plot_dict = pkl.load(r)
-            out_plot_dict.update({"lq": plot_dict})
-        else:
-            out_plot_dict = {"lq": plot_dict}
-
-        if "common" in list(out_plot_dict) and common_dict is not None:
-            out_plot_dict["common"].update(common_dict)
-        elif common_dict is not None:
-            out_plot_dict["common"] = common_dict
-
         Path(args.plot_file).parent.mkdir(parents=True, exist_ok=True)
         with Path(args.plot_file).open("wb") as w:
-            pkl.dump(out_plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
+            pkl.dump(plot_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
 
     final_hit_dict = convert_dict_np_to_float(
         {
             "pars": {"operations": cal_dict},
-            "results": dict(**ecal_dict["results"], lq=out_dict),
+            "results": dict(**ecal_dict["results"], lq=eres_dict),
         }
     )
     Path(args.hit_pars).parent.mkdir(parents=True, exist_ok=True)
