@@ -605,6 +605,7 @@ def par_geds_hit_ecal() -> None:
             )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
                 e_uncal, etol_kev=5 if det_status == "on" else 30, n_sigma=2
+            )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         if det_status != "on":
             full_object_dict[cal_energy_param].hpge_cal_energy_peak_tops(
