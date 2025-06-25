@@ -568,22 +568,22 @@ def par_geds_hit_ecal() -> None:
         e_uncal = data.query(selection_string)[energy_param].to_numpy()
         if len(e_uncal) > 0:
             if isinstance(e_uncal[0], (np.ndarray, list)):
-                    e_uncal = np.concatenate(
-                    [arr for arr in e_uncal if len(arr) > 0]
-                )
+                e_uncal = np.concatenate([arr for arr in e_uncal if len(arr) > 0])
             hist, bins, bar = pgh.get_hist(
-                    e_uncal[
-                        (e_uncal > np.nanpercentile(e_uncal, 95))
-                        & (e_uncal < np.nanpercentile(e_uncal, 99.9))
-                    ],
-                    dx=1,
-                    range=[
-                        np.nanpercentile(e_uncal, 95),
-                        np.nanpercentile(e_uncal, 99.9),
-                    ],
-                )
+                e_uncal[
+                    (e_uncal > np.nanpercentile(e_uncal, 95))
+                    & (e_uncal < np.nanpercentile(e_uncal, 99.9))
+                ],
+                dx=1,
+                range=[
+                    np.nanpercentile(e_uncal, 95),
+                    np.nanpercentile(e_uncal, 99.9),
+                ],
+            )
         else:
-            raise ValueError(f"e_uncal should not be empty! energy_param: {energy_param}")
+            raise ValueError(
+                f"e_uncal should not be empty! energy_param: {energy_param}"
+            )
         guess = 2614.511 / bins[np.nanargmax(hist)]
         full_object_dict[cal_energy_param] = HPGeCalibration(
             energy_param,
