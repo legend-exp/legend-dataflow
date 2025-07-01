@@ -14,7 +14,7 @@ def test_match_pars_files():
     filelist2 = ["file3_step1_typeA", "file4_step3_typeC"]
 
     with patch(
-        "legenddataflow.pars_loading.ProcessingFileKey.get_filekey_from_pattern"
+        "legenddataflow.methods.pars_loading.ProcessingFileKey.get_filekey_from_pattern"
     ) as mock_get_filekey:
         mock_get_filekey.side_effect = [
             MagicMock(processing_step="step1", datatype="typeA"),
@@ -47,16 +47,24 @@ def test_get_par_file():
     log.debug(catalog)
 
     with (
-        patch("legenddataflow.pars_loading.pars_path") as mock_pars_path,
-        patch("legenddataflow.pars_loading.get_pars_path") as mock_get_pars_path,
+        patch("legenddataflow.methods.pars_loading.pars_path") as mock_pars_path,
         patch(
-            "legenddataflow.pars_loading.par_overwrite_path"
+            "legenddataflow.methods.pars_loading.get_pars_path"
+        ) as mock_get_pars_path,
+        patch(
+            "legenddataflow.methods.pars_loading.par_overwrite_path"
         ) as mock_par_overwrite_path,
-        patch("legenddataflow.pars_loading.det_status_path") as mock_det_status_path,
-        patch("legenddataflow.pars_loading.ParsCatalog.read_from") as mock_read_from,
-        patch("legenddataflow.pars_loading.ParsCatalog.valid_for") as mock_valid_for,
         patch(
-            "legenddataflow.pars_loading.ParsCatalog.match_pars_files"
+            "legenddataflow.methods.pars_loading.det_status_path"
+        ) as mock_det_status_path,
+        patch(
+            "legenddataflow.methods.pars_loading.ParsCatalog.read_from"
+        ) as mock_read_from,
+        patch(
+            "legenddataflow.methods.pars_loading.ParsCatalog.valid_for"
+        ) as mock_valid_for,
+        patch(
+            "legenddataflow.methods.pars_loading.ParsCatalog.match_pars_files"
         ) as mock_match_pars_files,
     ):
         mock_pars_path.return_value = setup["paths"]["par"]

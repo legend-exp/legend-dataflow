@@ -8,18 +8,23 @@ to the blinded raw data. It handles:
 
 import os, sys
 from pathlib import Path
-from legenddataflow import patterns as patt
-from legenddataflow import utils, execenv, ParsKeyResolve
-import legenddataflow.paths as paths
 from datetime import datetime
 from dbetto import AttrsDict, TextDB
 from legendmeta import LegendMetadata
-from legenddataflow.pre_compile_catalog import pre_compile_catalog
-from legenddataflow.build_filelist import get_filelist
+
+from legenddataflow.methods import patterns as patt
+from legenddataflow.methods import ParsKeyResolve
+import legenddataflow.methods.paths as paths
+
+from legenddataflowscripts.workflow import (
+    pre_compile_catalog,
+    subst_vars_in_snakemake_config,
+)
+from legenddataflow.scripts.flow.build_filelist import get_filelist
 
 os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
-utils.subst_vars_in_snakemake_config(workflow, config)
+subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
 check_in_cycle = True

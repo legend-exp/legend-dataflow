@@ -20,10 +20,16 @@ import logging
 
 from dbetto import AttrsDict, TextDB
 from legendmeta import LegendMetadata
-from legenddataflow import CalGrouping, execenv, utils
+
+from legenddataflow.methods import CalGrouping
 import legenddataflow.methods.paths as paths
 from legenddataflow.methods.patterns import get_pattern_tier
-from legenddataflowscripts import pre_compile_catalog
+
+from legenddataflowscripts.workflow import (
+    pre_compile_catalog,
+    execenv,
+    subst_vars_in_snakemake_config,
+)
 from legenddataflow.scripts.flow.build_filelist import get_filelist
 
 
@@ -33,7 +39,7 @@ envvars:
 
 os.environ["XDG_CACHE_HOME"] = config.get("XDG_CACHE_HOME", ".snakemake/cache")
 
-utils.subst_vars_in_snakemake_config(workflow, config)
+subst_vars_in_snakemake_config(workflow, config)
 config = AttrsDict(config)
 
 check_in_cycle = True
