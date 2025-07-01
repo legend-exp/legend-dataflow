@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from legenddataflowscripts.workflow import subst_vars
 
-from legenddataflow import FileKey, paths, patterns, subst_vars
+from legenddataflow.methods import FileKey, paths, patterns
 
 testprod = Path(__file__).parent / "dummy_cycle"
 

@@ -7,7 +7,7 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 """
 
 from pathlib import Path
-from legenddataflow.patterns import (
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
@@ -18,8 +18,8 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.paths import config_path, metadata_path
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.methods.paths import config_path, metadata_path
+from legenddataflowscripts.workflow import execenv_pyexe
 
 
 # This rule builds the qc using the calibration dsp files and fft files

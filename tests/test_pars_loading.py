@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from legenddataflow.pars_loading import ParsCatalog
+from legenddataflow.methods import ParsCatalog
 
 log = logging.getLogger(__name__)
 

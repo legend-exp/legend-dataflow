@@ -2,14 +2,14 @@
 Snakemake file containing the rules for generating the tcm
 """
 
-from legenddataflow.patterns import (
+from legenddataflow.methods.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars_tmp_channel,
     get_pattern_log_channel,
 )
-from legenddataflow.paths import metadata_path
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.methods.paths import metadata_path
+from legenddataflowscripts.workflow import execenv_pyexe
 
 
 # This rule builds the tcm files each raw file

@@ -4,11 +4,9 @@ the rules are done in one step to minimize i/o.
 """
 
 from pathlib import Path
-from legenddataflow.pars_loading import ParsCatalog
-from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.utils import set_last_rule_name
-from legenddataflow.paths import filelist_path, config_path, metadata_path
-from legenddataflow.patterns import (
+from legenddataflow.methods.create_pars_keylist import ParsKeyResolve, ParsCatalog
+from legenddataflow.methods.paths import filelist_path, config_path, metadata_path
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
@@ -18,7 +16,7 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
 
 pht_fast_rules = {}

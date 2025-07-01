@@ -2,15 +2,15 @@
 Snakemake rules for processing evt tier.
 """
 
-from legenddataflow.pars_loading import ParsCatalog
-from legenddataflow.patterns import (
+from legenddataflow.methods.pars_loading import ParsCatalog
+from legenddataflow.methods.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
     get_pattern_log_concat,
 )
-from legenddataflow.paths import config_path, metadata_path
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.methods.paths import config_path, metadata_path
+from legenddataflowscripts.workflow import execenv_pyexe
 
 
 rule build_evt:

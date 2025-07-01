@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 import yaml
 from dbetto.catalog import Catalog
+from legenddataflowscripts.workflow import subst_vars
 
-from legenddataflow import subst_vars
-from legenddataflow.cal_grouping import CalGrouping
+from legenddataflow.methods import CalGrouping
 
 testprod = Path(__file__).parent / "dummy_cycle"
 

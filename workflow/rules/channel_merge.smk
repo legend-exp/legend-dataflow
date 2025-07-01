@@ -1,9 +1,8 @@
 import inspect
 
-from legenddataflow import patterns
-from legenddataflow.utils import set_last_rule_name
-from legenddataflow.execenv import execenv_pyexe
-from legenddataflow.build_chanlist import get_plt_chanlist, get_par_chanlist
+from legenddataflow.methods import patterns
+from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
+from legenddataflow.scripts.flow.build_chanlist import get_plt_chanlist, get_par_chanlist
 
 
 def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):

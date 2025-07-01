@@ -6,16 +6,15 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
-from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.pars_loading import ParsCatalog
+from legenddataflow.methods.pars_loading import ParsCatalog, ParsKeyResolve
 from pathlib import Path
-from legenddataflow.patterns import (
+from legenddataflow.methods.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars_tmp,
 )
-from legenddataflow.paths import config_path
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflow.methods.paths import config_path
+from legenddataflowscripts.workflow import execenv_pyexe
 
 hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],

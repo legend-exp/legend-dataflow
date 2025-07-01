@@ -4,8 +4,8 @@ Snakemake rules for building dsp pars for HPGes, before running build_dsp()
 - extraction of energy filter parameters and charge trapping correction for each channel from cal data
 """
 
-from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.patterns import (
+from legenddataflow.methods import ParsKeyResolve
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
@@ -13,11 +13,11 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.paths import (
+from legenddataflow.methods.paths import (
     filelist_path,
     config_path,
 )
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflowscripts.workflow import execenv_pyexe
 
 
 rule build_pars_dsp_pz_geds:

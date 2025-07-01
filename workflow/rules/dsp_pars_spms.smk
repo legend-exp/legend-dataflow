@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from legenddataflow import patterns as patt
-from legenddataflow import utils, execenv_pyexe
-from legenddataflow.paths import config_path
-from legenddataflow.build_chanlist import get_chanlist
+from legenddataflow.methods import patterns as patt
+from legenddataflow.methods.paths import config_path
+from legenddataflowscripts.workflow import execenv_pyexe
+from legenddataflow.scripts.flow.build_chanlist import get_chanlist
 
 
 rule build_pars_dsp_tau_spms:

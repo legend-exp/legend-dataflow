@@ -4,12 +4,12 @@ from pathlib import Path
 
 import yaml
 from dbetto import time
+from legenddataflowscripts.workflow import subst_vars
 
-from legenddataflow import (
+from legenddataflow.methods import (
     FileKey,
     ParsKeyResolve,
     patterns,
-    subst_vars,
 )
 
 testprod = Path(__file__).parent / "dummy_cycle"
