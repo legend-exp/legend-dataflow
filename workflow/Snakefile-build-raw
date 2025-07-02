@@ -17,6 +17,7 @@ from legenddataflow.methods import ParsKeyResolve
 import legenddataflow.methods.paths as paths
 
 from legenddataflowscripts.workflow import (
+    execenv,
     pre_compile_catalog,
     subst_vars_in_snakemake_config,
 )
