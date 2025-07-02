@@ -5,7 +5,7 @@ Snakemake rules for processing psp (partition dsp) tier data.
 """
 
 from pathlib import Path
-from legenddataflow.methods.create_pars_keylist import ParsKeyResolve, ParsCatalog
+from legenddataflow.methods import ParsKeyResolve, ParsCatalog
 from legenddataflow.methods.patterns import (
     get_pattern_plts,
     get_pattern_tier,

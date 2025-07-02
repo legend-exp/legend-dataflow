@@ -6,7 +6,7 @@ Snakemake rules for processing hit tier. This is done in 4 steps:
 - running build hit over all channels using par file
 """
 
-from legenddataflow.methods.pars_loading import ParsCatalog, ParsKeyResolve
+from legenddataflow.methods import ParsCatalog, ParsKeyResolve
 from pathlib import Path
 from legenddataflow.methods.patterns import (
     get_pattern_tier,

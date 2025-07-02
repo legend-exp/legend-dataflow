@@ -8,7 +8,7 @@ from pathlib import Path
 from dbetto.catalog import Props
 from lgdo import lh5
 
-from ..FileKey import ChannelProcKey
+from legenddataflow.methods import ChannelProcKey
 
 
 def replace_path(d, old_path, new_path):

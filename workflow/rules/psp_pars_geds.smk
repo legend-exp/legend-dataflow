@@ -4,7 +4,7 @@ Snakemake rules for processing psp (partition dsp) tier data.
 - extraction of psd calibration parameters and partition level energy fitting for each channel over whole partition from cal data
 """
 
-from legenddataflow.methods.create_pars_keylist import ParsKeyResolve
+from legenddataflow.methods import ParsKeyResolve
 from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,

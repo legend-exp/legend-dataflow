@@ -56,4 +56,4 @@ rule autogen_output:
         Path(tmp_log_path(config)) / time / "{label}-{tier}-complete_run.log",
     threads: min(workflow.cores, 64)
     script:
-        "../src/legenddataflow/scripts/complete_run.py"
+        "../src/legenddataflow/scripts/flow/complete_run.py"

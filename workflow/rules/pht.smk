@@ -7,7 +7,7 @@ Snakemake rules for processing pht (partition hit) tier data. This is done in 4 
 """
 
 from pathlib import Path
-from legenddataflow.methods.pars_loading import ParsCatalog, ParsKeyResolve
+from legenddataflow.methods import ParsCatalog, ParsKeyResolve
 from legenddataflow.methods.paths import filelist_path, config_path, metadata_path
 from legenddataflow.methods.patterns import (
     get_pattern_tier,

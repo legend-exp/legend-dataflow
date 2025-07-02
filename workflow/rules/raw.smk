@@ -14,7 +14,7 @@ from legenddataflow.methods.paths import (
     chan_map_path,
     metadata_path,
 )
-from legenddataflow.methods.create_pars_keylist import ParsKeyResolve
+from legenddataflow.methods import ParsKeyResolve
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
 raw_par_catalog = ParsKeyResolve.get_par_catalog(

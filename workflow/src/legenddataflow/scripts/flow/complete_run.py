@@ -8,18 +8,18 @@ import subprocess
 import time
 from pathlib import Path
 
+from legenddataflowscripts.workflow import as_ro, execenv_pyexe
+from legenddataflowscripts.workflow.execenv import _execenv2str
 from snakemake.script import snakemake
 
-from legenddataflow import paths as pat
-from legenddataflow import patterns
-from legenddataflow import utils as ut
-from legenddataflow.execenv import _execenv2str, execenv_pyexe
+from legenddataflow.method import patterns
+from legenddataflow.methods import paths as pat
 
 print("INFO: dataflow ran successfully, now few final checks and scripts")
 
 
-def as_ro(path):
-    return ut.as_ro(snakemake.params.setup, path)
+def as_ro_path(path):
+    return as_ro(snakemake.params.setup, path)
 
 
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
@@ -109,7 +109,7 @@ def find_gen_runs(gen_tier_path):
 def build_file_dbs(gen_tier_path, outdir, ignore_keys_file=None):
     tic = time.time()
 
-    gen_tier_path = Path(as_ro(gen_tier_path))
+    gen_tier_path = Path(as_ro_path(gen_tier_path))
     outdir = Path(outdir)
 
     # find generated directories
@@ -186,10 +186,10 @@ if snakemake.params.setup.get("build_file_dbs", True):
     if os.getenv("PRODENV") is not None and os.getenv("PRODENV") in str(
         snakemake.params.filedb_path
     ):
-        prodenv = as_ro(os.getenv("PRODENV"))
+        prodenv = as_ro_path(os.getenv("PRODENV"))
 
         def tdirs(tier):
-            return as_ro(pat.get_tier_path(snakemake.params.setup, tier)).replace(
+            return as_ro_path(pat.get_tier_path(snakemake.params.setup, tier)).replace(
                 prodenv, ""
             )
 
@@ -199,7 +199,7 @@ if snakemake.params.setup.get("build_file_dbs", True):
         print("WARNING: $PRODENV not set, the FileDB will not be relocatable")
 
         def tdirs(tier):
-            return as_ro(pat.get_tier_path(snakemake.params.setup, tier))
+            return as_ro_path(pat.get_tier_path(snakemake.params.setup, tier))
 
         file_db_config["data_dir"] = "/"
 

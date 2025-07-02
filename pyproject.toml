@@ -57,9 +57,10 @@ dependencies = [
     "pylegendmeta==1.2.5",
     "legend-pydataobj==1.12.0a4",
     "legend-daq2lh5==1.6.1",
-    "legend-dataflow-scripts==0.1.3",
+    "legend-dataflow-scripts==0.1.4",
     "pip",
 ]
+#"legend-dataflow-scripts @  file:///${PROJECT_ROOT}/../legend-dataflow-scripts",
 # "legend-daq2lh5 @  file:///${PROJECT_ROOT}/software/python/src/legend-daq2lh5
 # "pygama @ file:///${PROJECT_ROOT}/software/python/src/pygama",
 # "dspeed @ file:///${PROJECT_ROOT}/software/python/src/dspeed",
