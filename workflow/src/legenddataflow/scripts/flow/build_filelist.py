@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import glob
-import json
 from pathlib import Path
 
-import yaml
+from dbetto import Props
 
 import legenddataflow.methods.patterns as patt
 from legenddataflow.methods import FileKey, run_grouper
@@ -43,10 +42,8 @@ def get_analysis_runs(
 
     if ignore_keys_file is not None:
         if Path(ignore_keys_file).is_file():
-            if Path(ignore_keys_file).suffix == ".json":
-                with Path(ignore_keys_file).open() as f:
-                    ignore_keys = json.load(f)
-
+            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+                ignore_keys = Props.read_from(ignore_keys_file)
             elif Path(ignore_keys_file).suffix == ".keylist":
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = f.read().splitlines()
@@ -54,10 +51,6 @@ def get_analysis_runs(
                     key.split("#")[0].strip() if "#" in key else key.strip()
                     for key in ignore_keys
                 ]
-
-            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
-                with Path(ignore_keys_file).open() as f:
-                    ignore_keys = yaml.safe_load(f)
 
             else:
                 msg = "ignore_keys_file file not in json, yaml or keylist format"
@@ -69,12 +62,8 @@ def get_analysis_runs(
 
     if analysis_runs_file is not None and file_selection != "all":
         if Path(analysis_runs_file).is_file():
-            if Path(ignore_keys_file).suffix == ".json":
-                with Path(analysis_runs_file).open() as f:
-                    analysis_runs = json.load(f)
-            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
-                with Path(analysis_runs_file).open() as f:
-                    analysis_runs = yaml.safe_load(f)
+            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+                analysis_runs = Props.read_from(analysis_runs_file)
             else:
                 msg = f"analysis_runs file not in json or yaml format: {analysis_runs_file}"
                 raise ValueError(msg)
@@ -168,10 +157,10 @@ def build_filelist(
     # the ignore_keys dictionary organizes keys in sections, gather all the
     # section contents in a single list
     if ignore_keys is not None:
-        _ignore_keys = []
-        for item in ignore_keys.values():
-            _ignore_keys += item
-        ignore_keys = _ignore_keys
+        if tier in ("raw", "blind"):
+            ignore_keys = ignore_keys.get("uprocessable", [])
+        else:
+            ignore_keys = ignore_keys.get("removed", [])
     else:
         ignore_keys = []
 
