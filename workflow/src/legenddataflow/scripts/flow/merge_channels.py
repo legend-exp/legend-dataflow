@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 import shelve
@@ -6,7 +8,7 @@ from pathlib import Path
 from dbetto.catalog import Props
 from lgdo import lh5
 
-from ..FileKey import ChannelProcKey
+from legenddataflow.methods import ChannelProcKey
 
 
 def replace_path(d, old_path, new_path):
@@ -49,7 +51,8 @@ def merge_channels() -> None:
 
     file_extension = Path(args.output).suffix
 
-    if file_extension == ".dat" or file_extension == ".dir":
+    if file_extension in (".dat", ".dir"):
+        common_dict = {}
         out_file = Path(args.output).with_suffix("")
     else:
         out_file = args.output
@@ -82,7 +85,7 @@ def merge_channels() -> None:
 
         Path(out_file).rename(out_file)
 
-    elif file_extension == ".dat" or file_extension == ".dir":
+    elif file_extension in (".dat", ".dir"):
         common_dict = {}
         with shelve.open(str(out_file), "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
             for channel in channel_files:

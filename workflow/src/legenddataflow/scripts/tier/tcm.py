@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
-import lgdo.lh5 as lh5
 from daq2lh5.orca import orca_flashcam
 from dbetto import AttrsDict, TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log
+from lgdo import lh5
 from pygama.evt.build_tcm import build_tcm
-
-from ...log import build_log
 
 
 def build_tier_tcm() -> None:
@@ -24,7 +25,7 @@ def build_tier_tcm() -> None:
     config_dict = configs["snakemake_rules"]["tier_tcm"]
 
     log = build_log(config_dict, args.log)
-    if isinstance(config_dict["inputs"]["config"], (dict, AttrsDict)):
+    if isinstance(config_dict["inputs"]["config"], dict | AttrsDict):
         settings = {
             key: Props.read_from(val)
             for key, val in config_dict["inputs"]["config"].items()
@@ -52,7 +53,8 @@ def build_tier_tcm() -> None:
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     # make a hardware_tcm_[fcid] for each fcid
     for fcid, fcid_dict in fcid_channels.items():
-        log.info(f"building tcm for fcid: {fcid}")
+        msg = f"building tcm for fcid: {fcid}"
+        log.info(msg)
         build_tcm(
             [(args.input, fcid_dict)],
             out_file=args.output,
@@ -60,4 +62,5 @@ def build_tier_tcm() -> None:
             wo_mode="o",
             **settings.get(fcid, settings),
         )
-        log.info(f"built tcm for fcid: {fcid}")
+        msg = f"built tcm for fcid: {fcid}"
+        log.info(msg)

@@ -5,14 +5,14 @@ Helper functions for running data production
 from pathlib import Path
 import json
 import re
-from legenddataflow import patterns as patt
+from legenddataflow.methods import patterns as patt
 from dbetto.catalog import Catalog
 from dbetto import TextDB
-from legenddataflow import utils
+from legenddataflowscripts.workflow import as_ro
 
 
 def ro(path):
-    return utils.as_ro(config, path)
+    return as_ro(config, path)
 
 
 def get_blinding_curve_file(wildcards):

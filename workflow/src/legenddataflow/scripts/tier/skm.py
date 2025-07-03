@@ -1,23 +1,23 @@
+from __future__ import annotations
+
 import argparse
 
 import awkward as ak
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log
 from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
-
-from ...log import build_log
 
 
 def get_all_out_fields(input_table, out_fields, current_field=""):
     for key in input_table:
         field = input_table[key]
         key_string = f"{current_field}.{key}"
-        if isinstance(field, (Table, Struct)):
+        if isinstance(field, Table | Struct):
             get_all_out_fields(field, out_fields, key_string)
-        else:
-            if key_string not in out_fields:
-                out_fields.append(key_string)
+        elif key_string not in out_fields:
+            out_fields.append(key_string)
     return out_fields
 
 

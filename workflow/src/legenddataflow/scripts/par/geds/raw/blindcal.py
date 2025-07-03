@@ -4,6 +4,8 @@ it does this using a peak search, matching the peaks to the given ones
 and deriving a simple scaling relation from adc to keV.
 """
 
+from __future__ import annotations
+
 import argparse
 import pickle as pkl
 from pathlib import Path
@@ -13,10 +15,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import build_log
 from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
-
-from .....log import build_log
 
 mpl.use("agg")
 
@@ -80,9 +81,12 @@ def par_geds_raw_blindcal() -> None:
     detected_peaks_keV = hpge_cal.peaks_kev
     roughpars = hpge_cal.pars
 
-    log.info(f"{len(detected_peaks_locs)} peaks found:")
+    msg = f"{len(detected_peaks_locs)} peaks found:"
+    log.info(msg)
     log.info("\t   Energy   | Position  ")
-    for i, (Li, Ei) in enumerate(zip(detected_peaks_locs, detected_peaks_keV)):
+    for i, (Li, Ei) in enumerate(
+        zip(detected_peaks_locs, detected_peaks_keV, strict=False)
+    ):
         log.info(f"\t{i}".ljust(4) + str(Ei).ljust(9) + f"| {Li:g}".ljust(5))  # noqa: G003
 
     # dictionary to pass to build hit

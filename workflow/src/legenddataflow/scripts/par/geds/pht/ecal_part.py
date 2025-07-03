@@ -8,18 +8,20 @@ import numpy as np
 import pandas as pd
 import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
-from dbetto import TextDB
-from dbetto.catalog import Props
+from dbetto import Props, TextDB
+from legenddataflowscripts.utils import build_log, get_pulser_mask
 from pygama.math.distributions import nb_poly
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 
-from .....log import build_log
-from ....pulser_removal import get_pulser_mask
-from .util import get_run_dict, save_dict_to_files, split_files_by_run, update_cal_dicts
+from .util import (
+    get_run_dict,
+    save_dict_to_files,
+    split_files_by_run,
+    update_cal_dicts,
+)
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.RankWarning)
 
 
 def bin_spectrum(
@@ -49,67 +51,66 @@ def bin_spectrum(
 def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
     if np.isnan(ecal_class.pars).all():
         return {}
+    results_dict = copy.deepcopy(ecal_class.results["hpge_fit_energy_peaks"])
+
+    if "FWHMLinear" in results_dict:
+        fwhm_linear = results_dict["FWHMLinear"]
+        fwhm_linear["function"] = fwhm_linear["function"].__name__
+        fwhm_linear["parameters"] = fwhm_linear["parameters"].to_dict()
+        fwhm_linear["uncertainties"] = fwhm_linear["uncertainties"].to_dict()
+        fwhm_linear["cov"] = fwhm_linear["cov"].tolist()
     else:
-        results_dict = copy.deepcopy(ecal_class.results["hpge_fit_energy_peaks"])
+        fwhm_linear = None
 
-        if "FWHMLinear" in results_dict:
-            fwhm_linear = results_dict["FWHMLinear"]
-            fwhm_linear["function"] = fwhm_linear["function"].__name__
-            fwhm_linear["parameters"] = fwhm_linear["parameters"].to_dict()
-            fwhm_linear["uncertainties"] = fwhm_linear["uncertainties"].to_dict()
-            fwhm_linear["cov"] = fwhm_linear["cov"].tolist()
-        else:
-            fwhm_linear = None
+    if "FWHMQuadratic" in results_dict:
+        fwhm_quad = results_dict["FWHMQuadratic"]
+        fwhm_quad["function"] = fwhm_quad["function"].__name__
+        fwhm_quad["parameters"] = fwhm_quad["parameters"].to_dict()
+        fwhm_quad["uncertainties"] = fwhm_quad["uncertainties"].to_dict()
+        fwhm_quad["cov"] = fwhm_quad["cov"].tolist()
+    else:
+        fwhm_quad = None
 
-        if "FWHMQuadratic" in results_dict:
-            fwhm_quad = results_dict["FWHMQuadratic"]
-            fwhm_quad["function"] = fwhm_quad["function"].__name__
-            fwhm_quad["parameters"] = fwhm_quad["parameters"].to_dict()
-            fwhm_quad["uncertainties"] = fwhm_quad["uncertainties"].to_dict()
-            fwhm_quad["cov"] = fwhm_quad["cov"].tolist()
-        else:
-            fwhm_quad = None
+    pk_dict = results_dict["peak_parameters"]
 
-        pk_dict = results_dict["peak_parameters"]
+    for _, dic in pk_dict.items():
+        dic["function"] = dic["function"].name
+        dic["parameters"] = dic["parameters"].to_dict()
+        dic["uncertainties"] = dic["uncertainties"].to_dict()
+        dic.pop("covariance")
 
-        for _, dic in pk_dict.items():
-            dic["function"] = dic["function"].name
-            dic["parameters"] = dic["parameters"].to_dict()
-            dic["uncertainties"] = dic["uncertainties"].to_dict()
-            dic.pop("covariance")
+    out_dict = {
+        "total_fep": len(
+            data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")
+        ),
+        "total_dep": len(
+            data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")
+        ),
+        "pass_fep": len(
+            data.query(
+                f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}"
+            )
+        ),
+        "pass_dep": len(
+            data.query(
+                f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}"
+            )
+        ),
+        "eres_linear": fwhm_linear,
+        "eres_quadratic": fwhm_quad,
+        "fitted_peaks": ecal_class.peaks_kev.tolist(),
+        "pk_fits": pk_dict,
+        "peak_param": results_dict["peak_param"],
+    }
+    if "calibration_parameters" in results_dict:
+        out_dict["calibration_parameters"] = results_dict[
+            "calibration_parameters"
+        ].to_dict()
+        out_dict["calibration_uncertainty"] = results_dict[
+            "calibration_uncertainties"
+        ].to_dict()
 
-        out_dict = {
-            "total_fep": len(
-                data.query(f"{cal_energy_param}>2604&{cal_energy_param}<2624")
-            ),
-            "total_dep": len(
-                data.query(f"{cal_energy_param}>1587&{cal_energy_param}<1597")
-            ),
-            "pass_fep": len(
-                data.query(
-                    f"{cal_energy_param}>2604&{cal_energy_param}<2624&{selection_string}"
-                )
-            ),
-            "pass_dep": len(
-                data.query(
-                    f"{cal_energy_param}>1587&{cal_energy_param}<1597&{selection_string}"
-                )
-            ),
-            "eres_linear": fwhm_linear,
-            "eres_quadratic": fwhm_quad,
-            "fitted_peaks": ecal_class.peaks_kev.tolist(),
-            "pk_fits": pk_dict,
-            "peak_param": results_dict["peak_param"],
-        }
-        if "calibration_parameters" in results_dict:
-            out_dict["calibration_parameters"] = results_dict[
-                "calibration_parameters"
-            ].to_dict()
-            out_dict["calibration_uncertainty"] = results_dict[
-                "calibration_uncertainties"
-            ].to_dict()
-
-        return out_dict
+    return out_dict
 
 
 def calibrate_partition(
@@ -185,7 +186,7 @@ def calibrate_partition(
     full_object_dict = {}
 
     for energy_param, cal_energy_param in zip(
-        configs["energy_params"], cal_energy_params
+        configs["energy_params"], cal_energy_params, strict=False
     ):
         energy = data.query(selection_string)[energy_param].to_numpy()
         full_object_dict[cal_energy_param] = HPGeCalibration(

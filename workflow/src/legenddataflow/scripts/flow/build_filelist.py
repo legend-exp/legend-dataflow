@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import glob
-import json
 from pathlib import Path
 
-import yaml
+from dbetto import Props
 
-from . import patterns as patt
-from .FileKey import FileKey, run_grouper
+import legenddataflow.methods.patterns as patt
+from legenddataflow.methods import FileKey, run_grouper
 
 concat_datatypes = ["phy"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
@@ -41,10 +42,8 @@ def get_analysis_runs(
 
     if ignore_keys_file is not None:
         if Path(ignore_keys_file).is_file():
-            if Path(ignore_keys_file).suffix == ".json":
-                with Path(ignore_keys_file).open() as f:
-                    ignore_keys = json.load(f)
-
+            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+                ignore_keys = Props.read_from(ignore_keys_file)
             elif Path(ignore_keys_file).suffix == ".keylist":
                 with Path(ignore_keys_file).open() as f:
                     ignore_keys = f.read().splitlines()
@@ -52,10 +51,6 @@ def get_analysis_runs(
                     key.split("#")[0].strip() if "#" in key else key.strip()
                     for key in ignore_keys
                 ]
-
-            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
-                with Path(ignore_keys_file).open() as f:
-                    ignore_keys = yaml.safe_load(f)
 
             else:
                 msg = "ignore_keys_file file not in json, yaml or keylist format"
@@ -67,12 +62,8 @@ def get_analysis_runs(
 
     if analysis_runs_file is not None and file_selection != "all":
         if Path(analysis_runs_file).is_file():
-            if Path(ignore_keys_file).suffix == ".json":
-                with Path(analysis_runs_file).open() as f:
-                    analysis_runs = json.load(f)
-            elif Path(ignore_keys_file).suffix in (".yaml", ".yml"):
-                with Path(analysis_runs_file).open() as f:
-                    analysis_runs = yaml.safe_load(f)
+            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+                analysis_runs = Props.read_from(analysis_runs_file)
             else:
                 msg = f"analysis_runs file not in json or yaml format: {analysis_runs_file}"
                 raise ValueError(msg)
@@ -166,10 +157,10 @@ def build_filelist(
     # the ignore_keys dictionary organizes keys in sections, gather all the
     # section contents in a single list
     if ignore_keys is not None:
-        _ignore_keys = []
-        for item in ignore_keys.values():
-            _ignore_keys += item
-        ignore_keys = _ignore_keys
+        if tier in ("raw", "blind"):
+            ignore_keys = ignore_keys.get("uprocessable", [])
+        else:
+            ignore_keys = ignore_keys.get("removed", [])
     else:
         ignore_keys = []
 
@@ -214,29 +205,20 @@ def build_filelist(
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)
 
-                if analysis_runs == {}:
+                if analysis_runs == {} or (
+                    _key.datatype in analysis_runs
+                    and _key.period in analysis_runs[_key.datatype]
+                    and (
+                        _key.run in analysis_runs[_key.datatype][_key.period]
+                        or analysis_runs[_key.datatype][_key.period] == "all"
+                    )
+                ):
                     if (
                         _key.datatype in concat_datatypes
                     ):  # separate out phy files as some tiers these are concatenated
                         phy_filenames += filename
                     else:
                         other_filenames += filename
-                else:
-                    # check if period in analysis_runs dicts
-                    # check if run in analysis_runs dicts
-                    # or if runs is just specified as "all"
-                    if (
-                        _key.datatype in analysis_runs
-                        and _key.period in analysis_runs[_key.datatype]
-                        and (
-                            _key.run in analysis_runs[_key.datatype][_key.period]
-                            or analysis_runs[_key.datatype][_key.period] == "all"
-                        )
-                    ):
-                        if _key.datatype in concat_datatypes:
-                            phy_filenames += filename  # separate out phy files as some tiers these are concatenated
-                        else:
-                            other_filenames += filename
 
     phy_filenames = sorted(phy_filenames)
     other_filenames = sorted(other_filenames)

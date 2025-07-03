@@ -4,7 +4,7 @@ Snakemake rules for calibrating daq energy for blinding. Two steps:
 - combining all channels into single par file
 """
 
-from legenddataflow.patterns import (
+from legenddataflow.methods.patterns import (
     get_pattern_pars,
     get_pattern_plts,
     get_pattern_pars_tmp_channel,
@@ -12,7 +12,7 @@ from legenddataflow.patterns import (
     get_pattern_log_channel,
 )
 from pathlib import Path
-from legenddataflow.execenv import execenv_pyexe
+from legenddataflowscripts.workflow import execenv_pyexe
 
 
 rule build_blinding_calibration:

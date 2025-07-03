@@ -4,7 +4,7 @@ Snakemake rules for checking blinding. Two steps:
 - combining all channel check files into single check file
 """
 
-from legenddataflow.patterns import (
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
@@ -12,9 +12,12 @@ from legenddataflow.patterns import (
     get_pattern_plts,
     get_pattern_pars,
 )
-from legenddataflow.paths import config_path, metadata_path
-from legenddataflow.execenv import execenv_pyexe
-from legenddataflow.build_chanlist import get_par_chanlist, get_plt_chanlist
+from legenddataflow.methods.paths import config_path, metadata_path
+from legenddataflowscripts.workflow import execenv_pyexe
+from legenddataflow.scripts.flow.build_chanlist import (
+    get_par_chanlist,
+    get_plt_chanlist,
+)
 from pathlib import Path
 
 

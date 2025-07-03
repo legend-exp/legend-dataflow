@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
@@ -5,10 +7,8 @@ import hist
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB, utils
 from dspeed import build_processing_chain
+from legenddataflowscripts.utils import build_log, cfgtools
 from lgdo import lh5
-
-from ..... import cfgtools
-from .....log import build_log
 
 
 def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name, log):
@@ -52,8 +52,8 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
 
         elif len(data) < settings.n_events:
             msg = (
-                f"number of waveforms '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
-                "in {args.raw_file}, can't build histogram"
+                f"number of waveforms ({len(data)}) in '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
+                " in {args.raw_file}, can't build histogram"
             )
             raise RuntimeError(msg)
         else:
@@ -125,8 +125,8 @@ def par_spms_dsp_trg_thr() -> None:
         args.raw_table_name,
         log,
     )
-
-    log.debug(f"writing out baseline_curr_fwhm = {fwhm}")
+    msg = f"writing out baseline_curr_fwhm = {fwhm}"
+    log.debug(msg)
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(
         args.output_file,
@@ -159,7 +159,9 @@ def par_spms_dsp_trg_thr_multi() -> None:
     log = build_log(df_configs, args.logfile)
 
     out_dict = {}
-    for sipm_name, raw_table_name in zip(args.sipm_names, args.raw_table_names):
+    for sipm_name, raw_table_name in zip(
+        args.sipm_names, args.raw_table_names, strict=False
+    ):
         fwhm = get_channel_trg_thr(
             df_configs,
             sipm_name,
@@ -169,7 +171,8 @@ def par_spms_dsp_trg_thr_multi() -> None:
             log,
         )
 
-        log.debug(f"baseline_curr_fwhm for {sipm_name} = {fwhm}")
+        msg = f"baseline_curr_fwhm for {sipm_name} = {fwhm}"
+        log.debug(msg)
         out_dict[sipm_name] = {
             "baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm
         }

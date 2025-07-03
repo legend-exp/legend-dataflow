@@ -6,9 +6,11 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-from dbetto import TextDB
-from dbetto.catalog import Props
-from legenddataflow import build_log
+from dbetto import Props, TextDB
+from legenddataflowscripts.utils import (
+    build_log,
+)
+
 from legenddataflow.par.geds.pht.qc import build_qc
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)

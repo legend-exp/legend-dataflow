@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from legenddataflow.paths import (
+from legenddataflow.methods.paths import (
     filelist_path,
     log_path,
     tmp_par_path,
@@ -56,4 +56,4 @@ rule autogen_output:
         Path(tmp_log_path(config)) / time / "{label}-{tier}-complete_run.log",
     threads: min(workflow.cores, 64)
     script:
-        "../src/legenddataflow/scripts/complete_run.py"
+        "../src/legenddataflow/scripts/flow/complete_run.py"

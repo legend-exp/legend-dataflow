@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pickle as pkl
 import re
 from pathlib import Path

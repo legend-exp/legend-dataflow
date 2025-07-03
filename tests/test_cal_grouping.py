@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
 import pytest
 import yaml
 from dbetto.catalog import Catalog
-from legenddataflow import subst_vars
-from legenddataflow.cal_grouping import CalGrouping
+from legenddataflowscripts.workflow import subst_vars
+
+from legenddataflow.methods import CalGrouping
 
 testprod = Path(__file__).parent / "dummy_cycle"
 

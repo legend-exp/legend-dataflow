@@ -2,11 +2,9 @@
 Helper rule for building qc using physics data where fft data is not available
 """
 
-from legenddataflow.pars_loading import ParsCatalog
-from legenddataflow.create_pars_keylist import ParsKeyResolve
-from legenddataflow.utils import set_last_rule_name
-from legenddataflow.paths import filelist_path, config_path
-from legenddataflow.patterns import (
+from legenddataflow.methods import ParsKeyResolve, ParsCatalog
+from legenddataflow.methods.paths import filelist_path, config_path
+from legenddataflow.methods.patterns import (
     get_pattern_pars_tmp_channel,
     get_pattern_plts_tmp_channel,
     get_pattern_log_channel,
@@ -16,8 +14,11 @@ from legenddataflow.patterns import (
     get_pattern_log,
     get_pattern_pars,
 )
-from legenddataflow.execenv import execenv_pyexe
-from legenddataflow.build_chanlist import get_par_chanlist, get_plt_chanlist
+from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
+from legenddataflow.scripts.flow.build_chanlist import (
+    get_par_chanlist,
+    get_plt_chanlist,
+)
 
 intier = "psp"
 
