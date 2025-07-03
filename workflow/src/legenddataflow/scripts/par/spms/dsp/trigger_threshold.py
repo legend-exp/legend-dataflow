@@ -52,8 +52,8 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
 
         elif len(data) < settings.n_events:
             msg = (
-                f"number of waveforms '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
-                "in {args.raw_file}, can't build histogram"
+                f"number of waveforms ({len(data)}) in '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
+                " in {args.raw_file}, can't build histogram"
             )
             raise RuntimeError(msg)
         else:
