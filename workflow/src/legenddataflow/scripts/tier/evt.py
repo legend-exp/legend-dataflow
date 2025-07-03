@@ -12,7 +12,7 @@ from lgdo import lh5
 from lgdo.types import Array
 from pygama.evt import build_evt
 
-from ...FileKey import ProcessingFileKey
+from legenddataflow.methods import ProcessingFileKey
 
 
 def build_tier_evt() -> None:
