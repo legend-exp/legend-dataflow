@@ -22,7 +22,10 @@ from .ecal_part import calibrate_partition
 from .lq import run_lq_calibration
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
-warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
+try:
+    warnings.filterwarnings(action="ignore", category=np.exceptions.RankWarning)
+except AttributeError:  # np < 2
+    warnings.filterwarnings(action="ignore", category=np.RankWarning)
 
 
 def par_geds_pht_fast() -> None:
