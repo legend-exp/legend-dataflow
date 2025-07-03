@@ -57,9 +57,10 @@ dependencies = [
     "pylegendmeta==1.2.5",
     "legend-pydataobj==1.12.0a4",
     "legend-daq2lh5==1.6.1",
-    "legend-dataflow-scripts==0.1.4",
+    "legend-dataflow-scripts==0.1.5",
     "pip",
 ]
+
 #"legend-dataflow-scripts @  file:///${PROJECT_ROOT}/../legend-dataflow-scripts",
 # "legend-daq2lh5 @  file:///${PROJECT_ROOT}/software/python/src/legend-daq2lh5
 # "pygama @ file:///${PROJECT_ROOT}/software/python/src/pygama",
@@ -92,7 +93,7 @@ docs = [
 
 [project.scripts]
 create-chankeylist      = "legenddataflow.scripts.create_chankeylist:create_chankeylist"
-merge-channels          = "legenddataflow.scripts.merge_channels:merge_channels"
+merge-channels          = "legenddataflow.scripts.flow.merge_channels:merge_channels"
 build-tier-evt          = "legenddataflow.scripts.tier.evt:build_tier_evt"
 build-tier-raw-blind    = "legenddataflow.scripts.tier.raw_blind:build_tier_raw_blind"
 build-tier-raw-fcio     = "legenddataflow.scripts.tier.raw_fcio:build_tier_raw_fcio"
