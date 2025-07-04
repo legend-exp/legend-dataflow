@@ -34,7 +34,7 @@ def par_geds_pht_qc_phy() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     argparser.add_argument("--table-name", help="table name", type=str, required=True)
     argparser.add_argument(
-        "--baseline-name", help="table name", type=str, required=True
+        "--baseline-name", help="baseline name", type=str, required=True
     )
     argparser.add_argument("--pulser-name", help="table name", type=str, required=True)
 
@@ -55,7 +55,7 @@ def par_geds_pht_qc_phy() -> None:
     log = build_log(config_dict, args.log)
 
     # get metadata dictionary
-    channel_dict = config_dict["qc_config"][args.channel]
+    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
     kwarg_dict = Props.read_from(channel_dict)
 
     # sort files in dictionary where keys are first timestamp from run
@@ -70,9 +70,9 @@ def par_geds_pht_qc_phy() -> None:
             run_files = sorted(np.unique(run_files))
             phy_files += run_files
             bls = lh5.read(
-                args.baseline_name, run_files, field_mask=["wf_max", "bl_mean"]
+                args.baseline_name, phy_files, field_mask=["wf_max", "bl_mean"]
             )
-            puls = lh5.read(args.pulser_name, run_files, field_mask=["trapTmax"])
+            puls = lh5.read(args.pulser_name, phy_files, field_mask=["trapTmax"])
             bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
                 puls["trapTmax"].nda < 200
             )
@@ -161,7 +161,7 @@ def par_geds_pht_qc_phy() -> None:
     hit_dict = convert_dict_np_to_float(hit_dict)
 
     for file in args.save_path:
-        Path(file).name.mkdir(parents=True, exist_ok=True)
+        Path(file).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(file, {"pars": {"operations": hit_dict}})
 
     if args.plot_path:
