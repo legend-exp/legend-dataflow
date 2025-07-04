@@ -1,4 +1,4 @@
-from __future__ import annotations
+# ruff: noqa: I002
 
 import glob
 from pathlib import Path
