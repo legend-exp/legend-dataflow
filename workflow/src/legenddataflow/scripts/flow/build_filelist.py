@@ -1,4 +1,4 @@
-from __future__ import annotations
+# ruff: noqa: I002
 
 import glob
 from pathlib import Path
@@ -158,9 +158,11 @@ def build_filelist(
     # section contents in a single list
     if ignore_keys is not None:
         if tier in ("raw", "blind"):
-            ignore_keys = ignore_keys.get("uprocessable", [])
+            ignore_keys = ignore_keys.get("unprocessable", [])
         else:
-            ignore_keys = ignore_keys.get("removed", [])
+            _ignore_keys = ignore_keys.get("removed", [])
+            _ignore_keys += ignore_keys.get("unprocessable", [])
+            ignore_keys = sorted(_ignore_keys)
     else:
         ignore_keys = []
 
