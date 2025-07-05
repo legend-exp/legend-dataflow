@@ -37,7 +37,17 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
-                configs=config_path(config),
+                configs=ro(config_path(config)),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    channelmap_textdb,
+                    config,
+                    "cal",
+                    wildcards.timestamp,
+                    wildcards.channel,
+                    intier,
+                ),
+                pulser_name="PULS01/dsp",
+                baseline_name="BSLN01/dsp",
             output:
                 hit_pars=[
                     temp(file)
@@ -75,13 +85,17 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             shell:
                 execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
-                "--configs {params.configs} "
                 "--datatype {params.datatype} "
                 "--timestamp {params.timestamp} "
                 "--channel {params.channel} "
-                "--save-path {output.hit_pars} "
+                "--configs {params.configs} "
+                "--table-name {params.dsp_table_name} "
                 "--plot-path {output.plot_file} "
-                "--phy-files {input.phy_files}"
+                "--save-path {output.hit_pars} "
+                "--phy-files {input.phy_files} "
+                "--pulser-name {params.pulser_name} "
+                "--baseline-name {params.baseline_name} "
+                "--metadata {meta} "
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_qc_phy")
 
@@ -91,8 +105,6 @@ for key, dataset in part.datasets.items():
             qc_pht_rules[key] = [list(workflow.rules)[-1]]
 
 
-# Merged energy and a/e supercalibrations to reduce number of rules as they have same inputs/outputs
-# This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_pht_qc_phy:
     input:
         phy_files=(
@@ -103,7 +115,17 @@ rule build_pht_qc_phy:
         datatype="cal",
         channel="{channel}",
         timestamp="{timestamp}",
-        configs=config_path(config),
+        configs=ro(config_path(config)),
+        dsp_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            intier,
+        ),
+        pulser_name="PULS01/dsp",
+        baseline_name="BSLN01/dsp",
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qcphy")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qcphy")),
@@ -116,13 +138,17 @@ rule build_pht_qc_phy:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
-        "--configs {params.configs} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--channel {params.channel} "
-        "--save-path {output.hit_pars} "
+        "--configs {params.configs} "
+        "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
-        "--phy-files {input.phy_files}"
+        "--save-path {output.hit_pars} "
+        "--phy-files {input.phy_files} "
+        "--pulser-name {params.pulser_name} "
+        "--baseline-name {params.baseline_name} "
+        "--metadata {meta} "
 
 
 fallback_qc_rule = list(workflow.rules)[-1]
@@ -142,8 +168,9 @@ rule build_plts_pht_phy:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
-            det_status,
-            chan_maps,
+            det_status_textdb,
+            channelmap_textdb,
+            system="geds",
             name="qcphy",
         ),
     output:
@@ -165,8 +192,9 @@ rule build_pars_pht_phy:
             config,
             f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
             "pht",
-            det_status,
-            chan_maps,
+            det_status_textdb,
+            channelmap_textdb,
+            system="geds",
             name="qcphy",
         ),
         plts=get_pattern_plts(config, "pht", "qc_phy"),
