@@ -1,4 +1,4 @@
-# ruff: noqa: F821, T201, I002
+# ruff: noqa: T201, I002
 
 import datetime
 import json
@@ -99,7 +99,7 @@ def find_gen_runs(gen_tier_path):
     paths_concat = gen_tier_path.glob("*/*/*.lh5")
     # use the directories to build a datatype/period/run string
     runs_concat = {
-        "/".join([str(p).split("-")[3]] + str(p).split("-")[1:3]) for p in paths_concat
+        "/".join([str(p).split("-")[3], *str(p).split("-")[1:3]]) for p in paths_concat
     }
 
     return runs | runs_concat
