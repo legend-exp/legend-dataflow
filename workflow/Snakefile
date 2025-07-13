@@ -104,7 +104,11 @@ onstart:
     if not workflow.touch:
         shell(
             execenv.execenv_pyexe(config, "python")
-            + "-c 'import dspeed, lgdo, matplotlib, pygama'"
+            + "-c 'import lgdo, matplotlib, pygama'"
+        )
+        shell(
+            execenv.execenv_pyexe(config, "python")
+            + "-c 'from dspeed.processors import *'"
         )
 
         # Log parameter catalogs in validity files
