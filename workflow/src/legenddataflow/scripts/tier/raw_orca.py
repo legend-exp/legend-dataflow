@@ -5,10 +5,20 @@ import logging
 import time
 from pathlib import Path
 
+import hdf5plugin
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import alias_table, build_log
+
+filter_map = {
+    "zstd": hdf5plugin.Zstd(),
+    "blosc": hdf5plugin.Blosc(),
+    "lz4": hdf5plugin.LZ4(),
+    "bitshuffle": hdf5plugin.Bitshuffle(),
+    "bzip2": hdf5plugin.BZip2(),
+    # Add other filters from hdf5plugin if needed
+}
 
 
 def build_tier_raw_orca() -> None:
@@ -20,7 +30,12 @@ def build_tier_raw_orca() -> None:
     argparser.add_argument("--configs", help="config file", type=str)
     argparser.add_argument("--chan-maps", help="chan map", type=str)
     argparser.add_argument("--log", help="log file")
-    argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
+    argparser.add_argument(
+        "--alias-table", help="Alias table", type=str, default=None, required=False
+    )
+    argparser.add_argument(
+        "--inl-table", help="INL table", type=str, default=None, required=False
+    )
     args = argparser.parse_args()
 
     Path(args.log).parent.mkdir(parents=True, exist_ok=True)
@@ -41,7 +56,7 @@ def build_tier_raw_orca() -> None:
     all_config = Props.read_from(channel_dict["gen_config"])
 
     chmap = TextDB(args.chan_maps, lazy=True).channelmaps.on(args.timestamp)
-
+    db_dict = None
     if "geds_config" in list(channel_dict):
         ged_config = Props.read_from(channel_dict["geds_config"])
 
@@ -49,6 +64,14 @@ def build_tier_raw_orca() -> None:
 
         ged_config[next(iter(ged_config))]["geds"]["key_list"] = sorted(ged_channels)
         Props.add_to(all_config, ged_config)
+
+        if args.inl_table is not None:
+            log.info("Adding INL table to config")
+            db_dict = {
+                "values": f"loadlh5('{args.inl_table}', 'fc/inl')",
+                "factor": "1",
+            }
+            db_dict = dict.fromkeys(ged_channels, db_dict)
 
     if "spms_config" in list(channel_dict):
         spm_config = Props.read_from(channel_dict["spms_config"])
@@ -91,11 +114,17 @@ def build_tier_raw_orca() -> None:
     log.info("Starting build raw")
     start = time.time()
 
+    if "hdf5_settings" in settings and "compression" in settings["hdf5_settings"]:
+        compression = settings["hdf5_settings"]["compression"]
+        if compression in filter_map:
+            settings["hdf5_settings"]["compression"] = filter_map[compression]
+
     build_raw(
         args.input,
         out_spec=all_config,
         in_stream_type="ORCA",
         filekey=args.output,
+        db_dict=db_dict,
         **settings,
     )
 

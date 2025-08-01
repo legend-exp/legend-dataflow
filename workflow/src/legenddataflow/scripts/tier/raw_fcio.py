@@ -20,6 +20,9 @@ def build_tier_raw_fcio() -> None:
     argparser.add_argument("--chan-maps", help="chan map", type=str)
     argparser.add_argument("--log", help="log file", type=str)
     argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
+    argparser.add_argument(
+        "--inl-table", help="INL table", type=str, default=None, required=False
+    )
     args = argparser.parse_args()
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
