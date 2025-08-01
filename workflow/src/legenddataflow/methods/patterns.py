@@ -65,14 +65,20 @@ def get_pattern_tier_daq_unsorted(setup, extension="orca"):
     return None
 
 
-def get_pattern_tier_daq(setup, extension="orca"):
-    return (
+def get_pattern_tier_daq(setup, extension="orca", check_in_cycle=True):
+    file_pattern = (
         Path(f"{tier_daq_path(setup)}")
         / "{datatype}"
         / "{period}"
         / "{run}"
         / ("{experiment}-{period}-{run}-{datatype}-{timestamp}." + extension)
     )
+    if (
+        tier_path(setup) not in str(file_pattern.resolve(strict=False))
+        and check_in_cycle is True
+    ):
+        return "/tmp/" + file_pattern.name
+    return file_pattern
 
 
 def get_pattern_tier_raw_blind(setup):
