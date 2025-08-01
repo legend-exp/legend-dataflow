@@ -43,7 +43,8 @@ def test_create_pars_keylist():
     }
     keylist = sorted(
         ParsKeyResolve.get_keys(
-            "-*-*-*-cal", patterns.get_pattern_tier_daq(setup, extension="*")
+            "-*-*-*-cal",
+            patterns.get_pattern_tier_daq(setup, extension="*", check_in_cycle=False),
         ),
         key=FileKey.get_unix_timestamp,
     )
@@ -53,7 +54,7 @@ def test_create_pars_keylist():
     ]
 
     keylist += ParsKeyResolve.get_keys(
-        "-*-*-*-lar", patterns.get_pattern_tier_daq(setup)
+        "-*-*-*-lar", patterns.get_pattern_tier_daq(setup, check_in_cycle=False)
     )
     keylist = sorted(keylist, key=FileKey.get_unix_timestamp)
     assert keylist == [
