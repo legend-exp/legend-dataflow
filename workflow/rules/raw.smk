@@ -33,7 +33,7 @@ rule build_raw_orca:
     This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
     """
     input:
-        get_pattern_tier_daq(config, extension="orca"),
+        get_pattern_tier_daq(config, extension="orca", check_in_cycle=False),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -64,12 +64,12 @@ rule build_raw_orca:
 
 use rule build_raw_orca as build_raw_orca_bz2 with:
     input:
-        get_pattern_tier_daq(config, extension="orca.bz2"),
+        get_pattern_tier_daq(config, extension="orca.bz2", check_in_cycle=False),
 
 
 use rule build_raw_orca as build_raw_orca_gz with:
     input:
-        get_pattern_tier_daq(config, extension="orca.gz"),
+        get_pattern_tier_daq(config, extension="orca.gz", check_in_cycle=False),
 
 
 rule build_raw_fcio:
@@ -77,7 +77,7 @@ rule build_raw_fcio:
     This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
     """
     input:
-        get_pattern_tier_daq(config, extension="fcio"),
+        get_pattern_tier_daq(config, extension="fcio", check_in_cycle=False),
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",

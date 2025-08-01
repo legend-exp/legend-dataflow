@@ -7,7 +7,7 @@ import json
 import re
 from legenddataflow.methods import patterns as patt
 from dbetto.catalog import Catalog
-from dbetto import TextDB
+from dbetto import TextDB, AttrsDict
 from legenddataflowscripts.workflow import as_ro
 
 
@@ -115,7 +115,7 @@ def get_search_pattern(config, tier):
     """
     This func gets the search pattern for the relevant tier passed.
     """
-    if tier == "daq":
+    if tier in ("daq", "daq_compress"):
         return patt.get_pattern_tier_daq_unsorted(config, extension="*")
     elif tier == "raw":
         return patt.get_pattern_tier_daq(config, extension="*")
@@ -172,7 +172,7 @@ def get_alias(channelmap, timestamp, datatype, tier):
     detectors = get_all_channels(channelmap, timestamp, datatype)
     return json.dumps(
         {
-            f"ch{channel_dict[detector].daq.rawid:07}/{tier}": f"{detector}/{tier}"
+            f"ch{channel_dict[detector].daq.rawid:07}/{tier}": f"{tier}/{detector}"
             for detector in detectors
         }
     )
@@ -218,3 +218,17 @@ def _make_input_pars_file(wildcards):
         ]
 
     return filelist
+
+
+def check_filelist_length(wildcards, wildcard_overrides):
+    wildcards = AttrsDict(dict(wildcards))
+    for key, value in wildcard_overrides.items():
+        wildcards[key] = value
+    return get_filelist_full_wildcards(
+        wildcards,
+        config,
+        get_pattern_tier(config, "raw", check_in_cycle=False),
+        "raw",
+        ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
+        analysis_runs_file=Path(det_status) / "runlists.yaml",
+    )

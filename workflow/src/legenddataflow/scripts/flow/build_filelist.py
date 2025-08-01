@@ -193,16 +193,16 @@ def build_filelist(
                     )
                 elif tier == "daq":
                     filename = FileKey.get_path_from_filekey(
-                        _key, fn_pattern.with_suffix(Path(f).suffix)
+                        _key, fn_pattern.with_suffix("".join(Path(f).suffixes))
                     )
                 elif tier == "daq_compress":
-                    if Path(f).suffix == "orca":
+                    if Path(f).suffix == ".orca":
                         filename = FileKey.get_path_from_filekey(
                             _key, fn_pattern.with_suffix(".orca.bz2")
                         )
                     else:
                         filename = FileKey.get_path_from_filekey(
-                            _key, fn_pattern.with_suffix(Path(f).suffix)
+                            _key, fn_pattern.with_suffix("".join(Path(f).suffixes))
                         )
                 else:
                     filename = FileKey.get_path_from_filekey(_key, fn_pattern)

@@ -11,8 +11,8 @@ from legenddataflowscripts.workflow import as_ro, execenv_pyexe
 from legenddataflowscripts.workflow.execenv import _execenv2str
 from snakemake.script import snakemake
 
-from legenddataflow.method import patterns
 from legenddataflow.methods import paths as pat
+from legenddataflow.methods import patterns
 
 print("INFO: dataflow ran successfully, now few final checks and scripts")
 
@@ -211,9 +211,9 @@ if snakemake.params.setup.get("build_file_dbs", True):
         "table_format": snakemake.params.setup["table_format"],
     }
 
-if (snakemake.wildcards.tier != "daq") and snakemake.params.setup.get(
-    "build_file_dbs", True
-):
+if (
+    snakemake.wildcards.tier not in ("daq", "daq_compress")
+) and snakemake.params.setup.get("build_file_dbs", True):
     print(f"INFO: ...building FileDBs with {snakemake.threads} threads")
 
     Path(snakemake.params.filedb_path).mkdir(parents=True, exist_ok=True)
