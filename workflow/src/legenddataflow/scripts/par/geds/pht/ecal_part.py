@@ -275,24 +275,33 @@ def calibrate_partition(
             cal_dicts,
             {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()},
         )
-        if "ctc" in cal_energy_param:
-            no_ctc_dict = full_object_dict[cal_energy_param].gen_pars_dict()
-            no_ctc_dict["expression"] = no_ctc_dict["expression"].replace(
-                "ctc", "noctc"
-            )
-
-            cal_dicts = update_cal_dicts(
-                cal_dicts, {cal_energy_param.replace("ctc", "noctc"): no_ctc_dict}
-            )
-            cal_dicts = update_cal_dicts(
-                cal_dicts,
-                {
-                    cal_energy_param.replace("_ctc", ""): {
-                        "expression": f"where({cal_energy_param.replace('ctc', 'noctc')}>{configs.get('dt_theshold_kev', 100)}, {cal_energy_param}, {cal_energy_param.replace('ctc', 'noctc')})",
-                        "parameters": {},
-                    }
-                },
-            )
+        if "copy_calibration" in configs:
+            for copy_cal_param, _copy_to_cal_param in configs[
+                "copy_calibration"
+            ].items():
+                if copy_cal_param not in full_object_dict:
+                    msg = f"copy_calibration parameter {copy_cal_param} not found in full_object_dict"
+                    raise ValueError(msg)
+                if isinstance(_copy_to_cal_param, str):
+                    copy_to_cal_param = [_copy_to_cal_param]
+                else:
+                    copy_to_cal_param = _copy_to_cal_param
+                for cal_par in copy_to_cal_param:
+                    if cal_par in full_object_dict:
+                        msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
+                        raise ValueError(msg)
+                    copy_dict = {cal_par: full_object_dict[cal_par].gen_pars_dict()}
+                    copy_dict["expression"] = copy_dict[cal_par]["expression"].replace(
+                        copy_cal_param, cal_par
+                    )
+                    cal_dicts = update_cal_dicts(
+                        cal_dicts, {cal_par: copy_dict[cal_par]}
+                    )
+        if "extra_blocks" in configs:
+            if isinstance(configs["extra_blocks"], dict):
+                configs["extra_blocks"] = [configs["extra_blocks"]]
+            for extra_block in configs["extra_blocks"]:
+                cal_dicts = update_cal_dicts(cal_dicts, extra_block)
 
         if gen_plots is True:
             param_plot_dict = {}
