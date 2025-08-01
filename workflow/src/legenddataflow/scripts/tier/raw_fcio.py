@@ -4,10 +4,20 @@ import argparse
 import time
 from pathlib import Path
 
+import hdf5plugin
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import alias_table, build_log
+
+filter_map = {
+    "zstd": hdf5plugin.Zstd(),
+    "blosc": hdf5plugin.Blosc(),
+    "lz4": hdf5plugin.LZ4(),
+    "bitshuffle": hdf5plugin.Bitshuffle(),
+    "bzip2": hdf5plugin.BZip2(),
+    # Add other filters from hdf5plugin if needed
+}
 
 
 def build_tier_raw_fcio() -> None:
@@ -39,6 +49,11 @@ def build_tier_raw_fcio() -> None:
     settings = Props.read_from(channel_dict.settings)
     channel_dict = channel_dict.out_spec
     all_config = Props.read_from(channel_dict.gen_config)
+
+    if "hdf5_settings" in settings and "compression" in settings["hdf5_settings"]:
+        compression = settings["hdf5_settings"]["compression"]
+        if compression in filter_map:
+            settings["hdf5_settings"]["compression"] = filter_map[compression]
 
     if "geds_config" in channel_dict:
         raise NotImplementedError()

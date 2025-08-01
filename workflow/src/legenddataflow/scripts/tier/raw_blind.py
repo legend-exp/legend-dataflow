@@ -15,12 +15,22 @@ from __future__ import annotations
 import argparse
 import time
 
+import hdf5plugin
 import numexpr as ne
 import numpy as np
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import alias_table, build_log
 from legendmeta import LegendMetadata, TextDB
 from lgdo import lh5
+
+filter_map = {
+    "zstd": hdf5plugin.Zstd(),
+    "blosc": hdf5plugin.Blosc(),
+    "lz4": hdf5plugin.LZ4(),
+    "bitshuffle": hdf5plugin.Bitshuffle(),
+    "bzip2": hdf5plugin.BZip2(),
+    # Add other filters from hdf5plugin if needed
+}
 
 
 def build_tier_raw_blind() -> None:
@@ -47,6 +57,12 @@ def build_tier_raw_blind() -> None:
     log = build_log(config_dict, args.log)
 
     hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]
+
+    if "compression" in hdf_settings:
+        compression = hdf_settings["compression"]
+        if compression in filter_map:
+            hdf_settings["compression"] = filter_map[compression]
+
     blinding_settings = Props.read_from(config_dict["config"])
 
     centroid = blinding_settings["centroid_in_keV"]  # keV
