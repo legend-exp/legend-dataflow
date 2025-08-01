@@ -38,7 +38,7 @@ rule build_raw_orca:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: ro(input),
-        alias_table=lambda wildcards: get_alias(
+        alias_table=lambda wildcards: get_raw_alias(
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
         ),
         configs=ro(config_path(config)),
@@ -82,7 +82,7 @@ rule build_raw_fcio:
         timestamp="{timestamp}",
         datatype="{datatype}",
         ro_input=lambda _, input: ro(input),
-        alias_table=lambda wildcards: get_alias(
+        alias_table=lambda wildcards: get_raw_alias(
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
         ),
         configs=ro(config_path(config)),
@@ -120,7 +120,7 @@ rule build_raw_blind:
         timestamp="{timestamp}",
         datatype="phy",
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-        alias_table=lambda wildcards: get_alias(
+        alias_table=lambda wildcards: get_raw_alias(
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "raw"
         ),
         configs=ro(config_path(config)),

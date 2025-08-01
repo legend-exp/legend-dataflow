@@ -178,6 +178,26 @@ def get_alias(channelmap, timestamp, datatype, tier):
     )
 
 
+def get_raw_alias(channelmap, timestamp, datatype):
+    """Get the raw alias for the given channelmap, timestamp, and datatype."""
+    if isinstance(channelmap, (str, Path)):
+        channelmap = TextDB(channelmap, lazy=True)
+    channel_dict = channelmap.valid_for(timestamp, system=datatype)
+    detectors = get_all_channels(channelmap, timestamp, datatype)
+    return json.dumps(
+        [
+            {
+                f"ch{channel_dict[detector].daq.rawid:07}/raw": f"raw/{detector}"
+                for detector in detectors
+            },
+            {
+                f"ch{channel_dict[detector].daq.rawid:07}/raw": f"{detector}/raw"
+                for detector in detectors
+            },
+        ]
+    )
+
+
 def strip_channel_wildcard_constraint(files):
     if isinstance(files, str):
         files = [files]
