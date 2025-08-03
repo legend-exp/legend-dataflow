@@ -117,7 +117,7 @@ def get_search_pattern(config, tier):
     """
     if tier in ("daq", "daq_compress"):
         return patt.get_pattern_tier_daq_unsorted(
-            config, extension="*", check_in_cycle=False
+            config, extension="*"
         )
     elif tier == "raw":
         return patt.get_pattern_tier_daq(config, extension="*", check_in_cycle=False)
