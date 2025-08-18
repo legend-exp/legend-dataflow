@@ -134,7 +134,7 @@ def get_pattern_pars(
         datatype = "{datatype}"
     if tier in ["raw", "tcm", "dsp", "hit", "ann", "evt", "psp", "pht", "pan", "pet"]:
         if name is not None:
-            return (
+            file_pattern = (
                 Path(get_pars_path(setup, tier))
                 / datatype
                 / "{period}"
@@ -146,18 +146,19 @@ def get_pattern_pars(
                     + f"{tier}_{name}.{extension}"
                 )
             )
-        file_pattern = (
-            Path(get_pars_path(setup, tier))
-            / datatype
-            / "{period}"
-            / "{run}"
-            / (
-                "{experiment}-{period}-{run}-"
-                + datatype
-                + "-{timestamp}-par_"
-                + f"{tier}.{extension}"
+        else:
+            file_pattern = (
+                Path(get_pars_path(setup, tier))
+                / datatype
+                / "{period}"
+                / "{run}"
+                / (
+                    "{experiment}-{period}-{run}-"
+                    + datatype
+                    + "-{timestamp}-par_"
+                    + f"{tier}.{extension}"
+                )
             )
-        )
     else:
         msg = "invalid tier"
         raise Exception(msg)
