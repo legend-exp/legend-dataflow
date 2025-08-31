@@ -127,7 +127,7 @@ rule build_raw_blind:
         alias_table=lambda wildcards: get_raw_alias(
             channelmap_textdb,
             wildcards.timestamp,
-            wildcards.datatype,
+            "phy",
         ),
         configs=ro(config_path(config)),
         chan_maps=ro(chan_map_path(config)),
