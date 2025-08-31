@@ -34,7 +34,10 @@ def get_blinding_check_file(
     wildcards, raw_catalog
 ):
     """func to get the right blinding check file"""
-    par_files = raw_catalog.get_files(wildcards.timestamp)
+    if isinstance(raw_catalog, (str, Path)):
+        par_files = Catalog.get_files(raw_catalog, wildcards.timestamp)
+    else:
+        par_files = raw_catalog.valid_for(wildcards.timestamp)
     if isinstance(par_files, str):
         return Path(patt.get_pars_path(config, "raw")) / par_files
     else:
