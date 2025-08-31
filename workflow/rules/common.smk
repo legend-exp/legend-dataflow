@@ -31,7 +31,7 @@ def get_blinding_curve_file(wildcards):
 
 
 def get_blinding_check_file(
-    wildcards,
+    wildcards, raw_catalog
 ):
     """func to get the right blinding check file"""
     par_files = raw_catalog.get_files(wildcards.timestamp)
