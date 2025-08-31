@@ -41,6 +41,7 @@ metadata = LegendMetadata(meta_path, lazy=True)
 if "legend_metadata_version" in config:
     metadata.checkout(config.legend_metadata_version)
 
+det_status_textdb = pre_compile_catalog(Path(det_status) / "statuses")
 channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
 
 time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
