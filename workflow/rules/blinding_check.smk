@@ -106,4 +106,5 @@ rule build_pars_raw:
     group:
         "merge-raw"
     shell:
-        execenv_pyexe(config, "merge-channels")
+        execenv_pyexe(config, "merge-channels") + "--input {input.infiles} "
+        "--output {output} "
