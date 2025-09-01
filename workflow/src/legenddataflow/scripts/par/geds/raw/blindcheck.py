@@ -111,7 +111,7 @@ def par_geds_raw_blindcheck() -> None:
     if (
         np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5)
     ) or det_status is False:
-        Path(args.output).mkdir(parents=True, exist_ok=True)
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(
             args.output,
             {
