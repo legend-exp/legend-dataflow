@@ -71,7 +71,7 @@ dependencies = [
 # these are needed to run the data production
 runprod = [
     "pygments",
-    "snakemake>=8.16",
+    "snakemake==9.9.0",
 ]
 test = [
     "legend_dataflow[runprod]",
