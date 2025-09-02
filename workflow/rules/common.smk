@@ -30,9 +30,7 @@ def get_blinding_curve_file(wildcards):
         ]
 
 
-def get_blinding_check_file(
-    wildcards, raw_catalog
-):
+def get_blinding_check_file(wildcards, raw_catalog):
     """func to get the right blinding check file"""
     if isinstance(raw_catalog, (str, Path)):
         par_files = Catalog.get_files(raw_catalog, wildcards.timestamp)
@@ -81,7 +79,7 @@ def get_input_par_file(
     overwrite=True,
     extension="yaml",
 ):
-    allow_none = config.get("allow_none", False) | allow_none
+    allow_none = config.get("allow_none_par", False) or allow_none
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
@@ -231,14 +229,18 @@ def get_threads(wildcards):
 
 def _make_input_pars_file(wildcards):
     """Prepare the input pars files for the `build_dsp` rule."""
-    # first get the files from the catalog
-    filelist = dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
+    filelist = []
 
-    # then add the spms par files
+    # first get the spms par files
     if wildcards.datatype not in ("cal", "xtc", "fft", "pzc", "bkg", "pul"):
         filelist += [
-            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}", check_in_cycle=False)
+            patt.get_pattern_pars(
+                config, "dsp", name="spms", datatype="{datatype}", check_in_cycle=False
+            )
         ]
+
+    # then add the files from the catalog
+    filelist += dsp_par_catalog.get_par_file(config, wildcards.timestamp, "dsp")
 
     return filelist
 
