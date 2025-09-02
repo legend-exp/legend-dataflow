@@ -79,7 +79,7 @@ def get_input_par_file(
     overwrite=True,
     extension="yaml",
 ):
-    allow_none = config.get("allow_none_par", False) | allow_none
+    allow_none = config.get("allow_none_par", False) or allow_none
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
     pars_files_overwrite = Catalog.get_files(
         par_overwrite_file,
