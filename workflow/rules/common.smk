@@ -30,9 +30,7 @@ def get_blinding_curve_file(wildcards):
         ]
 
 
-def get_blinding_check_file(
-    wildcards, raw_catalog
-):
+def get_blinding_check_file(wildcards, raw_catalog):
     """func to get the right blinding check file"""
     if isinstance(raw_catalog, (str, Path)):
         par_files = Catalog.get_files(raw_catalog, wildcards.timestamp)
@@ -237,7 +235,9 @@ def _make_input_pars_file(wildcards):
     # then add the spms par files
     if wildcards.datatype not in ("cal", "xtc", "fft", "pzc", "bkg", "pul"):
         filelist += [
-            patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}", check_in_cycle=False)
+            patt.get_pattern_pars(
+                config, "dsp", name="spms", datatype="{datatype}", check_in_cycle=False
+            )
         ]
 
     return filelist
