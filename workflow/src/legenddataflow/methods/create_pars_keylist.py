@@ -4,8 +4,8 @@ This module creates the validity files used for determining the time validity of
 
 from __future__ import annotations
 
+import logging
 import re
-import warnings
 from pathlib import Path
 
 from dbetto import time
@@ -13,6 +13,8 @@ from dbetto import time
 from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
 from .pars_loading import ParsCatalog
 from .patterns import par_validity_pattern
+
+log = logging.getLogger(__name__)
 
 
 class ParsKeyResolve(ParsCatalog):
@@ -107,16 +109,21 @@ class ParsKeyResolve(ParsCatalog):
             keypart = [keypart]
         if isinstance(search_patterns, str | Path):
             search_patterns = [search_patterns]
+
         keylist = []
         for search_pattern in search_patterns:
             for keypar in keypart:
                 keylist += ParsKeyResolve.get_keys(keypar, search_pattern)
+
         if len(keylist) != 0:
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)
             keylist = ParsKeyResolve.generate_par_keylist(keys)
             entrylist = ParsKeyResolve.match_all_entries(keylist, name_dict)
         else:
-            msg = "No Keys found"
-            warnings.warn(msg, stacklevel=0)
+            msg = (
+                f"pars catalog: no keys found matching {keypart} for "
+                f"files {search_patterns} with names {name_dict}"
+            )
+            log.warning(msg)
             entrylist = []
         return cls({"all": entrylist})

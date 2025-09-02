@@ -54,7 +54,9 @@ def par_geds_raw_blindcheck() -> None:
 
     # get the usability status for this channel
 
-    chmap = LegendMetadata(args.metadata).channelmap(args.timestamp, system=args.datatype)
+    chmap = LegendMetadata(args.metadata).channelmap(
+        args.timestamp, system=args.datatype
+    )
     det_status = chmap[args.channel]["analysis"]["is_blinded"]
 
     # read in calibration curve for this channel
