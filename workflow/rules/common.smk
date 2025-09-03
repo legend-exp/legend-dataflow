@@ -116,8 +116,13 @@ def get_search_pattern(config, tier):
     """
     This func gets the search pattern for the relevant tier passed.
     """
-    if tier in ("daq", "daq_compress"):
+    if tier == "daq":
         return patt.get_pattern_tier_daq_unsorted(config, extension="*")
+    elif tier == "daq_compress":
+        return [
+            patt.get_pattern_tier_daq_unsorted(config, extension="*")
+            patt.get_pattern_tier_daq(config, extension="*", check_in_cycle=False)
+            ]
     elif tier == "raw":
         return patt.get_pattern_tier_daq(config, extension="*", check_in_cycle=False)
     else:
