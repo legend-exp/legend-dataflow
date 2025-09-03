@@ -115,7 +115,7 @@ def get_pattern(config, tier):
     elif tier == "evt_concat":
         fn_pattern = patt.get_pattern_tier(config, "evt", check_in_cycle=False)
     elif tier in ("daq", "daq_compress"):
-        fn_pattern = patt.get_pattern_tier_daq(config, extension="{ext}")
+        fn_pattern = patt.get_pattern_tier_daq(config, extension="{ext}", check_in_cycle=False)
     else:
         fn_pattern = patt.get_pattern_tier(config, tier, check_in_cycle=False)
     return fn_pattern
@@ -174,53 +174,56 @@ def build_filelist(
     fn_pattern = get_pattern(config, tier)
 
     for key in filekeys:
-        if Path(search_pattern).suffix == ".*":
-            search_pattern = Path(search_pattern).with_suffix(".{ext}")
-        fn_glob_pattern = key.get_path_from_filekey(search_pattern, ext="*")[0]
-        files = glob.glob(fn_glob_pattern)  # noqa: PTH207
-        for f in files:
-            _key = FileKey.get_filekey_from_pattern(f, search_pattern)
-            if _key.name in ignore_keys:
-                pass
-            else:
-                if tier == "blind" and _key.datatype in blind_datatypes:
-                    filename = FileKey.get_path_from_filekey(
-                        _key, patt.get_pattern_tier_raw_blind(config)
-                    )
-                elif tier == "skm":
-                    filename = FileKey.get_path_from_filekey(
-                        _key, patt.get_pattern_tier(config, "pet", check_in_cycle=False)
-                    )
-                elif tier == "daq":
-                    filename = FileKey.get_path_from_filekey(
-                        _key, fn_pattern.with_suffix("".join(Path(f).suffixes))
-                    )
-                elif tier == "daq_compress":
-                    if Path(f).suffix == ".orca":
+        if not isinstance(search_pattern, list):
+            search_pattern = [search_pattern]
+        for search_pat in search_pattern:
+            if Path(search_pat).suffix == ".*":
+                search_pat = Path(search_pat).with_suffix(".{ext}")
+            fn_glob_pattern = key.get_path_from_filekey(search_pat, ext="*")[0]
+            files = glob.glob(fn_glob_pattern)  # noqa: PTH207
+            for f in files:
+                _key = FileKey.get_filekey_from_pattern(f, search_pat)
+                if _key.name in ignore_keys:
+                    pass
+                else:
+                    if tier == "blind" and _key.datatype in blind_datatypes:
                         filename = FileKey.get_path_from_filekey(
-                            _key, fn_pattern.with_suffix(".orca.bz2")
+                            _key, patt.get_pattern_tier_raw_blind(config)
                         )
-                    else:
+                    elif tier == "skm":
+                        filename = FileKey.get_path_from_filekey(
+                            _key, patt.get_pattern_tier(config, "pet", check_in_cycle=False)
+                        )
+                    elif tier == "daq":
                         filename = FileKey.get_path_from_filekey(
                             _key, fn_pattern.with_suffix("".join(Path(f).suffixes))
                         )
-                else:
-                    filename = FileKey.get_path_from_filekey(_key, fn_pattern)
-
-                if analysis_runs == {} or (
-                    _key.datatype in analysis_runs
-                    and _key.period in analysis_runs[_key.datatype]
-                    and (
-                        _key.run in analysis_runs[_key.datatype][_key.period]
-                        or analysis_runs[_key.datatype][_key.period] == "all"
-                    )
-                ):
-                    if (
-                        _key.datatype in concat_datatypes
-                    ):  # separate out phy files as some tiers these are concatenated
-                        phy_filenames += filename
+                    elif tier == "daq_compress":
+                        if Path(f).suffix == ".orca":
+                            filename = FileKey.get_path_from_filekey(
+                                _key, fn_pattern.with_suffix(".orca.bz2")
+                            )
+                        else:
+                            filename = FileKey.get_path_from_filekey(
+                                _key, fn_pattern.with_suffix("".join(Path(f).suffixes))
+                            )
                     else:
-                        other_filenames += filename
+                        filename = FileKey.get_path_from_filekey(_key, fn_pattern)
+    
+                    if analysis_runs == {} or (
+                        _key.datatype in analysis_runs
+                        and _key.period in analysis_runs[_key.datatype]
+                        and (
+                            _key.run in analysis_runs[_key.datatype][_key.period]
+                            or analysis_runs[_key.datatype][_key.period] == "all"
+                        )
+                    ):
+                        if (
+                            _key.datatype in concat_datatypes
+                        ):  # separate out phy files as some tiers these are concatenated
+                            phy_filenames += filename
+                        else:
+                            other_filenames += filename
 
     phy_filenames = sorted(phy_filenames)
     other_filenames = sorted(other_filenames)
