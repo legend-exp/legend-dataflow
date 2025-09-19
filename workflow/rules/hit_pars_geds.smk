@@ -36,9 +36,20 @@ rule par_hit_qc:
             config, tier="hit", wildcards=wildcards, allow_none=True
         ),
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_hit_qc",
+            "qc_config",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_hit_qc",
+        ),
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -59,10 +70,8 @@ rule par_hit_qc:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-qc") + "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
-        "--configs {params.configs} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
         "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--save-path {output.qc_file} "
@@ -87,9 +96,20 @@ rule par_hit_energy_calibration:
         inplots=rules.par_hit_qc.output.plot_file,
         in_hit_dict=rules.par_hit_qc.output.qc_file,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_hit_ecal",
+            "ecal_config",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_hit_ecal",
+        ),
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -98,8 +118,9 @@ rule par_hit_energy_calibration:
             wildcards.channel,
             "dsp",
         ),
-        configs=ro(config_path(config)),
-        meta=ro(metadata_path(config)),
+        det_status=lambda wildcards: det_status_textdb.valid_for(
+            wildcards.timestamp, system="cal"
+        )[wildcards.channel]["usability"],
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
         results_file=temp(
@@ -116,11 +137,9 @@ rule par_hit_energy_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
-        "--configs {params.configs} "
-        "--metadata {params.meta} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--det-status {params.det_status}"
         "--table-name {params.dsp_table_name} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
@@ -143,9 +162,20 @@ rule par_hit_aoe_calibration:
         eres_file=rules.par_hit_energy_calibration.output.results_file,
         inplots=rules.par_hit_energy_calibration.output.plot_file,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_hit_aoecal",
+            "aoecal_config",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_hit_aoecal",
+        ),
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -154,7 +184,6 @@ rule par_hit_aoe_calibration:
             wildcards.channel,
             "dsp",
         ),
-        configs=ro(config_path(config)),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit", "aoe_cal")),
         aoe_results=temp(
@@ -171,10 +200,8 @@ rule par_hit_aoe_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-aoe") + "--log {log} "
-        "--configs {params.configs} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
         "--table-name {params.dsp_table_name} "
         "--aoe-results {output.aoe_results} "
         "--hit-pars {output.hit_pars} "
@@ -197,9 +224,20 @@ rule build_lq_calibration:
         eres_file=rules.par_hit_aoe_calibration.output.aoe_results,
         inplots=rules.par_hit_aoe_calibration.output.plot_file,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_hit_lqcal",
+            "lqcal_config",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_hit_lqcal",
+        ),
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -208,7 +246,6 @@ rule build_lq_calibration:
             wildcards.channel,
             "dsp",
         ),
-        configs=ro(config_path(config)),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "hit")),
         lq_results=temp(
@@ -223,10 +260,8 @@ rule build_lq_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-lq") + "--log {log} "
-        "--configs {params.configs} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
         "--table-name {params.dsp_table_name} "
         "--hit-pars {output.hit_pars} "
         "--plot-file {output.plot_file} "

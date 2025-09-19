@@ -262,3 +262,25 @@ def check_filelist_length(wildcards, wildcard_overrides):
         ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
         analysis_runs_file=Path(det_status) / "runlists.yaml",
     )
+
+
+def get_config_files(config_db, timestamp, datatype, channel, rule_name, field):
+    if isinstance(config_db, (str, Path)):
+        config_db = TextDB(config_db, lazy=True)
+    return ro(
+        config_db.valid_for(timestamp, system=datatype)["snakemake_rules"][rule_name][
+            "inputs"
+        ][field][channel]
+    )
+
+
+def get_log_config(config_db, timestamp, datatype, rule_name):
+    if isinstance(config_db, (str, Path)):
+        config_db = TextDB(config_db, lazy=True)
+    return ancient(
+        ro(
+            config_db.valid_for(timestamp, system=datatype)["snakemake_rules"][
+                rule_name
+            ]["options"]["logging"]
+        )
+    )

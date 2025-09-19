@@ -32,9 +32,28 @@ rule build_pars_dsp_pz_geds:
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_tau",
+            "tau_config",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_tau",
+            "processing_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_dsp_tau",
+        ),
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -54,11 +73,10 @@ rule build_pars_dsp_pz_geds:
     resources:
         runtime=300,
     shell:
-        execenv_pyexe(config, "par-geds-dsp-pz") + "--configs {params.configs} "
-        "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        execenv_pyexe(config, "par-geds-dsp-pz") + "--log {log} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--plot-path {output.plots} "
         "--output-file {output.decay_const} "
@@ -76,9 +94,28 @@ rule build_pars_evtsel_geds:
         database=rules.build_pars_dsp_pz_geds.output.decay_const,
         raw_cal_curve=get_blinding_curve_file,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_peak_selection",
+            "peak_config",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_peak_selection",
+            "processing_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_dsp_peak_selection",
+        ),
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -100,11 +137,10 @@ rule build_pars_evtsel_geds:
         runtime=300,
         mem_swap=70,
     shell:
-        execenv_pyexe(config, "par-geds-dsp-evtsel") + "--configs {params.configs} "
-        "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        execenv_pyexe(config, "par-geds-dsp-evtsel") + "--log {log} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--peak-file {output.peak_file} "
         "--pulser-file {input.pulser_file} "
@@ -122,9 +158,28 @@ rule build_pars_dsp_nopt_geds:
         database=rules.build_pars_dsp_pz_geds.output.decay_const,
         inplots=rules.build_pars_dsp_pz_geds.output.plots,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_nopt",
+            "optimiser_config",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_nopt",
+            "processing_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_dsp_nopt",
+        ),
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -147,11 +202,10 @@ rule build_pars_dsp_nopt_geds:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-nopt") + "--database {input.database} "
-        "--configs {params.configs} "
         "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--inplots {input.inplots} "
         "--plot-path {output.plots} "
@@ -169,9 +223,28 @@ rule build_pars_dsp_dplms_geds:
         database=rules.build_pars_dsp_nopt_geds.output.dsp_pars_nopt,
         inplots=rules.build_pars_dsp_nopt_geds.output.plots,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_dplms",
+            "dplms_pars",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_dplms",
+            "proc_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_dsp_dplms",
+        ),
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -196,11 +269,10 @@ rule build_pars_dsp_dplms_geds:
         "--fft-raw-filelist {input.fft_files} "
         "--database {input.database} "
         "--inplots {input.inplots} "
-        "--configs {params.configs} "
         "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--dsp-pars {output.dsp_pars} "
         "--lh5-path {output.lh5_path} "
@@ -214,9 +286,28 @@ rule build_pars_dsp_eopt_geds:
         decay_const=rules.build_pars_dsp_dplms_geds.output.dsp_pars,
         inplots=rules.build_pars_dsp_dplms_geds.output.plots,
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_eopt",
+            "optimiser_config",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_dsp_eopt",
+            "processing_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_dsp_eopt",
+        ),
         raw_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -225,7 +316,6 @@ rule build_pars_dsp_eopt_geds:
             wildcards.channel,
             "raw",
         ),
-        configs=config_path(config),
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
         qbb_grid=temp(
@@ -240,10 +330,9 @@ rule build_pars_dsp_eopt_geds:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-eopt") + "--log {log} "
-        "--configs {params.configs} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--peak-file {input.peak_file} "
         "--inplots {input.inplots} "
@@ -303,9 +392,6 @@ rule build_svm_dsp_geds:
         "--train-data {input.train_data} "
         "--train-hyperpars {input.hyperpars} "
         "--output-file {output.dsp_pars} "
-        "--timestamp {params.timestamp} "
-        "--datatype {params.datatype} "
-        "--configs {params.configs} "
 
 
 rule build_pars_dsp_svm_geds:

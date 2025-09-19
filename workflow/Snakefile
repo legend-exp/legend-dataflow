@@ -12,13 +12,10 @@ This includes:
 
 from pathlib import Path
 import os
-import sys
 import glob
 from datetime import datetime
-from collections import OrderedDict
-import logging
 
-from dbetto import AttrsDict, TextDB
+from dbetto import AttrsDict
 from legendmeta import LegendMetadata
 
 from legenddataflow.methods import CalGrouping
@@ -47,6 +44,7 @@ configs = paths.config_path(config)
 chan_maps = paths.chan_map_path(config)
 meta = paths.metadata_path(config)
 det_status = paths.det_status_path(config)
+dataflow_configs = paths.config_path(config)
 basedir = workflow.basedir
 
 # NOTE: this will attempt a clone of legend-metadata, if the directory does not exist
@@ -58,6 +56,7 @@ time = datetime.now().strftime("%Y%m%dT%H%M%SZ")
 
 det_status_textdb = pre_compile_catalog(Path(det_status) / "statuses")
 channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
+dataflow_configs_texdb = pre_compile_catalog(Path(dataflow_configs))
 
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
