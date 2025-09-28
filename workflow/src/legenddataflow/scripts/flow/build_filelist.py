@@ -115,7 +115,9 @@ def get_pattern(config, tier):
     elif tier == "evt_concat":
         fn_pattern = patt.get_pattern_tier(config, "evt", check_in_cycle=False)
     elif tier in ("daq", "daq_compress"):
-        fn_pattern = patt.get_pattern_tier_daq(config, extension="{ext}", check_in_cycle=False)
+        fn_pattern = patt.get_pattern_tier_daq(
+            config, extension="{ext}", check_in_cycle=False
+        )
     else:
         fn_pattern = patt.get_pattern_tier(config, tier, check_in_cycle=False)
     return fn_pattern
@@ -176,9 +178,11 @@ def build_filelist(
     for key in filekeys:
         if not isinstance(search_pattern, list):
             search_pattern = [search_pattern]
-        for search_pat in search_pattern:
-            if Path(search_pat).suffix == ".*":
-                search_pat = Path(search_pat).with_suffix(".{ext}")
+        for _search_pat in search_pattern:
+            if Path(_search_pat).suffix == ".*":
+                search_pat = Path(_search_pat).with_suffix(".{ext}")
+            else:
+                search_pat = _search_pat
             fn_glob_pattern = key.get_path_from_filekey(search_pat, ext="*")[0]
             files = glob.glob(fn_glob_pattern)  # noqa: PTH207
             for f in files:
@@ -192,7 +196,8 @@ def build_filelist(
                         )
                     elif tier == "skm":
                         filename = FileKey.get_path_from_filekey(
-                            _key, patt.get_pattern_tier(config, "pet", check_in_cycle=False)
+                            _key,
+                            patt.get_pattern_tier(config, "pet", check_in_cycle=False),
                         )
                     elif tier == "daq":
                         filename = FileKey.get_path_from_filekey(
@@ -209,7 +214,7 @@ def build_filelist(
                             )
                     else:
                         filename = FileKey.get_path_from_filekey(_key, fn_pattern)
-    
+
                     if analysis_runs == {} or (
                         _key.datatype in analysis_runs
                         and _key.period in analysis_runs[_key.datatype]

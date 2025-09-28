@@ -59,6 +59,7 @@ rule par_hit_qc:
             "dsp",
         ),
         configs=ro(config_path(config)),
+        channel="{channel}",
     output:
         qc_file=temp(get_pattern_pars_tmp_channel(config, "hit", "qc")),
         plot_file=temp(get_pattern_plts_tmp_channel(config, "hit", "qc")),
@@ -79,6 +80,7 @@ rule par_hit_qc:
         "--cal-files {input.files} "
         "--fft-files {input.fft_files} "
         "--overwrite-files {input.overwrite_files} "
+        "--channel {params.channel} "
 
 
 # This rule builds the energy calibration using the calibration dsp files
@@ -121,6 +123,7 @@ rule par_hit_energy_calibration:
         det_status=lambda wildcards: det_status_textdb.valid_for(
             wildcards.timestamp, system="cal"
         )[wildcards.channel]["usability"],
+        channel="{channel}",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "hit", "energy_cal")),
         results_file=temp(
@@ -139,8 +142,9 @@ rule par_hit_energy_calibration:
         execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--log-config {params.log_config} "
         "--config-file {params.config_file} "
-        "--det-status {params.det_status}"
+        "--det-status {params.det_status} "
         "--table-name {params.dsp_table_name} "
+        "--channel {params.channel} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
         "--save-path {output.ecal_file} "
