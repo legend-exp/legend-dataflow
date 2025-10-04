@@ -83,7 +83,7 @@ def build_tier_raw_orca() -> None:
 
     if "muon_config" in list(channel_dict):
         muon_config = Props.read_from(channel_dict["muon_config"])
-        muon_channels = list(chmap.map("system", unique=False)["muon"].map("daq.rawid"))
+        muon_channels = list(chmap.map("system", unique=False)["pmts"].map("daq.rawid"))
         top_key = next(iter(muon_config))
         muon_config[top_key][next(iter(muon_config[top_key]))]["key_list"] = sorted(
             muon_channels
