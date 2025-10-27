@@ -83,7 +83,7 @@ def par_geds_raw_blindcheck() -> None:
     )
 
     # bin with 1 keV bins and get maxs
-    hist, bins, var = get_hist(daqenergy_cal, np.arange(0, 3000, 1))
+    hist, _, _ = get_hist(daqenergy_cal, np.arange(0, 3000, 1))
     maxs = get_i_local_maxima(hist, delta=25)
     msg = f"peaks found at : {maxs}"
     log.info(msg)
