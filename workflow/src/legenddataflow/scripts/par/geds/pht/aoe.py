@@ -6,11 +6,10 @@ import warnings
 import numpy as np
 import pandas as pd
 from dbetto import Props, TextDB
+from legenddataflow.scripts.par.geds.hit.aoe import run_aoe_calibration
 from legenddataflowscripts.utils import build_log, get_pulser_mask
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.utils import load_data
-
-from legenddataflow.scripts.par.geds.hit.aoe import run_aoe_calibration
 
 from .util import (
     get_run_dict,
