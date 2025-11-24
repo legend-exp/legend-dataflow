@@ -125,6 +125,7 @@ rule build_pars_evtsel_geds:
             "raw",
         ),
         configs=config_path(config),
+        channel="{channel}",
     output:
         peak_file=temp(
             get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5")
@@ -141,6 +142,7 @@ rule build_pars_evtsel_geds:
         "--log-config {params.log_config} "
         "--config-file {params.config_file} "
         "--processing-chain {params.processing_chain} "
+        "--channel {params.channel} "
         "--raw-table-name {params.raw_table_name} "
         "--peak-file {output.peak_file} "
         "--pulser-file {input.pulser_file} "
@@ -254,6 +256,7 @@ rule build_pars_dsp_dplms_geds:
             "raw",
         ),
         configs=config_path(config),
+        channel="{channel}",
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
         lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
@@ -272,6 +275,7 @@ rule build_pars_dsp_dplms_geds:
         "--log {log} "
         "--log-config {params.log_config} "
         "--config-file {params.config_file} "
+        "--channel {params.channel} "
         "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--dsp-pars {output.dsp_pars} "
