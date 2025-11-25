@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import matplotlib as mpl
+
+# required for running with environment missing Tk
+mpl.use("Agg")
+
 import argparse
 import pickle as pkl
 import shelve
