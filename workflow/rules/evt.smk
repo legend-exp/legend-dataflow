@@ -31,6 +31,7 @@ rule build_evt:
             tier="evt",
             wildcards=wildcards,
             name="xtc",
+            allow_none=True,
             overwrite=False,
             extension="lh5",
         ),
