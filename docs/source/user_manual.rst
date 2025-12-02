@@ -5,18 +5,29 @@ Configuration
 =============
 
 Data processing resources are configured via a single site-dependent (and
-possibly user-dependent) configuration file, generally named ``config.json``.
+possibly user-dependent) configuration file, generally named ``dataflow-config.json``.
 Although you can choose any arbitrary name.
+Edit this file and adjust paths adjusted as necessary. Note that, when running Snakemake,
+the default path to the config file is ``./dataflow-config.json``.
 
-A template for this file is located at ``templates/config.json``
-which can be copied to the working directory
-the paths adjusted as necessary. Note that, when running Snakemake,
-the default path to the config file is ``./config.json``.
+The following (non-exhaustive) table shows a list of options:
+
++---------------------------+--------------------------------------------------------------------------+
+| Parameter                 | Description                                                              |
++===========================+==========================================================================+
+| legend_metadata_version   | The version of legend_metadata to be used automatically                  |
+|                           | (use custom legend_metadata: put one at the ``paths/metadata`` location) |
++---------------------------+--------------------------------------------------------------------------+
+| allow_none_par            | if pargen should be run                                                  |
++---------------------------+--------------------------------------------------------------------------+
+| paths                     | Paths to legend_metadata, data input and output.                         |
+|                           | Adapt e.g. ``paths/raw`` to point to existing raw input data.            |
++---------------------------+--------------------------------------------------------------------------+
 
 Profiles
 ========
 
-A number of profiles are also included in the ``profiles`` directory. If none
+A number of profiles are also included in the ``workflow/profiles`` directory. If none
 are specified, the default profile is used. The profile can be specified by
 using the ``--profile`` option when running Snakemake. These control how many
 jobs are run simultaneously, based on how many cores are specified and the
