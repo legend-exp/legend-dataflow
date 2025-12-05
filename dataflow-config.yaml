@@ -87,6 +87,18 @@ execenv:
       PYGAMA_FASTMATH: "false"
       TQDM_DISABLE: "true"
 
+  sator:
+    cmd: apptainer exec
+    arg: /mnt/atlas01/projects/scarf/software/containers/legendexp_legend-base_latest_20241110203225.sif
+    env:
+      PRODENV: $PRODENV
+      NUMBA_CACHE_DIR: $_/.snakemake/numba-cache
+      LGDO_BOUNDSCHECK: "false"
+      DSPEED_BOUNDSCHECK: "false"
+      PYGAMA_PARALLEL: "false"
+      PYGAMA_FASTMATH: "false"
+      TQDM_DISABLE: "true"
+
   nersc:
     cmd: shifter
     arg: --image legendexp/legend-base:latest

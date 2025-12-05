@@ -12,7 +12,7 @@ rule build_pars_dsp_tau_spms:
     input:
         raw_file=get_pattern_tier(config, "raw", check_in_cycle=False),
         pardb=lambda wildcards: get_input_par_file(
-            config, wildcards=wildcards, tier="dsp"
+            config, wildcards=wildcards, tier="dsp", allow_none=True
         ),
     params:
         timestamp="{timestamp}",
