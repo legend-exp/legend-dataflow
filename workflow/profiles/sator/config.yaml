@@ -1,0 +1,8 @@
+cores: 50
+# restart-times: 2
+configfile: dataflow-config.yaml
+snakefile: ./workflow/Snakefile
+keep-going: true
+rerun-incomplete: true
+config:
+  - system=sator

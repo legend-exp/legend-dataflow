@@ -6,7 +6,7 @@ from pathlib import Path
 import hist
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB, utils
-from dspeed import build_processing_chain
+from dspeed import build_dsp
 from legenddataflowscripts.utils import build_log, cfgtools
 from lgdo import lh5
 
@@ -59,10 +59,9 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
         else:
             # run the DSP with the provided configuration
             log.debug("running the DSP chain")
-            chain, _, dsp_output = build_processing_chain(
-                data, dsp_config, db_dict=_db_dict
+            dsp_output = build_dsp(
+                raw_in=data, dsp_config=dsp_config, database=_db_dict
             )
-            chain.execute()
 
             log.debug("analyzing DSP outputs")
             # get output of the current processor

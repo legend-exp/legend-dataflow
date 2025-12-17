@@ -11,8 +11,41 @@ takes as an input the metadata at `legend metadata
 Getting started
 ---------------
 
-It is recommended to install and use the package through the `legend-prodenv
-<https://github.com/legend-exp/legend-prodenv>`_.
+Clone the repository using git.
+
+.. code-block:: bash
+
+   git clone https://github.com/legend-exp/legend-dataflow.git
+   cd legend-dataflow
+
+Then create a virtual environment to install *legend-dataflow* to.
+Use e.g. ``uv`` for that:
+
+.. code-block:: bash
+
+   uv venv --python 3.12
+   source .venv/bin/activate
+   uv pip install -e ".[dev]"
+
+With ``[dev]`` you install the development dependencies. You might want to
+use a different set of dependencies dependent on you use case.
+
+Adapt the ``dataflow-config.yaml`` and add a workflow profile in
+``workflow/profiles/`` if you want to set the dataflow up for a new host.
+Otherwise, check if your host is already configured or if ``bare`` applies for you.
+
+Install the dataflow using
+
+.. code-block:: bash
+
+   dataflow -v install -s <host> dataflow-config.yaml
+
+with ``<host>`` being the hostname as configured in ``dataflow-config.yaml``.
+This command installs all the necessary software to run the dataflow to
+``.snakemake/legend-dataflow/venv``.
+Be sure to clear the numba cache (defined in the config) in case of software updates.
+
+
 
 Next steps
 ----------

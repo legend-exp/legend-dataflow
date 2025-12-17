@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import dbm.dumb
 import pickle as pkl
 import shelve
 from pathlib import Path
@@ -87,7 +88,14 @@ def merge_channels() -> None:
 
     elif file_extension in (".dat", ".dir"):
         common_dict = {}
-        with shelve.open(str(out_file), "c", protocol=pkl.HIGHEST_PROTOCOL) as shelf:
+        # Open the 'dumb' database directly.
+        # This forces a two-file backend, avoiding the automatic selection
+        # of a one-file backend (e.g. xxx.db) which breaks snakemake's output
+        # file detection
+        with (
+            dbm.dumb.open(str(out_file), "c") as db_object,
+            shelve.Shelf(db_object, protocol=pkl.HIGHEST_PROTOCOL) as shelf,
+        ):
             for channel in channel_files:
                 with Path(channel).open("rb") as r:
                     channel_dict = pkl.load(r)
