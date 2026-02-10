@@ -150,6 +150,7 @@ def build_filelist(
     tier,
     ignore_keys=None,
     analysis_runs=None,
+    remove_level="unprocessable",
 ):
     """
     This function builds the filelist for the given filekeys, search pattern
@@ -159,12 +160,11 @@ def build_filelist(
     # the ignore_keys dictionary organizes keys in sections, gather all the
     # section contents in a single list
     if ignore_keys is not None:
-        if tier in ("raw", "blind"):
-            ignore_keys = ignore_keys.get("unprocessable", [])
-        else:
-            _ignore_keys = ignore_keys.get("removed", [])
-            _ignore_keys += ignore_keys.get("unprocessable", [])
-            ignore_keys = sorted(_ignore_keys)
+        
+        _ignore_keys = ignore_keys.get("unprocessable", [])
+        if remove_level == "removed":
+            _ignore_keys += ignore_keys.get("removed", [])
+        ignore_keys = sorted(_ignore_keys)
     else:
         ignore_keys = []
 
@@ -242,7 +242,12 @@ def build_filelist(
 
 
 def get_filelist(
-    wildcards, config, search_pattern, ignore_keys_file=None, analysis_runs_file=None
+    wildcards, 
+    config, 
+    search_pattern, 
+    ignore_keys_file=None, 
+    analysis_runs_file=None, 
+    remove_level="unprocessable"
 ):
     file_selection = wildcards.label.split("-", 1)[0]
     # remove the file selection from the keypart
@@ -260,6 +265,7 @@ def get_filelist(
         wildcards.tier,
         ignore_keys,
         analysis_runs,
+        remove_level
     )
 
 
@@ -271,6 +277,7 @@ def get_filelist_full_wildcards(
     ignore_keys_file=None,
     analysis_runs_file=None,
     file_selection="all",
+    remove_level="unprocessable",
 ):
     keypart = f"-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-{wildcards.datatype}"
 
@@ -286,4 +293,5 @@ def get_filelist_full_wildcards(
         tier,
         ignore_keys,
         analysis_runs,
+        remove_level
     )
