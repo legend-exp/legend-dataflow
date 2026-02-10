@@ -205,6 +205,7 @@ rule gen_filelist:
             get_pattern_tier(config, "raw", check_in_cycle=False),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
+            remove_level="removed"
         ),
     output:
         temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
