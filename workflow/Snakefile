@@ -107,6 +107,10 @@ onstart:
         )
         shell(
             execenv.execenv_pyexe(config, "python")
+            + "-c 'from lgdo.compression import *'"
+        )
+        shell(
+            execenv.execenv_pyexe(config, "python")
             + "-c 'from dspeed.processors import *'"
         )
 
