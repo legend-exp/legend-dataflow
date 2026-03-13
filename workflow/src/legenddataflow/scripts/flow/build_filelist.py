@@ -160,7 +160,6 @@ def build_filelist(
     # the ignore_keys dictionary organizes keys in sections, gather all the
     # section contents in a single list
     if ignore_keys is not None:
-        
         _ignore_keys = ignore_keys.get("unprocessable", [])
         if remove_level == "removed":
             _ignore_keys += ignore_keys.get("removed", [])
@@ -242,12 +241,12 @@ def build_filelist(
 
 
 def get_filelist(
-    wildcards, 
-    config, 
-    search_pattern, 
-    ignore_keys_file=None, 
-    analysis_runs_file=None, 
-    remove_level="unprocessable"
+    wildcards,
+    config,
+    search_pattern,
+    ignore_keys_file=None,
+    analysis_runs_file=None,
+    remove_level="unprocessable",
 ):
     file_selection = wildcards.label.split("-", 1)[0]
     # remove the file selection from the keypart
@@ -265,7 +264,7 @@ def get_filelist(
         wildcards.tier,
         ignore_keys,
         analysis_runs,
-        remove_level
+        remove_level,
     )
 
 
@@ -287,11 +286,5 @@ def get_filelist_full_wildcards(
 
     filekeys = get_keys(keypart)
     return build_filelist(
-        config,
-        filekeys,
-        search_pattern,
-        tier,
-        ignore_keys,
-        analysis_runs,
-        remove_level
+        config, filekeys, search_pattern, tier, ignore_keys, analysis_runs, remove_level
     )

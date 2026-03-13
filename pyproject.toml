@@ -59,6 +59,8 @@ dependencies = [
     "legend-daq2lh5==1.6.3",
     "legend-dataflow-scripts==0.3.0a2",
     "pip",
+    "snakemake-logger-plugin-rich",
+    "snakemake-logger-plugin-snkmt",
 ]
 
 #"legend-dataflow-scripts @  file:///${PROJECT_ROOT}/../legend-dataflow-scripts",

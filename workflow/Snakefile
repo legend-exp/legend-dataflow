@@ -28,6 +28,7 @@ from legenddataflowscripts.workflow import (
     subst_vars_in_snakemake_config,
 )
 from legenddataflow.scripts.flow.build_filelist import get_filelist
+from snakemake.logging import logger
 
 
 envvars:
@@ -96,7 +97,7 @@ localrules:
 
 
 onstart:
-    print("INFO: starting workflow")
+    logger.info("INFO: starting workflow")
 
     # Make sure some packages are initialized before we begin to avoid race conditions
     # https://numba.readthedocs.io/en/stable/developer/caching.html#cache-sharing
@@ -122,7 +123,7 @@ onstart:
         Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
         hit_par_catalog.write_to(hit_par_cat_file)
     except NameError:
-        print("No hit parameter catalog found")
+        logger.warning("No hit parameter catalog found")
 
     pht_par_cat_file = Path(paths.pars_path(config)) / "pht" / "validity.yaml"
     if pht_par_cat_file.is_file():
@@ -131,7 +132,7 @@ onstart:
         Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
         pht_par_catalog.write_to(pht_par_cat_file)
     except NameError:
-        print("No pht parameter catalog found")
+        logger.warning("No pht parameter catalog found")
 
     dsp_par_cat_file = Path(paths.pars_path(config)) / "dsp" / "validity.yaml"
     if dsp_par_cat_file.is_file():
@@ -140,7 +141,7 @@ onstart:
         Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
         dsp_par_catalog.write_to(dsp_par_cat_file)
     except NameError:
-        print("No dsp parameter catalog found")
+        logger.warning("No dsp parameter catalog found")
 
     psp_par_cat_file = Path(paths.pars_path(config)) / "psp" / "validity.yaml"
     if psp_par_cat_file.is_file():
@@ -149,7 +150,7 @@ onstart:
         Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
         psp_par_catalog.write_to(psp_par_cat_file)
     except NameError:
-        print("No psp parameter catalog found")
+        logger.warning("No psp parameter catalog found")
 
 
 onsuccess:
@@ -209,7 +210,7 @@ rule gen_filelist:
             get_pattern_tier(config, "raw", check_in_cycle=False),
             ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
             analysis_runs_file=Path(det_status) / "runlists.yaml",
-            remove_level="removed"
+            remove_level="removed",
         ),
     output:
         temp(Path(paths.filelist_path(config)) / "{label}-{tier}.filelist"),
