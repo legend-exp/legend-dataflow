@@ -20,6 +20,7 @@ psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_psp"], "lar": ["par_psp"]},
+    run_overwrite_validity,
 )
 
 build_merge_rules("psp", lh5_merge=True, lh5_tier="dsp")
