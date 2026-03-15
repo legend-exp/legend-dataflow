@@ -21,13 +21,23 @@ def expand_runs(in_dict):
         "p01": "r001..r005"
     }
     """
-    for per, datalist in in_dict.items():
-        for datatype, run_list in datalist.items():
+    for datatype, datalist in in_dict.items():
+        for per, run_list in datalist.items():
             if isinstance(run_list, str) and ".." in run_list:
                 start, end = run_list.split("..")
-                in_dict[per][datatype] = [
+                in_dict[datatype][per] = [
                     f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
                 ]
+            if isinstance(run_list, list):
+                for i, run in enumerate(run_list):
+                    if isinstance(run, str) and ".." in run:
+                        start, end = run.split("..")
+                        run_list.pop(i)
+                        expanded_runs = [
+                            f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
+                        ]
+                        in_dict[datatype][per] += expanded_runs
+                in_dict[datatype][per] = sorted(run_list)
     return in_dict
 
 
