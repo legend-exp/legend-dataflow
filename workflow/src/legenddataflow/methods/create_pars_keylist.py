@@ -104,6 +104,7 @@ class ParsKeyResolve(ParsCatalog):
                 keys.append(key)
         return keys
 
+    @classmethod
     def apply_run_override(cls, hit_par_catalog, name_dict, run_overwrite_validity):
         run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
 
@@ -182,7 +183,7 @@ class ParsKeyResolve(ParsCatalog):
             keylist = ParsKeyResolve.generate_par_keylist(keys)
             entrylist = ParsKeyResolve.match_all_entries(keylist, name_dict)
             return ParsKeyResolve.apply_run_override(
-                entrylist, cls({"all": entrylist}), name_dict, run_overwrite_validity
+                cls({"all": entrylist}), name_dict, run_overwrite_validity
             )
 
         msg = (
