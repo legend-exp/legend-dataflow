@@ -16,12 +16,6 @@ from legenddataflow.methods.patterns import (
 from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
-psp_par_catalog = ParsKeyResolve.get_par_catalog(
-    ["-*-*-*-cal"],
-    get_pattern_tier(config, "raw", check_in_cycle=False),
-    {"cal": ["par_psp"], "lar": ["par_psp"]},
-)
-
 
 psp_rules = {}
 for key, dataset in part.datasets.items():
