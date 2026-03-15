@@ -9,10 +9,10 @@ from pathlib import Path
 
 from dbetto.catalog import Catalog
 
-from .FileKey import FileKey, ProcessingFileKey
+from .FileKey import ProcessingFileKey
 
 # from .patterns import
-from .paths import det_status_path, get_pars_path, par_overwrite_path, pars_path
+from .paths import get_pars_path, par_overwrite_path, pars_path
 
 
 class ParsCatalog(Catalog):
@@ -93,18 +93,6 @@ class ParsCatalog(Catalog):
         )
         if pars_files_overwrite is None:
             pars_files_overwrite = []
-
-        run_overwrite_validity = Path(det_status_path(setup)) / "run_override.yaml"
-        run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
-        run_overwrite = run_overwrite_catalog.valid_for(timestamp, allow_none=True)
-        if run_overwrite is not None and len(run_overwrite) > 0:
-            run_overwrite_files = []
-            for file in run_overwrite:
-                fk = FileKey.get_filekey_from_pattern(file)
-                run_overwrite_files.append(
-                    f"{fk.datatype}/{fk.period}/{fk.run}/{file}-par_{tier}.yaml"
-                )
-            pars_files = ParsCatalog.match_pars_files(pars_files, run_overwrite_files)
 
         pars_files = [Path(get_pars_path(setup, tier)) / file for file in pars_files]
         pars_files_overwrite = [

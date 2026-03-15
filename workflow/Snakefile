@@ -59,6 +59,8 @@ det_status_textdb = pre_compile_catalog(Path(det_status) / "statuses")
 channelmap_textdb = pre_compile_catalog(Path(chan_maps) / "channelmaps")
 dataflow_configs_texdb = pre_compile_catalog(Path(dataflow_configs))
 
+run_overwrite_validity = Path(det_status) / "run_override.yaml"
+
 part = CalGrouping(config, Path(det_status) / "cal_groupings.yaml")
 
 

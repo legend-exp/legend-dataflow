@@ -8,6 +8,7 @@ import logging
 import re
 from pathlib import Path
 
+import numpy as np
 from dbetto import time
 
 from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
@@ -103,8 +104,69 @@ class ParsKeyResolve(ParsCatalog):
                 keys.append(key)
         return keys
 
+    def apply_run_override(cls, hit_par_catalog, name_dict, run_overwrite_validity):
+        run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
+
+        for i, entry in enumerate(run_overwrite_catalog.entries["all"]):
+            if len(entry.file) != 0:
+                # check if common timestamp and remove old if this is the case
+                if entry.valid_from in np.array(
+                    [h.valid_from for h in hit_par_catalog.entries["all"]]
+                ):
+                    place = np.where(
+                        entry.valid_from
+                        == np.array(
+                            [h.valid_from for h in hit_par_catalog.entries["all"]]
+                        )
+                    )[0][0]
+                    hit_par_catalog.entries["all"].pop(place)
+
+                # append override entry to dict
+                hit_par_catalog.entries["all"].append(
+                    ParsKeyResolve.Entry(
+                        entry.valid_from,
+                        FileKey.from_string(entry.file[0]).get_path_from_filekey(
+                            par_validity_pattern(),
+                            processing_step=name_dict,
+                            ext="yaml",
+                        ),
+                    )
+                )
+
+                # look for bisections i.e. if run override covers multiple runs
+                valid_froms = np.array(
+                    [h.valid_from for h in hit_par_catalog.entries["all"]]
+                )
+                if i != len(run_overwrite_catalog.entries["all"]) - 1:
+                    next_timestamp = run_overwrite_catalog.entries["all"][
+                        i + 1
+                    ].valid_from
+                    bisections = np.where(
+                        (valid_froms > entry.valid_from)
+                        & (valid_froms < next_timestamp)
+                    )[0]
+                    if len(bisections) != 0:
+                        for b in bisections[::-1]:
+                            hit_par_catalog.entries["all"].pop(b)
+
+        sorted_catalog = sorted(
+            hit_par_catalog.entries["all"], key=lambda x: x.valid_from
+        )
+
+        # remove nextdoor entries with same file
+        pops = []
+        for i, _entry in enumerate(sorted_catalog[:-1]):
+            if sorted_catalog[i].file == sorted_catalog[i + 1].file:
+                pops.append(i + 1)
+        for p in pops[::-1]:
+            sorted_catalog.pop(p)
+
+        return cls({"all": sorted_catalog})
+
     @classmethod
-    def get_par_catalog(cls, keypart, search_patterns, name_dict):
+    def get_par_catalog(
+        cls, keypart, search_patterns, name_dict, run_overwrite_validity
+    ):
         if isinstance(keypart, str):
             keypart = [keypart]
         if isinstance(search_patterns, str | Path):
@@ -119,11 +181,14 @@ class ParsKeyResolve(ParsCatalog):
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)
             keylist = ParsKeyResolve.generate_par_keylist(keys)
             entrylist = ParsKeyResolve.match_all_entries(keylist, name_dict)
-        else:
-            msg = (
-                f"pars catalog: no keys found matching {keypart} for "
-                f"files {search_patterns} with names {name_dict}"
+            return ParsKeyResolve.apply_run_override(
+                entrylist, cls({"all": entrylist}), name_dict, run_overwrite_validity
             )
-            log.warning(msg)
-            entrylist = []
+
+        msg = (
+            f"pars catalog: no keys found matching {keypart} for "
+            f"files {search_patterns} with names {name_dict}"
+        )
+        log.warning(msg)
+        entrylist = []
         return cls({"all": entrylist})

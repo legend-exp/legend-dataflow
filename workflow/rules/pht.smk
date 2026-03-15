@@ -20,6 +20,7 @@ pht_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_pht"], "lar": ["par_pht"]},
+    run_overwrite_validity,
 )
 
 intier = "psp"

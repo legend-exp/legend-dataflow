@@ -20,6 +20,7 @@ hit_par_catalog = ParsKeyResolve.get_par_catalog(
     ["-*-*-*-cal"],
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_hit"], "lar": ["par_hit"]},
+    run_overwrite_validity,
 )
 
 build_merge_rules("hit", lh5_merge=False)
