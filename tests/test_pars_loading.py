@@ -55,9 +55,6 @@ def test_get_par_file():
             "legenddataflow.methods.pars_loading.par_overwrite_path"
         ) as mock_par_overwrite_path,
         patch(
-            "legenddataflow.methods.pars_loading.det_status_path"
-        ) as mock_det_status_path,
-        patch(
             "legenddataflow.methods.pars_loading.ParsCatalog.read_from"
         ) as mock_read_from,
         patch(
@@ -70,7 +67,6 @@ def test_get_par_file():
         mock_pars_path.return_value = setup["paths"]["par"]
         mock_get_pars_path.return_value = setup["paths"]["par"]
         mock_par_overwrite_path.return_value = setup["paths"]["overwrite"]
-        mock_det_status_path.return_value = setup["paths"]["det_status"]
         mock_read_from.return_value = ParsCatalog({"all": []})
         mock_valid_for.side_effect = [
             ["file3.yaml"],  # pars_files_overwrite

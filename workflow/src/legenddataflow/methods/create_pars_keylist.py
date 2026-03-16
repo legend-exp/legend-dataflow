@@ -166,7 +166,7 @@ class ParsKeyResolve(ParsCatalog):
 
     @classmethod
     def get_par_catalog(
-        cls, keypart, search_patterns, name_dict, run_overwrite_validity
+        cls, keypart, search_patterns, name_dict, run_overwrite_validity=None
     ):
         if isinstance(keypart, str):
             keypart = [keypart]
@@ -182,9 +182,11 @@ class ParsKeyResolve(ParsCatalog):
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)
             keylist = ParsKeyResolve.generate_par_keylist(keys)
             entrylist = ParsKeyResolve.match_all_entries(keylist, name_dict)
-            return ParsKeyResolve.apply_run_override(
-                cls({"all": entrylist}), name_dict, run_overwrite_validity
-            )
+            if run_overwrite_validity is not None:
+                return ParsKeyResolve.apply_run_override(
+                    cls({"all": entrylist}), name_dict, run_overwrite_validity
+                )
+            return cls({"all": entrylist})
 
         msg = (
             f"pars catalog: no keys found matching {keypart} for "
