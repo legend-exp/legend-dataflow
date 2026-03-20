@@ -1,11 +1,6 @@
 User Manual
 ===========
 
-.. contents:: Contents
-   :local:
-   :depth: 2
-
-
 Installation
 ============
 
@@ -272,6 +267,6 @@ Two files in the ``detector_status`` directory control which data are included:
 
 - ``ignored_daq_cycles.yaml`` – lists DAQ cycles to exclude from processing entirely
 - ``run_override.yaml`` – allows overriding the validity window for specific runs,
-  forcing re-processing even if valid parameters already exist
+e.g. to apply a previous valid calibration to a subsequent run
 
 These files are part of the ``legend-datasets`` repository.

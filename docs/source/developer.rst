@@ -1,11 +1,6 @@
 Developer Guide
 ===============
 
-.. contents:: Contents
-   :local:
-   :depth: 2
-
-
 Repository Structure
 --------------------
 
