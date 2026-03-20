@@ -55,7 +55,7 @@ where `<host>` is one of the execution environments defined in the config (`bare
 The main target format is:
 
 ```
-[all|sel]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
+[all|valid]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
 ```
 
 Examples:
@@ -71,7 +71,8 @@ snakemake --profile workflow/profiles/default sel-l200-p03-*-cal-dsp.gen
 snakemake --profile workflow/profiles/default all-l200-p03-r000_r001-phy-hit.gen
 ```
 
-Use `all` to process all data or `sel` to process only analysis-selected data.
+Use `all` to process all data or `valid` to process only analysis-selected data 
+(any keyword present in the `runlists.yaml` file in `legend-datasets` can be used here).
 Wildcards (`*`) and multi-value selectors (`_`-separated) are supported for most
 label components.
 

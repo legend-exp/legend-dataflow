@@ -161,11 +161,12 @@ The target format is:
 
 .. code-block:: text
 
-   [all|sel]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
+   [all|valid]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
 
 where:
 
-- ``all`` / ``sel`` – process all data, or only data selected for analysis
+- ``all`` / ``valid`` – process all data, or only data selected for analysis, 
+any keyword in `runlists.yaml` in `legend-datasets` is a possible option.
 - ``experiment`` – experiment name (e.g. ``l200``)
 - ``period`` – data-taking period (e.g. ``p03``)
 - ``run`` – run number (e.g. ``r001``)
@@ -189,7 +190,7 @@ Examples:
    snakemake all-l200-p03-r000_r001-phy-hit.gen
 
    # Process analysis-selected physics data from any period and run to SKM
-   snakemake sel-l200-*-*-phy-skm.gen
+   snakemake valid-l200-*-*-phy-skm.gen
 
 On success, the empty marker file ``{label}-{tier}.gen`` is created to record
 that production completed successfully.
@@ -208,23 +209,7 @@ On successful completion, the workflow automatically:
 Monitoring
 ==========
 
-Snakemake can push progress information to a
-`Panoptes <https://github.com/panoptes-organization/panoptes>`_ server, which
-provides a web-based job monitoring interface.
-
-Start a Panoptes server:
-
-.. code-block:: bash
-
-   panoptes --port 5000
-
-Then pass ``--wms-monitor`` to Snakemake:
-
-.. code-block:: bash
-
-   snakemake --wms-monitor http://127.0.0.1:5000 all-l200-p03-r001-phy-skm.gen
-
-The GUI is accessible at ``http://127.0.0.1:5000`` in your browser.
+You can use the snkmt TUI for monitoring. Available with `snkmt --console`
 
 
 Software Containers
