@@ -57,8 +57,10 @@ Next steps
 
 .. toctree::
    :maxdepth: 1
+   :caption: User Guide
 
    user_manual
+   pipeline
 
 .. toctree::
    :maxdepth: 1

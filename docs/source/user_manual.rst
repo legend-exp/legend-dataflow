@@ -1,118 +1,277 @@
 User Manual
------------
+===========
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Installation
+============
+
+Prerequisites
+-------------
+
+- Python 3.11 or later
+- `uv <https://docs.astral.sh/uv/>`_ (or another virtual environment manager)
+- Access to the LEGEND metadata repository
+
+Clone and install the package:
+
+.. code-block:: bash
+
+   git clone https://github.com/legend-exp/legend-dataflow.git
+   cd legend-dataflow
+   uv venv --python 3.12
+   source .venv/bin/activate
+   uv pip install -e ".[dev]"
+
+The ``[dev]`` extras include development tools such as testing and linting
+dependencies. For production use, omit ``[dev]``.
+
+Installing the software environment
+------------------------------------
+
+After configuring ``dataflow-config.yaml`` for your site (see :ref:`configuration`
+below), install the execution environment:
+
+.. code-block:: bash
+
+   dataflow -v install -s <host> dataflow-config.yaml
+
+where ``<host>`` is one of the execution environments defined in the config (e.g.
+``bare``, ``lngs``, ``sator``, ``nersc``). This installs all required software into
+``.snakemake/legend-dataflow/venv``.
+
+.. note::
+
+   If you update the software, clear the numba cache directory (defined in the config
+   under ``execenv.<host>.env.NUMBA_CACHE_DIR``) to avoid stale compiled code.
+
+
+.. _configuration:
 
 Configuration
 =============
 
-Data processing resources are configured via a single site-dependent (and
-possibly user-dependent) configuration file, generally named ``dataflow-config.json``.
-Although you can choose any arbitrary name.
-Edit this file and adjust paths adjusted as necessary. Note that, when running Snakemake,
-the default path to the config file is ``./dataflow-config.json``.
+Data processing resources are configured via a single site-dependent YAML file,
+conventionally named ``dataflow-config.yaml``. The default file in the repository root
+can serve as a starting point.
 
-The following (non-exhaustive) table shows a list of options:
+Key settings
+------------
 
-+---------------------------+--------------------------------------------------------------------------+
-| Parameter                 | Description                                                              |
-+===========================+==========================================================================+
-| legend_metadata_version   | The version of legend_metadata to be used automatically                  |
-|                           | (use custom legend_metadata: put one at the ``paths/metadata`` location) |
-+---------------------------+--------------------------------------------------------------------------+
-| allow_none_par            | if pargen should be run                                                  |
-+---------------------------+--------------------------------------------------------------------------+
-| paths                     | Paths to legend_metadata, data input and output.                         |
-|                           | Adapt e.g. ``paths/raw`` to point to existing raw input data.            |
-+---------------------------+--------------------------------------------------------------------------+
++-------------------------------+--------------------------------------------------------------+
+| Parameter                     | Description                                                  |
++===============================+==============================================================+
+| ``legend_metadata_version``   | Version tag of legend-metadata to check out automatically.  |
+|                               | Set a custom path at ``paths/metadata`` to use a local copy.|
++-------------------------------+--------------------------------------------------------------+
+| ``allow_none_par``            | If ``false``, the workflow aborts when calibration parameter |
+|                               | generation fails. If ``true``, it continues with default or  |
+|                               | overridden parameters.                                       |
++-------------------------------+--------------------------------------------------------------+
+| ``build_file_dbs``            | Whether to generate ``pygama.flow.FileDB`` databases after   |
+|                               | each successful production run.                              |
++-------------------------------+--------------------------------------------------------------+
+| ``check_log_files``           | Whether to scan log files for errors/warnings after each run.|
++-------------------------------+--------------------------------------------------------------+
+| ``multiprocess``              | Enable parallel processing within a single Snakemake job.    |
++-------------------------------+--------------------------------------------------------------+
+
+Paths
+-----
+
+All path values support the ``$_`` placeholder, which is substituted with the value of
+the ``$PRODENV`` environment variable at runtime. This allows a single config file to
+be used across different machines by setting ``PRODENV`` appropriately.
+
+The key path categories are:
+
+- **Input paths**: ``metadata``, ``config``, ``par_overwrite``, ``chan_map``,
+  ``detector_status``, ``detector_db``
+- **Output tier paths**: ``tier_raw``, ``tier_tcm``, ``tier_dsp``, ``tier_hit``,
+  ``tier_psp``, ``tier_pht``, ``tier_ann``, ``tier_evt``, ``tier_pan``, ``tier_pet``,
+  ``tier_skm``
+- **Parameter directories**: ``par_raw``, ``par_tcm``, ``par_dsp``, ``par_hit``,
+  ``par_psp``, ``par_pht``, ``par_pet``
+- **Scratch/log directories**: ``tmp_plt``, ``tmp_log``, ``tmp_filelists``, ``tmp_par``,
+  ``log``, ``plt``
+
+Execution environments
+----------------------
+
+The ``execenv`` section defines how scripts are executed. Each named environment
+specifies an optional container command and the environment variables to set:
+
+- ``bare`` – run directly in the local Python environment (no container)
+- ``lngs`` – Apptainer container on the LNGS cluster
+- ``sator`` – Apptainer container on the Sator cluster
+- ``nersc`` – Shifter container at NERSC
+
+To add a new environment, add a new key under ``execenv`` following the same pattern.
+
 
 Profiles
 ========
 
-A number of profiles are also included in the ``workflow/profiles`` directory. If none
-are specified, the default profile is used. The profile can be specified by
-using the ``--profile`` option when running Snakemake. These control how many
-jobs are run simultaneously, based on how many cores are specified and the
-memory constraints of the system. A full list of all the options that can be
-specified to snakemake can be found at `snakemake
-<https://snakemake.readthedocs.io/en/stable/executing/cli.html>`_.
+Snakemake execution profiles are stored in ``workflow/profiles/``. Each profile is a
+directory containing a ``config.yaml`` that sets Snakemake options such as the number
+of cores and memory constraints.
+
+The available profiles are:
+
+- ``default`` – bare-metal execution using all available cores
+- ``lngs`` – LNGS computing cluster settings
+- ``sator`` – Sator computing cluster settings
+- ``lngs-build-raw`` – settings specific to raw data building at LNGS
+
+Specify a profile with the ``--profile`` flag:
+
+.. code-block:: bash
+
+   snakemake --profile workflow/profiles/lngs all-l200-p03-r001-phy-skm.gen
+
+A full list of configurable Snakemake options is available in the
+`Snakemake CLI documentation <https://snakemake.readthedocs.io/en/stable/executing/cli.html>`_.
 
 
 Running the Dataflow
 ====================
 
-To run the dataflow at the most basic level all that is necassary is to tell
-snakemake the target file generation. In a simple case this may just be a
-single file e.g.
-```shell
-$ snakemake /data2/public/prodenv/prod-blind/ref-v1.0.0/generated/tier/dsp/p03/r000/l200-p03-r000-cal-20230401T000000Z-tier_dsp.lh5
-```
-This would generate the file and all the files that are required to generate
-it.  In general though we want to generate a large number of files, and we can
-do this using the ``gen`` target.
+The ``$PRODENV`` environment variable must be set to the root of your production
+environment before running Snakemake:
 
-Main output generation
-======================
+.. code-block:: bash
 
-Usually, the main output will be determined by a file-list.  The special output
-target ``{label}-{tier}.gen`` is used to generate all files that follow the
-label up to the specified tier.  The label is composed of the following parts:
+   export PRODENV=/path/to/your/production/environment
 
-- the filelist designator: in most cases this will be ``all``, but other
-  options are specified in the ``runlists.yaml`` file in the `legend-datasets
-  <https://github.com/legend-exp/legend-datasets>`_ repository.
-- experiment: the experiment name i.e. l200
-- period: the period of the data e.g. p03
-- run: the run number e.g. r000
-- datatype: the data type e.g. cal
-- timestamp: the timestamp of the data e.g. 20230401T000000Z
+Single-file targets
+-------------------
 
-Example:
+At the most basic level you can ask Snakemake to build a single output file, and it
+will work out all the dependencies automatically:
 
-```shell
-$ snakemake all-l200-p03-r001-cal-20230401T000000Z-dsp.gen
-```
+.. code-block:: bash
 
-You can specify as many or as few of these as they like e.g.
-``all-l200-p03-dsp.gen`` If you want to specify a lower part of the label but
-leave a higher part free, you can use the ``*``` character e.g.
-``all-l200-p03-*-cal-dsp.gen`` .  Additionally if you want to specify multiple
-options for a part of the label you can use the ``_`` character between e.g.
-``all-l200-p03-r000_r001-dsp.gen``.
+   snakemake /path/to/generated/tier/dsp/p03/r000/l200-p03-r000-cal-20230401T000000Z-tier_dsp.lh5
 
-After the files are created, the empty file ``{label}-{tier}.gen```` will be
-created to mark the successful data production.
+Batch targets with ``.gen`` files
+-----------------------------------
 
+In practice, you will want to process many files at once. The special ``.gen`` target
+format triggers processing of all matching files up to a given tier.
+
+The target format is:
+
+.. code-block:: text
+
+   [all|sel]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
+
+where:
+
+- ``all`` / ``sel`` – process all data, or only data selected for analysis
+- ``experiment`` – experiment name (e.g. ``l200``)
+- ``period`` – data-taking period (e.g. ``p03``)
+- ``run`` – run number (e.g. ``r001``)
+- ``datatype`` – data type (e.g. ``phy`` for physics, ``cal`` for calibration)
+- ``tier`` – output tier to build up to (e.g. ``dsp``, ``hit``, ``skm``)
+
+Any component except ``tier`` can be replaced by a wildcard (``*``) to match all
+values, or a ``_``-separated list to match multiple specific values.
+
+Examples:
+
+.. code-block:: bash
+
+   # Process all physics data from period p03, run r001, through to the SKM tier
+   snakemake all-l200-p03-r001-phy-skm.gen
+
+   # Process all calibration data from any run in period p03 to the DSP tier
+   snakemake all-l200-p03-*-cal-dsp.gen
+
+   # Process physics data from runs r000 and r001 to the HIT tier
+   snakemake all-l200-p03-r000_r001-phy-hit.gen
+
+   # Process analysis-selected physics data from any period and run to SKM
+   snakemake sel-l200-*-*-phy-skm.gen
+
+On success, the empty marker file ``{label}-{tier}.gen`` is created to record
+that production completed successfully.
+
+Post-processing
+---------------
+
+On successful completion, the workflow automatically:
+
+- Collects warnings and errors from individual log files into a summary log
+- Generates a Snakemake HTML report saved under the log directory
+- Builds ``pygama.flow.FileDB`` databases for the output files (if enabled)
+- Generates lists of valid file keys
+- Writes parameter validity catalog files for each tier
 
 Monitoring
 ==========
 
-Snakemake supports monitoring by connecting to a
-`panoptes <https://github.com/panoptes-organization/panoptes>`_ server.
+Snakemake can push progress information to a
+`Panoptes <https://github.com/panoptes-organization/panoptes>`_ server, which
+provides a web-based job monitoring interface.
 
-Run (e.g.)
-```shell
-$ panoptes --port 5000
-```
-in the background to run a panoptes server instance, which comes with a
-GUI that can be accessed with a web-brower on the specified port.
+Start a Panoptes server:
 
-Then use the Snakemake option ``--wms-monitor`` to instruct Snakemake to push
-progress information to the panoptes server:
-```shell
-snakemake --wms-monitor http://127.0.0.1:5000 [...]
-```
+.. code-block:: bash
 
-Using software containers
-=========================
+   panoptes --port 5000
 
-This dataflow doesn't use Snakemake's internal Singularity support, but
-instead supports Singularity containers via
-`venv <https://github.com/oschulz/singularity-venv>`_ environments
-for greater control.
+Then pass ``--wms-monitor`` to Snakemake:
 
-To use this, the path to ``venv`` and the name of the environment must be set
-in ``config.json``.
+.. code-block:: bash
 
-This is only relevant then running Snakemake *outside* of the software
-container, e.g. when using a batch system (see below). If Snakemake
-and the whole workflow is run inside of a container instance, no
-container-related settings in ``config.json`` are required.
+   snakemake --wms-monitor http://127.0.0.1:5000 all-l200-p03-r001-phy-skm.gen
+
+The GUI is accessible at ``http://127.0.0.1:5000`` in your browser.
+
+
+Software Containers
+===================
+
+The dataflow uses container environments for reproducible execution on HPC systems.
+Rather than Snakemake's built-in Singularity/Apptainer support, it manages containers
+through the ``execenv`` configuration, giving finer control over which commands are
+containerised.
+
+Container settings are only required when Snakemake itself runs outside the container
+(e.g. when submitting jobs to a batch system). If the entire workflow runs inside the
+container, no special container configuration is needed.
+
+Supported container runtimes:
+
+- **Apptainer** (formerly Singularity) – used at LNGS and Sator
+- **Shifter** – used at NERSC
+
+The container image path and runtime command are configured per environment in the
+``execenv`` section of ``dataflow-config.yaml``.
+
+
+Parameter Overrides
+===================
+
+Calibration parameters can be overridden on a per-channel, per-run basis by placing
+override files in the directory specified by ``paths/par_overwrite`` in the
+configuration. These take precedence over parameters derived by the automatic
+calibration pipeline.
+
+The override directory follows the same hierarchical structure as the parameter output
+directories.
+
+
+Run Validity and Ignored Cycles
+=================================
+
+Two files in the ``detector_status`` directory control which data are included:
+
+- ``ignored_daq_cycles.yaml`` – lists DAQ cycles to exclude from processing entirely
+- ``run_override.yaml`` – allows overriding the validity window for specific runs,
+  forcing re-processing even if valid parameters already exist
+
+These files are part of the ``legend-datasets`` repository.
