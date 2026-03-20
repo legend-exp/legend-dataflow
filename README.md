@@ -1,6 +1,5 @@
 # LEGEND L200 dataflow
 
-[![PyPI](https://img.shields.io/pypi/v/legend-dataflow?logo=pypi)](https://pypi.org/project/legend-dataflow/)
 [![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/legend-exp/legend-dataflow?logo=git)](https://github.com/legend-exp/legend-dataflow/tags)
 [![GitHub Workflow Status](https://img.shields.io/github/checks-status/legend-exp/legend-dataflow/main?label=main%20branch&logo=github)](https://github.com/legend-exp/legend-dataflow/actions)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
