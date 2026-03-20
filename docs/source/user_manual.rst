@@ -165,8 +165,8 @@ The target format is:
 
 where:
 
-- ``all`` / ``valid`` – process all data, or only data selected for analysis, 
-any keyword in `runlists.yaml` in `legend-datasets` is a possible option.
+- ``all`` / ``valid`` – process all data, or only data selected for analysis,
+any keyword in ``runlists.yaml`` in ``legend-datasets`` is a possible option.
 - ``experiment`` – experiment name (e.g. ``l200``)
 - ``period`` – data-taking period (e.g. ``p03``)
 - ``run`` – run number (e.g. ``r001``)
@@ -209,7 +209,7 @@ On successful completion, the workflow automatically:
 Monitoring
 ==========
 
-You can use the snkmt TUI for monitoring. Available with `snkmt --console`
+You can use the snkmt TUI for monitoring. Available with ``snkmt --console``
 
 
 Software Containers

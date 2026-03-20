@@ -3,7 +3,8 @@
 Implementation of an automatic data processing pipeline for
 [LEGEND](https://www.legend-experiment.org/) (Large Enriched Germanium Experiment for
 Neutrinoless double beta decay) L200 data, based on
-[Snakemake](https://snakemake.readthedocs.io/).
+[Snakemake](https://snakemake.readthedocs.io/). The snakemake docs have some nice tutorials
+alternatively [hsf](https://hsf-training.github.io/analysis-essentials/snakemake/README.html#) has a nice one also.
 
 ## Overview
 
@@ -71,7 +72,7 @@ snakemake --profile workflow/profiles/default sel-l200-p03-*-cal-dsp.gen
 snakemake --profile workflow/profiles/default all-l200-p03-r000_r001-phy-hit.gen
 ```
 
-Use `all` to process all data or `valid` to process only analysis-selected data 
+Use `all` to process all data or `valid` to process only analysis-selected data
 (any keyword present in the `runlists.yaml` file in `legend-datasets` can be used here).
 Wildcards (`*`) and multi-value selectors (`_`-separated) are supported for most
 label components.

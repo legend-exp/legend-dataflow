@@ -8,6 +8,10 @@ channels in parallel before bringing them all together to process the data. It
 takes as an input the metadata at `legend metadata
 <https://github.com/legend-exp/legend-metadata>`_.
 
+The snakemake website has some nice tutorials,
+alternatively `hsf <https://hsf-training.github.io/analysis-essentials/snakemake/README.html#>`_
+has a nice one also for learning the basics of snakemake.
+
 Getting started
 ---------------
 
