@@ -9,3 +9,5 @@ rerun-incomplete: true
 config:
   - system=lngs
   - XDG_CACHE_HOME=.snakemake/cache
+logger:
+  - snkmt
