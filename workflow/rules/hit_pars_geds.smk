@@ -165,6 +165,9 @@ rule par_hit_aoe_calibration:
         ecal_file=rules.par_hit_energy_calibration.output.ecal_file,
         eres_file=rules.par_hit_energy_calibration.output.results_file,
         inplots=rules.par_hit_energy_calibration.output.plot_file,
+        overwrite_files=lambda wildcards: get_input_par_file(
+            config, tier="hit", wildcards=wildcards, allow_none=True
+        ),
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -210,6 +213,8 @@ rule par_hit_aoe_calibration:
         "--aoe-results {output.aoe_results} "
         "--hit-pars {output.hit_pars} "
         "--plot-file {output.plot_file} "
+        "--override-files {input.overwrite_files} "
+        "--detector {wildcards.channel} "
         "--inplots {input.inplots} "
         "--eres-file {input.eres_file} "
         "--pulser-file {input.pulser} "
