@@ -5,6 +5,7 @@ check_log_files: true
 multiprocess: false
 mutliprocess_mode: max_usage
 max_processes: 1
+pht_intier: psp
 
 paths:
   sandbox_path: $_/sandbox

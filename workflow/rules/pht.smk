@@ -23,7 +23,7 @@ pht_par_catalog = ParsKeyResolve.get_par_catalog(
     run_overwrite_validity,
 )
 
-intier = "psp"
+intier = config.get("pht_intier", "psp")
 
 build_merge_rules("pht", lh5_merge=False)
 
