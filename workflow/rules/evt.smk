@@ -69,7 +69,7 @@ rule build_evt:
 
 rule build_pet:
     input:
-        dsp_file=get_pattern_tier(config, "psp", check_in_cycle=False),
+        dsp_file=get_pattern_tier(config, config.get("pht_intier", "psp"), check_in_cycle=False),
         hit_file=get_pattern_tier(config, "pht", check_in_cycle=False),
         tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
@@ -81,7 +81,13 @@ rule build_pet:
             config, wildcards.timestamp, "pht"
         ),
         xtalk_matrix=lambda wildcards: get_input_par_file(
-            config=config, tier="pet", wildcards=wildcards, name="xtc"
+            config=config,
+            tier="pet",
+            wildcards=wildcards,
+            name="xtc",
+            allow_none=True,
+            overwrite=False,
+            extension="lh5",
         ),
     output:
         get_pattern_tier(config, "pet", check_in_cycle=check_in_cycle),

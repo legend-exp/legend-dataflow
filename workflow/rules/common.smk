@@ -91,13 +91,13 @@ def get_input_par_file(
         ),
     )
     if name is None:
-        fullname = f"{tier}"
+        fullname = f""
     else:
-        fullname = f"{tier}_{name}"
+        fullname = f"{name}"
     if overwrite:
-        fullname += "-overwrite.yaml"
+        fullname = f"{fullname}-overwrite.yaml"
     else:
-        fullname += f".{extension}"
+        fullname = f"{fullname}.{extension}"
 
     out_files = []
     for pars_file in pars_files_overwrite:
@@ -107,7 +107,7 @@ def get_input_par_file(
     if (
         len(out_files) == 0 and not allow_none
     ):  # | (hasattr(wildcards, "datatype") & (wildcards.datatype != "phy")))
-        raise ValueError(f"Could not find name: {fullname} in {pars_files_overwrite}")
+        raise ValueError(f"Could not find name: {fullname} in {pars_files_overwrite} for {wildcards}")
     else:
         return out_files
 
@@ -138,6 +138,11 @@ def get_table_name(metadata, config, datatype, timestamp, detector, tier):
         raise ValueError(
             f"metadata must be a string or a Catalog object, not {type(metadata)}"
         )
+    if isinstance(detector,tuple):
+        if detector[0] == "default":
+            print(detector)
+            return config.table_format[tier].format(ch=chmap[detector[1].channel].daq.rawid)
+        return config.table_format[tier].format(ch=chmap[detector[0]].daq.rawid)
     return config.table_format[tier].format(ch=chmap[detector].daq.rawid)
 
 

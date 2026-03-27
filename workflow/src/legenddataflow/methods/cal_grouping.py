@@ -194,9 +194,13 @@ class CalGrouping:
                                 for run in runs:
                                     if run in default_runs[period]:
                                         exclude_chans.append(chan)
-            exclude_chans = set(exclude_chans)
-            out_string = ""
-            for chan in exclude_chans:
-                out_string += f"(?!{chan})"
-            return out_string + r"[PCVB]{1}\d{1}\w{5}"
+            exclude_chans = list(set(exclude_chans))
+            out_string = r"(?:"
+            if len(exclude_chans) > 0:
+                out_string += r"(?!(?:"
+                out_string += exclude_chans[0]
+                for chan in exclude_chans[1:]:
+                    out_string += f"|{chan}"
+                out_string += r"))"
+            return out_string + r"[PCVB]\d\w{5})"
         return r"[PCVB]{1}\d{1}\w{5}"

@@ -20,7 +20,7 @@ from legenddataflow.scripts.flow.build_chanlist import (
     get_plt_chanlist,
 )
 
-intier = "psp"
+intier = config.get("pht_intier", "psp")
 
 qc_pht_rules = {}
 for key, dataset in part.datasets.items():

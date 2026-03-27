@@ -11,3 +11,4 @@ config:
   - XDG_CACHE_HOME=.snakemake/cache
 logger:
   - snkmt
+logger-snkmt-db: ./.snakemake/snkmt-db

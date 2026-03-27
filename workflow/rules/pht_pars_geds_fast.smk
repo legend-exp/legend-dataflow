@@ -22,7 +22,18 @@ from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 pht_fast_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
-
+        if key == "default":
+            def dsp_table_name(wildcards):
+                return get_table_name(
+                            channelmap_textdb,
+                            config,
+                            "cal",
+                            part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                            wildcards.channel,
+                            "dsp",
+                        )
+        else:
+            dsp_table_name = key
         rule:
             input:
                 files=part.get_filelists(partition, key, intier),
@@ -66,14 +77,7 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                    wildcards.channel,
-                    "dsp",
-                ),
+                dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),
             output:

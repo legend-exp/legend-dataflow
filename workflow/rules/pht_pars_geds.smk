@@ -22,7 +22,7 @@ from legenddataflow.methods.patterns import (
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
 
-intier = "psp"
+intier = config.get("pht_intier", "psp")
 
 qc_pht_rules = {}
 partcal_pht_rules = {}
@@ -39,6 +39,19 @@ for key, dataset in part.datasets.items():
         ]
         tstamp = part.get_timestamp(pht_par_catalog, partition, key, tier="pht")
         wildcard_constrain = part.get_wildcard_constraints(partition, key)
+
+        if key == "default":
+            def dsp_table_name(wildcards):
+                return get_table_name(
+                            channelmap_textdb,
+                            config,
+                            "cal",
+                            part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                            wildcards.channel,
+                            "dsp",
+                        )
+        else:
+            dsp_table_name = key
 
         # qc rule
         rule:
@@ -64,14 +77,7 @@ for key, dataset in part.datasets.items():
                 timestamp=part.get_timestamp(
                     pht_par_catalog, partition, key, tier="pht"
                 ),
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                    wildcards.channel,
-                    "dsp",
-                ),
+                dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),
             output:
@@ -164,14 +170,7 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=tstamp,
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                    wildcards.channel,
-                    "dsp",
-                ),
+                dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),
             output:
@@ -266,14 +265,7 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=tstamp,
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                    wildcards.channel,
-                    "dsp",
-                ),
+                dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),
             output:
@@ -368,14 +360,7 @@ for key, dataset in part.datasets.items():
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
                 timestamp=tstamp,
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                    wildcards.channel,
-                    "dsp",
-                ),
+                dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),
             output:
@@ -524,7 +509,7 @@ rule build_per_energy_calibration:
         inplots=rules.build_pht_qc.output.plot_file,
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                psp_par_catalog if intier == "psp" else dsp_par_catalog,
+                dsp_par_catalog,
                 config,
                 wildcards.timestamp,
                 intier,
