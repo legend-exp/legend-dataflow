@@ -24,8 +24,13 @@ Clone and install the package:
 The ``[dev]`` extras include development tools such as testing and linting
 dependencies. For production use, omit ``[dev]``.
 
+
+
 Installing the software environment
 ------------------------------------
+
+All software versions are stored in the ``pyproject.toml`` file. These can be releases of the
+various packages e.g. ``dbetto==1.2.4`` or local versions ``dbetto @  file:///${PROJECT_ROOT}/dbetto``.
 
 After configuring ``dataflow-config.yaml`` for your site (see :ref:`configuration`
 below), install the execution environment:
@@ -59,8 +64,10 @@ Key settings
 +-------------------------------+--------------------------------------------------------------+
 | Parameter                     | Description                                                  |
 +===============================+==============================================================+
-| ``legend_metadata_version``   | Version tag of legend-metadata to check out automatically.  |
-|                               | Set a custom path at ``paths/metadata`` to use a local copy.|
+| ``legend_metadata_version``   | Version tag of legend-metadata to check out automatically.   |
+|                               | Can be either specified as a tag e.g. ``v1.2.0`` or a        |
+|                               | branch e.g. ``main``. If you want to edit the metadata in    |
+|                               | your cycle this line should be commented out.                |
 +-------------------------------+--------------------------------------------------------------+
 | ``allow_none_par``            | If ``false``, the workflow aborts when calibration parameter |
 |                               | generation fails. If ``true``, it continues with default or  |
@@ -72,6 +79,8 @@ Key settings
 | ``check_log_files``           | Whether to scan log files for errors/warnings after each run.|
 +-------------------------------+--------------------------------------------------------------+
 | ``multiprocess``              | Enable parallel processing within a single Snakemake job.    |
++-------------------------------+--------------------------------------------------------------+
+| ``pht_intier  ``              | Which tier to use as input for pht can be ``dsp`` or ``psp`` |
 +-------------------------------+--------------------------------------------------------------+
 
 Paths
@@ -92,6 +101,13 @@ The key path categories are:
   ``par_psp``, ``par_pht``, ``par_pet``
 - **Scratch/log directories**: ``tmp_plt``, ``tmp_log``, ``tmp_filelists``, ``tmp_par``,
   ``log``, ``plt``
+
+All generated paths can point to files in the cycle to make new files or it can point to files
+from another cycle e.g. "tier_dsp" : "/data2/public/prodenv/prod-blind/ref/v2.0.0"
+and in this case those files will be used as an input. The metadata version to use
+is un this file under ``legend_metadata_version`` and can be either specified as a tag
+e.g. ``v1.2.0`` or a branch e.g. ``main``. If you want to edit the metadata in your cycle
+this line should be commented out.
 
 Execution environments
 ----------------------

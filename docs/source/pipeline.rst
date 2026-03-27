@@ -45,7 +45,7 @@ Files are identified by *file keys* composed of:
 - **period** – data-taking period (e.g. ``p03``)
 - **run** – run number within the period (e.g. ``r001``)
 - **datatype** – ``cal`` (calibration) or ``phy`` (physics)
-- **timestamp** – UTC timestamp of the DAQ cycle (``YYYYMMDDTHHMMSSz`` format)
+- **timestamp** – UTC timestamp of the DAQ cycle (``YYYYMMDDTHHMMSSZ`` format)
 
 The Snakemake target label (e.g. ``all-l200-p03-r001-phy``) selects a set of file
 keys via the runlist defined in the ``legend-datasets`` repository.
@@ -74,14 +74,16 @@ RAW tier
 
 Converts raw DAQ files to LH5 format:
 
-- **ORCA format** (``build_raw_orca``) – decodes data from the ORCA DAQ system used
-  for HPGe detectors.
-- **FCIO format** (``build_raw_fcio``) – decodes data from the FCIO DAQ system used
-  for SiPM detectors.
-- **Blinding** (``build_raw_blind``) – applies an energy-dependent random shift to
-  high-energy events in physics data to blind the analysis region of interest. The
-  blinding calibration coefficients are derived separately (see
-  ``rules/blinding_calibration.smk``).
+- **ORCA format** (``build_raw_orca``) – decodes data from ORCA.
+- **FCIO format** (``build_raw_fcio``) – decodes data from FLASHCAM
+used for some special data taking.
+- **Blinding** (``build_raw_blind``) – removes events with any hit within 25keV of Qbb, it
+uses the daqenergy estimator to do this. The blinding is checked in each calibration using
+``rules/blinding_check.smk`` to verify the parameters are still valid. If any channels fail the
+processing will stop until a new calibration is put in. The calibrations are all stored in
+``legend-dataflow-overrides`` under ``raw``.
+The helper rules in ``rules/blinding_calibration.smk`` can be used to derive all the
+daqenergy calibration coefficients.
 
 Each raw file preserves the waveform data and DAQ metadata for all channels recorded
 in that DAQ cycle.
@@ -91,10 +93,10 @@ TCM tier
 
 **Rule file:** ``rules/tcm.smk``
 
-Builds the *Timing Correction Module* (TCM), which provides cross-channel timing
+Builds the *Time Coincidence Map* (TCM), which provides cross-channel timing
 alignment information. It also identifies pulser events (artificial periodic signals
 injected for monitoring) via ``build_pulser_ids``, which are used to track detector
-stability throughout processing.
+stability.
 
 DSP tier
 ~~~~~~~~~
@@ -114,7 +116,7 @@ DSP tier
 Applies the per-channel DSP parameters to all raw data, producing DSP-tier files
 containing quantities such as:
 
-- Calibrated energy estimates
+- Uncalibrated energy estimates
 - Baseline and pile-up flags
 - Waveform shape parameters
 
@@ -158,12 +160,11 @@ advanced analysis parameters at partition level:
 - **Physics QC** (``qc_phy``) – event-level quality cuts for physics analysis
 - **Partition energy calibration** (``ecal_part``) – refined energy calibration using
   the full partition statistics
-- **Alpha-over-energy** (``aoe``) – a pulse shape parameter used to discriminate
-  alpha-particle surface events
-- **Log-quality** (``lq``) – a complementary pulse shape parameter
+- **A/E** (``aoe``) – calibration of A/E
+- **Log-quality** (``lq``) – calibration of late charge (LQ)
 
-A fast mode (``pht_pars_geds_fast.smk``) is available for quicker turnaround at
-reduced accuracy.
+A fast mode (``pht_pars_geds_fast.smk``) is available which streamlines these steps by
+only loading the data in once.
 
 ANN tier
 ~~~~~~~~~
@@ -171,8 +172,8 @@ ANN tier
 **Rule file:** ``rules/ann.smk``
 
 Applies artificial neural network (ANN) cuts to data from coaxial HPGe detectors.
-These cuts provide additional background rejection beyond classical PSD. The ANN
-produces both channel-level (``ann``) and partition-level (``pan``) outputs.
+As these detectors can't use the standard PSD parameters. The ANN
+produces both run-level (``ann``) and partition-level (``pan``) outputs.
 
 EVT tier
 ~~~~~~~~~
@@ -181,10 +182,9 @@ EVT tier
 
 Builds *event-level* data by combining information across all detector channels:
 
-- **Cross-talk correction** – removes electrical cross-talk between channels
-- **Multi-detector coincidences** – identifies events where energy is deposited in
-  multiple detectors simultaneously
-- **Event energy** – computes the total energy deposited in each event
+- **Cross-talk correction** – corrects for cross-talk between channels
+- **Quality Cut Flags** – checks all waveforms are valid in an event
+- **Liquid Argon Coincidence** – checks for coincident light in the LAr system
 
 The EVT tier produces both run-level (``evt``) and partition-level (``pet``) outputs.
 
@@ -193,8 +193,8 @@ SKM tier
 
 **Rule file:** ``rules/skm.smk``
 
-The *skim* tier applies the final physics event selection, keeping only events that
-pass all quality and analysis cuts. This produces compact files suitable for
+The *skim* tier applies the final physics event selection, removing pulser and forced triggers and
+keeping only events that pass all quality cuts. This produces compact files suitable for
 physics analysis.
 
 
@@ -235,10 +235,9 @@ Blinding
 To prevent analysis bias, events in the ``0νββ`` signal region of interest are
 energy-blinded before physics analysis. The blinding procedure:
 
-1. Derives a calibration curve from ``cal`` data (``blinding_calibration.smk``)
-2. Validates the curve (``blinding_check.smk``)
-3. Applies a reproducible energy-dependent shift to candidate signal events in
-   ``phy`` data during raw-tier conversion (``raw.smk``)
+
+1. Validates the curve (``blinding_check.smk``)
+2. Remove all events within 25 keV of Qbb for ``phy`` data (``raw.smk``)
 
 Blinding is applied early in the pipeline so that all downstream tiers see only
 blinded data.
@@ -251,30 +250,27 @@ The following diagram summarises the dependency structure of the main processing
 
 .. code-block:: text
 
-                    DAQ files (ORCA / FCIO)
-                            |
-                     [raw.smk] RAW
-                            |
-                     [tcm.smk] TCM
-                       /         \
-      [dsp_pars_geds/spms]    DSP params
-                       \         /
-                     [dsp.smk] DSP
-                       /         \
-            [psp_pars_geds]    PSP params
-                       \         /
-                     [psp.smk] PSP
-                       /         \
-            [hit_pars_geds]    HIT params
-                       \         /
-                     [hit.smk] HIT
-                       /         \
-            [pht_pars_geds]    PHT params
-                       \         /
-                     [pht.smk] PHT
-                            |
-                     [ann.smk] ANN
-                            |
-                     [evt.smk] EVT
-                            |
-                     [skm.smk] SKM
+                         DAQ files (ORCA / FCIO)
+                                  |
+                           [raw.smk] RAW
+                                  |
+                           [tcm.smk] TCM
+                          /              \
+                         /                \
+          [dsp_pars_geds/spms] DSP params  [psp_pars_geds] PSP params
+                         \                /
+                          \              /
+                       [dsp.smk] DSP   [psp.smk] PSP
+                          /              \
+                         /                \
+              [hit_pars_geds] HIT params  [pht_pars_geds] PHT params
+                         \                /
+                          \              /
+                       [hit.smk] HIT   [pht.smk] PHT
+                                |              |
+                         [ann.smk] ANN  [pan.smk] PAN
+                                |              |
+                         [evt.smk] EVT  [pet.smk] PET
+                                 \             /
+                                  \           /
+                                  [skm.smk] SKM

@@ -23,17 +23,20 @@ pht_fast_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
         if key == "default":
+
             def dsp_table_name(wildcards):
                 return get_table_name(
-                            channelmap_textdb,
-                            config,
-                            "cal",
-                            part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
-                            wildcards.channel,
-                            "dsp",
-                        )
+                    channelmap_textdb,
+                    config,
+                    "cal",
+                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    wildcards.channel,
+                    "dsp",
+                )
+
         else:
             dsp_table_name = key
+
         rule:
             input:
                 files=part.get_filelists(partition, key, intier),

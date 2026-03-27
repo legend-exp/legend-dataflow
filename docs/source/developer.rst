@@ -73,7 +73,7 @@ Scripts
 -------
 
 Scripts live under ``workflow/src/legenddataflow/scripts/`` and are called by rules
-via Snakemake's ``script:`` directive. They receive inputs, outputs, and parameters
+via Snakemake's ``shell:`` directive. They receive inputs, outputs, and parameters
 from Snakemake through the ``snakemake`` object.
 
 Script categories:
@@ -100,6 +100,25 @@ The ``workflow/src/legenddataflow/methods/`` package provides shared utilities:
 - **ParsKeyResolve** (``create_pars_keylist.py``) – resolves which parameter files
   apply to a given file key, using the parameter validity catalog
 - **ParsCatalog** (``pars_loading.py``) – loads and manages parameter catalog files
+
+Adding a new processor to the dsp
+---------------------------------
+
+If the processor is already in ``dspeed`` this is simple just add the processor to the
+relevant config in ``legend-dataflow-config`` under   ``tier/dsp``. If the processor
+isn't yet in dspeed then either open a pr and add it or run using a local version which
+can be specified in the ``pyproject.toml``
+
+Adding a new calibration script
+-------------------------------
+
+1. **Add the rule to the relevant file** e.g. ``workflow/rules/hit_pars_geds.smk`` with:
+
+   - A parameter generation rule (if applicable) that reads calibration data and
+     writes e.g. ``par_hit_mystep.yaml``
+
+2. **Write the script(s)** –
+   ``scripts/par/geds/hit/`` implementing the processing logic.
 
 Adding a new processing stage
 ------------------------------

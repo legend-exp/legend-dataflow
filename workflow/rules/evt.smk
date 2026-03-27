@@ -69,7 +69,9 @@ rule build_evt:
 
 rule build_pet:
     input:
-        dsp_file=get_pattern_tier(config, config.get("pht_intier", "psp"), check_in_cycle=False),
+        dsp_file=get_pattern_tier(
+            config, config.get("pht_intier", "psp"), check_in_cycle=False
+        ),
         hit_file=get_pattern_tier(config, "pht", check_in_cycle=False),
         tcm_file=get_pattern_tier(config, "tcm", check_in_cycle=False),
         ann_file=lambda wildcards: (
