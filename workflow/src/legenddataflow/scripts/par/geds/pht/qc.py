@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from dbetto import Props, TextDB
-from legenddataflow.par.geds.pht.qc import build_qc
+from legenddataflowscripts.par.geds.hit.qc import build_qc
 from legenddataflowscripts.utils import (
     build_log,
 )

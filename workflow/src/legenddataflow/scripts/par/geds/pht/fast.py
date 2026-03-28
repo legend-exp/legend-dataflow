@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflow.scripts.par.geds.hit.aoe import run_aoe_calibration
-from legenddataflow.scripts.par.geds.hit.lq import run_lq_calibration
+from legenddataflowscripts.par.geds.hit.aoe import run_aoe_calibration
+from legenddataflowscripts.par.geds.hit.lq import run_lq_calibration
 from legenddataflowscripts.utils import build_log, get_pulser_mask
 from legendmeta import LegendMetadata
 from pygama.pargen.utils import load_data
