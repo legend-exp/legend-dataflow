@@ -124,7 +124,7 @@ def par_geds_pht_aoe() -> None:
             cal_dicts,
             results_dicts,
             object_dicts,
-            configs=channel_dict,
+            config=channel_dict,
             log=log,
             debug_mode=args.debug,
             # gen_plots=bool(args.plot_file),

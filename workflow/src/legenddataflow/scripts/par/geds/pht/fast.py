@@ -11,15 +11,15 @@ import numpy as np
 import pandas as pd
 from dbetto import TextDB
 from dbetto.catalog import Props
+from legenddataflow.scripts.par.geds.hit.aoe import run_aoe_calibration
+from legenddataflow.scripts.par.geds.hit.lq import run_lq_calibration
 from legenddataflowscripts.utils import build_log, get_pulser_mask
 from legendmeta import LegendMetadata
 from pygama.pargen.utils import load_data
 
 from legenddataflow.methods import ChannelProcKey, ProcessingFileKey, run_splitter
 
-from .aoe import run_aoe_calibration
 from .ecal_part import calibrate_partition
-from .lq import run_lq_calibration
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 try:
@@ -207,7 +207,7 @@ def par_geds_pht_fast() -> None:
         inplots_dict,
         args.timestamp,
         chmap,
-        config=configs["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
+        configs=configs["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
             args.channel
         ],
         gen_plots=bool(args.plot_file),
@@ -240,7 +240,7 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        config=configs["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel],
+        configs=configs["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel],
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
