@@ -103,7 +103,7 @@ class ParsKeyResolve(ParsCatalog):
                 key = FileKey(**d)
                 if ignore_keys is None:
                     keys.append(key)
-                if key.name not in ignore_keys:
+                if ignore_keys is not None and key.name not in ignore_keys:
                     keys.append(key)
         return keys
 
