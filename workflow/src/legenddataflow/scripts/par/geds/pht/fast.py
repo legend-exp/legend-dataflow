@@ -207,7 +207,7 @@ def par_geds_pht_fast() -> None:
         inplots_dict,
         args.timestamp,
         chmap,
-        config=configs["pars_pht_partcal"]["inputs"]["par_pht_partcal_config"][
+        config=configs["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
             args.channel
         ],
         gen_plots=bool(args.plot_file),
