@@ -16,6 +16,7 @@ dsp_par_catalog = ParsKeyResolve.get_par_catalog(
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_dsp"], "lar": ["par_dsp"]},
     run_overwrite_validity,
+    ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
 )
 
 

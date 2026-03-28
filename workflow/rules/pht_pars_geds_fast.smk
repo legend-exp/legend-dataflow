@@ -35,7 +35,14 @@ for key, dataset in part.datasets.items():
                 )
 
         else:
-            dsp_table_name = key
+            dsp_table_name = get_table_name(
+                channelmap_textdb,
+                config,
+                "cal",
+                part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                key,
+                "dsp",
+            )
 
         rule:
             input:

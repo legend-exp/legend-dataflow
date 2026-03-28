@@ -240,9 +240,7 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        config=configs["pars_pht_lqcal"]["inputs"]["lqcal_config"][
-            args.channel
-        ],
+        config=configs["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel],
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )

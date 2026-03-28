@@ -21,6 +21,7 @@ hit_par_catalog = ParsKeyResolve.get_par_catalog(
     get_pattern_tier(config, "raw", check_in_cycle=False),
     {"cal": ["par_hit"], "lar": ["par_hit"]},
     run_overwrite_validity,
+    ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
 )
 
 build_merge_rules("hit", lh5_merge=False)

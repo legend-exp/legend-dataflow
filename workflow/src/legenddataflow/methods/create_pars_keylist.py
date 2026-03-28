@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 import numpy as np
-from dbetto import time
+from dbetto import Props, time
 
 from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
 from .pars_loading import ParsCatalog
@@ -79,7 +79,7 @@ class ParsKeyResolve(ParsCatalog):
         return out_list
 
     @staticmethod
-    def get_keys(keypart, search_pattern):
+    def get_keys(keypart, search_pattern, ignore_keys=None):
         d = FileKey.parse_keypart(keypart)
         if Path(search_pattern).suffix == ".*":
             search_pattern = Path(search_pattern).with_suffix(".{ext}")
@@ -101,7 +101,10 @@ class ParsKeyResolve(ParsCatalog):
                 if "ext" in d:
                     d.pop("ext")
                 key = FileKey(**d)
-                keys.append(key)
+                if ignore_keys is None:
+                    keys.append(key)
+                if key.name not in ignore_keys:
+                    keys.append(key)
         return keys
 
     @classmethod
@@ -166,17 +169,28 @@ class ParsKeyResolve(ParsCatalog):
 
     @classmethod
     def get_par_catalog(
-        cls, keypart, search_patterns, name_dict, run_overwrite_validity=None
+        cls,
+        keypart,
+        search_patterns,
+        name_dict,
+        run_overwrite_validity=None,
+        ignore_keys_file=None,
     ):
         if isinstance(keypart, str):
             keypart = [keypart]
         if isinstance(search_patterns, str | Path):
             search_patterns = [search_patterns]
 
+        if ignore_keys_file is not None:
+            ignore_keys = Props.read_from(ignore_keys_file)
+            ignore_keys = ignore_keys["unprocessable"] + ignore_keys["removed"]
+        else:
+            ignore_keys = None
+
         keylist = []
         for search_pattern in search_patterns:
             for keypar in keypart:
-                keylist += ParsKeyResolve.get_keys(keypar, search_pattern)
+                keylist += ParsKeyResolve.get_keys(keypar, search_pattern, ignore_keys)
 
         if len(keylist) != 0:
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)
