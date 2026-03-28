@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from dbetto import Props
-from legenddatafow.FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
+from legenddataflow.FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
 
 
 def update_cal_dicts(cal_dicts, update_dict):
