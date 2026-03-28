@@ -205,7 +205,7 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dict,
         inplots_dict,
-        args.timestamp,
+        args.channel,
         chmap,
         configs=configs["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
             args.channel
