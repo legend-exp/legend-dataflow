@@ -507,7 +507,7 @@ rule build_per_energy_calibration:
         files=Path(filelist_path(config))
         / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        pht_dict=rules.build_pht_qc.output.hit_pars,
+        in_hit_dict=rules.build_pht_qc.output.hit_pars,
         inplots=rules.build_pht_qc.output.plot_file,
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
@@ -518,10 +518,20 @@ rule build_per_energy_calibration:
             )
         ),
     params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        channel="{channel}",
-        tier="pht",
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_pht_ecal",
+            "ecal_config",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_pht_ecal",
+        ),
         dsp_table_name=lambda wildcards: get_table_name(
             channelmap_textdb,
             config,
@@ -530,8 +540,10 @@ rule build_per_energy_calibration:
             wildcards.channel,
             "dsp",
         ),
-        configs=config_path(config),
-        meta=metadata_path(config),
+        det_status=lambda wildcards: det_status_textdb.valid_for(
+            wildcards.timestamp, system="cal"
+        )[wildcards.channel]["usability"],
+        channel="{channel}",
     output:
         ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
         results_file=temp(
@@ -548,18 +560,16 @@ rule build_per_energy_calibration:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
-        "--datatype {params.datatype} "
-        "--timestamp {params.timestamp} "
-        "--channel {params.channel} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--det-status {params.det_status} "
         "--table-name {params.dsp_table_name} "
-        "--configs {params.configs} "
-        "--metadata {params.meta} "
-        "--tier {params.tier} "
+        "--channel {params.channel} "
         "--plot-path {output.plot_file} "
         "--results-path {output.results_file} "
         "--save-path {output.ecal_file} "
         "--inplot-dict {input.inplots} "
-        "--in-hit-dict {input.pht_dict} "
+        "--in-hit-dict {input.in_hit_dict} "
         "--ctc-dict {input.ctc_dict} "
         "--pulser-file {input.pulser} "
         "--files {input.files}"
