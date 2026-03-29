@@ -276,27 +276,25 @@ def calibrate_partition(
             {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()},
         )
         if "copy_calibration" in configs:
-            for copy_cal_param, _copy_to_cal_param in configs[
-                "copy_calibration"
-            ].items():
+            for cal_par, copy_dict in configs["copy_calibration"].items():
+                copy_cal_param = copy_dict["copy_param"]
+                new_input_param = copy_dict["new_input_param"]
+                old_input_param = copy_dict["old_input_param"]
                 if copy_cal_param not in full_object_dict:
                     msg = f"copy_calibration parameter {copy_cal_param} not found in full_object_dict"
                     raise ValueError(msg)
-                if isinstance(_copy_to_cal_param, str):
-                    copy_to_cal_param = [_copy_to_cal_param]
-                else:
-                    copy_to_cal_param = _copy_to_cal_param
-                for cal_par in copy_to_cal_param:
-                    if cal_par in full_object_dict:
-                        msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
-                        raise ValueError(msg)
-                    copy_dict = {cal_par: full_object_dict[cal_par].gen_pars_dict()}
-                    copy_dict["expression"] = copy_dict[cal_par]["expression"].replace(
-                        copy_cal_param, cal_par
+                if cal_par in full_object_dict:
+                    msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
+                    raise ValueError(msg)
+                new_dict = {
+                    cal_par: copy.deepcopy(
+                        full_object_dict[cal_energy_param].gen_pars_dict()
                     )
-                    cal_dicts = update_cal_dicts(
-                        cal_dicts, {cal_par: copy_dict[cal_par]}
-                    )
+                }
+                new_dict[cal_par]["expression"] = new_dict[cal_par][
+                    "expression"
+                ].replace(old_input_param, new_input_param)
+                cal_dicts = update_cal_dicts(cal_dicts, {cal_par: copy_dict[cal_par]})
         if "extra_blocks" in configs:
             if isinstance(configs["extra_blocks"], dict):
                 configs["extra_blocks"] = [configs["extra_blocks"]]
