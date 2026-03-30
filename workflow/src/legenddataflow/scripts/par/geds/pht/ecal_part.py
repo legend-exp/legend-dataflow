@@ -294,7 +294,7 @@ def calibrate_partition(
                 new_dict[cal_par]["expression"] = new_dict[cal_par][
                     "expression"
                 ].replace(old_input_param, new_input_param)
-                cal_dicts = update_cal_dicts(cal_dicts, {cal_par: copy_dict[cal_par]})
+                cal_dicts = update_cal_dicts(cal_dicts, {cal_par: new_dict[cal_par]})
         if "extra_blocks" in configs:
             if isinstance(configs["extra_blocks"], dict):
                 configs["extra_blocks"] = [configs["extra_blocks"]]
