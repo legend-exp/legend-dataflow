@@ -354,9 +354,7 @@ def calibrate_partition(
                 msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
                 raise ValueError(msg)
             new_dict = {
-                cal_par: copy.deepcopy(
-                    full_object_dict[cal_energy_param].gen_pars_dict()
-                )
+                cal_par: copy.deepcopy(full_object_dict[copy_cal_param].gen_pars_dict())
             }
             new_dict[cal_par]["expression"] = new_dict[cal_par]["expression"].replace(
                 old_input_param, new_input_param
