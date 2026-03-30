@@ -71,13 +71,14 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
     else:
         fwhm_quad = None
 
-    pk_dict = results_dict["peak_parameters"]
+    pk_dict = results_dict.get("peak_parameters",{})
 
-    for _, dic in pk_dict.items():
-        dic["function"] = dic["function"].name
-        dic["parameters"] = dic["parameters"].to_dict()
-        dic["uncertainties"] = dic["uncertainties"].to_dict()
-        dic.pop("covariance")
+    if len(pk_dict)>0:
+        for _, dic in pk_dict.items():
+            dic["function"] = dic["function"].name
+            dic["parameters"] = dic["parameters"].to_dict()
+            dic["uncertainties"] = dic["uncertainties"].to_dict()
+            dic.pop("covariance")
 
     out_dict = {
         "total_fep": len(
