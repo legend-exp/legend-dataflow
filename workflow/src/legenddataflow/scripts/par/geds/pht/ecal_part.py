@@ -275,31 +275,6 @@ def calibrate_partition(
             cal_dicts,
             {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()},
         )
-        if "copy_calibration" in configs:
-            for cal_par, copy_dict in configs["copy_calibration"].items():
-                copy_cal_param = copy_dict["copy_param"]
-                new_input_param = copy_dict["new_input_param"]
-                old_input_param = copy_dict["old_input_param"]
-                if copy_cal_param not in full_object_dict:
-                    msg = f"copy_calibration parameter {copy_cal_param} not found in full_object_dict"
-                    raise ValueError(msg)
-                if cal_par in full_object_dict:
-                    msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
-                    raise ValueError(msg)
-                new_dict = {
-                    cal_par: copy.deepcopy(
-                        full_object_dict[cal_energy_param].gen_pars_dict()
-                    )
-                }
-                new_dict[cal_par]["expression"] = new_dict[cal_par][
-                    "expression"
-                ].replace(old_input_param, new_input_param)
-                cal_dicts = update_cal_dicts(cal_dicts, {cal_par: new_dict[cal_par]})
-        if "extra_blocks" in configs:
-            if isinstance(configs["extra_blocks"], dict):
-                configs["extra_blocks"] = [configs["extra_blocks"]]
-            for extra_block in configs["extra_blocks"]:
-                cal_dicts = update_cal_dicts(cal_dicts, extra_block)
 
         if gen_plots is True:
             param_plot_dict = {}
@@ -366,6 +341,32 @@ def calibrate_partition(
             peak_dict["function"] = peak_dict["function"].name
             peak_dict["parameters"] = peak_dict["parameters"].to_dict()
             peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+
+    if "copy_calibration" in configs:
+        for cal_par, copy_dict in configs["copy_calibration"].items():
+            copy_cal_param = copy_dict["copy_param"]
+            new_input_param = copy_dict["new_input_param"]
+            old_input_param = copy_dict["old_input_param"]
+            if copy_cal_param not in full_object_dict:
+                msg = f"copy_calibration parameter {copy_cal_param} not found in full_object_dict"
+                raise ValueError(msg)
+            if cal_par in full_object_dict:
+                msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
+                raise ValueError(msg)
+            new_dict = {
+                cal_par: copy.deepcopy(
+                    full_object_dict[cal_energy_param].gen_pars_dict()
+                )
+            }
+            new_dict[cal_par]["expression"] = new_dict[cal_par]["expression"].replace(
+                old_input_param, new_input_param
+            )
+            cal_dicts = update_cal_dicts(cal_dicts, {cal_par: new_dict[cal_par]})
+    if "extra_blocks" in configs:
+        if isinstance(configs["extra_blocks"], dict):
+            configs["extra_blocks"] = [configs["extra_blocks"]]
+        for extra_block in configs["extra_blocks"]:
+            cal_dicts = update_cal_dicts(cal_dicts, extra_block)
 
     out_result_dicts = {
         tstamp: dict(**result_dict, partition_ecal=ecal_results)
