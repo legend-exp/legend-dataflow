@@ -263,8 +263,7 @@ def par_geds_pht_fast() -> None:
             "results": results_dicts[fk.timestamp],
         }
         Path(out).parent.mkdir(parents=True, exist_ok=True)
-        with Path(out).open("w") as w:
-            json.dump(final_hit_dict, w, indent=4)
+        Props.write_to(out, final_hit_dict)
 
     for out in args.fit_results:
         fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
