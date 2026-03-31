@@ -47,7 +47,7 @@ for key, dataset in part.datasets.items():
                     channelmap_textdb,
                     config,
                     "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    tstamp,
                     wildcards.channel,
                     "dsp",
                 )
@@ -57,7 +57,7 @@ for key, dataset in part.datasets.items():
                 channelmap_textdb,
                 config,
                 "cal",
-                part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                tstamp,
                 key,
                 "dsp",
             )

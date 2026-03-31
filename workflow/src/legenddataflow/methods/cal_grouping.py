@@ -33,6 +33,18 @@ class CalGrouping:
                         self.datasets[channel][part][per] = [
                             f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
                         ]
+                    if isinstance(runs, list):
+                        final_runs = []
+                        for run in runs:
+                            if ".." in run:
+                                start, end = run.split("..")
+                                final_runs += [
+                                    f"r{x:03}"
+                                    for x in range(int(start[1:]), int(end[1:]) + 1)
+                                ]
+                            else:
+                                final_runs.append(run)
+                        self.datasets[channel][part][per] = final_runs
 
     def get_dataset(self, dataset, channel):
         partition_dict = self.datasets["default"].copy()

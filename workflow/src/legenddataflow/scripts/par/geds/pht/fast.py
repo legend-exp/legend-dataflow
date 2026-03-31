@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import pickle as pkl
 import time
 import warnings
