@@ -451,7 +451,7 @@ rule build_pht_qc:
         ),
         fft_files=(
             Path(filelist_path(config))
-            / f"all-{{experiment}}-{{period}}-{{run}}-cal-{intier}.filelist",
+            / f"all-{{experiment}}-{{period}}-{{run}}-fft-{intier}.filelist",
         ),
         pulser_files=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         overwrite_files=lambda wildcards: get_input_par_file(
