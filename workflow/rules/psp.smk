@@ -35,6 +35,17 @@ rule build_psp:
                 config, wildcards.timestamp, "psp"
             )
         ),
+    output:
+        tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
+        db_file=get_pattern_pars_tmp(config, "psp_db"),
+    log:
+        get_pattern_log(config, "tier_psp", time),
+    group:
+        "tier-dsp"
+    threads: get_threads
+    resources:
+        runtime=300,
+        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -46,17 +57,6 @@ rule build_psp:
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "dsp"
         ),
         configs=ro(config_path(config)),
-    output:
-        tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(config, "psp_db"),
-    log:
-        get_pattern_log(config, "tier_psp", time),
-    group:
-        "tier-dsp"
-    resources:
-        runtime=300,
-        mem_swap=lambda wildcards: 35 if wildcards.datatype == "cal" else 25,
-    threads: get_threads
     shell:
         execenv_pyexe(config, "build-tier-dsp") + "--log {log} "
         "--tier psp "

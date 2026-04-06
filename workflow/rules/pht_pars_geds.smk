@@ -21,7 +21,6 @@ from legenddataflow.methods.patterns import (
 )
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
-
 intier = config.get("pht_intier", "psp")
 
 qc_pht_rules = {}
@@ -78,17 +77,6 @@ for key, dataset in part.datasets.items():
                         tier="pht",
                     ),
                 ),
-            wildcard_constraints:
-                channel=wildcard_constrain,
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=part.get_timestamp(
-                    pht_par_catalog, partition, key, tier="pht"
-                ),
-                dsp_table_name=dsp_table_name,
-                configs=config_path(config),
-                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -119,11 +107,22 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_pht_qc",
                 ),
+            wildcard_constraints:
+                channel=wildcard_constrain,
             group:
                 "par-pht"
             resources:
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 30,
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=part.get_timestamp(
+                    pht_par_catalog, partition, key, tier="pht"
+                ),
+                dsp_table_name=dsp_table_name,
+                configs=config_path(config),
+                meta=metadata_path(config),
             shell:
                 execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
                 "--configs {params.configs} "
@@ -173,15 +172,6 @@ for key, dataset in part.datasets.items():
                     tier="pht",
                     name="energy_cal",
                 ),
-            wildcard_constraints:
-                channel=wildcard_constrain,
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=tstamp,
-                dsp_table_name=dsp_table_name,
-                configs=config_path(config),
-                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -223,11 +213,20 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_pht_partcal",
                 ),
+            wildcard_constraints:
+                channel=wildcard_constrain,
             group:
                 "par-pht"
             resources:
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=tstamp,
+                dsp_table_name=dsp_table_name,
+                configs=config_path(config),
+                meta=metadata_path(config),
             shell:
                 execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
                 "--configs {params.configs} "
@@ -268,15 +267,6 @@ for key, dataset in part.datasets.items():
                 inplots=strip_channel_wildcard_constraint(
                     previous_rule.output.plot_file
                 ),
-            wildcard_constraints:
-                channel=wildcard_constrain,
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=tstamp,
-                dsp_table_name=dsp_table_name,
-                configs=config_path(config),
-                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -318,11 +308,20 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_pht_aoe",
                 ),
+            wildcard_constraints:
+                channel=wildcard_constrain,
             group:
                 "par-pht"
             resources:
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=tstamp,
+                dsp_table_name=dsp_table_name,
+                configs=config_path(config),
+                meta=metadata_path(config),
             shell:
                 execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
                 "--configs {params.configs} "
@@ -363,15 +362,6 @@ for key, dataset in part.datasets.items():
                 inplots=strip_channel_wildcard_constraint(
                     previous_rule.output.plot_file
                 ),
-            wildcard_constraints:
-                channel=wildcard_constrain,
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=tstamp,
-                dsp_table_name=dsp_table_name,
-                configs=config_path(config),
-                meta=metadata_path(config),
             output:
                 hit_pars=[
                     temp(file)
@@ -411,11 +401,20 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_pht_lq",
                 ),
+            wildcard_constraints:
+                channel=wildcard_constrain,
             group:
                 "par-pht"
             resources:
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 15,
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=tstamp,
+                dsp_table_name=dsp_table_name,
+                configs=config_path(config),
+                meta=metadata_path(config),
             shell:
                 execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
                 "--configs {params.configs} "
@@ -457,6 +456,16 @@ rule build_pht_qc:
         overwrite_files=lambda wildcards: get_input_par_file(
             config, tier="pht", wildcards=wildcards
         ),
+    output:
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qc")),
+    log:
+        get_pattern_log_channel(config, "par_pht_qc", time),
+    group:
+        "par-pht"
+    resources:
+        mem_swap=60,
+        runtime=300,
     params:
         datatype="cal",
         channel="{channel}",
@@ -471,16 +480,6 @@ rule build_pht_qc:
         ),
         configs=config_path(config),
         meta=metadata_path(config),
-    output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qc")),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qc")),
-    log:
-        get_pattern_log_channel(config, "par_pht_qc", time),
-    group:
-        "par-pht"
-    resources:
-        mem_swap=60,
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-qc") + "--log {log} "
         "--configs {params.configs} "
@@ -524,6 +523,20 @@ rule build_per_energy_calibration:
                 intier,
             )
         ),
+    output:
+        ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
+        results_file=temp(
+            get_pattern_pars_tmp_channel(
+                config, "pht", "energy_cal_objects", extension="pkl"
+            )
+        ),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "energy_cal")),
+    log:
+        get_pattern_log_channel(config, "par_pht_energy_cal", time),
+    group:
+        "par-pht"
+    resources:
+        runtime=300,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -551,20 +564,6 @@ rule build_per_energy_calibration:
             wildcards.timestamp, system="cal"
         )[wildcards.channel]["usability"],
         channel="{channel}",
-    output:
-        ecal_file=temp(get_pattern_pars_tmp_channel(config, "pht", "energy_cal")),
-        results_file=temp(
-            get_pattern_pars_tmp_channel(
-                config, "pht", "energy_cal_objects", extension="pkl"
-            )
-        ),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "energy_cal")),
-    log:
-        get_pattern_log_channel(config, "par_pht_energy_cal", time),
-    group:
-        "par-pht"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-hit-ecal") + "--log {log} "
         "--log-config {params.log_config} "
@@ -592,20 +591,6 @@ rule build_pht_energy_super_calibrations:
         ecal_file=rules.build_per_energy_calibration.output.ecal_file,
         eres_file=rules.build_per_energy_calibration.output.results_file,
         inplots=rules.build_per_energy_calibration.output.plot_file,
-    params:
-        datatype="cal",
-        channel="{channel}",
-        timestamp="{timestamp}",
-        dsp_table_name=lambda wildcards: get_table_name(
-            channelmap_textdb,
-            config,
-            "cal",
-            wildcards.timestamp,
-            wildcards.channel,
-            "dsp",
-        ),
-        configs=config_path(config),
-        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "partcal")),
         partcal_results=temp(
@@ -621,6 +606,20 @@ rule build_pht_energy_super_calibrations:
     resources:
         mem_swap=60,
         runtime=300,
+    params:
+        datatype="cal",
+        channel="{channel}",
+        timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
+        ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     shell:
         execenv_pyexe(config, "par-geds-pht-ecal-part") + "--log {log} "
         "--configs {params.configs} "
@@ -660,20 +659,6 @@ rule build_pht_aoe_calibrations:
         ecal_file=rules.build_pht_energy_super_calibrations.output.hit_pars,
         eres_file=rules.build_pht_energy_super_calibrations.output.partcal_results,
         inplots=rules.build_pht_energy_super_calibrations.output.plot_file,
-    params:
-        datatype="cal",
-        channel="{channel}",
-        timestamp="{timestamp}",
-        dsp_table_name=lambda wildcards: get_table_name(
-            channelmap_textdb,
-            config,
-            "cal",
-            wildcards.timestamp,
-            wildcards.channel,
-            "dsp",
-        ),
-        configs=config_path(config),
-        meta=metadata_path(config),
     output:
         hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "aoecal")),
         aoe_results=temp(
@@ -689,6 +674,20 @@ rule build_pht_aoe_calibrations:
     resources:
         mem_swap=60,
         runtime=300,
+    params:
+        datatype="cal",
+        channel="{channel}",
+        timestamp="{timestamp}",
+        dsp_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "dsp",
+        ),
+        configs=config_path(config),
+        meta=metadata_path(config),
     shell:
         execenv_pyexe(config, "par-geds-pht-aoe") + "--log {log} "
         "--configs {params.configs} "
@@ -727,6 +726,19 @@ rule build_pht_lq_calibration:
         ecal_file=rules.build_pht_aoe_calibrations.output.hit_pars,
         eres_file=rules.build_pht_aoe_calibrations.output.aoe_results,
         inplots=rules.build_pht_aoe_calibrations.output.plot_file,
+    output:
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
+        lq_results=temp(
+            get_pattern_pars_tmp_channel(config, "pht", "objects", extension="pkl")
+        ),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht")),
+    log:
+        get_pattern_log_channel(config, "par_pht_lq_cal", time),
+    group:
+        "par-pht"
+    resources:
+        mem_swap=60,
+        runtime=300,
     params:
         datatype="cal",
         channel="{channel}",
@@ -741,19 +753,6 @@ rule build_pht_lq_calibration:
         ),
         configs=config_path(config),
         meta=metadata_path(config),
-    output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht")),
-        lq_results=temp(
-            get_pattern_pars_tmp_channel(config, "pht", "objects", extension="pkl")
-        ),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht")),
-    log:
-        get_pattern_log_channel(config, "par_pht_lq_cal", time),
-    group:
-        "par-pht"
-    resources:
-        mem_swap=60,
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-lq") + "--log {log} "
         "--configs {params.configs} "

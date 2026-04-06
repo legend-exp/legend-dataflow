@@ -17,17 +17,17 @@ rule build_skm:
         get_pattern_tier(config, "pet_concat", check_in_cycle=False),
     output:
         get_pattern_tier(config, "skm", check_in_cycle=check_in_cycle),
-    params:
-        timestamp="20230410T000000Z",
-        datatype="phy",
-        ro_input=lambda _, input: ro(input),
-        configs=ro(config_path(config)),
     log:
         get_pattern_log_concat(config, "tier_skm", time),
     group:
         "tier-skm"
     resources:
         runtime=300,
+    params:
+        timestamp="20230410T000000Z",
+        datatype="phy",
+        ro_input=lambda _, input: ro(input),
+        configs=ro(config_path(config)),
     shell:
         execenv_pyexe(config, "build-tier-skm") + "--configs {params.configs} "
         "--timestamp {params.timestamp} "

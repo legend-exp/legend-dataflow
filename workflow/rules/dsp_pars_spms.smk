@@ -14,6 +14,14 @@ rule build_pars_dsp_tau_spms:
         pardb=lambda wildcards: get_input_par_file(
             config, wildcards=wildcards, tier="dsp", allow_none=True
         ),
+    output:
+        patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}"),
+    log:
+        patt.get_pattern_log(config, "pars_spms", time),
+    wildcard_constraints:
+        datatype=r"\b(?!cal\b|xtc\b)\w+\b",
+    group:
+        "par-dsp"
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -42,14 +50,6 @@ rule build_pars_dsp_tau_spms:
             )
         ],
         configs=ro(config_path(config)),
-    wildcard_constraints:
-        datatype=r"\b(?!cal\b|xtc\b)\w+\b",
-    output:
-        patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}"),
-    log:
-        patt.get_pattern_log(config, "pars_spms", time),
-    group:
-        "par-dsp"
     shell:
         f'{execenv_pyexe(config, "par-spms-dsp-trg-thr-multi")} '
         "--config-path {params.configs} "

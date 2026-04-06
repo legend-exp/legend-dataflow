@@ -19,25 +19,25 @@ timestamp = datetime.strftime(datetime.utcnow(), "%Y%m%dT%H%M%SZ")
 rule autogen_output:
     """This is the main rule for running the data production
 
-    The Snakemake target format is specified as follows:
+The Snakemake target format is specified as follows:
 
-        [all|sel]-{experiment}-{period}-{run}-{dataype}-{timestamp}-{tier}.gen
+    [all|sel]-{experiment}-{period}-{run}-{dataype}-{timestamp}-{tier}.gen
 
-    where `experiment`, `period`, `run`, `datatype` can also be wildcards.
-    `tier` must instead be fixed to a value. Specifying `sel` instead of `all`
-    will only process data selected (valid) for analysis.
+where `experiment`, `period`, `run`, `datatype` can also be wildcards.
+`tier` must instead be fixed to a value. Specifying `sel` instead of `all`
+will only process data selected (valid) for analysis.
 
-    Examples:
+Examples:
 
-    > snakemake sel-l200-*-*-phy-dsp.gen
-    > snakemake all-l200-p03-r001-phy-skm.gen
+> snakemake sel-l200-*-*-phy-dsp.gen
+> snakemake all-l200-p03-r001-phy-skm.gen
 
-    At the end of the processing it will:
+At the end of the processing it will:
 
-    - collect all warnings and errors in log files into a final summary file
-    - run the `pygama.flow.FileDB` generation for output files
-    - generate lists of valid keys
-    """
+- collect all warnings and errors in log files into a final summary file
+- run the `pygama.flow.FileDB` generation for output files
+- generate lists of valid keys
+"""
     input:
         filelist=Path(filelist_path(config)) / "{label}-{tier}.filelist",
     output:
@@ -46,14 +46,14 @@ rule autogen_output:
         / f"summary-{{label}}-{{tier}}-{timestamp}.log",
         warning_log=Path(log_path(config))
         / f"warning-{{label}}-{{tier}}-{timestamp}.log",
+    log:
+        Path(tmp_log_path(config)) / time / "{label}-{tier}-complete_run.log",
+    threads: min(workflow.cores, 64)
     params:
         valid_keys_path=Path(pars_path(config)) / "valid_keys",
         filedb_path=Path(pars_path(config)) / "filedb",
         ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
         setup=lambda wildcards: config,
         basedir=workflow.basedir,
-    log:
-        Path(tmp_log_path(config)) / time / "{label}-{tier}-complete_run.log",
-    threads: min(workflow.cores, 64)
     script:
         "../src/legenddataflow/scripts/flow/complete_run.py"

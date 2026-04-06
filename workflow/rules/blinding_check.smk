@@ -23,13 +23,23 @@ from pathlib import Path
 
 rule build_blinding_check:
     """
-    Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
-    if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
-    """
+Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
+if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
+
+"""
     input:
         files=Path(filelist_path(config))
         / "all-{experiment}-{period}-{run}-cal-raw.filelist",
         par_file=get_blinding_curve_file,
+    output:
+        check_file=temp(get_pattern_pars_tmp_channel(config, "raw")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw")),
+    log:
+        get_pattern_log_channel(config, "pars_hit_blind_check", time),
+    group:
+        "par-hit"
+    resources:
+        runtime=300,
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -44,15 +54,6 @@ rule build_blinding_check:
             wildcards.channel,
             "raw",
         ),
-    output:
-        check_file=temp(get_pattern_pars_tmp_channel(config, "raw")),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw")),
-    log:
-        get_pattern_log_channel(config, "pars_hit_blind_check", time),
-    group:
-        "par-hit"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-raw-blindcheck") + "--log {log} "
         "--datatype {params.datatype} "

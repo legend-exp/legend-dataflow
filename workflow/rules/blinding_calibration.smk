@@ -17,12 +17,22 @@ from legenddataflowscripts.workflow import execenv_pyexe
 
 rule build_blinding_calibration:
     """
-    Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
-    if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
-    """
+Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
+if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
+
+"""
     input:
         files=Path(filelist_path(config))
         / "all-{experiment}-{period}-{run}-cal-raw.filelist",
+    output:
+        par_file=temp(get_pattern_pars_tmp_channel(config, "raw_blindcal")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw_blindcal")),
+    log:
+        get_pattern_log_channel(config, "pars_hit_blind_cal", time),
+    group:
+        "par-raw-blinding"
+    resources:
+        runtime=300,
     params:
         timestamp="{timestamp}",
         datatype="cal",
@@ -37,15 +47,6 @@ rule build_blinding_calibration:
             wildcards.channel,
             "raw",
         ),
-    output:
-        par_file=temp(get_pattern_pars_tmp_channel(config, "raw_blindcal")),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "raw_blindcal")),
-    log:
-        get_pattern_log_channel(config, "pars_hit_blind_cal", time),
-    group:
-        "par-raw-blinding"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-raw-blindcal") + "--log {log} "
         "--datatype {params.datatype} "
