@@ -127,14 +127,8 @@ for evt_tier in ("evt", "pet"):
 
     rule:
         input:
-            lambda wildcards: sorted(
-                get_filelist_full_wildcards(
-                    wildcards,
-                    config,
-                    get_pattern_tier(config, "raw", check_in_cycle=False),
-                    evt_tier,
-                    ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
-                )
+            os.path.join(
+                filelist_path(config), "all-{experiment}-{period}-{run}-phy-"+f"{evt_tier}.filelist"
             ),
         output:
             get_pattern_tier(

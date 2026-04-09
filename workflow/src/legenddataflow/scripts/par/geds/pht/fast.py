@@ -19,6 +19,9 @@ from pygama.pargen.utils import load_data
 from legenddataflow.methods import ChannelProcKey, ProcessingFileKey, run_splitter
 
 from .ecal_part import calibrate_partition
+from .util import (
+    save_dict_to_files,
+)
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
 try:
@@ -249,23 +252,14 @@ def par_geds_pht_fast() -> None:
     msg = f"Total calibration took {time.time() - start:.2f} seconds"
     log.info(msg)
 
-    if args.plot_file:
-        for plot_file in args.plot_file:
-            Path(plot_file).parent.mkdir(parents=True, exist_ok=True)
-            with Path(plot_file).open("wb") as w:
-                pkl.dump(plot_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
+    save_dict_to_files(args.plot_file, plot_dicts)
 
-    for out in sorted(args.hit_pars):
-        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
-        final_hit_dict = {
-            "pars": {"operations": cal_dict[fk.timestamp]},
-            "results": results_dicts[fk.timestamp],
-        }
-        Path(out).parent.mkdir(parents=True, exist_ok=True)
-        Props.write_to(out, final_hit_dict)
+    save_dict_to_files(
+        sorted(args.hit_pars),
+        {
+            tstamp: {"pars": cal_dicts[tstamp], "results": results_dicts[tstamp]}
+            for tstamp in cal_dicts
+        },
+    )
 
-    for out in args.fit_results:
-        fk = ChannelProcKey.get_filekey_from_pattern(Path(out).name)
-        Path(out).parent.mkdir(parents=True, exist_ok=True)
-        with Path(out).open("wb") as w:
-            pkl.dump(object_dicts[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
+    save_dict_to_files(args.fit_results, object_dicts)
