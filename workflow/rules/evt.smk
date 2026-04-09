@@ -37,13 +37,6 @@ rule build_evt:
         ),
     output:
         get_pattern_tier(config, "evt", check_in_cycle=check_in_cycle),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-        tier="evt",
-        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-        configs=ro(config_path(config)),
-        meta=ro(metadata_path(config)),
     log:
         get_pattern_log(config, "tier_evt", time),
     group:
@@ -51,6 +44,13 @@ rule build_evt:
     resources:
         runtime=300,
         mem_swap=50,
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        tier="evt",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     shell:
         execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
         "--metadata {params.meta} "
@@ -93,13 +93,6 @@ rule build_pet:
         ),
     output:
         get_pattern_tier(config, "pet", check_in_cycle=check_in_cycle),
-    params:
-        timestamp="{timestamp}",
-        datatype="{datatype}",
-        tier="pet",
-        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
-        configs=ro(config_path(config)),
-        meta=ro(metadata_path(config)),
     log:
         get_pattern_log(config, "tier_pet", time),
     group:
@@ -107,6 +100,13 @@ rule build_pet:
     resources:
         runtime=300,
         mem_swap=50,
+    params:
+        timestamp="{timestamp}",
+        datatype="{datatype}",
+        tier="pet",
+        ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
+        configs=ro(config_path(config)),
+        meta=ro(metadata_path(config)),
     shell:
         execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
         "--metadata {params.meta} "
@@ -126,8 +126,6 @@ rule build_pet:
 for evt_tier in ("evt", "pet"):
 
     rule:
-        wildcard_constraints:
-            timestamp=r"(?!\d{8}T\d{6}Z)",
         input:
             lambda wildcards: sorted(
                 get_filelist_full_wildcards(
@@ -142,14 +140,16 @@ for evt_tier in ("evt", "pet"):
             get_pattern_tier(
                 config, f"{evt_tier}_concat", check_in_cycle=check_in_cycle
             ),
+        log:
+            get_pattern_log_concat(config, f"tier_{evt_tier}_concat", time),
+        wildcard_constraints:
+            timestamp=r"(?!\d{8}T\d{6}Z)",
+        group:
+            "tier-evt"
         params:
             timestamp="all",
             datatype="{datatype}",
             ro_input=lambda _, input: utils.as_ro(config, input),
-        log:
-            get_pattern_log_concat(config, f"tier_{evt_tier}_concat", time),
-        group:
-            "tier-evt"
         shell:
             execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
             "--output {output} "

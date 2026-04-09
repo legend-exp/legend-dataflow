@@ -37,6 +37,12 @@ rule build_pht:
         ),
     output:
         tier_file=get_pattern_tier(config, "pht", check_in_cycle=check_in_cycle),
+    log:
+        get_pattern_log(config, "tier_pht", time),
+    group:
+        "tier-pht"
+    resources:
+        runtime=300,
     params:
         timestamp="{timestamp}",
         datatype="{datatype}",
@@ -49,12 +55,6 @@ rule build_pht:
             channelmap_textdb, wildcards.timestamp, wildcards.datatype, "hit"
         ),
         configs=ro(config_path(config)),
-    log:
-        get_pattern_log(config, "tier_pht", time),
-    group:
-        "tier-pht"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "build-tier-hit") + "--configs {params.configs} "
         "--table-map '{params.table_map}' "

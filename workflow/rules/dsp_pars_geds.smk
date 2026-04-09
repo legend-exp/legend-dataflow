@@ -31,6 +31,15 @@ rule build_pars_dsp_pz_geds:
             / "all-{experiment}-{period}-{run}-pzc-raw.filelist"
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
+    output:
+        decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
+    log:
+        get_pattern_log_channel(config, "par_dsp_decay_constant", time),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -63,15 +72,6 @@ rule build_pars_dsp_pz_geds:
             "raw",
         ),
         configs=config_path(config),
-    output:
-        decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
-    log:
-        get_pattern_log_channel(config, "par_dsp_decay_constant", time),
-    group:
-        "par-dsp"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-pz") + "--log {log} "
         "--log-config {params.log_config} "
@@ -93,6 +93,17 @@ rule build_pars_evtsel_geds:
         pulser_file=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
         database=rules.build_pars_dsp_pz_geds.output.decay_const,
         raw_cal_curve=get_blinding_curve_file,
+    output:
+        peak_file=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5")
+        ),
+    log:
+        get_pattern_log_channel(config, "par_dsp_event_selection", time),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
+        mem_swap=70,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -126,17 +137,6 @@ rule build_pars_evtsel_geds:
         ),
         configs=config_path(config),
         channel="{channel}",
-    output:
-        peak_file=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "peaks", extension="lh5")
-        ),
-    log:
-        get_pattern_log_channel(config, "par_dsp_event_selection", time),
-    group:
-        "par-dsp"
-    resources:
-        runtime=300,
-        mem_swap=70,
     shell:
         execenv_pyexe(config, "par-geds-dsp-evtsel") + "--log {log} "
         "--log-config {params.log_config} "
@@ -159,6 +159,17 @@ rule build_pars_dsp_nopt_geds:
         ),
         database=rules.build_pars_dsp_pz_geds.output.decay_const,
         inplots=rules.build_pars_dsp_pz_geds.output.plots,
+    output:
+        dsp_pars_nopt=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
+        ),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
+    log:
+        get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -191,17 +202,6 @@ rule build_pars_dsp_nopt_geds:
             "raw",
         ),
         configs=config_path(config),
-    output:
-        dsp_pars_nopt=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
-        ),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
-    log:
-        get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
-    group:
-        "par-dsp"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-nopt") + "--database {input.database} "
         "--log {log} "
@@ -224,6 +224,16 @@ rule build_pars_dsp_dplms_geds:
         peak_file=rules.build_pars_evtsel_geds.output.peak_file,
         database=rules.build_pars_dsp_nopt_geds.output.dsp_pars_nopt,
         inplots=rules.build_pars_dsp_nopt_geds.output.plots,
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
+        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
+    log:
+        get_pattern_log_channel(config, "pars_dsp_dplms", time),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -257,16 +267,6 @@ rule build_pars_dsp_dplms_geds:
         ),
         configs=config_path(config),
         channel="{channel}",
-    output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
-        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
-    log:
-        get_pattern_log_channel(config, "pars_dsp_dplms", time),
-    group:
-        "par-dsp"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-dplms") + "--peak-file {input.peak_file} "
         "--fft-raw-filelist {input.fft_files} "
@@ -289,6 +289,18 @@ rule build_pars_dsp_eopt_geds:
         peak_file=rules.build_pars_evtsel_geds.output.peak_file,
         decay_const=rules.build_pars_dsp_dplms_geds.output.dsp_pars,
         inplots=rules.build_pars_dsp_dplms_geds.output.plots,
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
+        qbb_grid=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl")
+        ),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp")),
+    log:
+        get_pattern_log_channel(config, "pars_dsp_eopt", time),
+    group:
+        "par-dsp"
+    resources:
+        runtime=300,
     params:
         config_file=lambda wildcards: get_config_files(
             dataflow_configs_texdb,
@@ -320,18 +332,6 @@ rule build_pars_dsp_eopt_geds:
             wildcards.channel,
             "raw",
         ),
-    output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
-        qbb_grid=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl")
-        ),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp")),
-    log:
-        get_pattern_log_channel(config, "pars_dsp_eopt", time),
-    group:
-        "par-dsp"
-    resources:
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-eopt") + "--log {log} "
         "--log-config {params.log_config} "
@@ -379,10 +379,6 @@ rule build_svm_dsp_geds:
             )
             else []
         ),
-    params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        configs=config_path(config),
     output:
         dsp_pars=get_pattern_pars(config, "dsp", "svm", extension="pkl"),
     log:
@@ -391,6 +387,10 @@ rule build_svm_dsp_geds:
         "par-dsp-svm"
     resources:
         runtime=300,
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        configs=config_path(config),
     shell:
         execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "

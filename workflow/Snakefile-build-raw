@@ -72,7 +72,8 @@ onstart:
     # Make sure some packages are initialized before we send jobs to avoid race conditions
     if not workflow.touch:
         shell(
-            execenv.execenv_pyexe(config, "python") + " -c 'import daq2lh5, matplotlib'"
+            execenv.execenv_pyexe(config, "python")
+            + " -c 'import daq2lh5, matplotlib'"
         )
 
     raw_par_cat_file = Path(paths.pars_path(config)) / "raw" / "validity.yaml"
@@ -107,11 +108,11 @@ rule gen_filelist:
 
 rule sort_data:
     """
-    Move DAQ data from sandbox to organized folder.
+Move DAQ data from sandbox to organized folder.
 
-    This rules moves the DAQ data from the unsorted sandbox directory to the
-    correct location in the `tier_raw` folder.
-    """
+This rules moves the DAQ data from the unsorted sandbox directory to the
+correct location in the `tier_raw` folder.
+"""
     input:
         patt.get_pattern_tier_daq_unsorted(config, extension="{ext}"),
     output:
@@ -122,9 +123,9 @@ rule sort_data:
 
 rule compress_data:
     """
-    Compress raw data. It uses pbzip2 to compress the data in parallel.
-    Currently only for ORCA data.
-    """
+Compress raw data. It uses pbzip2 to compress the data in parallel.
+Currently only for ORCA data.
+"""
     input:
         patt.get_pattern_tier_daq(config, extension="orca"),
     output:

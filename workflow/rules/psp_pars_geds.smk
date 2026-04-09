@@ -16,7 +16,6 @@ from legenddataflow.methods.patterns import (
 from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
-
 psp_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
@@ -41,15 +40,6 @@ for key, dataset in part.datasets.items():
                 dsp_plots=part.get_plt_files(
                     dsp_par_catalog, partition, key, tier="dsp"
                 ),
-            wildcard_constraints:
-                channel=part.get_wildcard_constraints(partition, key),
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=part.get_timestamp(
-                    psp_par_catalog, partition, key, tier="psp"
-                ),
-                configs=ro(config_path(config)),
             output:
                 psp_pars=temp(
                     part.get_par_files(
@@ -87,10 +77,19 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_psp",
                 ),
+            wildcard_constraints:
+                channel=part.get_wildcard_constraints(partition, key),
             group:
                 "par-psp"
             resources:
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=part.get_timestamp(
+                    psp_par_catalog, partition, key, tier="psp"
+                ),
+                configs=ro(config_path(config)),
             shell:
                 execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
                 "--configs {params.configs} "
@@ -119,11 +118,6 @@ rule build_par_psp_fallback:
         dsp_pars=get_pattern_pars_tmp_channel(config, "dsp", "eopt"),
         dsp_objs=get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl"),
         dsp_plots=get_pattern_plts_tmp_channel(config, "dsp"),
-    params:
-        datatype="cal",
-        channel="{channel}",
-        timestamp="{timestamp}",
-        configs=ro(config_path(config)),
     output:
         psp_pars=temp(get_pattern_pars_tmp_channel(config, "psp", "eopt")),
         psp_objs=temp(
@@ -136,6 +130,11 @@ rule build_par_psp_fallback:
         "par-psp"
     resources:
         runtime=300,
+    params:
+        datatype="cal",
+        channel="{channel}",
+        timestamp="{timestamp}",
+        configs=ro(config_path(config)),
     shell:
         execenv_pyexe(config, "par-geds-psp-average") + "--log {log} "
         "--configs {params.configs} "
@@ -172,16 +171,16 @@ rule build_svm_psp:
         ).replace("hyperpars.yaml", "train.lh5"),
     output:
         dsp_pars=get_pattern_pars(config, "psp", "svm", extension="pkl"),
-    params:
-        timestamp="{timestamp}",
-        datatype="cal",
-        configs=ro(config_path(config)),
     log:
         str(get_pattern_log(config, "pars_psp_svm", time)).replace("{datatype}", "cal"),
     group:
         "par-dsp-svm"
     resources:
         runtime=300,
+    params:
+        timestamp="{timestamp}",
+        datatype="cal",
+        configs=ro(config_path(config)),
     shell:
         execenv_pyexe(config, "par-geds-dsp-svm-build") + "--log {log} "
         "--train-data {input.train_data} "

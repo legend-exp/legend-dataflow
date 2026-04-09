@@ -29,25 +29,6 @@ for key, dataset in part.datasets.items():
         rule:
             input:
                 phy_files=part.get_filelists(partition, key, intier, datatype="phy"),
-            wildcard_constraints:
-                channel=part.get_wildcard_constraints(partition, key),
-            params:
-                datatype="cal",
-                channel="{channel}" if key == "default" else key,
-                timestamp=part.get_timestamp(
-                    pht_par_catalog, partition, key, tier="pht"
-                ),
-                configs=ro(config_path(config)),
-                dsp_table_name=lambda wildcards: get_table_name(
-                    channelmap_textdb,
-                    config,
-                    "cal",
-                    wildcards.timestamp,
-                    wildcards.channel,
-                    intier,
-                ),
-                pulser_name="PULS01/dsp",
-                baseline_name="BSLN01/dsp",
             output:
                 hit_pars=[
                     temp(file)
@@ -78,11 +59,30 @@ for key, dataset in part.datasets.items():
                     time,
                     name="par_pht_qc_phy",
                 ),
+            wildcard_constraints:
+                channel=part.get_wildcard_constraints(partition, key),
             group:
                 "par-pht"
             resources:
                 mem_swap=len(part.get_filelists(partition, key, intier)) * 20,
                 runtime=300,
+            params:
+                datatype="cal",
+                channel="{channel}" if key == "default" else key,
+                timestamp=part.get_timestamp(
+                    pht_par_catalog, partition, key, tier="pht"
+                ),
+                configs=ro(config_path(config)),
+                dsp_table_name=lambda wildcards: get_table_name(
+                    channelmap_textdb,
+                    config,
+                    "cal",
+                    wildcards.timestamp,
+                    wildcards.channel,
+                    intier,
+                ),
+                pulser_name="PULS01/dsp",
+                baseline_name="BSLN01/dsp",
             shell:
                 execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
                 "--datatype {params.datatype} "
@@ -111,6 +111,16 @@ rule build_pht_qc_phy:
             Path(filelist_path(config))
             / f"all-{{experiment}}-{{period}}-{{run}}-phy-{intier}.filelist",
         ),
+    output:
+        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qcphy")),
+        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qcphy")),
+    log:
+        get_pattern_log_channel(config, "pars_pht_qc_phy", time),
+    group:
+        "par-pht"
+    resources:
+        mem_swap=60,
+        runtime=300,
     params:
         datatype="cal",
         channel="{channel}",
@@ -126,16 +136,6 @@ rule build_pht_qc_phy:
         ),
         pulser_name="PULS01/dsp",
         baseline_name="BSLN01/dsp",
-    output:
-        hit_pars=temp(get_pattern_pars_tmp_channel(config, "pht", "qcphy")),
-        plot_file=temp(get_pattern_plts_tmp_channel(config, "pht", "qcphy")),
-    log:
-        get_pattern_log_channel(config, "pars_pht_qc_phy", time),
-    group:
-        "par-pht"
-    resources:
-        mem_swap=60,
-        runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-pht-qc-phy") + "--log {log} "
         "--datatype {params.datatype} "
