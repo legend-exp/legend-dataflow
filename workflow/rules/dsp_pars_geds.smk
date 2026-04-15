@@ -2,6 +2,8 @@
 Snakemake rules for building dsp pars for HPGes, before running build_dsp()
 - extraction of pole zero constant(s) for each channel from cal data
 - extraction of energy filter parameters and charge trapping correction for each channel from cal data
+
+Outputs should be dsp_pars, dsp_plots, dsp_pars_lh5 and dsp_objects, to be fed into merge rules
 """
 
 from legenddataflow.methods import ParsKeyResolve
@@ -19,7 +21,6 @@ from legenddataflow.methods.paths import (
 )
 from legenddataflowscripts.workflow import execenv_pyexe
 
-
 rule build_pars_dsp_pz_geds:
     input:
         files=(
@@ -32,8 +33,8 @@ rule build_pars_dsp_pz_geds:
         ),
         pulser=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
     output:
-        decay_const=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "decay_constant")),
+        dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
     log:
         get_pattern_log_channel(config, "par_dsp_decay_constant", time),
     group:
@@ -78,8 +79,8 @@ rule build_pars_dsp_pz_geds:
         "--config-file {params.config_file} "
         "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
-        "--plot-path {output.plots} "
-        "--output-file {output.decay_const} "
+        "--plot-path {output.dsp_plots} "
+        "--output-file {output.dsp_pars} "
         "--pulser-file {input.pulser} "
         "--raw-files {input.files} "
         "--pz-files {input.pz_files}"
@@ -91,7 +92,7 @@ rule build_pars_evtsel_geds:
             filelist_path(config), "all-{experiment}-{period}-{run}-cal-raw.filelist"
         ),
         pulser_file=get_pattern_pars_tmp_channel(config, "tcm", "pulser_ids"),
-        database=rules.build_pars_dsp_pz_geds.output.decay_const,
+        database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
         raw_cal_curve=get_blinding_curve_file,
     output:
         peak_file=temp(
@@ -157,13 +158,13 @@ rule build_pars_dsp_nopt_geds:
         files=os.path.join(
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
-        database=rules.build_pars_dsp_pz_geds.output.decay_const,
-        inplots=rules.build_pars_dsp_pz_geds.output.plots,
+        database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
+        inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
         dsp_pars_nopt=temp(
             get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
         ),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
+        dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
     log:
         get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
     group:
@@ -210,7 +211,7 @@ rule build_pars_dsp_nopt_geds:
         "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--inplots {input.inplots} "
-        "--plot-path {output.plots} "
+        "--plot-path {output.dsp_plots} "
         "--dsp-pars {output.dsp_pars_nopt} "
         "--raw-filelist {input.files}"
 
@@ -222,12 +223,12 @@ rule build_pars_dsp_dplms_geds:
             filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
         ),
         peak_file=rules.build_pars_evtsel_geds.output.peak_file,
-        database=rules.build_pars_dsp_nopt_geds.output.dsp_pars_nopt,
-        inplots=rules.build_pars_dsp_nopt_geds.output.plots,
+        dsp_pars=rules.build_pars_dsp_pz_geds.output.dsp_pars,
+        inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
-        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
+        dsp_pars_lh5=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms", extension="lh5")),
+        dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
     log:
         get_pattern_log_channel(config, "pars_dsp_dplms", time),
     group:
@@ -270,7 +271,7 @@ rule build_pars_dsp_dplms_geds:
     shell:
         execenv_pyexe(config, "par-geds-dsp-dplms") + "--peak-file {input.peak_file} "
         "--fft-raw-filelist {input.fft_files} "
-        "--database {input.database} "
+        "--database {input.dsp_pars} "
         "--inplots {input.inplots} "
         "--log {log} "
         "--log-config {params.log_config} "
@@ -279,22 +280,22 @@ rule build_pars_dsp_dplms_geds:
         "--processing-chain {params.processing_chain} "
         "--raw-table-name {params.raw_table_name} "
         "--dsp-pars {output.dsp_pars} "
-        "--lh5-path {output.lh5_path} "
-        "--plot-path {output.plots} "
+        "--lh5-path {output.dsp_pars_lh5} "
+        "--plot-path {output.dsp_plots} "
 
 
 # This rule builds the optimal energy filter parameters for the dsp using calibration dsp files
 rule build_pars_dsp_eopt_geds:
     input:
         peak_file=rules.build_pars_evtsel_geds.output.peak_file,
-        decay_const=rules.build_pars_dsp_dplms_geds.output.dsp_pars,
-        inplots=rules.build_pars_dsp_dplms_geds.output.plots,
+        dsp_pars=rules.build_pars_dsp_pz_geds.output.dsp_pars,
+        inplots=rules.build_pars_dsp_dplms_geds.output.dsp_plots,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
-        qbb_grid=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "objects", extension="pkl")
+        dsp_objects=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "eopt_objects", extension="pkl")
         ),
-        plots=temp(get_pattern_plts_tmp_channel(config, "dsp")),
+        dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "eopt")),
     log:
         get_pattern_log_channel(config, "pars_dsp_eopt", time),
     group:
@@ -340,9 +341,9 @@ rule build_pars_dsp_eopt_geds:
         "--raw-table-name {params.raw_table_name} "
         "--peak-file {input.peak_file} "
         "--inplots {input.inplots} "
-        "--decay-const {input.decay_const} "
-        "--plot-path {output.plots} "
-        "--qbb-grid-path {output.qbb_grid} "
+        "--decay-const {input.dsp_pars} "
+        "--plot-path {output.dsp_plots} "
+        "--qbb-grid-path {output.dsp_objects} "
         "--final-dsp-pars {output.dsp_pars}"
 
 
@@ -400,10 +401,9 @@ rule build_svm_dsp_geds:
 
 rule build_pars_dsp_svm_geds:
     input:
-        dsp_pars=rules.build_pars_dsp_eopt_geds.output.dsp_pars,
-        svm_file=rules.build_svm_dsp_geds.output.dsp_pars,
+        svm_file=rules.build_svm_dsp_geds.output.dsp_pars
     output:
-        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp")),
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "svm")),
     log:
         get_pattern_log_channel(config, "pars_dsp_svm", time),
     group:
@@ -415,3 +415,10 @@ rule build_pars_dsp_svm_geds:
         "--input-file {input.dsp_pars} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_file}"
+
+build_in_channel_merge_rules([
+    build_pars_dsp_eopt_geds, 
+    build_pars_dsp_nopt_geds,
+    build_pars_dsp_svm_geds,
+    build_pars_dsp_dplms_geds,
+], "dsp")

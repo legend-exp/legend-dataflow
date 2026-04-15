@@ -16,6 +16,10 @@ from legenddataflow.methods.patterns import (
 from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
+# merge just needed rules here, eopt, nopt
+
+
+
 psp_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
@@ -111,6 +115,74 @@ for key, dataset in part.datasets.items():
             psp_rules[key] = [list(workflow.rules)[-1]]
 
 
+        # This rule builds the dplms energy filter for the dsp using fft and cal files
+        rule build_pars_psp_dplms_geds_fallback:
+            input:
+                fft_files=os.path.join(
+                    filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+                ),
+                peak_file=rules.build_pars_evtsel_geds.output.peak_file,
+                database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
+                inplots=rules.build_pars_dsp_pz_geds.output.plots,
+            output:
+                dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
+                lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
+                plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
+            log:
+                get_pattern_log_channel(config, "pars_psp_dplms", time),
+            group:
+                "par-psp"
+            resources:
+                runtime=300,
+            params:
+                config_file=lambda wildcards: get_config_files(
+                    dataflow_configs_texdb,
+                    wildcards.timestamp,
+                    "cal",
+                    wildcards.channel,
+                    "pars_psp_dplms",
+                    "dplms_pars",
+                ),
+                processing_chain=lambda wildcards: get_config_files(
+                    dataflow_configs_texdb,
+                    wildcards.timestamp,
+                    "cal",
+                    wildcards.channel,
+                    "pars_psp_dplms",
+                    "proc_chain",
+                ),
+                log_config=lambda wildcards: get_log_config(
+                    dataflow_configs_texdb,
+                    wildcards.timestamp,
+                    "cal",
+                    "pars_psp_dplms",
+                ),
+                raw_table_name=lambda wildcards: get_table_name(
+                    channelmap_textdb,
+                    config,
+                    "cal",
+                    wildcards.timestamp,
+                    wildcards.channel,
+                    "raw",
+                ),
+                configs=config_path(config),
+                channel="{channel}",
+            shell:
+                execenv_pyexe(config, "par-geds-psp-dplms") + "--peak-file {input.peak_file} "
+                "--fft-raw-filelist {input.fft_files} "
+                "--database {input.database} "
+                "--inplots {input.inplots} "
+                "--log {log} "
+                "--log-config {params.log_config} "
+                "--config-file {params.config_file} "
+                "--channel {params.channel} "
+                "--processing-chain {params.processing_chain} "
+                "--raw-table-name {params.raw_table_name} "
+                "--dsp-pars {output.dsp_pars} "
+                "--lh5-path {output.lh5_path} "
+                "--plot-path {output.plots} "
+
+
 # Merged energy and a/e supercalibrations to reduce number of rules as they have same inputs/outputs
 # This rule builds the a/e calibration using the calibration dsp files for the whole partition
 rule build_par_psp_fallback:
@@ -157,6 +229,74 @@ for key, items in ordered.items():
     rule_order_list += [item.name for item in items]
 rule_order_list.append(fallback_psp_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
+
+
+# This rule builds the dplms energy filter for the dsp using fft and cal files
+rule build_pars_psp_dplms_geds_fallback:
+    input:
+        fft_files=os.path.join(
+            filelist_path(config), "all-{experiment}-{period}-{run}-fft-raw.filelist"
+        ),
+        peak_file=rules.build_pars_evtsel_geds.output.peak_file,
+        database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
+        inplots=rules.build_pars_dsp_pz_geds.output.plots,
+    output:
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
+        lh5_path=temp(get_pattern_pars_tmp_channel(config, "dsp", extension="lh5")),
+        plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
+    log:
+        get_pattern_log_channel(config, "pars_psp_dplms", time),
+    group:
+        "par-psp"
+    resources:
+        runtime=300,
+    params:
+        config_file=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_psp_dplms",
+            "dplms_pars",
+        ),
+        processing_chain=lambda wildcards: get_config_files(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            wildcards.channel,
+            "pars_psp_dplms",
+            "proc_chain",
+        ),
+        log_config=lambda wildcards: get_log_config(
+            dataflow_configs_texdb,
+            wildcards.timestamp,
+            "cal",
+            "pars_psp_dplms",
+        ),
+        raw_table_name=lambda wildcards: get_table_name(
+            channelmap_textdb,
+            config,
+            "cal",
+            wildcards.timestamp,
+            wildcards.channel,
+            "raw",
+        ),
+        configs=config_path(config),
+        channel="{channel}",
+    shell:
+        execenv_pyexe(config, "par-geds-psp-dplms") + "--peak-file {input.peak_file} "
+        "--fft-raw-filelist {input.fft_files} "
+        "--database {input.database} "
+        "--inplots {input.inplots} "
+        "--log {log} "
+        "--log-config {params.log_config} "
+        "--config-file {params.config_file} "
+        "--channel {params.channel} "
+        "--processing-chain {params.processing_chain} "
+        "--raw-table-name {params.raw_table_name} "
+        "--dsp-pars {output.dsp_pars} "
+        "--lh5-path {output.lh5_path} "
+        "--plot-path {output.plots} "
 
 
 rule build_svm_psp:
