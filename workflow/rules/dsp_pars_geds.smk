@@ -21,6 +21,7 @@ from legenddataflow.methods.paths import (
 )
 from legenddataflowscripts.workflow import execenv_pyexe
 
+
 rule build_pars_dsp_pz_geds:
     input:
         files=(
@@ -161,10 +162,10 @@ rule build_pars_dsp_nopt_geds:
         database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
         inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
-        dsp_pars=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
+        dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")),
+        dsp_plots=temp(
+            get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")
         ),
-        dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
     log:
         get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
     group:
@@ -227,7 +228,9 @@ rule build_pars_dsp_dplms_geds:
         inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms")),
-        dsp_pars_lh5=temp(get_pattern_pars_tmp_channel(config, "dsp", "dplms", extension="lh5")),
+        dsp_pars_lh5=temp(
+            get_pattern_pars_tmp_channel(config, "dsp", "dplms", extension="lh5")
+        ),
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
     log:
         get_pattern_log_channel(config, "pars_dsp_dplms", time),
@@ -293,7 +296,9 @@ rule build_pars_dsp_eopt_geds:
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
         dsp_objects=temp(
-            get_pattern_pars_tmp_channel(config, "dsp", "eopt_objects", extension="pkl")
+            get_pattern_pars_tmp_channel(
+                config, "dsp", "eopt_objects", extension="pkl"
+            )
         ),
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "eopt")),
     log:
@@ -401,7 +406,7 @@ rule build_svm_dsp_geds:
 
 rule build_pars_dsp_svm_geds:
     input:
-        svm_file=rules.build_svm_dsp_geds.output.dsp_pars
+        svm_file=rules.build_svm_dsp_geds.output.dsp_pars,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp", "svm")),
     log:
@@ -412,13 +417,17 @@ rule build_pars_dsp_svm_geds:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
-        #"--input-file {input.dsp_pars} "
+        # "--input-file {input.dsp_pars} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_file}"
 
-build_in_channel_merge_rules([
-    rules.build_pars_dsp_eopt_geds,
-    rules.build_pars_dsp_nopt_geds,
-    rules.build_pars_dsp_svm_geds,
-    rules.build_pars_dsp_dplms_geds,
-], "dsp")
+
+build_in_channel_merge_rules(
+    [
+        rules.build_pars_dsp_eopt_geds,
+        rules.build_pars_dsp_nopt_geds,
+        rules.build_pars_dsp_svm_geds,
+        rules.build_pars_dsp_dplms_geds,
+    ],
+    "dsp",
+)

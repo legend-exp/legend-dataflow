@@ -17,10 +17,14 @@ from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
 # merge just needed rules here, eopt, nopt
-build_in_channel_merge_rules([
-    rules.build_pars_dsp_eopt_geds,
-    rules.build_pars_dsp_nopt_geds,
-], "dsp", "psp_input")
+build_in_channel_merge_rules(
+    [
+        rules.build_pars_dsp_eopt_geds,
+        rules.build_pars_dsp_nopt_geds,
+    ],
+    "dsp",
+    "psp_input",
+)
 
 psp_rules = {}
 psp_dplms_rules = {}
@@ -32,6 +36,7 @@ for key, dataset in part.datasets.items():
         wildcard_constrain = part.get_wildcard_constraints(partition, key)
 
         if key == "default":
+
             def raw_table_name(wildcards):
                 return get_table_name(
                     channelmap_textdb,
@@ -51,6 +56,7 @@ for key, dataset in part.datasets.items():
                 key,
                 "raw",
             )
+
         rule:
             input:
                 dsp_pars=part.get_par_files(
@@ -69,7 +75,11 @@ for key, dataset in part.datasets.items():
                     extension="pkl",
                 ),
                 dsp_plots=part.get_plt_files(
-                    dsp_par_catalog, partition, key, tier="dsp", name = "psp_input",
+                    dsp_par_catalog,
+                    partition,
+                    key,
+                    tier="dsp",
+                    name="psp_input",
                 ),
             output:
                 psp_pars=temp(
@@ -93,11 +103,7 @@ for key, dataset in part.datasets.items():
                 ),
                 psp_plots=temp(
                     part.get_plt_files(
-                        psp_par_catalog,
-                        partition,
-                        key,
-                        tier="psp",
-                        name="eopt"
+                        psp_par_catalog, partition, key, tier="psp", name="eopt"
                     )
                 ),
             log:
@@ -141,6 +147,7 @@ for key, dataset in part.datasets.items():
             psp_rules[key] = [list(workflow.rules)[-1]]
 
         if key == "default":
+
             def config_file(wildcards):
                 return get_config_files(
                     dataflow_configs_texdb,
@@ -150,6 +157,7 @@ for key, dataset in part.datasets.items():
                     "pars_psp_dplms",
                     "dplms_pars",
                 )
+
             def processing_chain(wildcards):
                 return get_config_files(
                     dataflow_configs_texdb,
@@ -159,8 +167,10 @@ for key, dataset in part.datasets.items():
                     "pars_psp_dplms",
                     "proc_chain",
                 )
+
         else:
-            config_file=get_config_files(
+            config_file = (
+                get_config_files(
                     dataflow_configs_texdb,
                     tstamp,
                     "cal",
@@ -168,7 +178,8 @@ for key, dataset in part.datasets.items():
                     "pars_psp_dplms",
                     "dplms_pars",
                 ),
-            processing_chain=get_config_files(
+            )
+            processing_chain = get_config_files(
                 dataflow_configs_texdb,
                 tstamp,
                 "cal",
@@ -176,7 +187,6 @@ for key, dataset in part.datasets.items():
                 "pars_psp_dplms",
                 "proc_chain",
             )
-
 
         # This rule builds the dplms energy filter for the dsp using fft and cal files
         rule:
@@ -188,22 +198,18 @@ for key, dataset in part.datasets.items():
                     key,
                     tier="dsp",
                     name="peaks",
-                    extension="lh5"
+                    extension="lh5",
                 ),
                 database=part.get_par_files(
-                        psp_par_catalog,
-                        partition,
-                        key,
-                        tier="psp",
-                        name="eopt",
-                    ),
+                    psp_par_catalog,
+                    partition,
+                    key,
+                    tier="psp",
+                    name="eopt",
+                ),
                 inplots=part.get_plt_files(
-                        psp_par_catalog,
-                        partition,
-                        key,
-                        tier="psp",
-                        name = "eopt"
-                    ),
+                    psp_par_catalog, partition, key, tier="psp", name="eopt"
+                ),
             output:
                 psp_pars=temp(
                     part.get_par_files(
@@ -239,7 +245,7 @@ for key, dataset in part.datasets.items():
                     "psp",
                     time,
                     name="pars_psp_dplms",
-                )
+                ),
             wildcard_constraints:
                 channel=wildcard_constrain,
             group:
@@ -248,8 +254,8 @@ for key, dataset in part.datasets.items():
                 runtime=300,
             params:
                 config_file=config_file,
-                processing_chain= processing_chain,
-                log_config= get_log_config(
+                processing_chain=processing_chain,
+                log_config=get_log_config(
                     dataflow_configs_texdb,
                     tstamp,
                     "cal",
@@ -259,7 +265,8 @@ for key, dataset in part.datasets.items():
                 configs=config_path(config),
                 channel="{channel}" if key == "default" else key,
             shell:
-                execenv_pyexe(config, "par-geds-psp-dplms") + "--peak-files {input.peak_file} "
+                execenv_pyexe(config, "par-geds-psp-dplms")
+                + "--peak-files {input.peak_file} "
                 "--fft-raw-filelists {input.fft_files} "
                 "--database {input.database} "
                 "--inplots {input.inplots} "
@@ -286,7 +293,9 @@ for key, dataset in part.datasets.items():
 rule build_par_psp_fallback:
     input:
         dsp_pars=get_pattern_pars_tmp_channel(config, "dsp", "psp_input"),
-        dsp_objs=get_pattern_pars_tmp_channel(config, "dsp", "objects_psp_input", extension="pkl"),
+        dsp_objs=get_pattern_pars_tmp_channel(
+            config, "dsp", "objects_psp_input", extension="pkl"
+        ),
         dsp_plots=get_pattern_plts_tmp_channel(config, "dsp", "psp_input"),
     output:
         psp_pars=temp(get_pattern_pars_tmp_channel(config, "psp", "eopt")),
@@ -396,6 +405,7 @@ rule build_pars_psp_dplms_geds_fallback:
         "--lh5-path {output.lh5_path} "
         "--plot-path {output.plots} "
 
+
 fallback_psp_dplms_rule = list(workflow.rules)[-1]
 rule_order_list = []
 ordered = OrderedDict(psp_dplms_rules)
@@ -404,6 +414,7 @@ for key, items in ordered.items():
     rule_order_list += [item.name for item in items]
 rule_order_list.append(fallback_psp_dplms_rule.name)
 workflow._ruleorder.add(*rule_order_list)  # [::-1]
+
 
 rule build_svm_psp:
     input:

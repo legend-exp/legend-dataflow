@@ -2,10 +2,13 @@ import inspect
 
 from legenddataflow.methods import patterns
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
-from legenddataflow.scripts.flow.build_chanlist import get_plt_chanlist, get_par_chanlist
+from legenddataflow.scripts.flow.build_chanlist import (
+    get_plt_chanlist,
+    get_par_chanlist,
+)
+
 
 def build_in_channel_merge_rules(rules, tier, output_name=None):
-
 
     input_dsp_pars = []
     input_dsp_pars_lh5 = []
@@ -36,8 +39,7 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
         group:
             group_name
         shell:
-            execenv_pyexe(config, "merge-in-channels") + \
-            "--input {input} "
+            execenv_pyexe(config, "merge-in-channels") + "--input {input} "
             "--output {output} "
 
     set_last_rule_name(workflow, f"build_plts_inchan_{name}")
@@ -45,58 +47,90 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
     object_output_name = "objects"
     if output_name is not None:
         object_output_name += f"_{output_name}"
+
     rule:
         input:
             input_dsp_objects,
         output:
-            temp(get_pattern_pars_tmp_channel(config, tier, name=object_output_name, extension="pkl")),
+            temp(
+                get_pattern_pars_tmp_channel(
+                    config, tier, name=object_output_name, extension="pkl"
+                )
+            ),
         group:
             group_name
         shell:
-            execenv_pyexe(config, "merge-in-channels") + \
-            "--input {input} "
+            execenv_pyexe(config, "merge-in-channels") + "--input {input} "
             "--output {output} "
 
     set_last_rule_name(workflow, f"build_pars_inchan_{name}_objects")
 
     if len(input_dsp_pars_lh5) > 0:
+
         rule:
             input:
                 input_dsp_pars,
             output:
-                temp(get_pattern_pars_tmp_channel(config, tier, name=output_name + "_tmp" if output_name is not None else "tmp")),
+                temp(
+                    get_pattern_pars_tmp_channel(
+                        config,
+                        tier,
+                        name=(
+                            output_name + "_tmp" if output_name is not None else "tmp"
+                        ),
+                    )
+                ),
             group:
                 group_name
             shell:
-                execenv_pyexe(config, "merge-in-channels") + \
-                "--input {input} "
+                execenv_pyexe(config, "merge-in-channels") + "--input {input} "
                 "--output {output} "
 
         set_last_rule_name(workflow, f"build_pars_inchan_{name}_db")
 
-
     rule:
         input:
-            in_files=input_dsp_pars_lh5 if len(input_dsp_pars_lh5) > 0 else input_dsp_pars,
-            in_db=get_pattern_pars_tmp_channel(config, tier, name=output_name + "_tmp" if output_name is not None else "tmp") if len(input_dsp_pars_lh5) > 0 else [],
+            in_files=(
+                input_dsp_pars_lh5 if len(input_dsp_pars_lh5) > 0 else input_dsp_pars
+            ),
+            in_db=(
+                get_pattern_pars_tmp_channel(
+                    config,
+                    tier,
+                    name=output_name + "_tmp" if output_name is not None else "tmp",
+                )
+                if len(input_dsp_pars_lh5) > 0
+                else []
+            ),
             plts=get_pattern_plts_tmp_channel(config, tier, name=output_name),
-            objects=get_pattern_pars_tmp_channel(config, tier, name=object_output_name, extension="pkl"),
+            objects=get_pattern_pars_tmp_channel(
+                config, tier, name=object_output_name, extension="pkl"
+            ),
         output:
-            out_file=temp(get_pattern_pars_tmp_channel(config, tier, name=output_name, extension="lh5")) if len(input_dsp_pars_lh5) > 0 else temp(get_pattern_pars_tmp_channel(config, tier, name=output_name)),
-            out_db=temp(get_pattern_pars_tmp_channel(config, tier, name=output_name)) if len(input_dsp_pars_lh5) > 0 else [],
+            out_file=(
+                temp(
+                    get_pattern_pars_tmp_channel(
+                        config, tier, name=output_name, extension="lh5"
+                    )
+                )
+                if len(input_dsp_pars_lh5) > 0
+                else temp(get_pattern_pars_tmp_channel(config, tier, name=output_name))
+            ),
+            out_db=(
+                temp(get_pattern_pars_tmp_channel(config, tier, name=output_name))
+                if len(input_dsp_pars_lh5) > 0
+                else []
+            ),
         group:
             group_name
         run:
             shell_string = (
-                execenv_pyexe(config, "merge-in-channels") + \
-                "--output {output.out_file} "
+                execenv_pyexe(config, "merge-in-channels")
+                + "--output {output.out_file} "
                 "--input {input.in_files} "
             )
             if len(input_dsp_pars_lh5) > 0:
-                shell_string += (
-                    "--in-db {input.in_db} "
-                    "--out-db {output.out_db} "
-                )
+                shell_string += "--in-db {input.in_db} " "--out-db {output.out_db} "
             shell(shell_string)
 
     set_last_rule_name(workflow, f"build_pars_inchan_{name}")
