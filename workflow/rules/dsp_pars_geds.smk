@@ -161,7 +161,7 @@ rule build_pars_dsp_nopt_geds:
         database=rules.build_pars_dsp_pz_geds.output.dsp_pars,
         inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
-        dsp_pars_nopt=temp(
+        dsp_pars=temp(
             get_pattern_pars_tmp_channel(config, "dsp", "noise_optimization")
         ),
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "noise_optimization")),
@@ -212,7 +212,7 @@ rule build_pars_dsp_nopt_geds:
         "--raw-table-name {params.raw_table_name} "
         "--inplots {input.inplots} "
         "--plot-path {output.dsp_plots} "
-        "--dsp-pars {output.dsp_pars_nopt} "
+        "--dsp-pars {output.dsp_pars} "
         "--raw-filelist {input.files}"
 
 
@@ -289,7 +289,7 @@ rule build_pars_dsp_eopt_geds:
     input:
         peak_file=rules.build_pars_evtsel_geds.output.peak_file,
         dsp_pars=rules.build_pars_dsp_pz_geds.output.dsp_pars,
-        inplots=rules.build_pars_dsp_dplms_geds.output.dsp_plots,
+        inplots=rules.build_pars_dsp_pz_geds.output.dsp_plots,
     output:
         dsp_pars=temp(get_pattern_pars_tmp_channel(config, "dsp_eopt")),
         dsp_objects=temp(
@@ -412,13 +412,13 @@ rule build_pars_dsp_svm_geds:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
-        "--input-file {input.dsp_pars} "
+        #"--input-file {input.dsp_pars} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_file}"
 
 build_in_channel_merge_rules([
-    build_pars_dsp_eopt_geds, 
-    build_pars_dsp_nopt_geds,
-    build_pars_dsp_svm_geds,
-    build_pars_dsp_dplms_geds,
+    rules.build_pars_dsp_eopt_geds,
+    rules.build_pars_dsp_nopt_geds,
+    rules.build_pars_dsp_svm_geds,
+    rules.build_pars_dsp_dplms_geds,
 ], "dsp")

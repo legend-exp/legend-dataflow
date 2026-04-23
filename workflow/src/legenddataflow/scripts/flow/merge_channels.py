@@ -10,7 +10,9 @@ from dbetto.catalog import Props
 from lgdo import lh5
 
 from legenddataflow.methods import ChannelProcKey
+
 from .utils import replace_path
+
 
 def merge_channels() -> None:
     argparser = argparse.ArgumentParser()

@@ -4,7 +4,6 @@ from legenddataflow.methods import patterns
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 from legenddataflow.scripts.flow.build_chanlist import get_plt_chanlist, get_par_chanlist
 
-
 def build_in_channel_merge_rules(rules, tier, output_name=None):
 
 
@@ -15,30 +14,25 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
 
     name = f"tier" if output_name is None else f"{tier}_{output_name}"
 
-    group_name = f"merge-inchan-{tier}" 
+    group_name = f"merge-inchan-{tier}"
     if output_name is not None:
         group_name += f"_{output_name}"
 
-    for r in [rules]:
-        if hasattr(r.output, dsp_pars):
+    for r in rules:
+        if hasattr(r.output, f"{tier}_pars"):
             input_dsp_pars.append(r.output.dsp_pars)
-        if hasattr(r.output, dsp_pars_lh5):
+        if hasattr(r.output, f"{tier}_pars_lh5"):
             input_dsp_pars_lh5.append(r.output.dsp_pars_lh5)
-        if hasattr(r.output, plots):
+        if hasattr(r.output, f"{tier}_plots"):
             input_dsp_plots.append(r.output.dsp_plots)
-        if hasattr(r.output, dsp_objects):
+        if hasattr(r.output, f"{tier}_objects"):
             input_dsp_objects.append(r.output.dsp_objects)
-
-    par_file = temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name)),
-            lh5_file = temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name, extension="lh5")),
-            object_file = 
-            plot_file = 
 
     rule:
         input:
             input_dsp_plots,
         output:
-            temp(get_pattern_plts_tmp_channel(config, "dsp", name=output_name)),
+            temp(get_pattern_plts_tmp_channel(config, tier, name=output_name)),
         group:
             group_name
         shell:
@@ -48,11 +42,14 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
 
     set_last_rule_name(workflow, f"build_plts_inchan_{name}")
 
+    object_output_name = "objects"
+    if output_name is not None:
+        object_output_name += f"_{output_name}"
     rule:
         input:
             input_dsp_objects,
         output:
-            temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name, extension="pkl")),
+            temp(get_pattern_pars_tmp_channel(config, tier, name=object_output_name, extension="pkl")),
         group:
             group_name
         shell:
@@ -65,9 +62,9 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
     if len(input_dsp_pars_lh5) > 0:
         rule:
             input:
-                input_dsp_pars_lh5,
+                input_dsp_pars,
             output:
-                temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name + "_tmp" if output_name is not None else "tmp")),
+                temp(get_pattern_pars_tmp_channel(config, tier, name=output_name + "_tmp" if output_name is not None else "tmp")),
             group:
                 group_name
             shell:
@@ -81,12 +78,12 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
     rule:
         input:
             in_files=input_dsp_pars_lh5 if len(input_dsp_pars_lh5) > 0 else input_dsp_pars,
-            in_db=temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name + "_tmp" if output_name is not None else "tmp")) if len(input_dsp_pars_lh5) > 0 else [],
-            plts=temp(get_pattern_plts_tmp_channel(config, "dsp", name=output_name)),
-            objects=temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name, extension="pkl")),
+            in_db=get_pattern_pars_tmp_channel(config, tier, name=output_name + "_tmp" if output_name is not None else "tmp") if len(input_dsp_pars_lh5) > 0 else [],
+            plts=get_pattern_plts_tmp_channel(config, tier, name=output_name),
+            objects=get_pattern_pars_tmp_channel(config, tier, name=object_output_name, extension="pkl"),
         output:
-            out_file=temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name, extension="lh5")) if len(input_dsp_pars_lh5) > 0 else temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name)),
-            out_db=temp(get_pattern_pars_tmp_channel(config, "dsp", name=output_name)) if len(input_dsp_pars_lh5) > 0 else [],
+            out_file=temp(get_pattern_pars_tmp_channel(config, tier, name=output_name, extension="lh5")) if len(input_dsp_pars_lh5) > 0 else temp(get_pattern_pars_tmp_channel(config, tier, name=output_name)),
+            out_db=temp(get_pattern_pars_tmp_channel(config, tier, name=output_name)) if len(input_dsp_pars_lh5) > 0 else [],
         group:
             group_name
         run:

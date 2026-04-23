@@ -24,7 +24,7 @@ psp_par_catalog = ParsKeyResolve.get_par_catalog(
     ignore_keys_file=Path(det_status) / "ignored_daq_cycles.yaml",
 )
 
-build_merge_rules("psp", lh5_merge=True, lh5_tier="dsp")
+build_merge_rules("psp", lh5_merge=True, lh5_tier="psp")
 
 
 rule build_psp:

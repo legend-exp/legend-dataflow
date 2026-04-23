@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+
 
 def replace_path(d, old_path, new_path):
     if isinstance(d, dict):

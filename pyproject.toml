@@ -96,6 +96,7 @@ docs = [
 [project.scripts]
 create-chankeylist      = "legenddataflow.scripts.create_chankeylist:create_chankeylist"
 merge-channels          = "legenddataflow.scripts.flow.merge_channels:merge_channels"
+merge-in-channels       = "legenddataflow.scripts.flow.merge_in_channel:merge_in_channel"
 build-tier-evt          = "legenddataflow.scripts.tier.evt:build_tier_evt"
 build-tier-raw-blind    = "legenddataflow.scripts.tier.raw_blind:build_tier_raw_blind"
 build-tier-raw-fcio     = "legenddataflow.scripts.tier.raw_fcio:build_tier_raw_fcio"
@@ -108,6 +109,7 @@ par-geds-pht-fast       = "legenddataflow.scripts.par.geds.pht.fast:par_geds_pht
 par-geds-pht-qc-phy     = "legenddataflow.scripts.par.geds.pht.qc_phy:par_geds_pht_qc_phy"
 par-geds-pht-qc         = "legenddataflow.scripts.par.geds.pht.qc:par_geds_pht_qc"
 par-geds-psp-average    = "legenddataflow.scripts.par.geds.psp.average:par_geds_psp_average"
+par-geds-psp-dplms    = "legenddataflow.scripts.par.geds.psp.dplms:par_geds_psp_dplms"
 par-geds-raw-blindcal   = "legenddataflow.scripts.par.geds.raw.blindcal:par_geds_raw_blindcal"
 par-geds-raw-blindcheck = "legenddataflow.scripts.par.geds.raw.blindcheck:par_geds_raw_blindcheck"
 par-geds-tcm-pulser     = "legenddataflow.scripts.par.geds.tcm.pulser:par_geds_tcm_pulser"

@@ -6,7 +6,13 @@ from pathlib import Path
 
 import numpy as np
 from dbetto import Props
-from legenddataflow.FileKey import ChannelProcKey, ProcessingFileKey, run_splitter
+from legenddataflowscripts.utils import convert_dict_np_to_float
+
+from legenddataflow.methods.FileKey import (
+    ChannelProcKey,
+    ProcessingFileKey,
+    run_splitter,
+)
 
 
 def update_cal_dicts(cal_dicts, update_dict):
@@ -37,17 +43,16 @@ def get_run_dict(files):
     return out_dicts
 
 
-def split_files_by_run(files):
+def split_files_by_run(infiles):
     # sort files in dictionary where keys are first timestamp from run
-    if isinstance(files, list):
+    if isinstance(infiles, list):
         files = []
-        for file in files:
+        for file in infiles:
             with Path(file).open() as f:
                 files += f.read().splitlines()
     else:
-        with Path(files).open() as f:
+        with Path(infiles).open() as f:
             files = f.read().splitlines()
-
     files = sorted(
         np.unique(files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
@@ -68,7 +73,7 @@ def save_dict_to_files(files, out_dict):
             with Path(file).open("wb") as w:
                 pkl.dump(out_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
         elif Path(file).suffix in (".json", ".yml", ".yaml"):
-            Props.write_to(file, out_dict[fk.timestamp])
+            Props.write_to(file, convert_dict_np_to_float(out_dict[fk.timestamp]))
         else:
             err = f"File {file} not recognized as .pkl, .json, .yml or .yaml"
             raise ValueError(err)

@@ -149,7 +149,6 @@ def get_table_name(metadata, config, datatype, timestamp, detector, tier):
         return config.table_format[tier].format(ch=chmap[detector[0]].daq.rawid)
     return config.table_format[tier].format(ch=chmap[detector].daq.rawid)
 
-
 def get_all_channels(channelmap, timestamp, datatype):
     if isinstance(channelmap, (str, Path)):
         channelmap = TextDB(channelmap, lazy=True)
