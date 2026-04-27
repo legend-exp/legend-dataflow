@@ -110,7 +110,7 @@ onstart:
         )
         shell(
             execenv.execenv_pyexe(config, "python")
-            + "-c from 'lgdo.types.vovutils import *'"
+            + "-c 'from lgdo.types.vovutils import *'"
         )
         shell(
             execenv.execenv_pyexe(config, "python")
