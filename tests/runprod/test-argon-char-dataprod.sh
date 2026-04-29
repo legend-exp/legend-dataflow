@@ -17,6 +17,8 @@ rawfiles=(
     anp/p13/r002/l200-p13-r002-anp-20241217T094846Z-tier_raw.lh5
     anc/p13/r006/l200-p13-r006-anc-20241221T150249Z-tier_raw.lh5
     acs/p13/r006/l200-p13-r006-acs-20241221T150307Z-tier_raw.lh5
+    cal/p03/r000/l200-p03-r000-cal-20230311T235840Z-tier_raw.lh5
+    cal/p16/r000/l200-p16-r000-cal-20260101T000000Z-tier_raw.lh5
 )
 
 (
