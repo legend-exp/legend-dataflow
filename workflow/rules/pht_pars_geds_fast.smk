@@ -21,6 +21,9 @@ from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 pht_fast_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
+        tstamp = part.get_timestamp(pht_par_catalog, partition, key, tier="pht")
+        if tstamp == "20000101T000000Z":
+            continue
         if key == "default":
 
             def dsp_table_name(wildcards):
@@ -28,7 +31,7 @@ for key, dataset in part.datasets.items():
                     channelmap_textdb,
                     config,
                     "cal",
-                    part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                    tstamp,
                     wildcards.channel,
                     "dsp",
                 )
@@ -38,7 +41,7 @@ for key, dataset in part.datasets.items():
                 channelmap_textdb,
                 config,
                 "cal",
-                part.get_timestamp(pht_par_catalog, partition, key, tier="pht"),
+                tstamp,
                 key,
                 "dsp",
             )

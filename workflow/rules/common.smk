@@ -142,7 +142,6 @@ def get_table_name(metadata, config, datatype, timestamp, detector, tier):
         )
     if isinstance(detector, tuple):
         if detector[0] == "default":
-            print(detector)
             return config.table_format[tier].format(
                 ch=chmap[detector[1].channel].daq.rawid
             )

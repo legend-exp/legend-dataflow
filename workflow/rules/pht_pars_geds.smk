@@ -38,6 +38,8 @@ for key, dataset in part.datasets.items():
         ]
         tstamp = part.get_timestamp(pht_par_catalog, partition, key, tier="pht")
         wildcard_constrain = part.get_wildcard_constraints(partition, key)
+        if tstamp == "20000101T000000Z":
+            continue
 
         if key == "default":
 
@@ -70,12 +72,7 @@ for key, dataset in part.datasets.items():
                 overwrite_files=get_input_par_file(
                     config,
                     tier="pht",
-                    timestamp=part.get_timestamp(
-                        pht_par_catalog,
-                        partition,
-                        key,
-                        tier="pht",
-                    ),
+                    timestamp=tstamp,
                 ),
             output:
                 hit_pars=[
@@ -117,9 +114,7 @@ for key, dataset in part.datasets.items():
             params:
                 datatype="cal",
                 channel="{channel}" if key == "default" else key,
-                timestamp=part.get_timestamp(
-                    pht_par_catalog, partition, key, tier="pht"
-                ),
+                timestamp=tstamp,
                 dsp_table_name=dsp_table_name,
                 configs=config_path(config),
                 meta=metadata_path(config),

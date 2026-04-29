@@ -73,6 +73,7 @@ wildcard_constraints:
 
 
 include: "rules/channel_merge.smk"
+include: "rules/merge_in_channel.smk"
 include: "rules/common.smk"
 include: "rules/main.smk"
 include: "rules/tcm.smk"

@@ -192,7 +192,7 @@ class CalGrouping:
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             return fk.timestamp
-        return "20240101T000000Z"
+        return "20000101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
         if channel == "default":

@@ -24,6 +24,7 @@ rawfiles=(
     cal/p03/r001/l200-p03-r001-cal-20230317T211819Z-tier_raw.lh5
     cal/p03/r000/l200-p03-r000-cal-20230311T235840Z-tier_raw.lh5
     cal/p03/r002/l200-p03-r002-cal-20230324T161401Z-tier_raw.lh5
+    cal/p16/r000/l200-p16-r000-cal-20260101T000000Z-tier_raw.lh5
 )
 
 (

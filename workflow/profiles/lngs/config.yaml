@@ -1,5 +1,5 @@
 cores: 90
-restart-times: 2
+restart-times: 0
 resources:
   - mem_swap=3500
 configfile: dataflow-config.yaml
