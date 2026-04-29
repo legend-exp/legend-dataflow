@@ -30,9 +30,10 @@ psp_rules = {}
 psp_dplms_rules = {}
 for key, dataset in part.datasets.items():
     for partition in dataset.keys():
-
         fft_files = part.get_filelists(partition, key, "raw", datatype="fft")
         tstamp = part.get_timestamp(psp_par_catalog, partition, key, tier="psp")
+        if tstamp == "20000101T000000Z":
+            continue
         wildcard_constrain = part.get_wildcard_constraints(partition, key)
 
         if key == "default":
