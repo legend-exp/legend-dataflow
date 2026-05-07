@@ -8,6 +8,8 @@ from legenddataflow.methods import ParsKeyResolve, ParsCatalog
 from pathlib import Path
 from legenddataflow.methods import patterns as patt
 from legenddataflowscripts.workflow import execenv_pyexe
+from legenddataflow.methods.paths import config_path
+
 
 build_merge_rules("dsp", lh5_merge=True)
 

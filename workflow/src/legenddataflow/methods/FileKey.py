@@ -222,13 +222,13 @@ class ProcessingFileKey(FileKey):
         return self.expand(pattern, **kwargs)
 
 
-class ChannelProcKey(FileKey):
+class ChannelProcKey(ProcessingFileKey):
     re_pattern = "all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$"
     key_pattern = full_channel_pattern_with_extension()
-    _fields = (*FileKey._fields, "channel")
+    _fields = (*ProcessingFileKey._fields, "channel")
 
-    def __new__(cls, experiment, period, run, datatype, timestamp, channel):
-        self = super().__new__(cls, experiment, period, run, datatype, timestamp)
+    def __new__(cls, experiment, period, run, datatype, timestamp, channel, processing_step):
+        self = super().__new__(cls, experiment, period, run, datatype, timestamp, processing_step)
         self.channel = channel
         return self
 
@@ -239,6 +239,7 @@ class ChannelProcKey(FileKey):
     def _asdict(self):
         dic = super()._asdict()
         dic["channel"] = self.channel
+        dic["processing_step"] = self.processing_step
         return dic
 
     @staticmethod

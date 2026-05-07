@@ -417,7 +417,7 @@ rule build_pars_dsp_svm_geds:
         runtime=300,
     shell:
         execenv_pyexe(config, "par-geds-dsp-svm") + "--log {log} "
-        # "--input-file {input.dsp_pars} "
+        #"--input-file {input.svm} "
         "--output-file {output.dsp_pars} "
         "--svm-file {input.svm_file}"
 
