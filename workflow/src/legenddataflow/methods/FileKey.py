@@ -227,8 +227,12 @@ class ChannelProcKey(ProcessingFileKey):
     key_pattern = full_channel_pattern_with_extension()
     _fields = (*ProcessingFileKey._fields, "channel")
 
-    def __new__(cls, experiment, period, run, datatype, timestamp, channel, processing_step):
-        self = super().__new__(cls, experiment, period, run, datatype, timestamp, processing_step)
+    def __new__(
+        cls, experiment, period, run, datatype, timestamp, channel, processing_step
+    ):
+        self = super().__new__(
+            cls, experiment, period, run, datatype, timestamp, processing_step
+        )
         self.channel = channel
         return self
 
