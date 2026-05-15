@@ -22,6 +22,7 @@ from legenddataflow.methods.patterns import (
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
 
 intier = config.get("pht_intier", "psp")
+intier_par_catalog = psp_par_catalog if intier == "psp" else dsp_par_catalog
 
 qc_pht_rules = {}
 partcal_pht_rules = {}
@@ -512,7 +513,7 @@ rule build_per_energy_calibration:
         inplots=rules.build_pht_qc.output.plot_file,
         ctc_dict=ancient(
             lambda wildcards: ParsCatalog.get_par_file(
-                dsp_par_catalog,
+                intier_par_catalog,
                 config,
                 wildcards.timestamp,
                 intier,
