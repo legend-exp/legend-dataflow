@@ -10,7 +10,6 @@ from legenddataflow.methods import patterns as patt
 from legenddataflowscripts.workflow import execenv_pyexe
 from legenddataflow.methods.paths import config_path
 
-
 build_merge_rules("dsp", lh5_merge=True)
 
 dsp_par_catalog = ParsKeyResolve.get_par_catalog(
