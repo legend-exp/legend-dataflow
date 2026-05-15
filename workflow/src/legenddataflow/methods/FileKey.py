@@ -112,6 +112,9 @@ class FileKey(
         for key in d:
             if d[key] is None:
                 d[key] = "*"
+        for wildcard in cls._fields:
+            if wildcard not in d:
+                d[wildcard] = "*"
         return cls(**d)
 
     def expand(self, file_pattern, **kwargs):
