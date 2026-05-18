@@ -9,7 +9,6 @@ from legenddataflow.methods import ParsKeyResolve, ParsCatalog
 from legenddataflow.methods.patterns import (
     get_pattern_plts,
     get_pattern_tier,
-    get_pattern_pars_tmp,
     get_pattern_log,
     get_pattern_pars,
 )
@@ -37,7 +36,6 @@ rule build_psp:
         ),
     output:
         tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
-        db_file=get_pattern_pars_tmp(config, "psp_db"),
     log:
         get_pattern_log(config, "tier_psp", time),
     group:
@@ -63,11 +61,9 @@ rule build_psp:
         "--configs {params.configs} "
         "--table-map '{params.table_map}' "
         "--alias-table '{params.alias_table}' "
-        "--metadata {meta} "
         "--datatype {params.datatype} "
         "--timestamp {params.timestamp} "
         "--input {params.ro_input[raw_file]} "
         "--output {output.tier_file} "
-        "--db-file {output.db_file} "
         "--pars-file {params.ro_input[pars_file]} "
         "--n-processes {threads} "
