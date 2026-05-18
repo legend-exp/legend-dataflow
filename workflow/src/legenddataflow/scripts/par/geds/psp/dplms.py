@@ -14,6 +14,7 @@ from pygama.pargen.data_cleaning import generate_cuts
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 from pygama.pargen.dsp_optimize import run_one_dsp
 
+from legenddataflow.methods.FileKey import ChannelProcKey
 from legenddataflow.scripts.par.geds.pht.util import (
     get_run_dict,
     save_dict_to_files,
@@ -303,9 +304,6 @@ def par_geds_psp_dplms() -> None:
 
         coeffs = out_dict["dplms"].pop("coefficients")
         dplms_pars = Table(col_dict={"coefficients": Array(coeffs)})
-        out_dict["dplms"]["coefficients"] = (
-            f"loadlh5('{args.lh5_path}', '{args.channel}/dplms/coefficients')"
-        )
         msg = f"DPLMS creation finished in {(time.time() - t0) / 60} minutes"
         log.info(msg)
     else:
@@ -318,8 +316,17 @@ def par_geds_psp_dplms() -> None:
     for _, entry in inplot_dict.items():
         entry.update({"dplms": plot_dict})
 
-    for _, db_dict in db_dicts.items():
+    lh5_path_by_ts = {
+        ChannelProcKey.get_filekey_from_pattern(Path(p).name).timestamp: p
+        for p in args.lh5_path
+    }
+
+    for ts, db_dict in db_dicts.items():
         db_dict.update(out_dict)
+        if dplms_dict["run_dplms"] is True:
+            db_dict.setdefault("dplms", {})["coefficients"] = (
+                f"loadlh5('{lh5_path_by_ts[ts]}', '{args.channel}/dplms/coefficients')"
+            )
 
     for outfile in args.lh5_path:
         Path(outfile).parent.mkdir(parents=True, exist_ok=True)
