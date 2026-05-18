@@ -257,7 +257,7 @@ def par_geds_pht_fast() -> None:
     save_dict_to_files(
         sorted(args.hit_pars),
         {
-            tstamp: {"pars": cal_dicts[tstamp], "results": results_dicts[tstamp]}
+            tstamp: {"pars": {"operations":cal_dicts[tstamp]}, "results": results_dicts[tstamp]}
             for tstamp in cal_dicts
         },
     )
