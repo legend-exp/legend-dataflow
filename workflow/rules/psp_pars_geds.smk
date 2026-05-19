@@ -12,6 +12,7 @@ from legenddataflow.methods.patterns import (
     get_pattern_log,
     get_pattern_pars,
     get_pattern_tier,
+    get_pattern_benchmark_channel,
 )
 from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe, set_last_rule_name
@@ -306,6 +307,8 @@ rule build_par_psp_fallback:
         psp_plots=temp(get_pattern_plts_tmp_channel(config, "psp", "eopt")),
     log:
         get_pattern_log_channel(config, "pars_psp", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "pars_psp", time)
     group:
         "par-psp"
     resources:
@@ -354,6 +357,8 @@ rule build_pars_psp_dplms_geds_fallback:
         plots=temp(get_pattern_plts_tmp_channel(config, "psp")),
     log:
         get_pattern_log_channel(config, "pars_psp_dplms", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "pars_psp_dplms", time)
     group:
         "par-psp"
     resources:

@@ -18,6 +18,8 @@ rule build_pars_dsp_tau_spms:
         patt.get_pattern_pars(config, "dsp", name="spms", datatype="{datatype}"),
     log:
         patt.get_pattern_log(config, "pars_spms", time),
+    benchmark:
+        patt.get_pattern_benchmark(config, "pars_spms", time)
     wildcard_constraints:
         datatype=r"\b(?!cal\b|xtc\b)\w+\b",
     group:

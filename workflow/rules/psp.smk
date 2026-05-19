@@ -11,6 +11,7 @@ from legenddataflow.methods.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_benchmark,
 )
 from legenddataflow.methods.paths import config_path
 from legenddataflowscripts.workflow import execenv_pyexe
@@ -38,6 +39,8 @@ rule build_psp:
         tier_file=get_pattern_tier(config, "psp", check_in_cycle=check_in_cycle),
     log:
         get_pattern_log(config, "tier_psp", time),
+    benchmark:
+        get_pattern_benchmark(config, "tier_psp", time)
     group:
         "tier-dsp"
     threads: get_threads
