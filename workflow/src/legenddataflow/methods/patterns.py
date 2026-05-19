@@ -16,6 +16,7 @@ from .paths import (
     tier_daq_path,
     tier_path,
     tier_raw_blind_path,
+    tmp_benchmark_path,
     tmp_log_path,
     tmp_par_path,
     tmp_plts_path,
@@ -340,4 +341,32 @@ def get_pattern_log_concat(setup, processing_step, time):
         / time
         / processing_step
         / ("{experiment}-{period}-{run}-{datatype}-" + processing_step + ".log")
+    )
+
+
+def get_pattern_benchmark(setup, processing_step, time):
+    return (
+        Path(f"{tmp_benchmark_path(setup)}")
+        / time
+        / processing_step
+        / (
+            "{experiment}-{period}-{run}-{datatype}-{timestamp}-"
+            + processing_step
+            + ".tsv"
+        )
+    )
+
+
+def get_pattern_benchmark_channel(setup, processing_step, time, datatype="cal"):
+    return (
+        Path(f"{tmp_benchmark_path(setup)}")
+        / time
+        / processing_step
+        / (
+            "{experiment}-{period}-{run}-"
+            + datatype
+            + "-{timestamp}-{channel}-"
+            + processing_step
+            + ".tsv"
+        )
     )

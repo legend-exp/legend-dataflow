@@ -97,5 +97,9 @@ def tmp_log_path(setup):
     return setup["paths"]["tmp_log"]
 
 
+def tmp_benchmark_path(setup):
+    return setup["paths"]["tmp_benchmark"]
+
+
 def filelist_path(setup):
     return setup["paths"]["tmp_filelists"]

@@ -29,6 +29,8 @@ rule build_dsp:
         tier_file=patt.get_pattern_tier(config, "dsp", check_in_cycle=check_in_cycle),
     log:
         patt.get_pattern_log(config, "tier_dsp", time),
+    benchmark:
+        patt.get_pattern_benchmark(config, "tier_dsp", time)
     group:
         "tier-dsp"
     threads: get_threads

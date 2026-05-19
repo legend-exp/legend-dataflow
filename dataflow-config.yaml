@@ -49,6 +49,7 @@ paths:
 
   tmp_plt: $_/generated/tmp/plt
   tmp_log: $_/generated/tmp/log
+  tmp_benchmark: $_/generated/tmp/benchmark
   tmp_filelists: $_/generated/tmp/filelists
   tmp_par: $_/generated/tmp/par
 

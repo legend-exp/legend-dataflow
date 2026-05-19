@@ -14,6 +14,7 @@ from legenddataflow.methods.patterns import (
     get_pattern_tier,
     get_pattern_log,
     get_pattern_pars,
+    get_pattern_benchmark_channel,
 )
 from legenddataflow.methods.paths import (
     filelist_path,
@@ -38,6 +39,8 @@ rule build_pars_dsp_pz_geds:
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "decay_constant")),
     log:
         get_pattern_log_channel(config, "par_dsp_decay_constant", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "par_dsp_decay_constant", time)
     group:
         "par-dsp"
     resources:
@@ -101,6 +104,8 @@ rule build_pars_evtsel_geds:
         ),
     log:
         get_pattern_log_channel(config, "par_dsp_event_selection", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "par_dsp_event_selection", time)
     group:
         "par-dsp"
     resources:
@@ -168,6 +173,8 @@ rule build_pars_dsp_nopt_geds:
         ),
     log:
         get_pattern_log_channel(config, "par_dsp_noise_optimization", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "par_dsp_noise_optimization", time)
     group:
         "par-dsp"
     resources:
@@ -234,6 +241,8 @@ rule build_pars_dsp_dplms_geds:
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "dplms")),
     log:
         get_pattern_log_channel(config, "pars_dsp_dplms", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "pars_dsp_dplms", time)
     group:
         "par-dsp"
     resources:
@@ -303,6 +312,8 @@ rule build_pars_dsp_eopt_geds:
         dsp_plots=temp(get_pattern_plts_tmp_channel(config, "dsp", "eopt")),
     log:
         get_pattern_log_channel(config, "pars_dsp_eopt", time),
+    benchmark:
+        get_pattern_benchmark_channel(config, "pars_dsp_eopt", time)
     group:
         "par-dsp"
     resources:
