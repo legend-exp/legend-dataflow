@@ -324,9 +324,10 @@ def par_geds_psp_dplms() -> None:
     for ts, db_dict in db_dicts.items():
         db_dict.update(out_dict)
         if dplms_dict["run_dplms"] is True:
-            db_dict.setdefault("dplms", {})["coefficients"] = (
-                f"loadlh5('{lh5_path_by_ts[ts]}', '{args.channel}/dplms/coefficients')"
-            )
+            db_dict["dplms"] = {
+                **out_dict["dplms"],
+                "coefficients": f"loadlh5('{lh5_path_by_ts[ts]}', '{args.channel}/dplms/coefficients')",
+            }
 
     for outfile in args.lh5_path:
         Path(outfile).parent.mkdir(parents=True, exist_ok=True)

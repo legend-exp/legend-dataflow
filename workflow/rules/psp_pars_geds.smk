@@ -397,8 +397,8 @@ rule build_pars_psp_dplms_geds_fallback:
         configs=config_path(config),
         channel="{channel}",
     shell:
-        execenv_pyexe(config, "par-geds-psp-dplms") + "--peak-file {input.peak_file} "
-        "--fft-raw-filelist {input.fft_files} "
+        execenv_pyexe(config, "par-geds-psp-dplms") + "--peak-files {input.peak_file} "
+        "--fft-raw-filelists {input.fft_files} "
         "--database {input.database} "
         "--inplots {input.inplots} "
         "--log {log} "
