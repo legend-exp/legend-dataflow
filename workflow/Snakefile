@@ -101,6 +101,7 @@ localrules:
 
 onstart:
     logger.info("INFO: starting workflow")
+    paths.link_external_paths(config, workflow.basedir, logger=logger)
 
     # Make sure some packages are initialized before we begin to avoid race conditions
     # https://numba.readthedocs.io/en/stable/developer/caching.html#cache-sharing
