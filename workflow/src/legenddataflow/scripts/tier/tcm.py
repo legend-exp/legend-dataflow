@@ -3,11 +3,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import lh5
 from daq2lh5.orca import orca_flashcam
 from dbetto import AttrsDict, TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import build_log
-from lgdo import lh5
 from pygama.evt.build_tcm import build_tcm
 
 

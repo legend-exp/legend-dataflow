@@ -16,12 +16,12 @@ import argparse
 import time
 
 import hdf5plugin
+import lh5
 import numexpr as ne
 import numpy as np
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import alias_table, build_log
 from legendmeta import LegendMetadata, TextDB
-from lgdo import lh5
 
 filter_map = {
     "zstd": hdf5plugin.Zstd(),

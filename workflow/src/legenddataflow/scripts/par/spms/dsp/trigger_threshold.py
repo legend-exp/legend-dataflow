@@ -4,11 +4,11 @@ import argparse
 from pathlib import Path
 
 import hist
+import lh5
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB, utils
 from dspeed import build_dsp
 from legenddataflowscripts.utils import build_log, cfgtools
-from lgdo import lh5
 
 
 def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name, log):

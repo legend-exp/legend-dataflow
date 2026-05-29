@@ -4,8 +4,8 @@ import argparse
 import pickle as pkl
 from pathlib import Path
 
+import lh5
 from dbetto.catalog import Props
-from lgdo import lh5
 from lgdo.types import Struct
 
 from legenddataflow.methods import ChannelProcKey
