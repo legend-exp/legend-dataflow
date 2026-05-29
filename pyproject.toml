@@ -58,7 +58,7 @@ dependencies = [
     "legend-pydataobj==2.0.2",
     "legend-lh5io==0.2.6",
     "legend-daq2lh5==1.6.3",
-    "legend-dataflow-scripts==0.3.1",
+    "legend-dataflow-scripts==0.3.2",
     "pip",
     "snakemake-logger-plugin-rich",
     "snakemake-logger-plugin-snkmt",
