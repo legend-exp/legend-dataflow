@@ -115,7 +115,7 @@ onstart:
         )
         shell(
             execenv.execenv_pyexe(config, "python")
-            + "-c 'from lgdo.compression import *'"
+            + "-c 'from lh5.compression import *'"
         )
         shell(
             execenv.execenv_pyexe(config, "python")
