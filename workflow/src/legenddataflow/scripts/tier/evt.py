@@ -4,11 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
+import lh5
 import numpy as np
 from dbetto import AttrsDict, Props, TextDB
 from legenddataflowscripts.utils import build_log
 from legendmeta import LegendMetadata
-from lgdo import lh5
 from lgdo.types import Array
 from pygama.evt import build_evt
 

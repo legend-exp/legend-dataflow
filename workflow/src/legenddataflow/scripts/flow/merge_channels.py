@@ -6,8 +6,8 @@ import pickle as pkl
 import shelve
 from pathlib import Path
 
+import lh5
 from dbetto.catalog import Props
-from lgdo import lh5
 
 from legenddataflow.methods import ChannelProcKey
 

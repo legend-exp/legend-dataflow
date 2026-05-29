@@ -10,13 +10,13 @@ import argparse
 import pickle as pkl
 from pathlib import Path
 
+import lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import build_log
-from lgdo import lh5
 from pygama.pargen.energy_cal import HPGeCalibration
 
 mpl.use("agg")

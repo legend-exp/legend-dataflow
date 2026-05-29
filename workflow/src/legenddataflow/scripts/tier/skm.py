@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 
 import awkward as ak
+import lh5
 from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import build_log
-from lgdo import lh5
 from lgdo.types import Array, Struct, Table, VectorOfVectors
 
 

@@ -12,6 +12,7 @@ import argparse
 import pickle as pkl
 from pathlib import Path
 
+import lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
@@ -20,7 +21,6 @@ from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import build_log
 from legendmeta import LegendMetadata
-from lgdo import lh5
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
 

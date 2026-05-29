@@ -7,12 +7,12 @@ import re
 import warnings
 from pathlib import Path
 
+import lh5
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import build_log, convert_dict_np_to_float
-from lgdo import lh5
-from lgdo.lh5 import ls
+from lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
     get_keys,
