@@ -40,7 +40,7 @@ def get_chanlist(timestamp, datatype, det_status, channelmap, system):
     if len(channels) == 0:
         print("WARNING: No channels found")
 
-    return channels
+    return sorted(channels)
 
 
 def get_par_chanlist(
