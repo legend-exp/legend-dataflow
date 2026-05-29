@@ -123,42 +123,21 @@ onstart:
             + "-c 'from dspeed.processors import *'"
         )
 
-        # Log parameter catalogs in validity files
-    hit_par_cat_file = Path(paths.pars_path(config)) / "hit" / "validity.yaml"
-    if hit_par_cat_file.is_file():
-        hit_par_cat_file.unlink()
-    try:
-        Path(hit_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        hit_par_catalog.write_to(hit_par_cat_file)
-    except NameError:
-        logger.warning("No hit parameter catalog found")
-
-    pht_par_cat_file = Path(paths.pars_path(config)) / "pht" / "validity.yaml"
-    if pht_par_cat_file.is_file():
-        pht_par_cat_file.unlink()
-    try:
-        Path(pht_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        pht_par_catalog.write_to(pht_par_cat_file)
-    except NameError:
-        logger.warning("No pht parameter catalog found")
-
-    dsp_par_cat_file = Path(paths.pars_path(config)) / "dsp" / "validity.yaml"
-    if dsp_par_cat_file.is_file():
-        dsp_par_cat_file.unlink()
-    try:
-        Path(dsp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        dsp_par_catalog.write_to(dsp_par_cat_file)
-    except NameError:
-        logger.warning("No dsp parameter catalog found")
-
-    psp_par_cat_file = Path(paths.pars_path(config)) / "psp" / "validity.yaml"
-    if psp_par_cat_file.is_file():
-        psp_par_cat_file.unlink()
-    try:
-        Path(psp_par_cat_file).parent.mkdir(parents=True, exist_ok=True)
-        psp_par_catalog.write_to(psp_par_cat_file)
-    except NameError:
-        logger.warning("No psp parameter catalog found")
+    # Log parameter catalogs in validity files; skip tiers whose par path
+    # has been redirected outside the current production tree
+    for _tier in ["dsp", "hit", "psp", "pht"]:
+        if os.path.abspath(paths.get_pars_path(config, _tier)) != os.path.abspath(
+            Path(paths.pars_path(config)) / _tier
+        ):
+            continue
+        _cat_file = Path(paths.pars_path(config)) / _tier / "validity.yaml"
+        if _cat_file.is_file():
+            _cat_file.unlink()
+        try:
+            _cat_file.parent.mkdir(parents=True, exist_ok=True)
+            globals()[f"{_tier}_par_catalog"].write_to(_cat_file)
+        except KeyError:
+            logger.warning("No %s parameter catalog found", _tier)
 
 
 onsuccess:
