@@ -158,7 +158,7 @@ def get_all_channels(channelmap, timestamp, datatype):
     else:
         chmap = channelmap.valid_for(timestamp, system=datatype)
 
-    channels = list(chmap)
+    channels = sorted(chmap)
 
     if len(channels) == 0:
         print("WARNING: No channels found")  # noqa: T201
