@@ -323,7 +323,10 @@ def par_geds_psp_dplms() -> None:
     }
 
     for ts, db_dict in db_dicts.items():
+        existing_ctc_params = db_dict.get("ctc_params", {}).copy()
         db_dict.update(out_dict)
+        if "ctc_params" in out_dict and existing_ctc_params:
+            db_dict["ctc_params"] = {**existing_ctc_params, **out_dict["ctc_params"]}
         if dplms_dict["run_dplms"] is True:
             db_dict["dplms"] = {
                 **out_dict["dplms"],
