@@ -7,6 +7,7 @@ import shelve
 from pathlib import Path
 
 import lh5
+from dbetto import AttrsDict
 from dbetto.catalog import Props
 
 from legenddataflow.methods import ChannelProcKey
@@ -55,7 +56,7 @@ def merge_channels() -> None:
             if Path(channel).suffix == file_extension:
                 channel_dict = Props.read_from(channel)
                 fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
-                out_dict[fkey.channel] = channel_dict
+                out_dict[fkey.channel] = AttrsDict(channel_dict).to_dict()
             else:
                 msg = "Output file extension does not match input file extension"
                 raise RuntimeError(msg)
@@ -118,4 +119,4 @@ def merge_channels() -> None:
                 msg = "Output file extension does not match input file extension"
                 raise RuntimeError(msg)
         if args.out_db:
-            Props.write_to(args.out_db, db_dict)
+            Props.write_to(args.out_db, AttrsDict(db_dict).to_dict())

@@ -9,7 +9,7 @@ import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-from dbetto import Props, TextDB
+from dbetto import AttrsDict, Props, TextDB
 from legenddataflowscripts.utils import convert_dict_np_to_float
 
 from legenddataflow.methods import ChannelProcKey
@@ -125,7 +125,9 @@ def par_geds_psp_average() -> None:
 
     for file in args.output:
         tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
-        Props.write_to(file, convert_dict_np_to_float(in_dicts[tstamp]))
+        Props.write_to(
+            file, AttrsDict(convert_dict_np_to_float(in_dicts[tstamp])).to_dict()
+        )
 
     if args.out_plots:
         for file in args.out_plots:

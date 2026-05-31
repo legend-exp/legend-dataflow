@@ -5,6 +5,7 @@ import pickle as pkl
 from pathlib import Path
 
 import lh5
+from dbetto import AttrsDict
 from dbetto.catalog import Props
 from lgdo.types import Struct
 
@@ -44,7 +45,7 @@ def merge_in_channel() -> None:
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     if file_extension in (".json", ".yaml", ".yml"):
-        Props.write_to(out_file, Props.read_from(input_files))
+        Props.write_to(out_file, AttrsDict(Props.read_from(input_files)).to_dict())
 
     elif file_extension == ".pkl":
         out_dict = {}
@@ -77,4 +78,4 @@ def merge_in_channel() -> None:
             if args.in_db:
                 db_dict = replace_path(db_dict, infile, args.output)
 
-            Props.write_to(args.out_db, db_dict)
+            Props.write_to(args.out_db, AttrsDict(db_dict).to_dict())

@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 import numpy as np
-from dbetto import Props
+from dbetto import AttrsDict, Props
 from legenddataflowscripts.utils import convert_dict_np_to_float
 
 from legenddataflow.methods.FileKey import (
@@ -73,7 +73,10 @@ def save_dict_to_files(files, out_dict):
             with Path(file).open("wb") as w:
                 pkl.dump(out_dict[fk.timestamp], w, protocol=pkl.HIGHEST_PROTOCOL)
         elif Path(file).suffix in (".json", ".yml", ".yaml"):
-            Props.write_to(file, convert_dict_np_to_float(out_dict[fk.timestamp]))
+            Props.write_to(
+                file,
+                AttrsDict(convert_dict_np_to_float(out_dict[fk.timestamp])).to_dict(),
+            )
         else:
             err = f"File {file} not recognized as .pkl, .json, .yml or .yaml"
             raise ValueError(err)
