@@ -21,7 +21,7 @@ def par_geds_pht_qc() -> None:
     argparser.add_argument("--fft-files", help="fft_files", nargs="*", type=str)
 
     argparser.add_argument(
-        "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
+        "--pulser-files", help="pulser_files", nargs="*", type=str, required=False
     )
     argparser.add_argument(
         "--overwrite-files", help="overwrite_files", nargs="*", type=str, required=False
@@ -98,7 +98,7 @@ def par_geds_pht_qc() -> None:
         fft_files=fft_files,
         table_name=args.table_name,
         overwrite=overwrite,
-        pulser_file=args.pulser_file,
+        pulser_file=args.pulser_files,
         build_plots=bool(args.plot_path),
     )
 
