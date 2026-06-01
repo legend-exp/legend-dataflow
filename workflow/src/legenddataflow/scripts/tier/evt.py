@@ -50,7 +50,7 @@ def build_tier_evt() -> None:
     chmap = LegendMetadata(args.metadata, lazy=True).channelmap(on=args.timestamp)
     evt_config = AttrsDict(Props.read_from(df_config.inputs.evt_config))
 
-    if args.datatype in ("phy", "xtc"):
+    if args.datatype in ("phy", "xtc", "ssc", "rdc"):
         if len(args.xtc_file) == 0:
             msg = f"datatype is {args.datatype} but no xtc file was supplied"
             raise ValueError(msg)
@@ -75,7 +75,7 @@ def build_tier_evt() -> None:
 
         log.debug(json.dumps(file_path_config, indent=2))
 
-        Props.add_to(evt_config, file_path_config)
+        evt_config = Props.add_to(evt_config, file_path_config)
 
     # block for snakemake to fill in channel lists
     for field, dic in evt_config.channels.items():
