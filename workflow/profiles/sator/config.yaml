@@ -4,5 +4,6 @@ configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile
 keep-going: true
 rerun-incomplete: true
+notemp: true
 config:
   - system=sator
