@@ -8,9 +8,6 @@ import logging
 import os
 from pathlib import Path
 
-import yaml
-from legenddataflowscripts.workflow import subst_vars
-
 
 def sandbox_path(setup):
     if "sandbox_path" in setup["paths"]:
@@ -112,38 +109,38 @@ def filelist_path(setup):
     return setup["paths"]["tmp_filelists"]
 
 
-# leaf-level paths eligible for symlinking (parent dirs 'tier' and 'par' are
-# intentionally excluded to avoid parent/child symlink conflicts)
-_SYMLINK_CANDIDATES = (
-    "tier_daq",
-    "tier_raw",
-    "tier_tcm",
-    "tier_dsp",
-    "tier_hit",
-    "tier_ann",
-    "tier_evt",
-    "tier_psp",
-    "tier_pht",
-    "tier_pan",
-    "tier_pet",
-    "tier_skm",
-    "tier_raw_blind",
-    "par_raw",
-    "par_tcm",
-    "par_dsp",
-    "par_hit",
-    "par_evt",
-    "par_psp",
-    "par_pht",
-    "par_pet",
-    "plt",
-    "metadata",
-)
+# Maps each paths.<key> candidate to its canonical default location relative to
+# the production root (CWD).  Parent keys 'tier' and 'par' are intentionally
+# excluded to avoid parent/child symlink conflicts.
+_DEFAULT_SUBPATHS: dict[str, str] = {
+    "tier_daq": "generated/tier/daq",
+    "tier_raw": "generated/tier/raw",
+    "tier_tcm": "generated/tier/tcm",
+    "tier_dsp": "generated/tier/dsp",
+    "tier_hit": "generated/tier/hit",
+    "tier_ann": "generated/tier/ann",
+    "tier_evt": "generated/tier/evt",
+    "tier_psp": "generated/tier/psp",
+    "tier_pht": "generated/tier/pht",
+    "tier_pan": "generated/tier/pan",
+    "tier_pet": "generated/tier/pet",
+    "tier_skm": "generated/tier/skm",
+    "tier_raw_blind": "generated/tier/raw-blind",
+    "par_raw": "generated/par/raw",
+    "par_tcm": "generated/par/tcm",
+    "par_dsp": "generated/par/dsp",
+    "par_hit": "generated/par/hit",
+    "par_evt": "generated/par/evt",
+    "par_psp": "generated/par/psp",
+    "par_pht": "generated/par/pht",
+    "par_pet": "generated/par/pet",
+    "plt": "generated/plt",
+    "metadata": "inputs",
+}
 
 
 def link_external_paths(
     config,
-    workflow_basedir: str | Path,
     *,
     logger: logging.Logger | None = None,
 ) -> None:
@@ -155,10 +152,8 @@ def link_external_paths(
     the canonical default location so the ``generated/`` tree maintains a
     consistent layout.
 
-    The canonical defaults are read from the ``dataflow-config.yaml`` found at
-    ``<workflow_basedir>/../dataflow-config.yaml``, with ``$_`` substituted by
-    the current working directory.  The call is a safe no-op when that file does
-    not exist.
+    The canonical default for each key is derived from :data:`_DEFAULT_SUBPATHS`
+    relative to the current working directory (the production root).
 
     For each candidate key:
 
@@ -170,30 +165,16 @@ def link_external_paths(
     Real directories at the default location are never modified.
     """
     log_ = logger if logger is not None else logging.getLogger(__name__)
-    template = Path(workflow_basedir).parent / "dataflow-config.yaml"
-    if not template.is_file():
-        return
-
-    default_cfg = yaml.safe_load(template.read_text())
-    if not isinstance(default_cfg, dict):
-        return
-
-    subst_vars(
-        default_cfg,
-        var_values={"_": str(Path.cwd().resolve())},
-        ignore_missing=True,
-    )
-    default_paths = default_cfg.get("paths", {})
     config_paths = config.get("paths", {})
+    root = Path.cwd()
 
-    for key in _SYMLINK_CANDIDATES:
+    for key, subpath in _DEFAULT_SUBPATHS.items():
         current_str = config_paths.get(key)
-        default_str = default_paths.get(key)
-        if current_str is None or default_str is None:
+        if current_str is None:
             continue
 
         current = Path(current_str)
-        default = Path(default_str)
+        default = root / subpath
 
         # os.path.abspath (not Path.resolve) on purpose: don't follow symlinks
         if os.path.abspath(current) == os.path.abspath(default):  # noqa: PTH100
@@ -225,6 +206,6 @@ def link_external_paths(
             )
 
         rel = Path(os.path.relpath(current, start=default.parent))
+        log_.info("symlinking %s -> %s", default, rel)
         default.parent.mkdir(parents=True, exist_ok=True)
         default.symlink_to(rel, target_is_directory=True)
-        log_.info("symlinked %s -> %s", default, rel)
