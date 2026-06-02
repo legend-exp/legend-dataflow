@@ -236,5 +236,9 @@ if snakemake.params.setup.get("check_log_files", True):
         snakemake.output.gen_output,
         warning_file=snakemake.output.warning_log,
     )
+else:
+    Path(snakemake.output.summary_log).parent.mkdir(parents=True, exist_ok=True)
+    Path(snakemake.output.summary_log).touch()
+    Path(snakemake.output.warning_log).touch()
 
 Path(snakemake.output.gen_output).touch()
