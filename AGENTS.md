@@ -19,7 +19,7 @@ legend-dataflow/
 │   ├── Snakefile                  # Main workflow entry point
 │   ├── Snakefile-build-raw        # Separate workflow for raw data building
 │   ├── rules/                     # Snakemake rule files (one per processing stage)
-│   ├── profiles/                  # Execution profiles (default, lngs, sator, nersc)
+│   ├── profiles/                  # Execution profiles (default, lngs, lngs-build-raw, sator)
 │   └── src/legenddataflow/
 │       ├── methods/               # Core library: file keys, patterns, calibration grouping
 │       └── scripts/               # Executable scripts called by rules
