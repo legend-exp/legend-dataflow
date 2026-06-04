@@ -45,17 +45,17 @@ The pipeline transforms data through successive tiers. For each tier, calibratio
 parameters are first derived from dedicated calibration runs (`cal` datatype) and then
 applied to physics data (`phy` datatype).
 
-| Tier  | Rule file(s)                                  | Description                                          |
-| ----- | --------------------------------------------- | ---------------------------------------------------- |
-| `raw` | `rules/raw.smk`                               | Convert DAQ (ORCA/FCIO) to LH5; apply blinding       |
-| `tcm` | `rules/tcm.smk`                               | Time Coincidence Map; pulser identification           |
-| `dsp` | `rules/dsp.smk`, `dsp_pars_geds/spms.smk`    | Digital signal processing; per-channel optimisation  |
-| `hit` | `rules/hit.smk`, `hit_pars_geds.smk`         | Energy calibration and PSD                           |
-| `psp` | `rules/psp.smk`, `psp_pars_geds.smk`         | Partition-level DSP (averaged over multiple runs)    |
-| `pht` | `rules/pht.smk`, `pht_pars_geds*.smk`        | Partition-level HIT; QC, A/E, LQ calibrations        |
-| `ann` | `rules/ann.smk`                               | ANN cuts for coaxial HPGe detectors                  |
-| `evt` | `rules/evt.smk`                               | Event-level reconstruction; cross-talk correction    |
-| `skm` | `rules/skm.smk`                               | Final physics skim                                   |
+| Tier  | Rule file(s)                              | Description                                         |
+| ----- | ----------------------------------------- | --------------------------------------------------- |
+| `raw` | `rules/raw.smk`                           | Convert DAQ (ORCA/FCIO) to LH5; apply blinding      |
+| `tcm` | `rules/tcm.smk`                           | Time Coincidence Map; pulser identification         |
+| `dsp` | `rules/dsp.smk`, `dsp_pars_geds/spms.smk` | Digital signal processing; per-channel optimisation |
+| `hit` | `rules/hit.smk`, `hit_pars_geds.smk`      | Energy calibration and PSD                          |
+| `psp` | `rules/psp.smk`, `psp_pars_geds.smk`      | Partition-level DSP (averaged over multiple runs)   |
+| `pht` | `rules/pht.smk`, `pht_pars_geds*.smk`     | Partition-level HIT; QC, A/E, LQ calibrations       |
+| `ann` | `rules/ann.smk`                           | ANN cuts for coaxial HPGe detectors                 |
+| `evt` | `rules/evt.smk`                           | Event-level reconstruction; cross-talk correction   |
+| `skm` | `rules/skm.smk`                           | Final physics skim                                  |
 
 **Dependency graph (simplified):**
 
@@ -105,17 +105,17 @@ Wildcards (`*`) and multi-value selectors (`_`-separated) work for most componen
 
 **Runtime** (pinned in `pyproject.toml`):
 
-| Package                  | Role                                     |
-| ------------------------ | ---------------------------------------- |
-| `pygama`                 | Gamma-ray analysis framework             |
-| `dspeed`                 | Digital signal processing                |
-| `legend-pydataobj`       | LEGEND data objects (LH5 format)         |
-| `legend-lh5io`           | LH5 I/O layer                            |
-| `legend-daq2lh5`         | DAQ format → LH5 conversion              |
-| `legend-dataflow-scripts`| Auxiliary dataflow scripts               |
-| `pylegendmeta`           | LEGEND metadata access                   |
-| `dbetto`                 | Database-backed parameter store          |
-| `snakemake`              | Workflow management (in `runprod` extra) |
+| Package                   | Role                                     |
+| ------------------------- | ---------------------------------------- |
+| `pygama`                  | Gamma-ray analysis framework             |
+| `dspeed`                  | Digital signal processing                |
+| `legend-pydataobj`        | LEGEND data objects (LH5 format)         |
+| `legend-lh5io`            | LH5 I/O layer                            |
+| `legend-daq2lh5`          | DAQ format → LH5 conversion              |
+| `legend-dataflow-scripts` | Auxiliary dataflow scripts               |
+| `pylegendmeta`            | LEGEND metadata access                   |
+| `dbetto`                  | Database-backed parameter store          |
+| `snakemake`               | Workflow management (in `runprod` extra) |
 
 **Development extras** (`[dev]` = `[runprod,test]` + `pre-commit`):
 
@@ -166,25 +166,25 @@ pre-commit install
 
 Active hooks (`.pre-commit-config.yaml`):
 
-| Hook                        | Purpose                                        |
-| --------------------------- | ---------------------------------------------- |
-| `blacken-docs`              | Format Python code blocks in RST/Markdown docs |
-| `check-added-large-files`   | Block accidental large file commits            |
-| `check-yaml/json/toml`      | Validate config file syntax                    |
-| `check-merge-conflict`      | Detect unresolved merge markers                |
-| `end-of-file-fixer`         | Ensure files end with a newline                |
-| `trailing-whitespace`       | Strip trailing spaces                          |
-| `name-tests-test`           | Enforce `test_*.py` naming (pytest-first)      |
-| `ruff` + `ruff-format`      | Lint and format Python                         |
-| `validate-pyproject`        | Validate `pyproject.toml` schema               |
-| `check-github-workflows`    | Validate GitHub Actions YAML                   |
-| `mypy`                      | Type checking (manual stage only)              |
-| `nbstripout`                | Strip notebook outputs before commit           |
-| `codespell`                 | Spell checking (with physics word exceptions)  |
-| `shellcheck`                | Shell script linting                           |
-| `rst-backticks` etc.        | RST syntax checks                              |
-| `prettier`                  | Format YAML, Markdown, JSON, TOML              |
-| `snakefmt`                  | Format Snakemake rule files                    |
+| Hook                      | Purpose                                        |
+| ------------------------- | ---------------------------------------------- |
+| `blacken-docs`            | Format Python code blocks in RST/Markdown docs |
+| `check-added-large-files` | Block accidental large file commits            |
+| `check-yaml/json/toml`    | Validate config file syntax                    |
+| `check-merge-conflict`    | Detect unresolved merge markers                |
+| `end-of-file-fixer`       | Ensure files end with a newline                |
+| `trailing-whitespace`     | Strip trailing spaces                          |
+| `name-tests-test`         | Enforce `test_*.py` naming (pytest-first)      |
+| `ruff` + `ruff-format`    | Lint and format Python                         |
+| `validate-pyproject`      | Validate `pyproject.toml` schema               |
+| `check-github-workflows`  | Validate GitHub Actions YAML                   |
+| `mypy`                    | Type checking (manual stage only)              |
+| `nbstripout`              | Strip notebook outputs before commit           |
+| `codespell`               | Spell checking (with physics word exceptions)  |
+| `shellcheck`              | Shell script linting                           |
+| `rst-backticks` etc.      | RST syntax checks                              |
+| `prettier`                | Format YAML, Markdown, JSON, TOML              |
+| `snakefmt`                | Format Snakemake rule files                    |
 
 Auto-update schedule: quarterly. `mypy` and `check-manifest` run only on manual stage.
 
