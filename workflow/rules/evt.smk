@@ -144,10 +144,12 @@ for evt_tier in ("evt", "pet"):
         params:
             timestamp="all",
             datatype="{datatype}",
-            ro_input=lambda _, input: utils.as_ro(config, input),
-        shell:
-            execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
-            "--output {output} "
-            "-- {params.ro_input} &> {log}"
+            ro_input=lambda _, input: as_ro(config, input.filelist),
+        run:
+            with open(input.filelist, "r") as r:
+                files = [as_ro(config,f) for f in r.read().splitlines()]
+            shell_string = (execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
+            "-- " + " ".join(files) + " &> {log}")
+            shell(shell_string)
 
     set_last_rule_name(workflow, f"concat_{evt_tier}")
