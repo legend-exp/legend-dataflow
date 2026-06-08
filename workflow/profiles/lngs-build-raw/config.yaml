@@ -1,6 +1,4 @@
 cores: 30
-resources:
-  - mem_swap=3500
 configfile: dataflow-config.yaml
 snakefile: ./workflow/Snakefile-build-raw
 keep-going: true
