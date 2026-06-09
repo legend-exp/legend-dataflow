@@ -127,7 +127,7 @@ for evt_tier in ("evt", "pet"):
 
     rule:
         input:
-            os.path.join(
+            filelist = os.path.join(
                 filelist_path(config),
                 "all-{experiment}-{period}-{run}-phy-" + f"{evt_tier}.filelist",
             ),
