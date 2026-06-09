@@ -149,6 +149,7 @@ for evt_tier in ("evt", "pet"):
             with open(input.filelist, "r") as r:
                 files = [as_ro(config,f) for f in r.read().splitlines()]
             shell_string = (execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
+            "--output {output} "
             "-- " + " ".join(files) + " &> {log}")
             shell(shell_string)
 
