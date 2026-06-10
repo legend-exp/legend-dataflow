@@ -8,7 +8,7 @@ from dbetto import Props
 import legenddataflow.methods.patterns as patt
 from legenddataflow.methods import FileKey, run_grouper
 
-concat_datatypes = ["phy"]
+concat_datatypes = ["phy", "ssc", "rdc"]
 concat_tiers = ["skm", "pet_concat", "evt_concat"]
 blind_datatypes = ["phy"]
 

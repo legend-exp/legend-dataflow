@@ -127,9 +127,9 @@ for evt_tier in ("evt", "pet"):
 
     rule:
         input:
-            filelist = os.path.join(
+            filelist=os.path.join(
                 filelist_path(config),
-                "all-{experiment}-{period}-{run}-phy-" + f"{evt_tier}.filelist",
+                "all-{experiment}-{period}-{run}-{datatype}-" + f"{evt_tier}.filelist",
             ),
         output:
             get_pattern_tier(
@@ -147,10 +147,12 @@ for evt_tier in ("evt", "pet"):
             ro_input=lambda _, input: as_ro(config, input.filelist),
         run:
             with open(input.filelist, "r") as r:
-                files = [as_ro(config,f) for f in r.read().splitlines()]
-            shell_string = (execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
-            "--output {output} "
-            "-- " + " ".join(files) + " &> {log}")
+                files = [as_ro(config, f) for f in r.read().splitlines()]
+            shell_string = (
+                execenv_pyexe(config, "lh5concat") + "--verbose --overwrite "
+                "--output {output} "
+                "-- " + " ".join(files) + " &> {log}"
+            )
             shell(shell_string)
 
     set_last_rule_name(workflow, f"concat_{evt_tier}")
