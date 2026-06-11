@@ -13,4 +13,6 @@ def replace_path(d, old_path, new_path):
     elif isinstance(d, str) and old_path in d:
         d = d.replace(old_path, new_path)
         d = d.replace(new_path, f"$_/{Path(new_path).name}")
+    elif isinstance(d, str) and Path(old_path).name in d:
+        d = d.replace(Path(old_path).name, Path(new_path).name)
     return d
