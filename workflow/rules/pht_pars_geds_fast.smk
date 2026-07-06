@@ -155,7 +155,6 @@ for key, dataset in part.datasets.items():
 
         set_last_rule_name(workflow, f"{key}-{partition}-par_pht_fast")
         slow_rule = workflow._rules[f"{key}-{partition}-build_pht_lq_calibration"]
-
         if key in pht_fast_rules:
             pht_fast_rules[key] += [list(workflow.rules)[-1], slow_rule]
         else:

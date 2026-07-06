@@ -19,25 +19,25 @@ timestamp = datetime.strftime(datetime.utcnow(), "%Y%m%dT%H%M%SZ")
 rule autogen_output:
     """This is the main rule for running the data production
 
-The Snakemake target format is specified as follows:
+    The Snakemake target format is specified as follows:
 
-    [all|sel]-{experiment}-{period}-{run}-{dataype}-{timestamp}-{tier}.gen
+        [all|sel]-{experiment}-{period}-{run}-{dataype}-{timestamp}-{tier}.gen
 
-where `experiment`, `period`, `run`, `datatype` can also be wildcards.
-`tier` must instead be fixed to a value. Specifying `sel` instead of `all`
-will only process data selected (valid) for analysis.
+    where `experiment`, `period`, `run`, `datatype` can also be wildcards.
+    `tier` must instead be fixed to a value. Specifying `sel` instead of `all`
+    will only process data selected (valid) for analysis.
 
-Examples:
+    Examples:
 
-> snakemake sel-l200-*-*-phy-dsp.gen
-> snakemake all-l200-p03-r001-phy-skm.gen
+    > snakemake sel-l200-*-*-phy-dsp.gen
+    > snakemake all-l200-p03-r001-phy-skm.gen
 
-At the end of the processing it will:
+    At the end of the processing it will:
 
-- collect all warnings and errors in log files into a final summary file
-- run the `pygama.flow.FileDB` generation for output files
-- generate lists of valid keys
-"""
+    - collect all warnings and errors in log files into a final summary file
+    - run the `pygama.flow.FileDB` generation for output files
+    - generate lists of valid keys
+    """
     input:
         filelist=Path(filelist_path(config)) / "{label}-{tier}.filelist",
     output:

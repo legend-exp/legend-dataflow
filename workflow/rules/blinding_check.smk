@@ -23,10 +23,10 @@ from pathlib import Path
 
 rule build_blinding_check:
     """
-Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
-if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
+    Runs a check on the daqenergy of the calibration run that the blinding curve given still applies,
+    if so creates a file whose existence will be checked by the raw blinding before proceeding with blinding the phy data
 
-"""
+    """
     input:
         files=Path(filelist_path(config))
         / "all-{experiment}-{period}-{run}-cal-raw.filelist",
