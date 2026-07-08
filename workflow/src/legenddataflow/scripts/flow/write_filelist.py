@@ -1,5 +1,8 @@
 # ruff: noqa: T201, I002
 
+"""Snakemake ``script:`` for the ``gen_filelist`` checkpoint: write the input
+files matched by a ``.gen`` target into a filelist."""
+
 from pathlib import Path
 
 from snakemake.script import snakemake  # snakemake > 8.16

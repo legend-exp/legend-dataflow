@@ -1,3 +1,7 @@
+"""Console script ``merge-channels``: merge per-channel parameter or plot
+outputs for one timestamp into a single per-tier file (yaml/json,
+pickle/shelve or lh5)."""
+
 from __future__ import annotations
 
 import argparse

@@ -1,3 +1,6 @@
+"""Console script ``build-tier-skm``: build the skm tier (flattened physics
+skim) from concatenated evt-tier data."""
+
 from __future__ import annotations
 
 import argparse

@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-aoe``: derive the partition-level A/E
+calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse

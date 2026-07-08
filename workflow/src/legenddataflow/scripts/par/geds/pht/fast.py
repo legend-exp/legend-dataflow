@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-fast``: run the partition-level calibrations
+(energy, A/E, LQ) for a HPGe channel in a single pass."""
+
 from __future__ import annotations
 
 import argparse

@@ -1,5 +1,8 @@
 # ruff: noqa: I002
 
+"""Build the lists of input files matching a ``.gen`` production target,
+grouping keys by run and handling the per-tier concatenation rules."""
+
 import glob
 from pathlib import Path
 

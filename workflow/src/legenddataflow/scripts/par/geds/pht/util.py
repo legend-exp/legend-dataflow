@@ -1,3 +1,6 @@
+"""Helpers shared by the pht parameter scripts: splitting input files by run
+and updating/saving calibration dictionaries."""
+
 from __future__ import annotations
 
 import pickle as pkl

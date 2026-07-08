@@ -1,3 +1,6 @@
+"""Console script ``par-geds-psp-average``: average run-level DSP parameters
+over a partition to produce psp parameters, with stability plots."""
+
 from __future__ import annotations
 
 import argparse

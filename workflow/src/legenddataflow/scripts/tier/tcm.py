@@ -1,3 +1,6 @@
+"""Console script ``build-tier-tcm``: build the time-coincidence map (tcm)
+tier from raw-tier data."""
+
 from __future__ import annotations
 
 import argparse

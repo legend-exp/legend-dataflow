@@ -80,15 +80,21 @@ Key settings
 +-------------------------------+--------------------------------------------------------------+
 | ``multiprocess``              | Enable parallel processing within a single Snakemake job.    |
 +-------------------------------+--------------------------------------------------------------+
+| ``multiprocess_mode``         | Strategy used to share work when ``multiprocess`` is on      |
+|                               | (default ``max_usage``).                                     |
++-------------------------------+--------------------------------------------------------------+
+| ``max_processes``             | Maximum number of processes when multiprocessing.            |
++-------------------------------+--------------------------------------------------------------+
 | ``pht_intier``                | Which tier to use as input for pht can be ``dsp`` or ``psp`` |
 +-------------------------------+--------------------------------------------------------------+
 
 Paths
 -----
 
-All path values support the ``$_`` placeholder, which is substituted with the value of
-the ``$PRODENV`` environment variable at runtime. This allows a single config file to
-be used across different machines by setting ``PRODENV`` appropriately.
+All path values support the ``$_`` placeholder, which is substituted with the directory
+containing the config file (the production cycle root). Other ``$VAR`` placeholders are
+taken from the environment, e.g. ``$PRODENV``. This allows a single config file to be
+used across different machines.
 
 The key path categories are:
 

@@ -1,3 +1,6 @@
+"""Console script ``build-tier-raw-fcio``: convert FCIO (FlashCam) DAQ files
+to the LH5 raw tier with ``daq2lh5``."""
+
 from __future__ import annotations
 
 import argparse

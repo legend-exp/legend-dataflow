@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-ecal-part``: derive the partition-level
+energy calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse

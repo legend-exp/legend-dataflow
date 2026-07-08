@@ -1,3 +1,6 @@
+"""Console script ``par-geds-tcm-pulser``: identify pulser events in the tcm
+tier and save their ids."""
+
 from __future__ import annotations
 
 import argparse

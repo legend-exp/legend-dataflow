@@ -19,12 +19,18 @@ from .patterns import (
 
 
 class CalGrouping:
+    """Resolve partition-level calibration groupings (from
+    ``cal_groupings.yaml``): which runs belong to each partition per channel,
+    and the corresponding filelists, parameter/plot files, log paths and
+    wildcard constraints."""
+
     def __init__(self, setup, input_file):
         self.datasets = Props.read_from(input_file)
         self.expand_runs()
         self.setup = setup
 
     def expand_runs(self):
+        """Expand ``r000..r005`` run-range strings into explicit run lists."""
         for channel, chan_dict in self.datasets.items():
             for part, part_dict in chan_dict.items():
                 for per, runs in part_dict.items():
@@ -47,12 +53,15 @@ class CalGrouping:
                         self.datasets[channel][part][per] = final_runs
 
     def get_dataset(self, dataset, channel):
+        """Return the ``{period: runs}`` dict for a partition, with
+        channel-specific overrides applied on top of ``default``."""
         partition_dict = self.datasets["default"].copy()
         if channel in self.datasets:
             partition_dict.update(self.datasets[channel])
         return partition_dict[dataset]
 
     def get_filelists(self, dataset, channel, tier, experiment="l200", datatype="cal"):
+        """Return the filelist paths covering all runs in the partition."""
         dataset = self.get_dataset(dataset, channel)
         files = []
         for per in dataset:
@@ -81,6 +90,9 @@ class CalGrouping:
         extension="yaml",
         pattern_func=get_pattern_pars_tmp_channel,
     ):
+        """Select from ``catalog`` the per-channel parameter files whose keys
+        fall inside the partition's periods and runs, expanded with
+        ``pattern_func``."""
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
         for item in catalog.entries["all"]:
@@ -134,6 +146,7 @@ class CalGrouping:
         datatype="cal",
         name=None,
     ):
+        """Like :meth:`get_par_files` but for the pickled plot outputs."""
         return self.get_par_files(
             catalog,
             dataset,
@@ -157,6 +170,8 @@ class CalGrouping:
         datatype="cal",
         name=None,
     ):
+        """Build the log-file path for the partition job, derived from the
+        first matching parameter file."""
         par_files = self.get_par_files(
             catalog,
             dataset,
@@ -180,6 +195,7 @@ class CalGrouping:
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
     ):
+        """Return the timestamp of the partition's first parameter file."""
         par_files = self.get_par_files(
             catalog,
             dataset,
@@ -195,6 +211,8 @@ class CalGrouping:
         return "20000101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
+        """Build the channel wildcard regex; for ``default`` it excludes
+        channels that have their own override for the partition's runs."""
         if channel == "default":
             exclude_chans = []
             default_runs = self.get_dataset(dataset, channel)

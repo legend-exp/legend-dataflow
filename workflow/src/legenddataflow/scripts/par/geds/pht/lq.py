@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-lq``: derive the partition-level LQ
+calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse

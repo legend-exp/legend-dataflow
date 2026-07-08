@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-qc-phy``: derive partition-level
+quality-control cuts for a HPGe channel from physics data."""
+
 from __future__ import annotations
 
 import argparse

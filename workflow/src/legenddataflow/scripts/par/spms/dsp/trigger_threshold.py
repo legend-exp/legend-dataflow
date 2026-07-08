@@ -1,3 +1,7 @@
+"""Console scripts ``par-spms-dsp-trg-thr`` and ``-multi``: determine SiPM
+trigger thresholds from the noise distribution of DSP-processed raw
+waveforms."""
+
 from __future__ import annotations
 
 import argparse

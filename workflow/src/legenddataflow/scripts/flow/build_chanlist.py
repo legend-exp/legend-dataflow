@@ -1,5 +1,8 @@
 # ruff: noqa: I002, T201
 
+"""Determine the channels to process for a given timestamp and build the
+corresponding per-channel parameter and plot output filenames."""
+
 from pathlib import Path
 
 from dbetto import TextDB

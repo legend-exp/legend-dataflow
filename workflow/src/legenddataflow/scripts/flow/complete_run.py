@@ -1,5 +1,9 @@
 # ruff: noqa: T201, I002
 
+"""Run-completion script executed by the ``autogen_output`` rule: checks log
+files for warnings and errors, builds ``pygama`` FileDB databases and
+collects the produced run information."""
+
 import datetime
 import json
 import os

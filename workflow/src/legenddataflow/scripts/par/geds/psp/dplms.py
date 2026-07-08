@@ -1,3 +1,6 @@
+"""Console script ``par-geds-psp-dplms``: train DPLMS filters from
+calibration waveforms and produce partition-level DSP parameters."""
+
 from __future__ import annotations
 
 import argparse

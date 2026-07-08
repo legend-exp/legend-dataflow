@@ -1,3 +1,7 @@
+"""Console script ``build-tier-evt``: build the evt tier (event-level
+reconstruction and cross-talk correction) from hit, dsp and tcm inputs,
+optionally including ANN files."""
+
 from __future__ import annotations
 
 import argparse

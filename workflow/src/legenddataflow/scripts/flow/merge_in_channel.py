@@ -1,3 +1,6 @@
+"""Console script ``merge-in-channels``: merge per-channel parameter outputs
+into a single channel-keyed output file."""
+
 from __future__ import annotations
 
 import argparse
@@ -65,7 +68,9 @@ def merge_in_channel() -> None:
             fkey = ChannelProcKey.get_filekey_from_pattern(Path(infile).name)
             tb_in = lh5.read(f"{fkey.channel}", infile)
 
-            objects[f"{fkey.processing_step}".split("_", maxsplit=3)[2]] = tb_in[f"{fkey.processing_step}".split("_", maxsplit=3)[2]]
+            objects[f"{fkey.processing_step}".split("_", maxsplit=3)[2]] = tb_in[
+                f"{fkey.processing_step}".split("_", maxsplit=3)[2]
+            ]
 
         lh5.write(
             Struct(objects),
