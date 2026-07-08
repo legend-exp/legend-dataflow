@@ -95,7 +95,6 @@ docs = [
 ]
 
 [project.scripts]
-create-chankeylist      = "legenddataflow.scripts.create_chankeylist:create_chankeylist"
 merge-channels          = "legenddataflow.scripts.flow.merge_channels:merge_channels"
 merge-in-channels       = "legenddataflow.scripts.flow.merge_in_channel:merge_in_channel"
 build-tier-evt          = "legenddataflow.scripts.tier.evt:build_tier_evt"
@@ -107,6 +106,7 @@ build-tier-tcm          = "legenddataflow.scripts.tier.tcm:build_tier_tcm"
 par-geds-pht-aoe        = "legenddataflow.scripts.par.geds.pht.aoe:par_geds_pht_aoe"
 par-geds-pht-ecal-part  = "legenddataflow.scripts.par.geds.pht.ecal_part:par_geds_pht_ecal_part"
 par-geds-pht-fast       = "legenddataflow.scripts.par.geds.pht.fast:par_geds_pht_fast"
+par-geds-pht-lq         = "legenddataflow.scripts.par.geds.pht.lq:par_geds_pht_lq"
 par-geds-pht-qc-phy     = "legenddataflow.scripts.par.geds.pht.qc_phy:par_geds_pht_qc_phy"
 par-geds-pht-qc         = "legenddataflow.scripts.par.geds.pht.qc:par_geds_pht_qc"
 par-geds-psp-average    = "legenddataflow.scripts.par.geds.psp.average:par_geds_psp_average"

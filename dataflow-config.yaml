@@ -12,10 +12,9 @@ build_file_dbs: true
 # Scan log files for errors/warnings after each run.
 check_log_files: true
 # Parallel processing within a single Snakemake job, its mode, and the
-# process cap. NOTE: the "mode" key name is misspelled; renaming it
-# requires updating the code that reads it.
+# process cap.
 multiprocess: false
-mutliprocess_mode: max_usage
+multiprocess_mode: max_usage
 max_processes: 1
 # Input tier for pht building: dsp or psp.
 pht_intier: psp
