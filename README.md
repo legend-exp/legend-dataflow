@@ -95,6 +95,9 @@ Full documentation is available at the project's ReadTheDocs page:
 - **Developer Guide** – how to extend and contribute to the pipeline
 - **API Reference** – Python API documentation
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution
+guidelines.
+
 ## Related projects
 
 - [legend-pydataobj](https://legend-pydataobj.readthedocs.io) – LEGEND data objects (LH5 format)

@@ -1,268 +1,133 @@
 # LEGEND Dataflow — Agent / Developer Reference
 
-## Project Overview
-
-`legend-dataflow` orchestrates the full LEGEND L200 data processing pipeline from raw
-digitiser output to physics-ready event data using
-[Snakemake](https://snakemake.readthedocs.io/). Hundreds of detector channels are
-calibrated and optimised in parallel before physics data are processed.
-
-Full documentation: <https://legend-dataflow.readthedocs.io>
-
----
+`legend-dataflow` orchestrates the LEGEND L200 data processing pipeline — raw
+digitiser output to physics-ready events — with
+[Snakemake](https://snakemake.readthedocs.io/), calibrating hundreds of detector
+channels in parallel. Full docs: <https://legend-dataflow.readthedocs.io>.
+AI-assisted contributions must follow `AI_POLICY.md` (human review + disclosure).
 
 ## Repository Structure
 
 ```text
 legend-dataflow/
 ├── workflow/
-│   ├── Snakefile                  # Main workflow entry point
-│   ├── Snakefile-build-raw        # Separate workflow for raw data building
-│   ├── rules/                     # Snakemake rule files (one per processing stage)
-│   ├── profiles/                  # Execution profiles (default, lngs, sator, nersc)
+│   ├── Snakefile                  # Main workflow (tcm → … → skm)
+│   ├── Snakefile-build-raw        # DAQ → raw tier (+ blinding)
+│   ├── rules/                     # Rule files, one per processing stage
+│   ├── profiles/                  # Snakemake profiles (default, lngs, sator, nersc)
 │   └── src/legenddataflow/
-│       ├── methods/               # Core library: file keys, patterns, calibration grouping
-│       └── scripts/               # Executable scripts called by rules
-│           ├── flow/              # File discovery, channel lists, run finalisation
-│           ├── tier/              # Data tier building (raw, tcm, evt, skm)
-│           └── par/               # Parameter generation scripts
-│               ├── geds/          # HPGe detector parameters
-│               └── spms/          # SiPM detector parameters
-├── docs/                          # Sphinx documentation (RST source)
-├── tests/                         # pytest test suite
-├── dataflow-config.yaml           # Default site configuration
-└── pyproject.toml                 # Package metadata and dependencies
+│       ├── methods/               # Library: file keys, patterns, pars catalogs, cal grouping
+│       └── scripts/               # Rule executables: flow/ (plumbing), tier/ (builders),
+│                                  # par/geds|spms/ (calibration)
+├── docs/                          # Sphinx docs (RST, Furo, ReadTheDocs)
+├── tests/                         # pytest suite + runprod integration tests
+├── dataflow-config.yaml           # Site configuration
+└── pyproject.toml                 # Metadata, deps, entry points; package-dir = workflow/src
 ```
 
-Python source lives in `workflow/src/legenddataflow/`; `pyproject.toml` sets
-`tool.setuptools.package-dir` accordingly.
+## Split Across Two Packages
 
----
+Many console scripts invoked by rules (`build-tier-dsp`, `build-tier-hit`,
+`build-tier-pht`, …) and the `dataflow`/`dataprod` CLI live in the external
+`legend-dataflow-scripts` package (imported as `legenddataflowscripts`), pinned in
+`pyproject.toml`. This repo's own entry points are listed under `[project.scripts]`.
+If a command's implementation isn't here, check that package before concluding it's
+missing.
 
 ## Processing Tiers
 
-The pipeline transforms data through successive tiers. For each tier, calibration
-parameters are first derived from dedicated calibration runs (`cal` datatype) and then
-applied to physics data (`phy` datatype).
+Per tier, calibration parameters are derived from `cal` runs, then applied to `phy`
+data.
 
-| Tier  | Rule file(s)                                  | Description                                          |
-| ----- | --------------------------------------------- | ---------------------------------------------------- |
-| `raw` | `rules/raw.smk`                               | Convert DAQ (ORCA/FCIO) to LH5; apply blinding       |
-| `tcm` | `rules/tcm.smk`                               | Time Coincidence Map; pulser identification           |
-| `dsp` | `rules/dsp.smk`, `dsp_pars_geds/spms.smk`    | Digital signal processing; per-channel optimisation  |
-| `hit` | `rules/hit.smk`, `hit_pars_geds.smk`         | Energy calibration and PSD                           |
-| `psp` | `rules/psp.smk`, `psp_pars_geds.smk`         | Partition-level DSP (averaged over multiple runs)    |
-| `pht` | `rules/pht.smk`, `pht_pars_geds*.smk`        | Partition-level HIT; QC, A/E, LQ calibrations        |
-| `ann` | `rules/ann.smk`                               | ANN cuts for coaxial HPGe detectors                  |
-| `evt` | `rules/evt.smk`                               | Event-level reconstruction; cross-talk correction    |
-| `skm` | `rules/skm.smk`                               | Final physics skim                                   |
-
-**Dependency graph (simplified):**
+| Tier  | Rule file(s)                              | Description                                         |
+| ----- | ----------------------------------------- | --------------------------------------------------- |
+| `raw` | `rules/raw.smk`                           | Convert DAQ (ORCA/FCIO) to LH5; apply blinding      |
+| `tcm` | `rules/tcm.smk`                           | Time Coincidence Map; pulser identification         |
+| `dsp` | `rules/dsp.smk`, `dsp_pars_geds/spms.smk` | Digital signal processing; per-channel optimisation |
+| `hit` | `rules/hit.smk`, `hit_pars_geds.smk`      | Energy calibration and PSD                          |
+| `psp` | `rules/psp.smk`, `psp_pars_geds.smk`      | Partition-level DSP (averaged over multiple runs)   |
+| `pht` | `rules/pht.smk`, `pht_pars_geds*.smk`     | Partition-level HIT; QC, A/E, LQ calibrations       |
+| `ann` | `rules/ann.smk`                           | ANN cuts for coaxial HPGe detectors                 |
+| `evt` | `rules/evt.smk`                           | Event-level reconstruction; cross-talk correction   |
+| `skm` | `rules/skm.smk`                           | Final physics skim                                  |
 
 ```
-DAQ files → RAW → TCM → DSP/PSP → HIT/PHT → ANN/PAN → EVT/PET → SKM
+DAQ → raw → tcm → dsp/psp → hit/pht → ann/pan → evt/pet → skm
 ```
-
----
 
 ## Key Conventions
 
-### Rule naming
+- **File keys:** `{experiment}-{period}-{run}-{datatype}-{timestamp}`, e.g.
+  `l200-p03-r001-phy-20230401T000000Z`; parsed/generated by `methods/FileKey.py`.
+- **Targets:** `[all|valid|<runlist-key>]-{experiment}-{period}-{run}-{datatype}-{tier}.gen`;
+  `*` wildcards and `_`-separated multi-selectors work for most components.
+- **Rule naming:** `build_tier_{tier}`; `build_{tier}_pars_{geds|spms}`.
+- **Patterns/paths:** all filename patterns live in `methods/patterns.py`, path
+  resolvers in `methods/paths.py`; new tiers need entries in both plus
+  `dataflow-config.yaml`.
+- **Parameter catalogs:** per-tier `validity.yaml` files map parameter sets to time
+  ranges; resolved by `ParsKeyResolve` (`methods/create_pars_keylist.py`) and
+  `ParsCatalog` (`methods/pars_loading.py`).
+- **Two rule→script styles:** `script:` directives (receive the `snakemake` object,
+  e.g. `scripts/flow/write_filelist.py`) vs `shell:` +
+  `execenv_pyexe(config, "<console-script>")`, which runs inside the configured
+  execenv. Don't convert between them casually.
+- **Config/environment:** the `PRODENV` env var is required. In
+  `dataflow-config.yaml`, `$_` expands to the project root and `$PRODENV` to the
+  production root; inputs live under `inputs/`, outputs under `generated/`.
+  `execenv:` defines named environments (bare/lngs/sator/nersc); non-bare ones run
+  in containers.
 
-- `build_tier_{tier}` — builds a data tier from input data
-- `build_{tier}_pars_{detector}` — derives calibration parameters for a detector type
-  (`geds` = HPGe, `spms` = SiPM)
-- Partition-level rules use `psp` / `pht` / `pan` / `pet` tier names
-
-### File key structure
-
-Files are identified by components: `experiment-period-run-datatype-timestamp`
-(e.g. `l200-p03-r001-phy-20230401T000000Z`). The `FileKey` class in
-`methods/FileKey.py` parses and generates these.
-
-### File path patterns
-
-All tier and parameter path patterns are defined in `methods/patterns.py`. New tiers
-must add entries here and in `dataflow-config.yaml`.
-
-### Parameter catalogs
-
-Validity YAML files track which parameter set applies to which time range:
-`{par_path}/{tier}/validity.yaml`. `ParsKeyResolve` (`methods/create_pars_keylist.py`)
-and `ParsCatalog` (`methods/pars_loading.py`) implement catalog resolution.
-
-### Snakemake target format
-
-```
-[all|valid|<runlist-key>]-{experiment}-{period}-{run}-{datatype}-{tier}.gen
-```
-
-Wildcards (`*`) and multi-value selectors (`_`-separated) work for most components.
-
----
-
-## Dependencies
-
-**Runtime** (pinned in `pyproject.toml`):
-
-| Package                  | Role                                     |
-| ------------------------ | ---------------------------------------- |
-| `pygama`                 | Gamma-ray analysis framework             |
-| `dspeed`                 | Digital signal processing                |
-| `legend-pydataobj`       | LEGEND data objects (LH5 format)         |
-| `legend-lh5io`           | LH5 I/O layer                            |
-| `legend-daq2lh5`         | DAQ format → LH5 conversion              |
-| `legend-dataflow-scripts`| Auxiliary dataflow scripts               |
-| `pylegendmeta`           | LEGEND metadata access                   |
-| `dbetto`                 | Database-backed parameter store          |
-| `snakemake`              | Workflow management (in `runprod` extra) |
-
-**Development extras** (`[dev]` = `[runprod,test]` + `pre-commit`):
+## Commands
 
 ```bash
-uv pip install -e ".[dev]"
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -e ".[dev]"          # add ".[docs]" to build docs
+
+python -m pytest                    # unit tests
+./tests/runprod/run-all.sh          # integration tests; run from repo root,
+                                    # needs LEGEND_METADATA set
+pre-commit run --all-files          # lint/format (once: pre-commit install)
+make -C docs                        # Sphinx docs (regenerates apidoc; -W: warnings are errors)
+
+# run the workflow
+snakemake --profile workflow/profiles/default all-l200-p03-r001-phy-skm.gen
 ```
 
-**Docs extras** (not installed by default):
+## Style
 
-```bash
-uv pip install -e ".[docs]"
-```
-
-Python ≥ 3.11 required; 3.12 is the recommended version.
-
----
-
-## Code Style
-
-The project uses **ruff** for both linting and formatting (replacing Black/isort).
-
-```bash
-ruff check .          # lint
-ruff format .         # format
-```
-
-Key ruff configuration (from `pyproject.toml`):
-
-- Source root: `workflow/src`
-- Enabled rule sets: `ARG`, `B`, `C4`, `EM`, `EXE`, `G`, `I`, `ICN`, `NPY`, `PD`,
-  `PGH`, `PIE`, `PL`, `PT`, `PTH`, `RET`, `RUF`, `SIM`, `T20`, `UP`, `YTT`
-- `from __future__ import annotations` is required in all Python files
-- `T20` (print statements) is allowed in `tests/` and `noxfile.py`
-
-Snakemake rule files are formatted with **snakefmt** (excluded: `channel_merge.smk`).
-
-Shell scripts are checked with **shellcheck**.
-
----
-
-## Pre-commit
-
-Install hooks after cloning:
-
-```bash
-pre-commit install
-```
-
-Active hooks (`.pre-commit-config.yaml`):
-
-| Hook                        | Purpose                                        |
-| --------------------------- | ---------------------------------------------- |
-| `blacken-docs`              | Format Python code blocks in RST/Markdown docs |
-| `check-added-large-files`   | Block accidental large file commits            |
-| `check-yaml/json/toml`      | Validate config file syntax                    |
-| `check-merge-conflict`      | Detect unresolved merge markers                |
-| `end-of-file-fixer`         | Ensure files end with a newline                |
-| `trailing-whitespace`       | Strip trailing spaces                          |
-| `name-tests-test`           | Enforce `test_*.py` naming (pytest-first)      |
-| `ruff` + `ruff-format`      | Lint and format Python                         |
-| `validate-pyproject`        | Validate `pyproject.toml` schema               |
-| `check-github-workflows`    | Validate GitHub Actions YAML                   |
-| `mypy`                      | Type checking (manual stage only)              |
-| `nbstripout`                | Strip notebook outputs before commit           |
-| `codespell`                 | Spell checking (with physics word exceptions)  |
-| `shellcheck`                | Shell script linting                           |
-| `rst-backticks` etc.        | RST syntax checks                              |
-| `prettier`                  | Format YAML, Markdown, JSON, TOML              |
-| `snakefmt`                  | Format Snakemake rule files                    |
-
-Auto-update schedule: quarterly. `mypy` and `check-manifest` run only on manual stage.
-
----
+- **ruff** (lint + format), **snakefmt** for Snakefiles (`channel_merge.smk`
+  excluded), **shellcheck**, **prettier** (YAML/MD/JSON/TOML) — all via pre-commit;
+  pre-commit.ci pushes autofixes to PRs.
+- `from __future__ import annotations` is required in all Python files.
+- **NumPy-style docstrings** (Sphinx Napoleon is configured NumPy-only; apidoc
+  publishes undocumented modules as empty stubs).
+- Versioning is **setuptools_scm** from git tags — never edit `_version.py`.
+- Commit messages loosely follow conventional-commit prefixes (`fix(evt): …`).
 
 ## Testing
 
-Tests use **pytest** and live in `tests/`:
-
-```bash
-pytest tests/
-```
-
-Test files:
-
-- `test_filekey.py` — `FileKey` parsing and pattern generation
-- `test_create_pars.py` — parameter key resolution
-- `test_pars_loading.py` — parameter catalog loading
-- `test_cal_grouping.py` — calibration grouping / partition logic
-
-pytest configuration (from `pyproject.toml`):
-
-- `--strict-markers`, `--strict-config`, `--showlocals`
-- `xfail_strict = true` — unexpected passes are failures
-- `filterwarnings = ["error"]` — all warnings are errors
-- `log_cli_level = "INFO"`
-
-The `tests/dummy_cycle/` and `tests/runprod/` directories contain fixture data for
-integration-style tests.
-
----
-
-## Documentation
-
-Documentation is written in **reStructuredText** under `docs/source/` and built with
-**Sphinx** (Furo theme):
-
-```bash
-cd docs
-make html
-```
-
-Source files:
-
-- `index.rst` — top-level table of contents
-- `user_manual.rst` — configuration, profiles, running the dataflow
-- `pipeline.rst` — processing pipeline overview and tier descriptions
-- `developer.rst` — repository structure, conventions, how to extend the pipeline
-
-Published automatically on ReadTheDocs at <https://legend-dataflow.readthedocs.io>.
-
----
+- pytest promotes warnings to errors and uses strict markers/config;
+  `xfail_strict = true`.
+- Unit tests cover only `methods/` (file keys, pars catalogs, cal grouping) and
+  load the `tests/dummy_cycle/` fixture config at module import time.
+- `tests/runprod/*.sh` are DAG smoke tests using empty `touch`ed dummy files — by
+  design: real processing is ~1 TB per run, far beyond CI capacity. Never propose
+  processing real data in GitHub Actions; test pure logic with unit tests instead.
 
 ## Extending the Pipeline
 
-### Adding a new DSP processor
+- **New DSP processor:** if it exists in `dspeed`, add it to the relevant config in
+  `legend-dataflow-config` under `tier/dsp`; otherwise PR to `dspeed` first.
+- **New calibration script:** add a rule to the relevant `.smk` file writing
+  `par_{tier}_mystep.yaml`, plus the script under `scripts/par/geds/{tier}/`.
+- **New tier `foo`:** path entries in `dataflow-config.yaml` and `methods/paths.py`;
+  patterns in `methods/patterns.py`; `rules/foo.smk`; scripts under `scripts/`;
+  `include:` in `workflow/Snakefile` in dependency order; `table_format` entry in
+  the config.
+- **New execution environment:** `execenv` entry in `dataflow-config.yaml` plus a
+  profile under `workflow/profiles/<name>/config.yaml`.
 
-If the processor exists in `dspeed`, add it to the relevant config in
-`legend-dataflow-config` under `tier/dsp`. Otherwise open a PR to `dspeed` first, or
-point `pyproject.toml` at a local version.
-
-### Adding a new calibration script
-
-1. Add a rule to the relevant `.smk` file (e.g. `rules/hit_pars_geds.smk`) writing
-   `par_hit_mystep.yaml`.
-2. Add the script under `scripts/par/geds/hit/`.
-
-### Adding a new tier `foo`
-
-1. Add `tier_foo` and `par_foo` path entries to `dataflow-config.yaml` and `methods/paths.py`.
-2. Add file path patterns in `methods/patterns.py`.
-3. Write `workflow/rules/foo.smk` with parameter generation and tier building rules.
-4. Write scripts in `scripts/tier/foo.py` and/or `scripts/par/geds/foo/`.
-5. Add `include: "rules/foo.smk"` to `workflow/Snakefile` in dependency order.
-6. Add the HDF5 table naming pattern to the `table_format` section of the config.
-
-### Adding a new execution environment
-
-1. Add a key under `execenv` in `dataflow-config.yaml` with container command, image
-   path, and required environment variables.
-2. Add a matching profile under `workflow/profiles/<hostname>/config.yaml`.
+Python ≥ 3.11 (3.12 recommended). Key pinned dependencies (`pyproject.toml`):
+pygama, dspeed, legend-pydataobj, legend-daq2lh5, pylegendmeta, dbetto,
+legend-dataflow-scripts.

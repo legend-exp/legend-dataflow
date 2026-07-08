@@ -1,18 +1,36 @@
+# Site configuration for the LEGEND dataflow. Key settings are documented in
+# docs/source/user_manual.rst (Configuration section).
+
+# Tag or branch of legend-metadata to check out automatically;
+# comment out to manage the metadata checkout manually.
 legend_metadata_version: v1.4.1
+# If false, abort when calibration parameter generation fails;
+# if true, continue with default or overridden parameters.
 allow_none_par: false
+# Generate pygama FileDB databases after a successful production run.
 build_file_dbs: true
+# Scan log files for errors/warnings after each run.
 check_log_files: true
+# Parallel processing within a single Snakemake job, its mode, and the
+# process cap. NOTE: the "mode" key name is misspelled; renaming it
+# requires updating the code that reads it.
 multiprocess: false
 mutliprocess_mode: max_usage
 max_processes: 1
+# Input tier for pht building: dsp or psp.
 pht_intier: psp
 
+# $_ expands to the directory containing this file; other $VARS
+# (e.g. $PRODENV) are taken from the environment.
 paths:
+  # Staging area for incoming DAQ files (Snakefile-build-raw).
   sandbox_path: $_/sandbox
+  # Blinded raw output (physics data with signal region removed).
   tier_raw_blind: $_/generated/tier/raw-blind
 
   workflow: $_/workflow
 
+  # Inputs: metadata, processing configs, overrides, hardware maps.
   metadata: $_/inputs
   config: $_/inputs/dataprod/config
   par_overwrite: $_/inputs/dataprod/overrides
@@ -20,6 +38,7 @@ paths:
   detector_status: $_/inputs/datasets
   detector_db: $_/inputs/hardware/detectors
 
+  # Data tier outputs.
   tier: $_/generated/tier
   tier_daq: $_/generated/tier/daq
   tier_raw: $_/generated/tier/raw
@@ -34,6 +53,7 @@ paths:
   tier_pet: $_/generated/tier/pet
   tier_skm: $_/generated/tier/skm
 
+  # Calibration parameter outputs (validity catalogs + par files).
   par: $_/generated/par
   par_raw: $_/generated/par/raw
   par_tcm: $_/generated/par/tcm
@@ -44,18 +64,23 @@ paths:
   par_pht: $_/generated/par/pht
   par_pet: $_/generated/par/pet
 
+  # Monitoring plots and logs.
   plt: $_/generated/plt
   log: $_/generated/log
 
+  # Scratch space, cleaned up on workflow success.
   tmp_plt: $_/generated/tmp/plt
   tmp_log: $_/generated/tmp/log
   tmp_benchmark: $_/generated/tmp/benchmark
   tmp_filelists: $_/generated/tmp/filelists
   tmp_par: $_/generated/tmp/par
 
+  # Python source checkout and venv created by `dataflow install`.
   src: $_/software/python/src
   install: $_/.snakemake/legend-dataflow/venv
 
+# LH5 table name inside output files, per tier
+# ({ch} = channel rawid, {grp} = detector group).
 table_format:
   raw: ch{ch:07d}/raw
   dsp: ch{ch:07d}/dsp
@@ -67,6 +92,9 @@ table_format:
   skm: "{grp}/skm"
   tcm: hardware_tcm_1
 
+# Named execution environments, selected with `--config system=<name>`
+# (profiles set this). Non-bare environments wrap commands in a container
+# via `cmd` + `arg`; `env` sets variables for every job.
 execenv:
   bare:
     env:
