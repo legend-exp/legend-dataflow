@@ -75,7 +75,7 @@ def get_analysis_runs(
 
     if analysis_runs_file is not None and file_selection != "all":
         if Path(analysis_runs_file).is_file():
-            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+            if Path(analysis_runs_file).suffix in (".json", ".yaml", ".yml"):
                 analysis_runs = Props.read_from(analysis_runs_file)
             else:
                 msg = f"analysis_runs file not in json or yaml format: {analysis_runs_file}"
@@ -171,12 +171,14 @@ def build_filelist(
     the keys specified in the analysis_runs dict.
     """
     # the ignore_keys dictionary organizes keys in sections, gather all the
-    # section contents in a single list
-    if ignore_keys is not None:
+    # section contents in a single list; keylist files yield a flat list
+    if isinstance(ignore_keys, dict):
         _ignore_keys = ignore_keys.get("unprocessable", [])
         if remove_level == "removed":
             _ignore_keys += ignore_keys.get("removed", [])
         ignore_keys = sorted(_ignore_keys)
+    elif ignore_keys is not None:
+        ignore_keys = sorted(ignore_keys)
     else:
         ignore_keys = []
 
