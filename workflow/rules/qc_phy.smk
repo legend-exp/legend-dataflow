@@ -98,7 +98,6 @@ for key, dataset in part.datasets.items():
                 "--metadata {meta} "
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_qc_phy")
-
         if key in qc_pht_rules:
             qc_pht_rules[key].append(list(workflow.rules)[-1])
         else:

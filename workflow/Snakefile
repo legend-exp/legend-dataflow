@@ -102,7 +102,6 @@ localrules:
 onstart:
     logger.info("INFO: starting workflow")
     paths.link_external_paths(config, logger=logger)
-
     # Make sure some packages are initialized before we begin to avoid race conditions
     # https://numba.readthedocs.io/en/stable/developer/caching.html#cache-sharing
     if not workflow.touch:
@@ -122,7 +121,6 @@ onstart:
             execenv.execenv_pyexe(config, "python")
             + "-c 'from dspeed.processors import *'"
         )
-
     # Log parameter catalogs in validity files; skip tiers whose par path
     # has been redirected outside the current production tree
     for _tier in ["dsp", "hit", "psp", "pht"]:
@@ -158,22 +156,18 @@ onsuccess:
         asyncio.run(
             auto_report(workflow.persistence.dag, report_plugin, report_settings)
         )
-
         # FIXME: broken with Snakemake>=9
         # with (rep_dir / "dag.txt").open("w") as f:
         #     if workflow.persistence.dag is not None:
         #         f.writelines(str(workflow.persistence.dag))
-
     with (rep_dir / "rulegraph.txt").open("w") as f:
         if workflow.persistence.dag is not None:
             f.writelines(str(workflow.persistence.dag.rule_dot()))
-
             # remove .gen files
     files = glob.glob("*.gen")
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
-
     files = glob.glob(os.path.join(paths.filelist_path(config), "*"))
     for file in files:
         if os.path.isfile(file):
@@ -185,11 +179,11 @@ onsuccess:
 rule gen_filelist:
     """Generate file list.
 
-This rule is used as a "checkpoint", so when it is run it will update the
-DAG based on the files it finds. It does this by taking in the search
-pattern, using this to find all the files that match this pattern, deriving
-the keys from the files found and generating the list of new files needed.
-"""
+    This rule is used as a "checkpoint", so when it is run it will update the
+    DAG based on the files it finds. It does this by taking in the search
+    pattern, using this to find all the files that match this pattern, deriving
+    the keys from the files found and generating the list of new files needed.
+    """
     input:
         lambda wildcards: get_filelist(
             wildcards,

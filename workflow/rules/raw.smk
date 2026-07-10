@@ -30,8 +30,8 @@ raw_par_catalog = ParsKeyResolve.get_par_catalog(
 
 rule build_raw_orca:
     """
-This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
-"""
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
+    """
     input:
         get_pattern_tier_daq(config, extension="orca", check_in_cycle=False),
     output:
@@ -76,8 +76,8 @@ use rule build_raw_orca as build_raw_orca_gz with:
 
 rule build_raw_fcio:
     """
-This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
-"""
+    This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
+    """
     input:
         get_pattern_tier_daq(config, extension="fcio", check_in_cycle=False),
     output:
@@ -112,10 +112,10 @@ This rule runs build_raw, it takes in a file.{daq_ext} and outputs a raw file
 
 rule build_raw_blind:
     """
-This rule runs the data blinding, it takes in the raw file, calibration curve stored in the overrides
-and runs only if the blinding check file is on disk. Output is just the blinded raw file.
+    This rule runs the data blinding, it takes in the raw file, calibration curve stored in the overrides
+    and runs only if the blinding check file is on disk. Output is just the blinded raw file.
 
-"""
+    """
     input:
         tier_file=str(get_pattern_tier(config, "raw", check_in_cycle=False)).replace(
             "{datatype}", "phy"

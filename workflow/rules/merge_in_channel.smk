@@ -43,7 +43,6 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
             "--output {output} "
 
     set_last_rule_name(workflow, f"build_plts_inchan_{name}")
-
     object_output_name = "objects"
     if output_name is not None:
         object_output_name += f"_{output_name}"
@@ -64,7 +63,6 @@ def build_in_channel_merge_rules(rules, tier, output_name=None):
             "--output {output} "
 
     set_last_rule_name(workflow, f"build_pars_inchan_{name}_objects")
-
     if len(input_dsp_pars_lh5) > 0:
 
         rule:
