@@ -225,6 +225,12 @@ def par_geds_psp_dplms() -> None:
         fft_runs, _ = split_files_by_run(args.fft_raw_filelists)
 
         n_runs = len(fft_runs)
+        if n_runs == 0:
+            msg = (
+                "no fft raw files found in the provided filelists "
+                f"{args.fft_raw_filelists}, cannot train the DPLMS filter"
+            )
+            raise RuntimeError(msg)
         n_per_run = dplms_dict["n_baselines"] // n_runs
 
         t0 = time.time()

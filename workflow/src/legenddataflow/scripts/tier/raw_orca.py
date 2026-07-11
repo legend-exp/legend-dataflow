@@ -4,7 +4,6 @@ raw tier with ``daq2lh5``."""
 from __future__ import annotations
 
 import argparse
-import logging
 import time
 from pathlib import Path
 
@@ -40,9 +39,6 @@ def build_tier_raw_orca() -> None:
         "--inl-table", help="INL table", type=str, default=None, required=False
     )
     args = argparser.parse_args()
-
-    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 

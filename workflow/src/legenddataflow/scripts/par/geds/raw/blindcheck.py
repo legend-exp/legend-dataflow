@@ -19,7 +19,7 @@ import numexpr as ne
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import build_log, expand_filelist
 from legendmeta import LegendMetadata
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
@@ -62,12 +62,7 @@ def par_geds_raw_blindcheck() -> None:
     # read in calibration curve for this channel
     blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
-    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
-        input_file = args.files[0]
-        with Path(input_file).open() as f:
-            input_file = f.read().splitlines()
-    else:
-        input_file = args.files
+    input_file = expand_filelist(args.files)
 
     # load in the data
     daqenergy = lh5.read_as(
@@ -122,5 +117,9 @@ def par_geds_raw_blindcheck() -> None:
             },
         )
     else:
-        msg = "peaks not found in daqenergy"
+        msg = (
+            f"blinding check failed for channel {args.channel}: no peaks found "
+            f"within 5 keV of both 583 and 2614 keV in the calibrated daqenergy "
+            f"(local maxima at {maxs} keV), the blinding calibration may be stale"
+        )
         raise RuntimeError(msg)

@@ -9,10 +9,12 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-from dbetto import Props, TextDB
+from dbetto import Props
 from legenddataflowscripts.par.geds.hit.qc import build_qc
 from legenddataflowscripts.utils import (
     build_log,
+    get_channel_config,
+    get_rule_config,
 )
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -50,13 +52,16 @@ def par_geds_pht_qc() -> None:
     )
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_pht_qc"]
+    config_dict = get_rule_config(
+        args.configs, "pars_pht_qc", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
 
     # get metadata dictionary
-    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
+    channel_dict = get_channel_config(
+        config_dict["inputs"]["qc_config"], args.channel, name="qc_config"
+    )
     kwarg_dict = Props.read_from(channel_dict)
 
     if args.overwrite_files:

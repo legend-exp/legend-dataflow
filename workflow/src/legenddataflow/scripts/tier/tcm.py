@@ -28,11 +28,15 @@ def build_tier_tcm() -> None:
     config_dict = configs["snakemake_rules"]["tier_tcm"]
 
     log = build_log(config_dict, args.log)
+    # the config can either be a single file used for all fcids or a mapping
+    # of per-fcid config files
+    per_fcid_settings = None
     if isinstance(config_dict["inputs"]["config"], dict | AttrsDict):
-        settings = {
-            key: Props.read_from(val)
+        per_fcid_settings = {
+            int(key): Props.read_from(val)
             for key, val in config_dict["inputs"]["config"].items()
         }
+        settings = None
     else:
         settings = Props.read_from(config_dict["inputs"]["config"])
 
@@ -40,7 +44,7 @@ def build_tier_tcm() -> None:
     ch_list = lh5.ls(args.input, "/ch*")
 
     if len(ch_list) == 0:
-        msg = "no tables matching /ch* found in input file"
+        msg = f"no tables matching /ch* found in input file {args.input}"
         raise RuntimeError(msg)
 
     log.debug(ch_list)
@@ -58,12 +62,22 @@ def build_tier_tcm() -> None:
     for fcid, fcid_dict in fcid_channels.items():
         msg = f"building tcm for fcid: {fcid}"
         log.info(msg)
+        if per_fcid_settings is not None:
+            if fcid not in per_fcid_settings:
+                msg = (
+                    f"no tcm config found for fcid {fcid}: the config mapping "
+                    f"only covers fcids {sorted(per_fcid_settings)}"
+                )
+                raise RuntimeError(msg)
+            fcid_settings = per_fcid_settings[fcid]
+        else:
+            fcid_settings = settings
         build_tcm(
             [(args.input, fcid_dict)],
             out_file=args.output,
             out_name=f"hardware_tcm_{fcid}",
             wo_mode="o",
-            **settings.get(fcid, settings),
+            **fcid_settings,
         )
         msg = f"built tcm for fcid: {fcid}"
         log.info(msg)

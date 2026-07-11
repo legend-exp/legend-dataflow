@@ -35,7 +35,7 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
     if len(lh5.ls(raw_file, f"{raw_table_name}/waveform_bit_drop")) == 0:
         msg = (
             f"could not find waveform '{raw_table_name}/waveform_bit_drop' "
-            "in {args.raw_file}, returning null pars"
+            f"in {raw_file}, returning null pars"
         )
         log.warning(msg)
 
@@ -50,14 +50,15 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
         if len(data) == 0:
             msg = (
                 f"could not find any waveforms '{raw_table_name}/waveform_bit_drop' "
-                "in {args.raw_file}, returning null pars"
+                f"in {raw_file}, returning null pars"
             )
             log.warning(msg)
 
         elif len(data) < settings.n_events:
             msg = (
-                f"number of waveforms ({len(data)}) in '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
-                " in {args.raw_file}, can't build histogram"
+                f"found only {len(data)} waveforms in "
+                f"'{raw_table_name}/waveform_bit_drop' of {raw_file}, need at "
+                f"least {settings.n_events} to build the histogram"
             )
             raise RuntimeError(msg)
         else:
@@ -89,7 +90,10 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
             fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
 
             if fwhm <= 0:
-                msg = f"determined FWHM of baseline derivative distribution is so <= 0: {fwhm:.3f}"
+                msg = (
+                    "determined FWHM of the baseline derivative distribution "
+                    f"is not positive: {fwhm:.3f}"
+                )
                 raise RuntimeError(msg)
 
             return fwhm

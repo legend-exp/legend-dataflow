@@ -6,10 +6,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import build_log, expand_filelist
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 
@@ -24,9 +23,7 @@ def par_geds_tcm_pulser() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     argparser.add_argument("--rawid", help="rawid", type=str, required=True)
 
-    argparser.add_argument(
-        "--pulser-file", help="pulser file", type=str, required=False
-    )
+    argparser.add_argument("--pulser-file", help="pulser file", type=str, required=True)
 
     argparser.add_argument("--tcm-files", help="tcm_files", nargs="*", type=str)
     args = argparser.parse_args()
@@ -39,17 +36,8 @@ def par_geds_tcm_pulser() -> None:
     kwarg_dict = config_dict["inputs"]["pulser_config"]
     kwarg_dict = Props.read_from(kwarg_dict)
 
-    if (
-        isinstance(args.tcm_files, list)
-        and args.tcm_files[0].split(".")[-1] == "filelist"
-    ):
-        tcm_files = args.tcm_files[0]
-        with Path(tcm_files).open() as f:
-            tcm_files = f.read().splitlines()
-    else:
-        tcm_files = args.tcm_files
     # get pulser mask from tcm files
-    tcm_files = sorted(np.unique(tcm_files))
+    tcm_files = expand_filelist(args.tcm_files, "--tcm-files")
     ids, mask = get_tcm_pulser_ids(
         tcm_files, args.rawid, kwarg_dict.pop("pulser_multiplicity_threshold")
     )

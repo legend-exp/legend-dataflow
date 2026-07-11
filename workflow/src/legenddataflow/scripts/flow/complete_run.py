@@ -25,66 +25,45 @@ except ImportError:  # not running inside a snakemake job (e.g. unit tests)
 
 def check_log_files(log_path, output_file, gen_output, warning_file=None):
     now = datetime.datetime.now(datetime.UTC).strftime("%d/%m/%y %H:%M")
-    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+
+    # collect ERROR/WARNING lines from all log files, consuming the logs;
+    # uncaught tracebacks carry no "ERROR" token, so track traceback blocks
+    # and report their final exception line as an error
+    error_lines = []
+    warning_lines = []
+    for file in Path(log_path).rglob("*.log"):
+        in_traceback = False
+        with Path(file).open() as r:
+            for line in r:
+                if line.startswith("Traceback (most recent call last):"):
+                    in_traceback = True
+                elif in_traceback:
+                    if line[:1] in (" ", "\t") or not line.strip():
+                        continue
+                    # first unindented line is the exception itself
+                    error_lines.append(f"{Path(file).name} : {line.rstrip()}\n")
+                    in_traceback = False
+                elif "ERROR" in line:
+                    error_lines.append(f"{Path(file).name} : {line.rstrip()}\n")
+                elif "WARNING" in line:
+                    warning_lines.append(f"{Path(file).name} : {line.rstrip()}\n")
+        Path(file).unlink()
+
+    def _write_summary(path, lines, label):
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with Path(path).open("w") as f:
+            if lines:
+                f.write(f"{gen_output} successfully generated at {now} with {label} \n")
+                f.writelines(lines)
+            else:
+                f.write(
+                    f"{gen_output} successfully generated at {now} with no {label} \n"
+                )
+
+    _write_summary(output_file, error_lines, "errors")
     if warning_file is not None:
-        Path(warning_file).parent.mkdir(parents=True, exist_ok=True)
-        with Path(warning_file).open("w") as w, Path(output_file).open("w") as f:
-            n_errors = 0
-            n_warnings = 0
-            for file in Path(log_path).rglob("*.log"):
-                with Path(file).open() as r:
-                    text = r.read()
-                    if "ERROR" in text or "WARNING" in text:
-                        for line in text.splitlines():
-                            if "ERROR" in line:
-                                if n_errors == 0:
-                                    f.write(
-                                        f"{gen_output} successfully generated at {now} with errors \n"
-                                    )
-                                if n_warnings == 0:
-                                    w.write(
-                                        f"{gen_output} successfully generated at {now} with warnings \n"
-                                    )
-                                f.write(f"{Path(file).name} : {line}\n")
-                                n_errors += 1
-                            elif "WARNING" in line:
-                                w.write(f"{Path(file).name} : {line}\n")
-                                n_warnings += 1
-                    else:
-                        pass
-                Path(file).unlink()
-                text = None
-            if n_errors == 0:
-                f.write(
-                    f"{gen_output} successfully generated at {now} with no errors \n"
-                )
-            if n_warnings == 0:
-                w.write(
-                    f"{gen_output} successfully generated at {now} with no warnings \n"
-                )
-    else:
-        with Path(output_file).open("w") as f:
-            n_errors = 0
-            for file in Path(log_path).rglob("*.log"):
-                with Path(file).open() as r:
-                    text = r.read()
-                    if "ERROR" in text:
-                        for line in text.splitlines():
-                            if "ERROR" in line:
-                                if n_errors == 0:
-                                    f.write(
-                                        f"{gen_output} successfully generated at {now} with errors \n"
-                                    )
-                                f.write(f"{Path(file).name} : {line}\n")
-                                n_errors += 1
-                    else:
-                        pass
-                Path(file).unlink()
-                text = None
-            if n_errors == 0:
-                f.write(
-                    f"{gen_output} successfully generated at {now} with no errors \n"
-                )
+        _write_summary(warning_file, warning_lines, "warnings")
+
     walk = list(os.walk(log_path))
     for path, _, _ in walk[::-1]:
         if len(list(Path(path).iterdir())) == 0:

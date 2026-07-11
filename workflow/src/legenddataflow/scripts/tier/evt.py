@@ -19,14 +19,37 @@ from pygama.evt import build_evt
 from legenddataflow.methods import ProcessingFileKey
 
 
+def _resolve_channels(chmap, field, dic, timestamp):
+    """Resolve one evt-config ``channels`` entry into a list of ``chXXX``
+    names using the channel map valid at ``timestamp``."""
+    system_map = chmap.map("system", unique=False)
+    if dic["system"] not in system_map:
+        msg = (
+            f"channels field {field!r} requests system {dic['system']!r}, "
+            f"which is not in the channel map for {timestamp}: available "
+            f"systems are {sorted(system_map)}"
+        )
+        raise ValueError(msg)
+    chans = system_map[dic["system"]]
+    if "selectors" in dic:
+        try:
+            for k, val in dic["selectors"].items():
+                chans = chans.map(k, unique=False)[val]
+        except KeyError:
+            chans = None
+    if chans is not None:
+        return [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
+    return []
+
+
 def build_tier_evt() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--hit-file")
     argparser.add_argument("--dsp-file")
     argparser.add_argument("--tcm-file")
-    argparser.add_argument("--ann-file", nargs="*")
-    argparser.add_argument("--xtc-file", nargs="*")
-    argparser.add_argument("--par-files", nargs="*")
+    argparser.add_argument("--ann-file", nargs="*", default=[])
+    argparser.add_argument("--xtc-file", nargs="*", default=[])
+    argparser.add_argument("--par-files", nargs="*", default=[])
 
     argparser.add_argument("--datatype", required=True)
     argparser.add_argument("--timestamp", required=True)
@@ -40,7 +63,7 @@ def build_tier_evt() -> None:
     args = argparser.parse_args()
 
     if args.tier not in ("evt", "pet"):
-        msg = f"unsupported tier {args.tier}"
+        msg = f"unsupported tier {args.tier!r}: this script only builds 'evt' or 'pet'"
         raise ValueError(msg)
 
     # load in config
@@ -84,18 +107,9 @@ def build_tier_evt() -> None:
     # block for snakemake to fill in channel lists
     for field, dic in evt_config.channels.items():
         if isinstance(dic, dict):
-            chans = chmap.map("system", unique=False)[dic["system"]]
-            if "selectors" in dic:
-                try:
-                    for k, val in dic["selectors"].items():
-                        chans = chans.map(k, unique=False)[val]
-                except KeyError:
-                    chans = None
-            if chans is not None:
-                chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
-            else:
-                chans = []
-            evt_config.channels[field] = chans
+            evt_config.channels[field] = _resolve_channels(
+                chmap, field, dic, args.timestamp
+            )
 
     log.debug(json.dumps(evt_config.channels, indent=2))
 
@@ -104,6 +118,13 @@ def build_tier_evt() -> None:
     }
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+
+    if "hardware_tcm_1" not in lh5.ls(args.tcm_file):
+        msg = (
+            f"'hardware_tcm_1' not found in tcm file {args.tcm_file}: "
+            f"available objects are {lh5.ls(args.tcm_file)}"
+        )
+        raise ValueError(msg)
 
     file_table = {
         "tcm": (args.tcm_file, "hardware_tcm_1", "ch{}"),
@@ -129,18 +150,9 @@ def build_tier_evt() -> None:
         # block for snakemake to fill in channel lists
         for field, dic in muon_config["channels"].items():
             if isinstance(dic, dict):
-                chans = chmap.map("system", unique=False)[dic["system"]]
-                if "selectors" in dic:
-                    try:
-                        for k, val in dic["selectors"].items():
-                            chans = chans.map(k, unique=False)[val]
-                    except KeyError:
-                        chans = None
-                if chans is not None:
-                    chans = [f"ch{chan}" for chan in list(chans.map("daq.rawid"))]
-                else:
-                    chans = []
-                muon_config["channels"][field] = chans
+                muon_config["channels"][field] = _resolve_channels(
+                    chmap, field, dic, args.timestamp
+                )
 
         trigger_timestamp = table[field_config["ged_timestamp"]["table"]][
             field_config["ged_timestamp"]["field"]
@@ -191,7 +203,7 @@ def _find_matching_values_with_delay(arr1, arr2, jit_delay):
     matching_values = []
 
     # Create an array with all possible delay values
-    delays = np.arange(0, int(1e9 * jit_delay)) * jit_delay
+    delays = np.linspace(0, int(1e9 * jit_delay), 10000) * jit_delay
 
     for delay in delays:
         arr2_delayed = arr2 + delay

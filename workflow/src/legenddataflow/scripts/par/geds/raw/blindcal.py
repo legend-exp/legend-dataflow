@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import build_log, expand_filelist
 from pygama.pargen.energy_cal import HPGeCalibration
 
 mpl.use("agg")
@@ -53,12 +53,7 @@ def par_geds_raw_blindcal() -> None:
         [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
     )
 
-    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
-        input_file = args.files[0]
-        with Path(input_file).open() as f:
-            input_file = f.read().splitlines()
-    else:
-        input_file = args.files
+    input_file = expand_filelist(args.files)
 
     E_uncal = lh5.read_as(f"{args.raw_table_name}/daqenergy", input_file, library="np")
     E_uncal = E_uncal[E_uncal > 200]

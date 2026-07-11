@@ -44,6 +44,14 @@ def merge_channels() -> None:
 
     channel_files = args.input.infiles if hasattr(args.input, "infiles") else args.input
 
+    if len(channel_files) == 0:
+        msg = "no input files provided, cannot merge anything"
+        raise ValueError(msg)
+
+    if args.out_db and not args.in_db:
+        msg = "--out-db requires --in-db: there is no input database to update"
+        raise ValueError(msg)
+
     file_extension = Path(args.output).suffix
 
     if file_extension in (".dat", ".dir"):
@@ -62,7 +70,10 @@ def merge_channels() -> None:
                 fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
                 out_dict[fkey.channel] = AttrsDict(channel_dict).to_dict()
             else:
-                msg = "Output file extension does not match input file extension"
+                msg = (
+                    f"input file {channel} does not match the extension "
+                    f"{file_extension!r} of the output file {args.output}"
+                )
                 raise RuntimeError(msg)
 
         Props.write_to(out_file, out_dict)
@@ -77,8 +88,6 @@ def merge_channels() -> None:
 
         with Path(out_file).open("wb") as w:
             pkl.dump(out_dict, w, protocol=pkl.HIGHEST_PROTOCOL)
-
-        Path(out_file).rename(out_file)
 
     elif file_extension in (".dat", ".dir"):
         common_dict = {}
@@ -116,11 +125,27 @@ def merge_channels() -> None:
                     wo_mode="a",
                 )
                 if args.in_db:
+                    if fkey.channel not in db_dict:
+                        msg = (
+                            f"channel {fkey.channel} (from {channel}) not found in "
+                            f"the input database {args.in_db}"
+                        )
+                        raise KeyError(msg)
                     db_dict[fkey.channel] = replace_path(
                         db_dict[fkey.channel], channel, args.output
                     )
             else:
-                msg = "Output file extension does not match input file extension"
+                msg = (
+                    f"input file {channel} does not match the extension "
+                    f"{file_extension!r} of the output file {args.output}"
+                )
                 raise RuntimeError(msg)
         if args.out_db:
             Props.write_to(args.out_db, AttrsDict(db_dict).to_dict())
+
+    else:
+        msg = (
+            f"unsupported output file extension {file_extension!r} for {args.output}: "
+            "expected one of .json, .yaml, .yml, .pkl, .dat, .dir or .lh5"
+        )
+        raise ValueError(msg)

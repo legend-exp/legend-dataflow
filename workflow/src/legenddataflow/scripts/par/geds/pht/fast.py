@@ -11,11 +11,17 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from dbetto import TextDB
 from dbetto.catalog import Props
 from legenddataflowscripts.par.geds.hit.aoe import run_aoe_calibration
 from legenddataflowscripts.par.geds.hit.lq import run_lq_calibration
-from legenddataflowscripts.utils import build_log, get_pulser_mask
+from legenddataflowscripts.utils import (
+    build_log,
+    check_pulser_mask,
+    get_channel_config,
+    get_pulser_mask,
+    get_rule_config,
+    require_config_keys,
+)
 from legendmeta import LegendMetadata
 from pygama.pargen.utils import load_data
 
@@ -72,10 +78,17 @@ def par_geds_pht_fast() -> None:
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]
+    partcal_dict = get_rule_config(
+        args.configs, "pars_pht_partcal", args.timestamp, args.datatype
+    )
+    aoecal_dict = get_rule_config(
+        args.configs, "pars_pht_aoecal", args.timestamp, args.datatype
+    )
+    lqcal_dict = get_rule_config(
+        args.configs, "pars_pht_lqcal", args.timestamp, args.datatype
+    )
 
-    log = build_log(config_dict["pars_pht_partcal"], args.log)
+    log = build_log(partcal_dict, args.log)
 
     chmap = LegendMetadata(args.metadata).channelmap(
         args.timestamp, system=args.datatype
@@ -122,16 +135,39 @@ def par_geds_pht_fast() -> None:
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
 
-    kwarg_dict = Props.read_from(
-        config_dict["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
-            args.channel
-        ]
+    partcal_config = get_channel_config(
+        partcal_dict["inputs"]["pars_pht_partcal_config"],
+        args.channel,
+        name="pars_pht_partcal_config",
     )
-    aoe_kwarg_dict = Props.read_from(
-        config_dict["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][args.channel]
+    aoecal_config = get_channel_config(
+        aoecal_dict["inputs"]["par_pht_aoecal_config"],
+        args.channel,
+        name="par_pht_aoecal_config",
     )
-    lq_kwarg_dict = Props.read_from(
-        config_dict["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel]
+    lqcal_config = get_channel_config(
+        lqcal_dict["inputs"]["lqcal_config"],
+        args.channel,
+        name="lqcal_config",
+    )
+    kwarg_dict = Props.read_from(partcal_config)
+    aoe_kwarg_dict = Props.read_from(aoecal_config)
+    lq_kwarg_dict = Props.read_from(lqcal_config)
+
+    require_config_keys(
+        kwarg_dict,
+        ["final_cut_field", "energy_params", "threshold"],
+        f"channel {args.channel} partcal config ({partcal_config})",
+    )
+    require_config_keys(
+        aoe_kwarg_dict,
+        ["run_aoe"],
+        f"channel {args.channel} aoecal config ({aoecal_config})",
+    )
+    require_config_keys(
+        lq_kwarg_dict,
+        ["run_lq"],
+        f"channel {args.channel} lqcal config ({lqcal_config})",
     )
 
     params = [
@@ -141,6 +177,11 @@ def par_geds_pht_fast() -> None:
     params += kwarg_dict["energy_params"]
 
     if aoe_kwarg_dict["run_aoe"] is True:
+        require_config_keys(
+            aoe_kwarg_dict,
+            ["final_cut_field", "current_param", "energy_param", "cal_energy_param"],
+            f"channel {args.channel} aoecal config ({aoecal_config})",
+        )
         aoe_params = [
             aoe_kwarg_dict["final_cut_field"],
             aoe_kwarg_dict["current_param"],
@@ -158,6 +199,11 @@ def par_geds_pht_fast() -> None:
         params += aoe_params
 
     if lq_kwarg_dict["run_lq"] is True:
+        require_config_keys(
+            lq_kwarg_dict,
+            ["energy_param", "cal_energy_param", "cut_field"],
+            f"channel {args.channel} lqcal config ({lqcal_config})",
+        )
         params += [
             "lq80",
             "dt_eff",
@@ -184,6 +230,7 @@ def par_geds_pht_fast() -> None:
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 
+    check_pulser_mask(mask, threshold_mask, args.channel)
     data["is_pulser"] = mask[threshold_mask]
 
     msg = f"{len(data.query('~is_pulser'))} non pulser events"
@@ -198,10 +245,6 @@ def par_geds_pht_fast() -> None:
             row = pd.DataFrame(row)
             data = pd.concat([data, row])
 
-    configs = TextDB(path=args.configs, lazy=True).on(
-        args.timestamp, system=args.datatype
-    )["snakemake_rules"]
-
     start = time.time()
 
     cal_dicts, results_dicts, object_dicts, plot_dicts = calibrate_partition(
@@ -212,9 +255,7 @@ def par_geds_pht_fast() -> None:
         inplots_dict,
         args.channel,
         chmap,
-        configs=configs["pars_pht_partcal"]["inputs"]["pars_pht_partcal_config"][
-            args.channel
-        ],
+        configs=partcal_config,
         gen_plots=bool(args.plot_file),
         debug_mode=args.debug,
     )
@@ -228,9 +269,7 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        config=configs["pars_pht_aoecal"]["inputs"]["par_pht_aoecal_config"][
-            args.channel
-        ],
+        config=aoecal_config,
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
@@ -245,7 +284,7 @@ def par_geds_pht_fast() -> None:
         results_dicts,
         object_dicts,
         plot_dicts,
-        configs=configs["pars_pht_lqcal"]["inputs"]["lqcal_config"][args.channel],
+        configs=lqcal_config,
         debug_mode=args.debug,
         # gen_plots=bool(args.plot_file),
     )
@@ -255,7 +294,8 @@ def par_geds_pht_fast() -> None:
     msg = f"Total calibration took {time.time() - start:.2f} seconds"
     log.info(msg)
 
-    save_dict_to_files(args.plot_file, plot_dicts)
+    if args.plot_file:
+        save_dict_to_files(args.plot_file, plot_dicts)
 
     save_dict_to_files(
         sorted(args.hit_pars),

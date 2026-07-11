@@ -54,17 +54,24 @@ def build_tier_skm() -> None:
     # make it rectangular and make an LGDO Table
     out_table = Table(skm)
 
-    for field in out_fields:
+    # expand fields that refer to whole sub-tables into their leaf fields;
+    # iterate over a copy since out_fields is modified in the loop
+    for field in list(out_fields):
         items = field.split(".")
         ptr1 = out_table
-        for item in items[:-1]:
-            ptr1 = ptr1[item]
-
-        if isinstance(ptr1[items[-1]], Table):
-            out_fields.remove(field)
-            out_fields = get_all_out_fields(
-                ptr1[items[-1]], out_fields, current_field=field
+        try:
+            for item in items:
+                ptr1 = ptr1[item]
+        except KeyError as err:
+            msg = (
+                f"keep_fields entry {field!r} not found in the evt tier data: "
+                f"missing key {err}"
             )
+            raise KeyError(msg) from err
+
+        if isinstance(ptr1, Table):
+            out_fields.remove(field)
+            out_fields = get_all_out_fields(ptr1, out_fields, current_field=field)
 
     # remove unwanted columns
     out_table_skm = Table(size=len(out_table))

@@ -12,8 +12,12 @@ import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-from dbetto import AttrsDict, Props, TextDB
-from legenddataflowscripts.utils import convert_dict_np_to_float
+from dbetto import AttrsDict, Props
+from legenddataflowscripts.utils import (
+    convert_dict_np_to_float,
+    get_channel_config,
+    get_rule_config,
+)
 
 from legenddataflow.methods import ChannelProcKey
 
@@ -49,9 +53,13 @@ def par_geds_psp_average() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
+    config_dict = get_rule_config(
+        args.configs, "pars_psp", args.timestamp, args.datatype
+    )
     merge_config = Props.read_from(
-        configs["snakemake_rules"]["pars_psp"]["inputs"]["psp_config"][args.channel]
+        get_channel_config(
+            config_dict["inputs"]["psp_config"], args.channel, name="psp_config"
+        )
     )
 
     ave_fields = merge_config["average_fields"]
@@ -85,15 +93,25 @@ def par_geds_psp_average() -> None:
                     tmp_dict[key] = {}
                     tmp_dict = tmp_dict[key]
         if isinstance(vals[0], str):
-            if "*" in vals[0]:
-                unit = vals[0].split("*")[1]
-                rounding = (
-                    len(val.split("*")[0].split(".")[-1]) if "." in vals[0] else 16
+            try:
+                if "*" in vals[0]:
+                    unit = vals[0].split("*")[1]
+                    rounding = (
+                        len(vals[0].split("*")[0].split(".")[-1])
+                        if "." in vals[0]
+                        else 16
+                    )
+                    vals = np.array([float(val.split("*")[0]) for val in vals])
+                else:
+                    unit = None
+                    rounding = 16
+                    vals = np.array([float(val) for val in vals])
+            except (ValueError, IndexError) as err:
+                msg = (
+                    f"cannot average field {field!r}: values {vals} are not "
+                    "numbers or 'number*unit' strings"
                 )
-                vals = np.array([float(val.split("*")[0]) for val in vals])
-            else:
-                unit = None
-                rounding = 16
+                raise ValueError(msg) from err
         else:
             vals = np.array(vals)
             unit = None
@@ -132,17 +150,23 @@ def par_geds_psp_average() -> None:
             file, AttrsDict(convert_dict_np_to_float(in_dicts[tstamp])).to_dict()
         )
 
+    def _find_input_for_timestamp(infiles, tstamp, outfile):
+        for infile in infiles:
+            if tstamp in infile:
+                with Path(infile).open("rb") as f:
+                    return pkl.load(f)
+        msg = (
+            f"no input file matching timestamp {tstamp} (from output {outfile}) "
+            f"found among {infiles}"
+        )
+        raise ValueError(msg)
+
     if args.out_plots:
         for file in args.out_plots:
             tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
             if args.in_plots:
-                for infile in args.in_plots:
-                    if tstamp in infile:
-                        with Path(infile).open("rb") as f:
-                            old_plot_dict = pkl.load(f)
-                        break
-                old_plot_dict.update({"psp": plot_dict})
-                new_plot_dict = old_plot_dict
+                new_plot_dict = _find_input_for_timestamp(args.in_plots, tstamp, file)
+                new_plot_dict.update({"psp": plot_dict})
             else:
                 new_plot_dict = {"psp": plot_dict}
             with Path(file).open("wb") as f:
@@ -152,12 +176,7 @@ def par_geds_psp_average() -> None:
         for file in args.out_obj:
             tstamp = ChannelProcKey.get_filekey_from_pattern(Path(file).name).timestamp
             if args.in_obj:
-                for infile in args.in_obj:
-                    if tstamp in infile:
-                        with Path(infile).open("rb") as f:
-                            old_obj_dict = pkl.load(f)
-                        break
-                new_obj_dict = old_obj_dict
+                new_obj_dict = _find_input_for_timestamp(args.in_obj, tstamp, file)
             else:
                 new_obj_dict = {}
             with Path(file).open("wb") as f:
