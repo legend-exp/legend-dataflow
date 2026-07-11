@@ -87,18 +87,22 @@ class FileKey(
     def get_filekey_from_pattern(cls, filename, pattern=None):
         """Match ``filename`` against ``pattern`` (default: the class key
         pattern) and build a key from the named groups; fields not present in
-        the pattern become ``*``. Returns ``None`` if the filename doesn't
-        match."""
+        the pattern become ``*``. Raises :class:`ValueError` if the filename
+        doesn't match."""
         if isinstance(pattern, Path):
             pattern = pattern.as_posix()
         filename = str(filename)
-        key_pattern_rx = re.compile(
-            regex_from_filepattern(cls.key_pattern if pattern is None else pattern)
-        )
+        used_pattern = cls.key_pattern if pattern is None else pattern
+        key_pattern_rx = re.compile(regex_from_filepattern(used_pattern))
 
-        if key_pattern_rx.match(filename) is None:
-            return None
-        d = key_pattern_rx.match(filename).groupdict()
+        match = key_pattern_rx.match(filename)
+        if match is None:
+            msg = (
+                f"'{filename}' does not match the {cls.__name__} "
+                f"pattern '{used_pattern}'"
+            )
+            raise ValueError(msg)
+        d = match.groupdict()
         for entry in list(d):
             if entry not in cls._fields:
                 d.pop(entry)
@@ -120,7 +124,11 @@ class FileKey(
         """Parse a possibly partial key (e.g. ``-l200-p00``); missing trailing
         components become ``*``."""
         keypart_rx = re.compile(cls.re_pattern)
-        d = keypart_rx.match(keypart).groupdict()
+        match = keypart_rx.match(keypart)
+        if match is None:
+            msg = f"'{keypart}' cannot be parsed as a {cls.__name__} keypart"
+            raise ValueError(msg)
+        d = match.groupdict()
         for key in d:
             if d[key] is None:
                 d[key] = "*"
@@ -151,20 +159,22 @@ class FileKey(
             result.append(formatter.vformat(file_pattern, (), substitution))
         return result
 
+    def _resolve_dict_kwargs(self, kwargs):
+        """Resolve dict-valued kwargs by looking up the first of their keys
+        matching one of this key's fields; drop entries with no match."""
+        for entry, value in list(kwargs.items()):
+            if isinstance(value, dict):
+                matches = set(value).intersection(self._list())
+                if matches:
+                    kwargs[entry] = value[next(iter(matches))]
+                else:
+                    kwargs.pop(entry)
+        return kwargs
+
     def get_path_from_filekey(self, pattern, **kwargs):
         """Expand ``pattern`` with this key; dict-valued kwargs are resolved by
         looking up the first of their keys matching one of this key's fields."""
-        if kwargs is None:
-            return self.expand(pattern, **kwargs)
-        for entry, value in kwargs.items():
-            if isinstance(value, dict):
-                if len(next(iter(set(value).intersection(self._list())))) > 0:
-                    kwargs[entry] = value[
-                        next(iter(set(value).intersection(self._list())))
-                    ]
-                else:
-                    kwargs.pop(entry)
-        return self.expand(pattern, **kwargs)
+        return self.expand(pattern, **self._resolve_dict_kwargs(kwargs))
 
     # get_path_from_key
     @classmethod
@@ -233,17 +243,7 @@ class ProcessingFileKey(FileKey):
             pattern = pattern.as_posix()
         if not isinstance(pattern, str):
             pattern = pattern(self.tier, self.identifier)
-        if kwargs is None:
-            return self.expand(pattern, **kwargs)
-        for entry, value in kwargs.items():
-            if isinstance(value, dict):
-                if len(next(iter(set(value).intersection(self._list())))) > 0:
-                    kwargs[entry] = value[
-                        next(iter(set(value).intersection(self._list())))
-                    ]
-                else:
-                    kwargs.pop(entry)
-        return self.expand(pattern, **kwargs)
+        return self.expand(pattern, **self._resolve_dict_kwargs(kwargs))
 
 
 class ChannelProcKey(ProcessingFileKey):

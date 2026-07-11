@@ -11,20 +11,29 @@ from pathlib import Path
 
 def sandbox_path(setup):
     if "sandbox_path" in setup["paths"]:
-        return setup["paths"]["sandbox_path"]
+        return _get_path(setup, "sandbox_path")
     return None
 
 
+def _get_path(setup, key):
+    """Look up ``paths.<key>`` in the dataflow config, with a named error."""
+    try:
+        return setup["paths"][key]
+    except KeyError:
+        msg = f"dataflow-config paths.{key} is not set"
+        raise KeyError(msg) from None
+
+
 def tier_daq_path(setup):
-    return setup["paths"]["tier_daq"]
+    return _get_path(setup, "tier_daq")
 
 
 def tier_raw_blind_path(setup):
-    return setup["paths"]["tier_raw_blind"]
+    return _get_path(setup, "tier_raw_blind")
 
 
 def tier_path(setup):
-    return setup["paths"]["tier"]
+    return _get_path(setup, "tier")
 
 
 def get_tier_path(setup, tier):
@@ -41,72 +50,72 @@ def get_tier_path(setup, tier):
         "pet",
         "skm",
     ]:
-        return setup["paths"][f"tier_{tier}"]
+        return _get_path(setup, f"tier_{tier}")
     msg = f"no tier matching:{tier}"
     raise ValueError(msg)
 
 
 def pars_path(setup):
-    return setup["paths"]["par"]
+    return _get_path(setup, "par")
 
 
 def get_pars_path(setup, tier):
     if tier in ["raw", "tcm", "dsp", "hit", "evt", "psp", "pht", "pet"]:
-        return setup["paths"][f"par_{tier}"]
+        return _get_path(setup, f"par_{tier}")
     msg = f"no tier matching:{tier}"
     raise ValueError(msg)
 
 
 def tmp_par_path(setup):
-    return setup["paths"]["tmp_par"]
+    return _get_path(setup, "tmp_par")
 
 
 def tmp_plts_path(setup):
-    return setup["paths"]["tmp_plt"]
+    return _get_path(setup, "tmp_plt")
 
 
 def plts_path(setup):
-    return setup["paths"]["plt"]
+    return _get_path(setup, "plt")
 
 
 def par_overwrite_path(setup):
-    return setup["paths"]["par_overwrite"]
+    return _get_path(setup, "par_overwrite")
 
 
 def config_path(setup):
-    return setup["paths"]["config"]
+    return _get_path(setup, "config")
 
 
 def chan_map_path(setup):
-    return setup["paths"]["chan_map"]
+    return _get_path(setup, "chan_map")
 
 
 def det_status_path(setup):
-    return setup["paths"]["detector_status"]
+    return _get_path(setup, "detector_status")
 
 
 def metadata_path(setup):
-    return setup["paths"]["metadata"]
+    return _get_path(setup, "metadata")
 
 
 def detector_db_path(setup):
-    return setup["paths"]["detector_db"]
+    return _get_path(setup, "detector_db")
 
 
 def log_path(setup):
-    return setup["paths"]["log"]
+    return _get_path(setup, "log")
 
 
 def tmp_log_path(setup):
-    return setup["paths"]["tmp_log"]
+    return _get_path(setup, "tmp_log")
 
 
 def tmp_benchmark_path(setup):
-    return setup["paths"]["tmp_benchmark"]
+    return _get_path(setup, "tmp_benchmark")
 
 
 def filelist_path(setup):
-    return setup["paths"]["tmp_filelists"]
+    return _get_path(setup, "tmp_filelists")
 
 
 # Maps each paths.<key> candidate to its canonical default location relative to
