@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 from dbetto import time
 from legenddataflowscripts.workflow import subst_vars
@@ -11,6 +12,7 @@ from legenddataflow.methods import (
     ParsKeyResolve,
     patterns,
 )
+from legenddataflow.methods.pars_loading import ParsCatalog
 
 testprod = Path(__file__).parent / "dummy_cycle"
 
@@ -73,3 +75,28 @@ def test_create_pars_keylist():
         "cal/p00/r000/l200-p00-r000-cal-20230101T123456Z-par_dsp.yaml",
         "lar/p00/r000/l200-p00-r000-lar-20230110T123456Z-par_dsp.yaml",
     }
+
+
+def test_apply_run_override_missing_all(tmp_path):
+    overwrite_validity = tmp_path / "validity.yaml"
+    overwrite_validity.write_text(
+        yaml.dump(
+            [
+                {
+                    "valid_from": "20230101T000000Z",
+                    "apply": ["a.yaml"],
+                    "category": "other",
+                }
+            ]
+        )
+    )
+    hit_catalog = ParsCatalog({"all": []})
+    with pytest.raises(ValueError, match="has no 'all' system entry"):
+        ParsKeyResolve.apply_run_override(hit_catalog, {}, overwrite_validity)
+
+    overwrite_validity.write_text(
+        yaml.dump([{"valid_from": "20230101T000000Z", "apply": ["a.yaml"]}])
+    )
+    hit_catalog = ParsCatalog({"other": []})
+    with pytest.raises(ValueError, match="par catalog passed to apply_run_override"):
+        ParsKeyResolve.apply_run_override(hit_catalog, {}, overwrite_validity)

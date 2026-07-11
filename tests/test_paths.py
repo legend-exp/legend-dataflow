@@ -29,6 +29,13 @@ def test_sandbox_path():
     assert paths.sandbox_path({"paths": {}}) is None
 
 
+def test_missing_path_key():
+    with pytest.raises(KeyError, match=r"dataflow-config paths\.tier_daq is not set"):
+        paths.tier_daq_path({"paths": {}})
+    with pytest.raises(KeyError, match=r"dataflow-config paths\.tier_dsp is not set"):
+        paths.get_tier_path({"paths": {}}, "dsp")
+
+
 def test_get_tier_path():
     assert paths.get_tier_path(setup, "dsp") == f"{testprod}/generated/tier/dsp"
     assert paths.get_tier_path(setup, "skm") == f"{testprod}/generated/tier/skm"

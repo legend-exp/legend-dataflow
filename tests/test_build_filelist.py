@@ -53,7 +53,7 @@ def test_get_analysis_runs_yaml(tmp_path):
     assert analysis_runs == {"phy": {"p03": ["r000", "r001"]}}
     assert ignore_keys == []
 
-    with pytest.raises(ValueError, match="Unknown file selection"):
+    with pytest.raises(ValueError, match="unknown file selection"):
         get_analysis_runs(
             analysis_runs_file=runs_file, file_selection="not_a_selection"
         )
@@ -71,12 +71,12 @@ def test_get_analysis_runs_ignore_keylist(tmp_path):
         "l200-p00-r001-cal-20230102T123456Z",
     ]
 
-    with pytest.raises(ValueError, match="no ignore_keys file found"):
+    with pytest.raises(ValueError, match="ignore_keys file not found"):
         get_analysis_runs(tmp_path / "missing.yaml")
 
     bad = tmp_path / "ignore.txt"
     bad.write_text("key")
-    with pytest.raises(ValueError, match="not in json, yaml or keylist format"):
+    with pytest.raises(ValueError, match="unsupported ignore_keys file extension"):
         get_analysis_runs(bad)
 
 

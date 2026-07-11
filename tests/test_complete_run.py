@@ -157,3 +157,71 @@ def test_snakemake_glue(tmp_path, monkeypatch):
     assert "with warnings" in (tmp_path / "warning.log").read_text()
     assert (tmp_path / "all-l200-p03-r000-phy-dsp.gen").exists()
     assert not log_path.exists()
+
+
+def test_check_log_files_traceback(tmp_path):
+    log_path = tmp_path / "log"
+    sub = log_path / "build_dsp"
+    sub.mkdir(parents=True)
+    (sub / "crashed.log").write_text(
+        "INFO: starting\n"
+        "Traceback (most recent call last):\n"
+        '  File "script.py", line 10, in main\n'
+        "    threshold = kwarg_dict['threshold']\n"
+        "                ~~~~~~~~~~^^^^^^^^^^^^^\n"
+        "KeyError: 'threshold'\n"
+    )
+    summary = tmp_path / "summary.log"
+    warning = tmp_path / "warning.log"
+
+    check_log_files(log_path, summary, "all-l200.gen", warning_file=warning)
+
+    summary_text = summary.read_text()
+    assert "with errors" in summary_text
+    assert "crashed.log : KeyError: 'threshold'" in summary_text
+    # the traceback frames themselves are not reported
+    assert "script.py" not in summary_text
+    assert "with no warnings" in warning.read_text()
+
+
+def test_check_log_files_chained_traceback(tmp_path):
+    log_path = tmp_path / "log"
+    sub = log_path / "build_dsp"
+    sub.mkdir(parents=True)
+    (sub / "crashed.log").write_text(
+        "Traceback (most recent call last):\n"
+        '  File "script.py", line 3, in inner\n'
+        "ValueError: inner failure\n"
+        "\n"
+        "During handling of the above exception, another exception occurred:\n"
+        "\n"
+        "Traceback (most recent call last):\n"
+        '  File "script.py", line 10, in main\n'
+        "RuntimeError: outer failure\n"
+    )
+    summary = tmp_path / "summary.log"
+
+    check_log_files(log_path, summary, "all-l200.gen")
+
+    summary_text = summary.read_text()
+    assert "crashed.log : ValueError: inner failure" in summary_text
+    assert "crashed.log : RuntimeError: outer failure" in summary_text
+
+
+def test_check_log_files_error_and_traceback(tmp_path):
+    log_path = tmp_path / "log"
+    sub = log_path / "build_dsp"
+    sub.mkdir(parents=True)
+    (sub / "mixed.log").write_text(
+        "ERROR: something logged\n"
+        "Traceback (most recent call last):\n"
+        '  File "script.py", line 10, in main\n'
+        "OSError: disk full\n"
+    )
+    summary = tmp_path / "summary.log"
+
+    check_log_files(log_path, summary, "all-l200.gen")
+
+    summary_text = summary.read_text()
+    assert "mixed.log : ERROR: something logged" in summary_text
+    assert "mixed.log : OSError: disk full" in summary_text

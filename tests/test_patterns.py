@@ -43,7 +43,7 @@ def test_get_pattern_tier():
         == f"{testprod}/generated/tier/skm/phy/"
         "{experiment}-{period}-{run}-{datatype}-tier_skm.lh5"
     )
-    with pytest.raises(Exception, match="invalid tier"):
+    with pytest.raises(ValueError, match="invalid tier"):
         patterns.get_pattern_tier(setup, "not_a_tier")
 
 
@@ -69,7 +69,7 @@ def test_get_pattern_pars():
         str(patterns.get_pattern_pars(setup, "dsp", datatype=None)).count("{datatype}")
         == 2
     )
-    with pytest.raises(Exception, match="invalid tier"):
+    with pytest.raises(ValueError, match="invalid tier"):
         patterns.get_pattern_pars(setup, "skm")
 
 

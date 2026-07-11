@@ -41,7 +41,7 @@ def test_merge_channels_extension_mismatch(tmp_path, monkeypatch):
     f.write_text("{}")
     out_file = tmp_path / "out.yaml"
 
-    with pytest.raises(RuntimeError, match="extension does not match"):
+    with pytest.raises(RuntimeError, match="does not match the extension"):
         _run(monkeypatch, ["--input", str(f), "--output", str(out_file)])
 
 
