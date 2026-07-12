@@ -142,12 +142,10 @@ for key, dataset in part.datasets.items():
                 "--output {output.psp_pars} "
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_par_psp")
-
         if key in psp_rules:
             psp_rules[key].append(list(workflow.rules)[-1])
         else:
             psp_rules[key] = [list(workflow.rules)[-1]]
-
         if key == "default":
 
             def config_file(wildcards):
@@ -283,7 +281,6 @@ for key, dataset in part.datasets.items():
                 "--plot-path {output.psp_plots} "
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_par_psp_dplms")
-
         if key in psp_dplms_rules:
             psp_dplms_rules[key].append(list(workflow.rules)[-1])
         else:

@@ -135,7 +135,6 @@ for key, dataset in part.datasets.items():
                 "--cal-files {input.cal_files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_qc")
-
         if key in qc_pht_rules:
             qc_pht_rules[key].append(list(workflow.rules)[-1])
         else:
@@ -429,7 +428,6 @@ for key, dataset in part.datasets.items():
                 "--input-files {input.files}"
 
         set_last_rule_name(workflow, f"{key}-{partition}-build_pht_lq_calibration")
-
         if key in lq_pht_rules:
             lq_pht_rules[key].append(list(workflow.rules)[-1])
         else:
