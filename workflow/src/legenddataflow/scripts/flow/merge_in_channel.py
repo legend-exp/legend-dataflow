@@ -10,6 +10,7 @@ from pathlib import Path
 import lh5
 from dbetto import AttrsDict
 from dbetto.catalog import Props
+from legenddataflowscripts.utils import check_input_files
 from lgdo.types import Struct
 
 from legenddataflow.methods import ChannelProcKey
@@ -45,6 +46,7 @@ def merge_in_channel() -> None:
     if len(input_files) == 0:
         msg = "no input files provided, cannot merge anything"
         raise ValueError(msg)
+    check_input_files(input_files, "--input")
 
     if args.out_db and not args.in_db:
         msg = "--out-db requires --in-db: there is no input database to update"

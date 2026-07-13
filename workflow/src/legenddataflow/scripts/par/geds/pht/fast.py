@@ -16,10 +16,12 @@ from legenddataflowscripts.par.geds.hit.aoe import run_aoe_calibration
 from legenddataflowscripts.par.geds.hit.lq import run_lq_calibration
 from legenddataflowscripts.utils import (
     build_log,
+    check_input_files,
     check_pulser_mask,
     get_channel_config,
     get_pulser_mask,
     get_rule_config,
+    prepare_output_paths,
     require_config_keys,
 )
 from legendmeta import LegendMetadata
@@ -46,9 +48,6 @@ def par_geds_pht_fast() -> None:
     )
     argparser.add_argument(
         "--pulser-files", help="pulser_file", nargs="*", type=str, required=False
-    )
-    argparser.add_argument(
-        "--tcm-filelist", help="tcm_filelist", type=str, nargs="*", required=False
     )
     argparser.add_argument(
         "--ecal-file", help="ecal_file", type=str, nargs="*", required=True
@@ -90,6 +89,11 @@ def par_geds_pht_fast() -> None:
 
     log = build_log(partcal_dict, args.log)
 
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.fit_results or []), *(args.plot_file or [])
+    )
+
     chmap = LegendMetadata(args.metadata).channelmap(
         args.timestamp, system=args.datatype
     )
@@ -127,6 +131,7 @@ def par_geds_pht_fast() -> None:
     files = sorted(
         np.unique(files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+    check_input_files(files, "--input-files")
 
     final_dict = {}
     all_file = run_splitter(sorted(files))

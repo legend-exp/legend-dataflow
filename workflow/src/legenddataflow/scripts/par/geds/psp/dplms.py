@@ -11,7 +11,11 @@ import lh5
 import numpy as np
 import pygama.math.distributions as pmd  # noqa: F401
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    prepare_output_paths,
+)
 from lgdo import Array, Table, WaveformTable
 from pygama.evt.build_tcm import _concat_tables
 from pygama.pargen.data_cleaning import generate_cuts
@@ -211,8 +215,14 @@ def par_geds_psp_dplms() -> None:
 
     args = argparser.parse_args()
 
-    dsp_config = Props.read_from(args.processing_chain)
     log = build_log(args.log_config, args.log)
+
+    check_input_files(args.peak_files, "--peak-files")
+    check_input_files(args.database, "--database")
+    check_input_files(args.inplots, "--inplots")
+    prepare_output_paths(*args.dsp_pars, *args.lh5_path, *(args.plot_path or []))
+
+    dsp_config = Props.read_from(args.processing_chain)
 
     t0 = time.time()
 

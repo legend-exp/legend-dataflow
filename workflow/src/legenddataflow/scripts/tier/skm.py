@@ -7,9 +7,13 @@ import argparse
 
 import awkward as ak
 import lh5
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 from lgdo.types import Array, Struct, Table, VectorOfVectors
 
 
@@ -35,11 +39,14 @@ def build_tier_skm() -> None:
     args = argparser.parse_args()
 
     # load in config
-    config_dict = TextDB(args.configs, lazy=True).on(
-        args.timestamp, system=args.datatype
-    )["snakemake_rules"]["tier_skm"]
+    config_dict = get_rule_config(
+        args.configs, "tier_skm", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
+
+    check_input_files(args.evt_file, "--evt-file")
+    prepare_output_paths(args.output)
 
     skm_config_file = config_dict["inputs"]["skm_config"]
     evt_filter = Props.read_from(skm_config_file)["evt_filter"]

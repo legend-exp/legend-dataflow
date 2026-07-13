@@ -19,9 +19,15 @@ import hdf5plugin
 import lh5
 import numexpr as ne
 import numpy as np
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import alias_table, build_log
+from legenddataflowscripts.utils import (
+    alias_table,
+    build_log,
+    check_input_files,
+    get_rule_config,
+    parse_json_arg,
+    prepare_output_paths,
+)
 from legendmeta import LegendMetadata
 
 filter_map = {
@@ -50,12 +56,20 @@ def build_tier_raw_blind() -> None:
     argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True)
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_raw_blind"
-    ]
+    config_dict = get_rule_config(
+        args.configs, "tier_raw_blind", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.input, "--input")
+    check_input_files(args.blind_curve, "--blind-curve")
+    alias_map = (
+        parse_json_arg(args.alias_table, "--alias-table")
+        if args.alias_table is not None
+        else None
+    )
+    prepare_output_paths(args.output)
 
     hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]
 
@@ -198,6 +212,6 @@ def build_tier_raw_blind() -> None:
     log.info("Finished blinding Ge channels")
     msg = f"Time taken: {time.time() - start:.2f} seconds"
     log.info(msg)
-    if args.alias_table is not None:
+    if alias_map is not None:
         log.info("Creating alias table")
-        alias_table(args.output, args.alias_table)
+        alias_table(args.output, alias_map)

@@ -14,10 +14,12 @@ import pygama.math.histogram as pgh
 from dbetto import Props, TextDB
 from legenddataflowscripts.utils import (
     build_log,
+    check_input_files,
     check_pulser_mask,
     get_channel_config,
     get_pulser_mask,
     get_rule_config,
+    prepare_output_paths,
     require_config_keys,
 )
 from pygama.math.distributions import nb_poly
@@ -447,8 +449,13 @@ def par_geds_pht_ecal_part() -> None:
 
     build_log(config_dict, args.log)
 
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.fit_results or []), *(args.plot_file or [])
+    )
+
     chmap = TextDB(path=args.metadata, lazy=True).on(
-        args.timestamp, system=args.datatype
+        args.timestamp, category=args.datatype
     )
 
     # par files

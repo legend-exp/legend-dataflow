@@ -16,7 +16,7 @@ class FakeValidity:
     def __init__(self, mapping):
         self.mapping = AttrsDict(mapping)
 
-    def valid_for(self, timestamp, system=None):  # noqa: ARG002
+    def valid_for(self, timestamp, category=None):  # noqa: ARG002
         return self.mapping
 
 

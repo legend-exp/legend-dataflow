@@ -4,11 +4,14 @@ tier and save their ids."""
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log, expand_filelist
+from legenddataflowscripts.utils import (
+    build_log,
+    expand_filelist,
+    get_rule_config,
+    prepare_output_paths,
+)
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 
@@ -28,10 +31,13 @@ def par_geds_tcm_pulser() -> None:
     argparser.add_argument("--tcm-files", help="tcm_files", nargs="*", type=str)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_tcm_pulser"]
+    config_dict = get_rule_config(
+        args.configs, "pars_tcm_pulser", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
+
+    prepare_output_paths(args.pulser_file)
 
     kwarg_dict = config_dict["inputs"]["pulser_config"]
     kwarg_dict = Props.read_from(kwarg_dict)
@@ -42,5 +48,4 @@ def par_geds_tcm_pulser() -> None:
         tcm_files, args.rawid, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
 
-    Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

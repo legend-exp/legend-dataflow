@@ -22,13 +22,13 @@ def get_chanlist(timestamp, datatype, det_status, channelmap, system):
         channelmap = TextDB(channelmap, lazy=True)
 
     if isinstance(det_status, TextDB):
-        status_map = det_status.statuses.on(timestamp, system=datatype)
+        status_map = det_status.statuses.on(timestamp, category=datatype)
     else:
-        status_map = det_status.valid_for(timestamp, system=datatype)
+        status_map = det_status.valid_for(timestamp, category=datatype)
     if isinstance(channelmap, TextDB):
-        chmap = channelmap.channelmaps.on(timestamp, system=datatype)
+        chmap = channelmap.channelmaps.on(timestamp, category=datatype)
     else:
-        chmap = channelmap.valid_for(timestamp, system=datatype)
+        chmap = channelmap.valid_for(timestamp, category=datatype)
 
     # only restrict to a certain system (geds, spms, ...)
     channels = []

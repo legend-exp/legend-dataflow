@@ -13,8 +13,10 @@ from dbetto import Props
 from legenddataflowscripts.par.geds.hit.qc import build_qc
 from legenddataflowscripts.utils import (
     build_log,
+    check_input_files,
     get_channel_config,
     get_rule_config,
+    prepare_output_paths,
 )
 
 warnings.filterwarnings(action="ignore", category=RuntimeWarning)
@@ -58,6 +60,9 @@ def par_geds_pht_qc() -> None:
 
     build_log(config_dict, args.log)
 
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(*(args.save_path or []), *(args.plot_path or []))
+
     # get metadata dictionary
     channel_dict = get_channel_config(
         config_dict["inputs"]["qc_config"], args.channel, name="qc_config"
@@ -86,6 +91,7 @@ def par_geds_pht_qc() -> None:
     cal_files = sorted(
         np.unique(cal_files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+    check_input_files(cal_files, "--cal-files")
 
     if isinstance(args.fft_files, list):
         fft_files = []
@@ -99,6 +105,9 @@ def par_geds_pht_qc() -> None:
     fft_files = sorted(
         np.unique(fft_files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+    # an empty fft filelist is legitimate; only check the members it lists
+    if fft_files:
+        check_input_files(fft_files, "--fft-files")
 
     hit_dict, plot_dict = build_qc(
         config=kwarg_dict,

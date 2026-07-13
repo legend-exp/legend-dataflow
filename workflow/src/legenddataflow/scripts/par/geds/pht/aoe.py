@@ -12,10 +12,12 @@ from dbetto import Props
 from legenddataflowscripts.par.geds.hit.aoe import run_aoe_calibration
 from legenddataflowscripts.utils import (
     build_log,
+    check_input_files,
     check_pulser_mask,
     get_channel_config,
     get_pulser_mask,
     get_rule_config,
+    prepare_output_paths,
     require_config_keys,
 )
 from pygama.pargen.AoE_cal import *  # noqa: F403
@@ -71,6 +73,11 @@ def par_geds_pht_aoe() -> None:
     )
 
     build_log(config_dict, args.log)
+
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.aoe_results or []), *(args.plot_file or [])
+    )
 
     channel_dict = get_channel_config(
         config_dict["inputs"]["par_pht_aoecal_config"],

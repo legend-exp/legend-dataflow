@@ -14,9 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dbetto import AttrsDict, Props
 from legenddataflowscripts.utils import (
+    check_input_files,
     convert_dict_np_to_float,
     get_channel_config,
     get_rule_config,
+    prepare_output_paths,
 )
 
 from legenddataflow.methods import ChannelProcKey
@@ -63,6 +65,11 @@ def par_geds_psp_average() -> None:
     )
 
     ave_fields = merge_config["average_fields"]
+
+    check_input_files(args.input, "--input")
+    prepare_output_paths(
+        *(args.output or []), *(args.out_plots or []), *(args.out_obj or [])
+    )
 
     # partitions could be different for different channels - do separately for each channel
     in_dicts = {}

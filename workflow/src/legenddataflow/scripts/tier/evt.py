@@ -10,8 +10,13 @@ from pathlib import Path
 
 import lh5
 import numpy as np
-from dbetto import AttrsDict, Props, TextDB
-from legenddataflowscripts.utils import build_log
+from dbetto import AttrsDict, Props
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 from legendmeta import LegendMetadata
 from lgdo.types import Array
 from pygama.evt import build_evt
@@ -67,12 +72,16 @@ def build_tier_evt() -> None:
         raise ValueError(msg)
 
     # load in config
-    df_config = (
-        TextDB(args.configs, lazy=True)
-        .on(args.timestamp, system=args.datatype)
-        .snakemake_rules.tier_evt
-    )
+    df_config = get_rule_config(args.configs, "tier_evt", args.timestamp, args.datatype)
     log = build_log(df_config, args.log)
+
+    check_input_files(args.hit_file, "--hit-file")
+    check_input_files(args.dsp_file, "--dsp-file")
+    check_input_files(args.tcm_file, "--tcm-file")
+    check_input_files(args.par_files, "--par-files")
+    check_input_files(args.xtc_file, "--xtc-file")
+    check_input_files(args.ann_file, "--ann-file")
+    prepare_output_paths(args.output)
 
     chmap = LegendMetadata(args.metadata, lazy=True).channelmap(on=args.timestamp)
     evt_config = AttrsDict(Props.read_from(df_config.inputs.evt_config))
@@ -116,8 +125,6 @@ def build_tier_evt() -> None:
     evt_config["channel_mapping"] = {
         f"ch{chan}": dic.name for chan, dic in chmap.map("daq.rawid").items()
     }
-
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     if "hardware_tcm_1" not in lh5.ls(args.tcm_file):
         msg = (

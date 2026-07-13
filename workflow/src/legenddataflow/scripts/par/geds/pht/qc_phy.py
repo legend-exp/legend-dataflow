@@ -15,9 +15,11 @@ import numpy as np
 from dbetto.catalog import Props
 from legenddataflowscripts.utils import (
     build_log,
+    check_input_files,
     convert_dict_np_to_float,
     get_channel_config,
     get_rule_config,
+    prepare_output_paths,
 )
 from lh5 import ls
 from pygama.pargen.data_cleaning import (
@@ -62,6 +64,8 @@ def par_geds_pht_qc_phy() -> None:
 
     log = build_log(config_dict, args.log)
 
+    prepare_output_paths(*(args.save_path or []), *(args.plot_path or []))
+
     # get metadata dictionary
     channel_dict = get_channel_config(
         config_dict["inputs"]["qc_config"], args.channel, name="qc_config"
@@ -78,6 +82,7 @@ def par_geds_pht_qc_phy() -> None:
             if len(run_files) == 0:
                 continue
             run_files = sorted(np.unique(run_files))
+            check_input_files(run_files, "--phy-files")
             phy_files += run_files
             bls = lh5.read(
                 args.baseline_name, run_files, field_mask=["wf_max", "bl_mean"]

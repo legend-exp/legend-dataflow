@@ -4,13 +4,17 @@ tier from raw-tier data."""
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import lh5
 from daq2lh5.orca import orca_flashcam
-from dbetto import AttrsDict, TextDB
+from dbetto import AttrsDict
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 from pygama.evt.build_tcm import build_tcm
 
 
@@ -24,10 +28,14 @@ def build_tier_tcm() -> None:
     argparser.add_argument("--log", help="log file", type=str)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["tier_tcm"]
+    config_dict = get_rule_config(
+        args.configs, "tier_tcm", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.input, "input")
+    prepare_output_paths(args.output)
     # the config can either be a single file used for all fcids or a mapping
     # of per-fcid config files
     per_fcid_settings = None
@@ -57,7 +65,6 @@ def build_tier_tcm() -> None:
             fcid_channels[fcid] = []
         fcid_channels[fcid].append(f"/{ch}/raw")
 
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     # make a hardware_tcm_[fcid] for each fcid
     for fcid, fcid_dict in fcid_channels.items():
         msg = f"building tcm for fcid: {fcid}"
