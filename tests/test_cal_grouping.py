@@ -151,17 +151,6 @@ def test_get_dataset_missing_default(tmp_path):
         cal_grouping.get_dataset("part1", "V01234A")
 
 
-def test_expand_runs_malformed_range(tmp_path):
-    file = tmp_path / "input.json"
-    file.write_text(json.dumps({"default": {"part": {"p01": "001..r005"}}}))
-    with pytest.raises(ValueError, match=r"malformed run range '001\.\.r005'"):
-        CalGrouping(setup, file)
-
-    file.write_text(json.dumps({"default": {"part": {"p01": ["r001..x005"]}}}))
-    with pytest.raises(ValueError, match="malformed run range"):
-        CalGrouping(setup, file)
-
-
 def test_empty_partition_warns(input_file_json, caplog):
     cal_grouping = CalGrouping(setup, input_file_json)
     empty_catalog = Catalog.get([{"valid_from": "20210101T000000Z", "apply": []}])

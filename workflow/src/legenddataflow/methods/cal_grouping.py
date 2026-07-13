@@ -5,10 +5,10 @@ This module uses the partition database files to the necessary inputs for partit
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
 from dbetto import Props
+from legendmeta.utils import expand_runs as _expand_runs
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .paths import filelist_path
@@ -33,45 +33,13 @@ class CalGrouping:
         self.expand_runs()
         self.setup = setup
 
-    @staticmethod
-    def _expand_range(runs, channel, part, per):
-        if re.fullmatch(r"r\d+\.\.r\d+", runs) is None:
-            msg = (
-                f"malformed run range {runs!r} for channel {channel!r}, "
-                f"partition {part!r}, period {per!r}: expected 'rNNN..rNNN'"
-            )
-            raise ValueError(msg)
-        start, end = runs.split("..")
-        return [f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)]
-
     def expand_runs(self):
         """Expand ``r000..r005`` run-range strings into explicit run lists."""
         for channel, chan_dict in self.datasets.items():
             for part, part_dict in chan_dict.items():
                 for per, runs in part_dict.items():
-                    if isinstance(runs, str) and ".." in runs:
-                        self.datasets[channel][part][per] = self._expand_range(
-                            runs, channel, part, per
-                        )
-                    if isinstance(runs, list):
-                        final_runs = []
-                        for run in runs:
-                            if ".." in run:
-                                final_runs += self._expand_range(
-                                    run, channel, part, per
-                                )
-                            else:
-                                if re.fullmatch(r"r\d+", run) is None:
-                                    log.warning(
-                                        "run %r for channel %r, partition %r, "
-                                        "period %r does not look like 'rNNN'",
-                                        run,
-                                        channel,
-                                        part,
-                                        per,
-                                    )
-                                final_runs.append(run)
-                        self.datasets[channel][part][per] = final_runs
+                    if runs != "all":
+                        self.datasets[channel][part][per] = _expand_runs(runs)
 
     def get_dataset(self, dataset, channel):
         """Return the ``{period: runs}`` dict for a partition, with
