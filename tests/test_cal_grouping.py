@@ -151,6 +151,26 @@ def test_get_dataset_missing_default(tmp_path):
         cal_grouping.get_dataset("part1", "V01234A")
 
 
+def test_expand_runs_malformed_range_yields_empty(tmp_path):
+    # pylegendmeta's expand_runs returns [] for malformed ranges (no error raised)
+    file = tmp_path / "input.json"
+    file.write_text(json.dumps({"default": {"part": {"p01": "001..r005"}}}))
+    cal_grouping = CalGrouping(setup, file)
+    assert cal_grouping.datasets["default"]["part"]["p01"] == []
+
+    file.write_text(json.dumps({"default": {"part": {"p01": ["r001..x005"]}}}))
+    cal_grouping = CalGrouping(setup, file)
+    assert cal_grouping.datasets["default"]["part"]["p01"] == []
+
+
+def test_expand_runs_all_preserved(tmp_path):
+    # "all" must not be expanded to []
+    file = tmp_path / "input.json"
+    file.write_text(json.dumps({"default": {"part": {"p01": "all"}}}))
+    cal_grouping = CalGrouping(setup, file)
+    assert cal_grouping.datasets["default"]["part"]["p01"] == "all"
+
+
 def test_empty_partition_warns(input_file_json, caplog):
     cal_grouping = CalGrouping(setup, input_file_json)
     empty_catalog = Catalog.get([{"valid_from": "20210101T000000Z", "apply": []}])
