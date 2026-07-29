@@ -117,7 +117,12 @@ def par_geds_pht_aoe() -> None:
             "tp_99",
             "timestamp",
         ]
-        for param_config in kwarg_dict["params"].values():
+        for name, param_config in kwarg_dict["params"].items():
+            require_config_keys(
+                param_config,
+                ["current_param", "energy_param"],
+                f"channel {args.channel} aoecal config params entry '{name}' ({channel_dict})",
+            )
             params.append(param_config["current_param"])
             params.append(param_config["energy_param"])
             params.append(param_config.get("dt_param", "dt_eff"))
