@@ -39,6 +39,21 @@ jobs:
         run: |
           python -m pytest
 
+  unit-tests-pixi:
+    name: Run units tests in a pixi environment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Pixi
+        uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          environments: test
+
+      - name: Run unit tests
+        run: |
+          pixi run -e test test
+
   run-dataflow:
     if: github.event.pull_request.head.repo.fork == false
     name: Run the Snakemake workflow

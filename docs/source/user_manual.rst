@@ -7,11 +7,40 @@ Installation
 Prerequisites
 -------------
 
-- Python 3.11 or later
-- `uv <https://docs.astral.sh/uv/>`_ (or another virtual environment manager)
+- `pixi <https://pixi.sh>`_ (recommended) or Python 3.11 or later with
+  `uv <https://docs.astral.sh/uv/>`_ (or another virtual environment manager)
 - Access to the LEGEND metadata repository
 
-Clone and install the package:
+Installation with pixi (recommended)
+------------------------------------
+
+All software versions (including the conda-forge packages that would otherwise
+require a container image) are specified in ``pyproject.toml``. With
+`pixi <https://pixi.sh>`_ installed, the whole environment is created with:
+
+.. code-block:: bash
+
+   git clone https://github.com/legend-exp/legend-dataflow.git
+   cd legend-dataflow
+   pixi install
+
+Enter the environment with ``pixi shell``, or use the provided tasks without
+entering a shell:
+
+- ``pixi run prod [--profile <name>]`` — run the workflow with a Snakemake profile
+- ``pixi run dry`` — preview what Snakemake would do without executing
+- ``pixi run snakemake [ARGS]`` — pass arbitrary arguments directly to Snakemake
+- ``pixi run -e test test`` — run the unit test suite
+
+When the software environment is managed by pixi, the ``execenv:`` section of
+``dataflow-config.yaml`` can be dropped entirely: all workflow commands then run
+directly in the ambient pixi environment and no container layer or per-cycle
+virtualenv (``dataflow install``) is needed.
+
+Installation with uv
+--------------------
+
+Alternatively, create a plain Python virtual environment:
 
 .. code-block:: bash
 
@@ -26,8 +55,8 @@ dependencies. For production use, omit ``[dev]``.
 
 
 
-Installing the software environment
-------------------------------------
+Installing the software environment (legacy, container sites)
+-------------------------------------------------------------
 
 All software versions are stored in the ``pyproject.toml`` file. These can be releases of the
 various packages e.g. ``dbetto==1.2.4`` or local versions ``dbetto @  file:///${PROJECT_ROOT}/dbetto``.
@@ -42,6 +71,12 @@ below), install the execution environment:
 where ``<host>`` is one of the execution environments defined in the config (e.g.
 ``bare``, ``lngs``, ``sator``, ``nersc``). This installs all required software into
 ``.snakemake/legend-dataflow/venv``.
+
+.. note::
+
+   ``dataflow install`` (and the ``execenv:`` container machinery it relies on)
+   is deprecated in favour of the pixi-based setup above, which provides the
+   full software stack from conda-forge without containers.
 
 .. note::
 

@@ -123,6 +123,60 @@ exclude = ["generated", "inputs", "software", "workflow"]
 [tool.uv]
 default-groups = []
 
+[tool.pixi.workspace]
+# bioconda provides the snakemake packages
+channels = ["conda-forge", "bioconda"]
+platforms = ["linux-64"]
+
+# NOTE: non-conda dependencies will be installed from pypi
+[tool.pixi.pypi-dependencies]
+legend_dataflow = { path = ".", editable = true }
+# none of these are on conda-forge
+legend-daq2lh5 = "==1.6.3"
+legend-dataflow-scripts = "==0.3.3"
+snakemake-logger-plugin-rich = "*"
+snakemake-logger-plugin-snkmt = "*"
+
+# FIXME: remove when https://github.com/prefix-dev/pixi/issues/532 is closed
+[tool.pixi.dependencies]
+python = "3.12.*"
+colorlog = "*"
+dbetto = "==1.3.7"
+pygama = "==2.4.1"
+dspeed = "==2.1.4"
+pylegendmeta = "==1.4.4"
+legend-pydataobj = "==2.0.2"
+legend-lh5io = "==0.2.6"
+pip = "*"
+
+# execution (the runprod extra)
+pygments = "*"
+snakemake = "==9.9.0"
+
+# with pixi providing the full software environment there is no need for the
+# execenv container layer: these replace the env vars from the execenv config
+[tool.pixi.activation.env]
+LGDO_BOUNDSCHECK = "false"
+DSPEED_BOUNDSCHECK = "false"
+PYGAMA_PARALLEL = "false"
+PYGAMA_FASTMATH = "false"
+TQDM_DISABLE = "true"
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+
+[tool.pixi.tasks]
+snakemake = "snakemake"
+dry = "snakemake --dry-run"
+
+[tool.pixi.tasks.prod]
+cmd = "snakemake --workflow-profile workflow/profiles/{{ profile }}"
+args = [{ arg = "profile", default = "default" }]
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
