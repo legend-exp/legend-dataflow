@@ -106,22 +106,24 @@ def par_geds_pht_aoe() -> None:
     if kwarg_dict.get("run_aoe", True) is True:
         require_config_keys(
             kwarg_dict,
-            ["final_cut_field", "current_param", "energy_param", "cal_energy_param"],
+            ["final_cut_field", "cal_energy_param", "cut_field", "params"],
             f"channel {args.channel} aoecal config ({channel_dict})",
         )
         params = [
             kwarg_dict["final_cut_field"],
-            kwarg_dict["current_param"],
+            kwarg_dict["cal_energy_param"],
+            kwarg_dict["cut_field"],
             "tp_0_est",
             "tp_99",
-            kwarg_dict["energy_param"],
-            kwarg_dict["cal_energy_param"],
             "timestamp",
         ]
-        params.append(kwarg_dict.get("dt_param", "dt_eff"))
-
-        if "dt_cut" in kwarg_dict and kwarg_dict["dt_cut"] is not None:
-            params.append(kwarg_dict["dt_cut"]["out_param"])
+        for param_config in kwarg_dict["params"].values():
+            params.append(param_config["current_param"])
+            params.append(param_config["energy_param"])
+            params.append(param_config.get("dt_param", "dt_eff"))
+            if "dt_cut" in param_config and param_config["dt_cut"] is not None:
+                params.append(param_config["dt_cut"]["out_param"])
+        params = list(dict.fromkeys(params))
 
         # load data in
         data, threshold_mask = load_data(

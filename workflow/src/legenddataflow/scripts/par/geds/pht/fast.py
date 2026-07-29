@@ -184,38 +184,40 @@ def par_geds_pht_fast() -> None:
     if aoe_kwarg_dict["run_aoe"] is True:
         require_config_keys(
             aoe_kwarg_dict,
-            ["final_cut_field", "current_param", "energy_param", "cal_energy_param"],
+            ["final_cut_field", "cal_energy_param", "cut_field", "params"],
             f"channel {args.channel} aoecal config ({aoecal_config})",
         )
         aoe_params = [
             aoe_kwarg_dict["final_cut_field"],
-            aoe_kwarg_dict["current_param"],
+            aoe_kwarg_dict["cal_energy_param"],
+            aoe_kwarg_dict["cut_field"],
             "tp_0_est",
             "tp_99",
-            aoe_kwarg_dict["energy_param"],
-            aoe_kwarg_dict["cal_energy_param"],
             "timestamp",
         ]
-        if "dt_param" in aoe_kwarg_dict:
-            aoe_params.append(aoe_kwarg_dict["dt_param"])
-        else:
-            aoe_params.append("dt_eff")
+        for param_config in aoe_kwarg_dict["params"].values():
+            aoe_params.append(param_config["current_param"])
+            aoe_params.append(param_config["energy_param"])
+            aoe_params.append(param_config.get("dt_param", "dt_eff"))
+            if "dt_cut" in param_config and param_config["dt_cut"] is not None:
+                aoe_params.append(param_config["dt_cut"]["out_param"])
 
         params += aoe_params
 
     if lq_kwarg_dict["run_lq"] is True:
         require_config_keys(
             lq_kwarg_dict,
-            ["energy_param", "cal_energy_param", "cut_field"],
+            ["cal_energy_param", "cut_field", "params"],
             f"channel {args.channel} lqcal config ({lqcal_config})",
         )
         params += [
-            "lq80",
-            "dt_eff",
-            lq_kwarg_dict["energy_param"],
             lq_kwarg_dict["cal_energy_param"],
             lq_kwarg_dict["cut_field"],
         ]
+        for param_config in lq_kwarg_dict["params"].values():
+            params.append(param_config["lq_param"])
+            params.append(param_config["energy_param"])
+            params.append(param_config.get("dt_param", "dt_eff"))
     params = list(np.unique(params))
 
     # load data in
