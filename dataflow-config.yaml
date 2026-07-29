@@ -67,6 +67,10 @@ table_format:
   skm: "{grp}/skm"
   tcm: hardware_tcm_1
 
+# NOTE: the execenv block below is only needed for container-based setups
+# installed with 'dataflow install'. Cycles whose software environment is
+# managed by pixi (see [tool.pixi] in pyproject.toml) can drop it entirely:
+# all commands then run directly in the ambient pixi environment.
 execenv:
   bare:
     env:

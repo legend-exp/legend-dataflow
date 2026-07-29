@@ -125,3 +125,7 @@ venv.bak/
 .mypy_cache/
 
 docs/source/api
+
+# pixi environments (lock file is not committed, following legend-simflow)
+.pixi/
+pixi.lock
