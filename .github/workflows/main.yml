@@ -40,7 +40,7 @@ jobs:
           python -m pytest
 
   unit-tests-pixi:
-    name: Run units tests in a pixi environment
+    name: Run unit tests in a pixi environment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

@@ -126,7 +126,7 @@ default-groups = []
 [tool.pixi.workspace]
 # bioconda provides the snakemake packages
 channels = ["conda-forge", "bioconda"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
 
 # NOTE: non-conda dependencies will be installed from pypi
 [tool.pixi.pypi-dependencies]
@@ -164,6 +164,8 @@ TQDM_DISABLE = "true"
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
+# the "test" feature maps to the [project.optional-dependencies] test extra,
+# so pytest & co are pulled in automatically
 test = { features = ["test"], solve-group = "default" }
 
 [tool.pixi.tasks]
