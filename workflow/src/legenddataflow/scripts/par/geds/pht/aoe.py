@@ -127,6 +127,11 @@ def par_geds_pht_aoe() -> None:
             params.append(param_config["energy_param"])
             params.append(param_config.get("dt_param", "dt_eff"))
             if "dt_cut" in param_config and param_config["dt_cut"] is not None:
+                require_config_keys(
+                    param_config["dt_cut"],
+                    ["out_param"],
+                    f"channel {args.channel} aoecal config params entry '{name}' dt_cut ({channel_dict})",
+                )
                 params.append(param_config["dt_cut"]["out_param"])
         params = list(dict.fromkeys(params))
 
