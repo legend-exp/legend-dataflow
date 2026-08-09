@@ -47,6 +47,38 @@ def _resolve_channels(chmap, field, dic, timestamp):
     return []
 
 
+#: chunk size pygama's build_evt falls back to when nothing is configured
+DEFAULT_BUFFER_LEN = 10**4
+
+
+def _resolve_buffer_len(cli_value, df_config):
+    """Resolve the evt chunk size: CLI over rule config over the pygama default.
+
+    A non-integer or non-positive chunk size is rejected here: left alone it
+    fails much later and far less clearly, inside the read loop.
+    """
+    buffer_len = cli_value
+    source = "--buffer-len"
+    if buffer_len is None:
+        buffer_len = df_config.get("options", {}).get("buffer_len")
+        source = "the tier_evt rule config"
+    if buffer_len is None:
+        # unset in both places, including an explicit `buffer_len: null`
+        return DEFAULT_BUFFER_LEN
+
+    try:
+        buffer_len = int(buffer_len)
+    except (TypeError, ValueError) as e:
+        msg = f"buffer_len from {source} is not an integer: {buffer_len!r}"
+        raise ValueError(msg) from e
+
+    if buffer_len < 1:
+        msg = f"buffer_len from {source} must be positive, got {buffer_len}"
+        raise ValueError(msg)
+
+    return buffer_len
+
+
 def build_tier_evt() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--hit-file")
@@ -97,11 +129,7 @@ def build_tier_evt() -> None:
     chmap = LegendMetadata(args.metadata, lazy=True).channelmap(on=args.timestamp)
     evt_config = AttrsDict(Props.read_from(df_config.inputs.evt_config))
 
-    # CLI wins over the rule config, which wins over the pygama default
-    buffer_len = args.buffer_len
-    if buffer_len is None:
-        buffer_len = df_config.get("options", {}).get("buffer_len", 10**4)
-    buffer_len = int(buffer_len)
+    buffer_len = _resolve_buffer_len(args.buffer_len, df_config)
     log.debug("using buffer_len=%d", buffer_len)
 
     if args.datatype in ("phy", "xtc", "ssc", "rdc"):
