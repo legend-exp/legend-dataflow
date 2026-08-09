@@ -17,7 +17,7 @@ def test_falls_back_to_the_rule_config_then_the_default():
     assert _resolve_buffer_len(None, {}) == PYGAMA_DEFAULT
 
 
-@pytest.mark.parametrize("bad", [0, -1, -10**6])
+@pytest.mark.parametrize("bad", [0, -1, -(10**6)])
 def test_non_positive_chunk_sizes_are_rejected(bad):
     """A chunk size of 0 or less is meaningless and fails obscurely later."""
     with pytest.raises(ValueError, match="must be positive"):
@@ -36,7 +36,10 @@ def test_the_message_names_where_the_value_came_from():
 @pytest.mark.parametrize("bad", ["abc", None, [1]])
 def test_non_integer_config_values_are_rejected(bad):
     if bad is None:  # `buffer_len: null` means "unset", so the default applies
-        assert _resolve_buffer_len(None, {"options": {"buffer_len": None}}) == PYGAMA_DEFAULT
+        assert (
+            _resolve_buffer_len(None, {"options": {"buffer_len": None}})
+            == PYGAMA_DEFAULT
+        )
         return
     with pytest.raises(ValueError, match="is not an integer"):
         _resolve_buffer_len(None, {"options": {"buffer_len": bad}})
