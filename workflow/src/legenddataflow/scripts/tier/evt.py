@@ -63,6 +63,17 @@ def build_tier_evt() -> None:
     argparser.add_argument("--configs", required=True)
     argparser.add_argument("--metadata", required=True)
     argparser.add_argument("--log")
+    argparser.add_argument(
+        "--buffer-len",
+        type=int,
+        default=None,
+        help=(
+            "number of events read per chunk. Overrides the 'buffer_len' option "
+            "in the tier_evt rule config. Calibration files hold ~200x more "
+            "events than physics files, so the per-chunk overhead dominates "
+            "unless this is large enough to keep the chunk count low."
+        ),
+    )
 
     argparser.add_argument("--output")
     args = argparser.parse_args()
@@ -85,6 +96,13 @@ def build_tier_evt() -> None:
 
     chmap = LegendMetadata(args.metadata, lazy=True).channelmap(on=args.timestamp)
     evt_config = AttrsDict(Props.read_from(df_config.inputs.evt_config))
+
+    # CLI wins over the rule config, which wins over the pygama default
+    buffer_len = args.buffer_len
+    if buffer_len is None:
+        buffer_len = df_config.get("options", {}).get("buffer_len", 10**4)
+    buffer_len = int(buffer_len)
+    log.debug("using buffer_len=%d", buffer_len)
 
     if args.datatype in ("phy", "xtc", "ssc", "rdc"):
         if len(args.xtc_file) == 0:
@@ -146,6 +164,7 @@ def build_tier_evt() -> None:
     table = build_evt(
         file_table,
         evt_config,
+        buffer_len=buffer_len,
     )
 
     if (
@@ -173,6 +192,7 @@ def build_tier_evt() -> None:
                     "evt": (None, "evt"),
                 },
                 muon_config,
+                buffer_len=buffer_len,
             )
             lh5.write(
                 obj=muon_table, name="evt_muon", lh5_file=args.output, wo_mode="a"
