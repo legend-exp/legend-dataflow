@@ -105,20 +105,28 @@ def par_geds_pht_lq() -> None:
         msg = f"lqcal config for {args.channel} is missing the required key 'run_lq'"
         raise KeyError(msg)
 
-    # run lq cal
-    if kwarg_dict.pop("run_lq") is True:
+    # run lq cal; run_lq is left in kwarg_dict because run_lq_calibration
+    # requires and re-checks it itself
+    if kwarg_dict["run_lq"] is True:
         require_config_keys(
             kwarg_dict,
-            ["energy_param", "cal_energy_param", "cut_field", "threshold"],
+            ["cal_energy_param", "cut_field", "threshold", "params"],
             f"channel {args.channel} lqcal config ({channel_dict})",
         )
         params = [
-            "lq80",
-            "dt_eff",
-            kwarg_dict["energy_param"],
             kwarg_dict["cal_energy_param"],
             kwarg_dict["cut_field"],
         ]
+        for name, param_config in kwarg_dict["params"].items():
+            require_config_keys(
+                param_config,
+                ["lq_param", "energy_param"],
+                f"channel {args.channel} lqcal config params entry '{name}' ({channel_dict})",
+            )
+            params.append(param_config["lq_param"])
+            params.append(param_config["energy_param"])
+            params.append(param_config.get("dt_param", "dt_eff"))
+        params = list(dict.fromkeys(params))
 
         # load data in
         data, threshold_mask = load_data(
@@ -126,15 +134,13 @@ def par_geds_pht_lq() -> None:
             args.table_name,
             cal_dicts,
             params=params,
-            threshold=kwarg_dict.pop("threshold"),
+            threshold=kwarg_dict["threshold"],
             return_selection_mask=True,
         )
         msg = f"Loaded {len(data)} events from {len(final_dict)} files"
         log.info(msg)
 
         mask = get_pulser_mask(pulser_file=args.pulser_files)
-        if "pulser_multiplicity_threshold" in kwarg_dict:
-            kwarg_dict.pop("pulser_multiplicity_threshold")
 
         check_pulser_mask(mask, threshold_mask, args.channel)
         data["is_pulser"] = mask[threshold_mask]
