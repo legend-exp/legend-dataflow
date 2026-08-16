@@ -68,6 +68,12 @@ include: "rules/blinding_check.smk"
 
 onstart:
     print("INFO: initializing workflow")
+    # --- optionally refresh the metadata submodules from upstream -----------
+    if config.get("auto_update_metadata", False) and not workflow.touch:
+        from legenddataflow.methods.metadata_updates import check_metadata_updates
+
+        check_metadata_updates(config, mode="ff-only")
+    # ------------------------------------------------------------------------
     # Make sure some packages are initialized before we send jobs to avoid race conditions
     if not workflow.touch:
         shell(

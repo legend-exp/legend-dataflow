@@ -26,9 +26,9 @@ jobs:
         os: [ubuntu-latest, macos-14]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Get dependencies and install legend-dataflow
@@ -50,9 +50,9 @@ jobs:
         os: [ubuntu-latest, macos-14]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -61,7 +61,7 @@ jobs:
           echo "LEGEND_METADATA=$GITHUB_WORKSPACE/inputs" >> $GITHUB_ENV
 
       - name: Clone legend-metadata
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: legend-exp/legend-metadata
           fetch-depth: 0
@@ -97,10 +97,10 @@ jobs:
     name: Calculate and upload test coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
