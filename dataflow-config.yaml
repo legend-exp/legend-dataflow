@@ -4,6 +4,9 @@
 # Tag or branch of legend-metadata to check out automatically;
 # comment out to manage the metadata checkout manually.
 legend_metadata_version: v1.4.1
+# Fast-forward the metadata submodules from upstream when the workflow
+# starts; leave false to manage the checkout manually.
+auto_update_metadata: false
 # If false, abort when calibration parameter generation fails;
 # if true, continue with default or overridden parameters.
 allow_none_par: false
