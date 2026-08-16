@@ -47,6 +47,38 @@ def _resolve_channels(chmap, field, dic, timestamp):
     return []
 
 
+#: chunk size pygama's build_evt falls back to when nothing is configured
+DEFAULT_BUFFER_LEN = 10**4
+
+
+def _resolve_buffer_len(cli_value, df_config):
+    """Resolve the evt chunk size: CLI over rule config over the pygama default.
+
+    A non-integer or non-positive chunk size is rejected here: left alone it
+    fails much later and far less clearly, inside the read loop.
+    """
+    buffer_len = cli_value
+    source = "--buffer-len"
+    if buffer_len is None:
+        buffer_len = df_config.get("options", {}).get("buffer_len")
+        source = "the tier_evt rule config"
+    if buffer_len is None:
+        # unset in both places, including an explicit `buffer_len: null`
+        return DEFAULT_BUFFER_LEN
+
+    try:
+        buffer_len = int(buffer_len)
+    except (TypeError, ValueError) as e:
+        msg = f"buffer_len from {source} is not an integer: {buffer_len!r}"
+        raise ValueError(msg) from e
+
+    if buffer_len < 1:
+        msg = f"buffer_len from {source} must be positive, got {buffer_len}"
+        raise ValueError(msg)
+
+    return buffer_len
+
+
 def build_tier_evt() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--hit-file")
@@ -63,6 +95,17 @@ def build_tier_evt() -> None:
     argparser.add_argument("--configs", required=True)
     argparser.add_argument("--metadata", required=True)
     argparser.add_argument("--log")
+    argparser.add_argument(
+        "--buffer-len",
+        type=int,
+        default=None,
+        help=(
+            "number of events read per chunk. Overrides the 'buffer_len' option "
+            "in the tier_evt rule config. Calibration files hold ~200x more "
+            "events than physics files, so the per-chunk overhead dominates "
+            "unless this is large enough to keep the chunk count low."
+        ),
+    )
 
     argparser.add_argument("--output")
     args = argparser.parse_args()
@@ -85,6 +128,9 @@ def build_tier_evt() -> None:
 
     chmap = LegendMetadata(args.metadata, lazy=True).channelmap(on=args.timestamp)
     evt_config = AttrsDict(Props.read_from(df_config.inputs.evt_config))
+
+    buffer_len = _resolve_buffer_len(args.buffer_len, df_config)
+    log.debug("using buffer_len=%d", buffer_len)
 
     if args.datatype in ("phy", "xtc", "ssc", "rdc"):
         if len(args.xtc_file) == 0:
@@ -146,6 +192,7 @@ def build_tier_evt() -> None:
     table = build_evt(
         file_table,
         evt_config,
+        buffer_len=buffer_len,
     )
 
     if (
@@ -173,6 +220,7 @@ def build_tier_evt() -> None:
                     "evt": (None, "evt"),
                 },
                 muon_config,
+                buffer_len=buffer_len,
             )
             lh5.write(
                 obj=muon_table, name="evt_muon", lh5_file=args.output, wo_mode="a"
@@ -207,16 +255,36 @@ def build_tier_evt() -> None:
 
 
 def _find_matching_values_with_delay(arr1, arr2, jit_delay):
-    matching_values = []
+    """Return the values of *arr1* that follow a value of *arr2* within the window.
 
-    # Create an array with all possible delay values
-    delays = np.linspace(0, int(1e9 * jit_delay), 10000) * jit_delay
+    The matching is one-sided by design: a germanium trigger is flagged only if
+    it comes *at or after* a muon trigger, never before.
 
-    for delay in delays:
-        arr2_delayed = arr2 + delay
+    Note that *jit_delay* is not itself the tolerance.  The window this searches
+    is ``int(1e9 * jit_delay) * jit_delay`` — the jitter expressed in ns,
+    truncated, times the jitter in seconds — so it grows roughly as
+    ``1e9 * jit_delay**2``.  With the configured ``2.384185791015625e-07`` that
+    is ~56.7 us.  The behaviour is preserved here rather than corrected, so the
+    name and the quadratic scaling are worth revisiting in the config.
 
-        # Find matching values and indices
-        mask = np.isin(arr1, arr2_delayed, assume_unique=True)
-        matching_values.extend(arr1[mask])
+    The previous implementation swept 10000 delays and tested exact float
+    equality with :func:`numpy.isin`.  That worked only because these unix
+    timestamps and the jitter share a scale: at t ~ 1.76e9 s the float64
+    spacing *is* ``2.384185791015625e-07``, so every timestamp difference is an
+    integer multiple of it and the swept delays landed exactly on that grid.
+    Comparing the offset directly is equivalent, does not depend on that
+    coincidence, and replaces 10000 full scans with one sorted lookup.
+    """
+    arr1 = np.asarray(arr1)
+    arr2 = np.asarray(arr2)
+    if len(arr2) == 0 or len(arr1) == 0:
+        return np.empty(0, dtype=arr1.dtype)
 
-    return np.unique(matching_values)
+    window = int(1e9 * jit_delay) * jit_delay
+
+    ref = np.sort(arr2)
+    # the last reference value at or before each arr1 value
+    idx = np.searchsorted(ref, arr1, side="right") - 1
+    offset = np.where(idx >= 0, arr1 - ref[np.clip(idx, 0, None)], np.inf)
+
+    return np.unique(arr1[(offset >= 0) & (offset <= window)])

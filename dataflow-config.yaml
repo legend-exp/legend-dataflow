@@ -21,6 +21,13 @@ multiprocess_mode: max_usage
 max_processes: 1
 # Input tier for pht building: dsp or psp.
 pht_intier: psp
+# Events read per chunk when building the evt/pet tiers. build_evt's cost is
+# dominated by fixed per-chunk, per-operation, per-channel overhead, so the
+# chunk count — not the chunk size — drives the runtime. A cal file holds ~1M
+# events against ~5k for a phy file, so a small value costs cal ~100x more
+# than phy: at 10000 a cal file is 108 chunks, at 1000000 it is one, which
+# takes a cal pet file from ~44 min to ~1.5 min.
+evt_buffer_len: 1000000
 
 # $_ expands to the directory containing this file; other $VARS
 # (e.g. $PRODENV) are taken from the environment.

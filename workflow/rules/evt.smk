@@ -51,6 +51,7 @@ rule build_evt:
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
         configs=ro(config_path(config)),
         meta=ro(metadata_path(config)),
+        buffer_len=config.get("evt_buffer_len", 10**6),
     shell:
         execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
         "--metadata {params.meta} "
@@ -64,6 +65,7 @@ rule build_evt:
         "--tcm-file {params.ro_input[tcm_file]} "
         "--dsp-file {params.ro_input[dsp_file]} "
         "--output {output} "
+        "--buffer-len {params.buffer_len} "
         "--ann-file {params.ro_input[ann_file]} "
 
 
@@ -107,6 +109,7 @@ rule build_pet:
         ro_input=lambda _, input: {k: ro(v) for k, v in input.items()},
         configs=ro(config_path(config)),
         meta=ro(metadata_path(config)),
+        buffer_len=config.get("evt_buffer_len", 10**6),
     shell:
         execenv_pyexe(config, "build-tier-evt") + "--configs {params.configs} "
         "--metadata {params.meta} "
@@ -120,6 +123,7 @@ rule build_pet:
         "--tcm-file {params.ro_input[tcm_file]} "
         "--dsp-file {params.ro_input[dsp_file]} "
         "--output {output} "
+        "--buffer-len {params.buffer_len} "
         "--ann-file {params.ro_input[ann_file]} "
 
 
