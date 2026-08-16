@@ -15,6 +15,7 @@ from legenddataflowscripts.utils import (
     build_log,
     check_input_files,
     prepare_output_paths,
+    require_peaks_present,
 )
 from lgdo import Array, Table, WaveformTable
 from pygama.evt.build_tcm import _concat_tables
@@ -294,6 +295,22 @@ def par_geds_psp_dplms() -> None:
         peaks_rounded = [int(peak) for peak in peaks_kev]
 
         n_per_run_signals = dplms_dict["n_signals"] // n_runs
+        # a peak may legitimately be absent from an individual run's file, so
+        # validate against the union over all of them before reading waveforms
+        available_peaks = set()
+        for file in args.peak_files:
+            available_peaks.update(
+                np.unique(
+                    lh5.read_as(f"{args.raw_table_name}/peak", file, library="np")
+                )
+            )
+        require_peaks_present(
+            available_peaks,
+            peaks_rounded,
+            f"peak files {args.peak_files} requested by "
+            f"dplms config ({args.config_file})",
+        )
+
         cal_tbs = []
         for file in args.peak_files:
             peaks = lh5.read_as(f"{args.raw_table_name}/peak", file, library="np")
