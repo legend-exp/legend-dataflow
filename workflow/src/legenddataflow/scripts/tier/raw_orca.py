@@ -1,15 +1,23 @@
+"""Console script ``build-tier-raw-orca``: convert ORCA DAQ files to the LH5
+raw tier with ``daq2lh5``."""
+
 from __future__ import annotations
 
 import argparse
-import logging
 import time
-from pathlib import Path
 
 import hdf5plugin
 from daq2lh5 import build_raw
 from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import alias_table, build_log
+from legenddataflowscripts.utils import (
+    alias_table,
+    build_log,
+    check_input_files,
+    get_rule_config,
+    parse_json_arg,
+    prepare_output_paths,
+)
 
 filter_map = {
     "zstd": hdf5plugin.Zstd(),
@@ -38,17 +46,20 @@ def build_tier_raw_orca() -> None:
     )
     args = argparser.parse_args()
 
-    Path(args.log).parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.INFO, filename=args.log, filemode="w")
-
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-
-    configs = TextDB(args.configs, lazy=True)
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_raw_orca"
-    ]
+    config_dict = get_rule_config(
+        args.configs, "tier_raw_orca", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.input, "input")
+    check_input_files(args.inl_table, "--inl-table")
+    alias_map = (
+        parse_json_arg(args.alias_table, "--alias-table")
+        if args.alias_table is not None
+        else None
+    )
+    prepare_output_paths(args.output)
 
     channel_dict = config_dict["inputs"]
     settings = Props.read_from(channel_dict["settings"])
@@ -131,6 +142,6 @@ def build_tier_raw_orca() -> None:
     msg = f"Built raw in {time.time() - start:.2f} seconds"
     log.info(msg)
 
-    if args.alias_table is not None:
+    if alias_map is not None:
         log.info("Creating alias table")
-        alias_table(args.output, args.alias_table)
+        alias_table(args.output, alias_map)

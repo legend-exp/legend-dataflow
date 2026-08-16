@@ -111,6 +111,16 @@ class ParsKeyResolve(ParsCatalog):
     def apply_run_override(cls, hit_par_catalog, name_dict, run_overwrite_validity):
         run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
 
+        if "all" not in run_overwrite_catalog.entries:
+            msg = (
+                f"run-override validity file {run_overwrite_validity} has no "
+                "'all' system entry"
+            )
+            raise ValueError(msg)
+        if "all" not in hit_par_catalog.entries:
+            msg = "par catalog passed to apply_run_override has no 'all' system entry"
+            raise ValueError(msg)
+
         for i, entry in enumerate(run_overwrite_catalog.entries["all"]):
             if len(entry.file) != 0:
                 # check if common timestamp and remove old if this is the case

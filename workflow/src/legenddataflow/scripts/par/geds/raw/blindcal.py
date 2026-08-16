@@ -14,9 +14,13 @@ import lh5
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    expand_filelist,
+    get_rule_config,
+    prepare_output_paths,
+)
 from pygama.pargen.energy_cal import HPGeCalibration
 
 mpl.use("agg")
@@ -43,22 +47,20 @@ def par_geds_raw_blindcal() -> None:
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["tier_raw_blind_check"]
+    config_dict = get_rule_config(
+        args.configs, "tier_raw_blind_check", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    prepare_output_paths(args.blind_curve, args.plot_file)
 
     # peaks to search for
     peaks_keV = np.array(
         [238, 583.191, 727.330, 860.564, 1592.53, 1620.50, 2103.53, 2614.50]
     )
 
-    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
-        input_file = args.files[0]
-        with Path(input_file).open() as f:
-            input_file = f.read().splitlines()
-    else:
-        input_file = args.files
+    input_file = expand_filelist(args.files)
 
     E_uncal = lh5.read_as(f"{args.raw_table_name}/daqenergy", input_file, library="np")
     E_uncal = E_uncal[E_uncal > 200]

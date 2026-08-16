@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from legenddataflow.methods import ParsCatalog
 
 log = logging.getLogger(__name__)
@@ -28,16 +30,20 @@ def test_match_pars_files():
         assert result1 == ["file1_step1_typeA", "file3_step1_typeA"]
 
 
-def test_get_par_file():
+def test_get_par_file(tmp_path):
+    overwrite_path = tmp_path / "overwrite"
     setup = {
         "paths": {
             "par": "/pars",
-            "overwrite": "/overwrite",
+            "overwrite": str(overwrite_path),
             "det_status": "/det_status",
         }
     }
     timestamp = "20230101T000000Z"
     tier = "test_tier"
+    # the overwrite validity file must exist for get_par_file to read it
+    (overwrite_path / tier).mkdir(parents=True)
+    (overwrite_path / tier / "validity.yaml").touch()
 
     catalog = ParsCatalog.get(
         [
@@ -81,7 +87,30 @@ def test_get_par_file():
         expected_result = [
             Path("/pars/file1.yaml"),
             Path("/pars/file2.yaml"),
-            Path("/overwrite/test_tier/file3.yaml"),
+            overwrite_path / tier / "file3.yaml",
         ]
 
         assert result == expected_result
+
+
+def test_get_par_file_missing_overwrite_validity(tmp_path):
+    setup = {"paths": {"par": "/pars", "overwrite": str(tmp_path / "overwrite")}}
+    catalog = ParsCatalog.get(
+        [{"valid_from": "20230101T000000Z", "apply": ["file1.yaml"]}]
+    )
+
+    with (
+        patch("legenddataflow.methods.pars_loading.pars_path") as mock_pars_path,
+        patch(
+            "legenddataflow.methods.pars_loading.get_pars_path"
+        ) as mock_get_pars_path,
+        patch(
+            "legenddataflow.methods.pars_loading.par_overwrite_path"
+        ) as mock_par_overwrite_path,
+    ):
+        mock_pars_path.return_value = setup["paths"]["par"]
+        mock_get_pars_path.return_value = setup["paths"]["par"]
+        mock_par_overwrite_path.return_value = setup["paths"]["overwrite"]
+
+        with pytest.raises(FileNotFoundError, match="par-overwrite validity file"):
+            ParsCatalog.get_par_file(catalog, setup, "20230101T000000Z", "test_tier")

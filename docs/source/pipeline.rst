@@ -76,12 +76,13 @@ Converts raw DAQ files to LH5 format:
 
 - **ORCA format** (``build_raw_orca``) – decodes data from ORCA.
 - **FCIO format** (``build_raw_fcio``) – decodes data from FLASHCAM
-used for some special data taking.
+  used for some special data taking.
 - **Blinding** (``build_raw_blind``) – removes events with any hit within 25keV of Qbb, it
-uses the daqenergy estimator to do this. The blinding is checked in each calibration using
-``rules/blinding_check.smk`` to verify the parameters are still valid. If any channels fail the
-processing will stop until a new calibration is put in. The calibrations are all stored in
-``legend-dataflow-overrides`` under ``raw``.
+  uses the daqenergy estimator to do this. The blinding is checked in each calibration using
+  ``rules/blinding_check.smk`` to verify the parameters are still valid. If any channels fail the
+  processing will stop until a new calibration is put in. The calibrations are all stored in
+  ``legend-dataflow-overrides`` under ``raw``.
+
 The helper rules in ``rules/blinding_calibration.smk`` can be used to derive all the
 daqenergy calibration coefficients.
 

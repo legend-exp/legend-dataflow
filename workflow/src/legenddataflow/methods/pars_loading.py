@@ -79,6 +79,9 @@ class ParsCatalog(Catalog):
         allow_none = setup.get("allow_none_par", False)
         if pars_path(setup) not in get_pars_path(setup, tier):
             par_file = Path(get_pars_path(setup, tier)) / "validity.yaml"
+            if not par_file.is_file():
+                msg = f"validity file {par_file} for tier {tier!r} does not exist"
+                raise FileNotFoundError(msg)
             catalog = ParsCatalog.read_from(par_file)
             pars_files = catalog.valid_for(timestamp, allow_none=allow_none)
         else:
@@ -87,6 +90,12 @@ class ParsCatalog(Catalog):
             pars_files = []
 
         par_overwrite_file = Path(par_overwrite_path(setup)) / tier / "validity.yaml"
+        if not par_overwrite_file.is_file():
+            msg = (
+                f"par-overwrite validity file {par_overwrite_file} for tier "
+                f"{tier!r} does not exist"
+            )
+            raise FileNotFoundError(msg)
         overwrite_catalog = ParsCatalog.read_from(par_overwrite_file)
         pars_files_overwrite = overwrite_catalog.valid_for(
             timestamp, allow_none=allow_none

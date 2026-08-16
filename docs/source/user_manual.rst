@@ -80,15 +80,21 @@ Key settings
 +-------------------------------+--------------------------------------------------------------+
 | ``multiprocess``              | Enable parallel processing within a single Snakemake job.    |
 +-------------------------------+--------------------------------------------------------------+
-| ``pht_intier  ``              | Which tier to use as input for pht can be ``dsp`` or ``psp`` |
+| ``multiprocess_mode``         | Strategy used to share work when ``multiprocess`` is on      |
+|                               | (default ``max_usage``).                                     |
++-------------------------------+--------------------------------------------------------------+
+| ``max_processes``             | Maximum number of processes when multiprocessing.            |
++-------------------------------+--------------------------------------------------------------+
+| ``pht_intier``                | Which tier to use as input for pht can be ``dsp`` or ``psp`` |
 +-------------------------------+--------------------------------------------------------------+
 
 Paths
 -----
 
-All path values support the ``$_`` placeholder, which is substituted with the value of
-the ``$PRODENV`` environment variable at runtime. This allows a single config file to
-be used across different machines by setting ``PRODENV`` appropriately.
+All path values support the ``$_`` placeholder, which is substituted with the directory
+containing the config file (the production cycle root). Other ``$VAR`` placeholders are
+taken from the environment, e.g. ``$PRODENV``. This allows a single config file to be
+used across different machines.
 
 The key path categories are:
 
@@ -182,7 +188,7 @@ The target format is:
 where:
 
 - ``all`` / ``valid`` – process all data, or only data selected for analysis,
-any keyword in ``runlists.yaml`` in ``legend-datasets`` is a possible option.
+  any keyword in ``runlists.yaml`` in ``legend-datasets`` is a possible option.
 - ``experiment`` – experiment name (e.g. ``l200``)
 - ``period`` – data-taking period (e.g. ``p03``)
 - ``run`` – run number (e.g. ``r001``)
@@ -268,6 +274,6 @@ Two files in the ``detector_status`` directory control which data are included:
 
 - ``ignored_daq_cycles.yaml`` – lists DAQ cycles to exclude from processing entirely
 - ``run_override.yaml`` – allows overriding the validity window for specific runs,
-e.g. to apply a previous valid calibration to a subsequent run
+  e.g. to apply a previous valid calibration to a subsequent run
 
 These files are part of the ``legend-datasets`` repository.

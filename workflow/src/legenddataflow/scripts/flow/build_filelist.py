@@ -1,5 +1,8 @@
 # ruff: noqa: I002
 
+"""Build the lists of input files matching a ``.gen`` production target,
+grouping keys by run and handling the per-tier concatenation rules."""
+
 import glob
 from pathlib import Path
 
@@ -21,23 +24,23 @@ def expand_runs(in_dict):
         "p01": "r001..r005"
     }
     """
+
+    def _expand_range(run_range):
+        start, end = run_range.split("..")
+        return [f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)]
+
     for datatype, datalist in in_dict.items():
         for per, run_list in datalist.items():
             if isinstance(run_list, str) and ".." in run_list:
-                start, end = run_list.split("..")
-                in_dict[datatype][per] = [
-                    f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
-                ]
+                in_dict[datatype][per] = _expand_range(run_list)
             if isinstance(run_list, list):
-                for i, run in enumerate(run_list):
+                expanded_runs = []
+                for run in run_list:
                     if isinstance(run, str) and ".." in run:
-                        start, end = run.split("..")
-                        run_list.pop(i)
-                        expanded_runs = [
-                            f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
-                        ]
-                        in_dict[datatype][per] += expanded_runs
-                in_dict[datatype][per] = sorted(run_list)
+                        expanded_runs += _expand_range(run)
+                    else:
+                        expanded_runs.append(run)
+                in_dict[datatype][per] = sorted(expanded_runs)
     return in_dict
 
 
@@ -63,29 +66,41 @@ def get_analysis_runs(
                 ]
 
             else:
-                msg = "ignore_keys_file file not in json, yaml or keylist format"
+                msg = (
+                    f"unsupported ignore_keys file extension "
+                    f"{Path(ignore_keys_file).suffix!r} ({ignore_keys_file}): "
+                    "expected .json, .yaml, .yml or .keylist"
+                )
                 raise ValueError(msg)
 
         else:
-            msg = f"no ignore_keys file found: {ignore_keys_file}"
+            msg = f"ignore_keys file not found: {ignore_keys_file}"
             raise ValueError(msg)
 
     if analysis_runs_file is not None and file_selection != "all":
         if Path(analysis_runs_file).is_file():
-            if Path(ignore_keys_file).suffix in (".json", ".yaml", ".yml"):
+            if Path(analysis_runs_file).suffix in (".json", ".yaml", ".yml"):
                 analysis_runs = Props.read_from(analysis_runs_file)
             else:
-                msg = f"analysis_runs file not in json or yaml format: {analysis_runs_file}"
+                msg = (
+                    f"unsupported analysis_runs file extension "
+                    f"{Path(analysis_runs_file).suffix!r} ({analysis_runs_file}): "
+                    "expected .json, .yaml or .yml"
+                )
                 raise ValueError(msg)
             if file_selection in analysis_runs:
                 analysis_runs = expand_runs(
                     analysis_runs[file_selection]
                 )  # select the file_selection and expand out the runs
             else:
-                msg = f"Unknown file selection: {file_selection} not in {list(analysis_runs)}"
+                msg = (
+                    f"unknown file selection {file_selection!r}: "
+                    f"available selections in {analysis_runs_file} are "
+                    f"{list(analysis_runs)}"
+                )
                 raise ValueError(msg)
         else:
-            msg = f"no analysis_runs file found: {analysis_runs_file}"
+            msg = f"analysis_runs file not found: {analysis_runs_file}"
             raise ValueError(msg)
 
     return analysis_runs, ignore_keys
@@ -168,12 +183,14 @@ def build_filelist(
     the keys specified in the analysis_runs dict.
     """
     # the ignore_keys dictionary organizes keys in sections, gather all the
-    # section contents in a single list
-    if ignore_keys is not None:
+    # section contents in a single list; keylist files yield a flat list
+    if isinstance(ignore_keys, dict):
         _ignore_keys = ignore_keys.get("unprocessable", [])
         if remove_level == "removed":
             _ignore_keys += ignore_keys.get("removed", [])
         ignore_keys = sorted(_ignore_keys)
+    elif ignore_keys is not None:
+        ignore_keys = sorted(ignore_keys)
     else:
         ignore_keys = []
 

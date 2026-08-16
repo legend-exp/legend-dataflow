@@ -118,8 +118,8 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
             / "{experiment}-{period}-{run}-{datatype}-tier_skm.lh5"
         )
     else:
-        msg = "invalid tier"
-        raise Exception(msg)
+        msg = f"invalid tier {tier!r}"
+        raise ValueError(msg)
     if (
         tier_path(setup) not in str(file_pattern.resolve(strict=False))
         and check_in_cycle is True
@@ -161,8 +161,8 @@ def get_pattern_pars(
                 )
             )
     else:
-        msg = "invalid tier"
-        raise Exception(msg)
+        msg = f"invalid tier {tier!r}"
+        raise ValueError(msg)
     if (
         pars_path(setup) not in str(Path(file_pattern).resolve(strict=False))
         and check_in_cycle is True

@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-qc-phy``: derive partition-level
+quality-control cuts for a HPGe channel from physics data."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,9 +12,15 @@ from pathlib import Path
 
 import lh5
 import numpy as np
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log, convert_dict_np_to_float
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    convert_dict_np_to_float,
+    get_channel_config,
+    get_rule_config,
+    prepare_output_paths,
+)
 from lh5 import ls
 from pygama.pargen.data_cleaning import (
     generate_cut_classifiers,
@@ -49,13 +58,18 @@ def par_geds_pht_qc_phy() -> None:
     )
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_pht_qc"]
+    config_dict = get_rule_config(
+        args.configs, "pars_pht_qc", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
 
+    prepare_output_paths(*(args.save_path or []), *(args.plot_path or []))
+
     # get metadata dictionary
-    channel_dict = config_dict["inputs"]["qc_config"][args.channel]
+    channel_dict = get_channel_config(
+        config_dict["inputs"]["qc_config"], args.channel, name="qc_config"
+    )
     kwarg_dict = Props.read_from(channel_dict)
 
     # sort files in dictionary where keys are first timestamp from run
@@ -68,11 +82,12 @@ def par_geds_pht_qc_phy() -> None:
             if len(run_files) == 0:
                 continue
             run_files = sorted(np.unique(run_files))
+            check_input_files(run_files, "--phy-files")
             phy_files += run_files
             bls = lh5.read(
-                args.baseline_name, phy_files, field_mask=["wf_max", "bl_mean"]
+                args.baseline_name, run_files, field_mask=["wf_max", "bl_mean"]
             )
-            puls = lh5.read(args.pulser_name, phy_files, field_mask=["trapTmax"])
+            puls = lh5.read(args.pulser_name, run_files, field_mask=["trapTmax"])
             bl_idxs = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
                 puls["trapTmax"].nda < 200
             )
@@ -86,6 +101,10 @@ def par_geds_pht_qc_phy() -> None:
         bl_mask = ((bls["wf_max"].nda - bls["bl_mean"].nda) > 1000) & (
             puls["trapTmax"].nda < 200
         )
+
+    if len(phy_files) == 0:
+        msg = "no files found in the provided phy filelists, cannot derive qc cuts"
+        raise RuntimeError(msg)
 
     kwarg_dict_fft = kwarg_dict["fft_fields"]
 
@@ -107,7 +126,7 @@ def par_geds_pht_qc_phy() -> None:
     )
 
     discharges = data["t_sat_lo"] > 0
-    discharge_timestamps = np.where(data["timestamp"][discharges])[0]
+    discharge_timestamps = data["timestamp"][discharges]
     is_recovering = np.full(len(data), False, dtype=bool)
     for tstamp in discharge_timestamps:
         is_recovering = is_recovering | np.where(
@@ -145,10 +164,10 @@ def par_geds_pht_qc_phy() -> None:
         for outname, info in cut_dict.items():
             # convert to pandas eval
             exp = info["expression"]
-            for key in info.get("parameters", None):
+            for key in info.get("parameters", {}):
                 exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
             cut_data[outname] = cut_data.eval(
-                exp, local_dict=info.get("parameters", None)
+                exp, local_dict=info.get("parameters", {})
             )
             if "_classifier" not in outname:
                 ct_mask = ct_mask & cut_data[outname]

@@ -1,14 +1,23 @@
+"""Console scripts ``par-spms-dsp-trg-thr`` and ``-multi``: determine SiPM
+trigger thresholds from the noise distribution of DSP-processed raw
+waveforms."""
+
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import hist
 import lh5
 import numpy as np
-from dbetto import AttrsDict, Props, TextDB, utils
+from dbetto import AttrsDict, Props, utils
 from dspeed import build_dsp
-from legenddataflowscripts.utils import build_log, cfgtools
+from legenddataflowscripts.utils import (
+    build_log,
+    cfgtools,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 
 
 def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name, log):
@@ -31,7 +40,7 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
     if len(lh5.ls(raw_file, f"{raw_table_name}/waveform_bit_drop")) == 0:
         msg = (
             f"could not find waveform '{raw_table_name}/waveform_bit_drop' "
-            "in {args.raw_file}, returning null pars"
+            f"in {raw_file}, returning null pars"
         )
         log.warning(msg)
 
@@ -46,14 +55,15 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
         if len(data) == 0:
             msg = (
                 f"could not find any waveforms '{raw_table_name}/waveform_bit_drop' "
-                "in {args.raw_file}, returning null pars"
+                f"in {raw_file}, returning null pars"
             )
             log.warning(msg)
 
         elif len(data) < settings.n_events:
             msg = (
-                f"number of waveforms ({len(data)}) in '{raw_table_name}/waveform_bit_drop' < {settings.n_events}"
-                " in {args.raw_file}, can't build histogram"
+                f"found only {len(data)} waveforms in "
+                f"'{raw_table_name}/waveform_bit_drop' of {raw_file}, need at "
+                f"least {settings.n_events} to build the histogram"
             )
             raise RuntimeError(msg)
         else:
@@ -85,7 +95,10 @@ def get_channel_trg_thr(df_configs, sipm_name, dsp_db, raw_file, raw_table_name,
             fwhm = edges[idx_over_half[-1]] - edges[idx_over_half[0]]
 
             if fwhm <= 0:
-                msg = f"determined FWHM of baseline derivative distribution is so <= 0: {fwhm:.3f}"
+                msg = (
+                    "determined FWHM of the baseline derivative distribution "
+                    f"is not positive: {fwhm:.3f}"
+                )
                 raise RuntimeError(msg)
 
             return fwhm
@@ -107,14 +120,16 @@ def par_spms_dsp_trg_thr() -> None:
     args = argparser.parse_args()
 
     # dataflow configs
-    df_configs = (
-        TextDB(args.config_path, lazy=True)
-        .on(args.timestamp, system=args.datatype)
-        .snakemake_rules.pars_spms_dsp_trg_thr
+    df_configs = get_rule_config(
+        args.config_path, "pars_spms_dsp_trg_thr", args.timestamp, args.datatype
     )
 
     # setup logging
     log = build_log(df_configs, args.logfile)
+
+    check_input_files(args.raw_file, "--raw-file")
+    check_input_files(args.dsp_db, "--dsp-db")
+    prepare_output_paths(args.output_file)
 
     fwhm = get_channel_trg_thr(
         df_configs,
@@ -126,7 +141,6 @@ def par_spms_dsp_trg_thr() -> None:
     )
     msg = f"writing out baseline_curr_fwhm = {fwhm}"
     log.debug(msg)
-    Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(
         args.output_file,
         {"baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm},
@@ -148,18 +162,28 @@ def par_spms_dsp_trg_thr_multi() -> None:
     args = argparser.parse_args()
 
     # dataflow configs
-    df_configs = (
-        TextDB(args.config_path, lazy=True)
-        .on(args.timestamp, system=args.datatype)
-        .snakemake_rules.pars_spms_dsp_trg_thr
+    df_configs = get_rule_config(
+        args.config_path, "pars_spms_dsp_trg_thr", args.timestamp, args.datatype
     )
 
     # setup logging
     log = build_log(df_configs, args.logfile)
 
+    check_input_files(args.raw_file, "--raw-file")
+    check_input_files(args.dsp_db, "--dsp-db")
+    prepare_output_paths(args.output_file)
+
+    if len(args.sipm_names) != len(args.raw_table_names):
+        msg = (
+            f"--sipm-names ({len(args.sipm_names)} entries) and "
+            f"--raw-table-names ({len(args.raw_table_names)} entries) must "
+            "have the same length"
+        )
+        raise ValueError(msg)
+
     out_dict = {}
     for sipm_name, raw_table_name in zip(
-        args.sipm_names, args.raw_table_names, strict=False
+        args.sipm_names, args.raw_table_names, strict=True
     ):
         fwhm = get_channel_trg_thr(
             df_configs,
@@ -175,7 +199,6 @@ def par_spms_dsp_trg_thr_multi() -> None:
         out_dict[sipm_name] = {
             "baseline_curr_fwhm": float(fwhm) if fwhm is not None else fwhm
         }
-    Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(
         args.output_file,
         out_dict,

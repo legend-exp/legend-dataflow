@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 from legenddataflowscripts.workflow import subst_vars
 
-from legenddataflow.methods import FileKey, paths, patterns
+from legenddataflow.methods import ChannelProcKey, FileKey, paths, patterns
 
 testprod = Path(__file__).parent / "dummy_cycle"
 
@@ -38,3 +39,33 @@ def test_filekey():
         ).name
         == key.name
     )
+
+
+def test_get_filekey_from_pattern_no_match():
+    with pytest.raises(ValueError, match="does not match"):
+        FileKey.get_filekey_from_pattern(
+            "stray-file.txt", patterns.get_pattern_tier(setup, "dsp")
+        )
+
+
+def test_parse_keypart_invalid():
+    with pytest.raises(ValueError, match="cannot be parsed as a FileKey keypart"):
+        FileKey.parse_keypart("garbage")
+    # keypart without the leading dash
+    with pytest.raises(ValueError, match="cannot be parsed"):
+        FileKey.parse_keypart("l200-p00-r000-cal")
+    # ChannelProcKey keyparts must start with 'all'
+    with pytest.raises(ValueError, match="ChannelProcKey keypart"):
+        ChannelProcKey.parse_keypart("-l200-p00-r000-cal")
+
+
+def test_get_path_from_filekey_dict_kwargs():
+    key = FileKey("l200", "p00", "r000", "cal", "20230101T123456Z")
+    # dict-valued kwargs are resolved via the key's field values
+    assert key.get_path_from_filekey(
+        "{experiment}-{run}-{extra}", extra={"cal": "x"}
+    ) == ["l200-r000-x"]
+    # non-intersecting dict kwargs are dropped instead of crashing
+    assert key.get_path_from_filekey("{experiment}-{run}", extra={"nomatch": "x"}) == [
+        "l200-r000"
+    ]

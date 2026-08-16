@@ -1,13 +1,20 @@
+"""Console script ``build-tier-tcm``: build the time-coincidence map (tcm)
+tier from raw-tier data."""
+
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import lh5
 from daq2lh5.orca import orca_flashcam
-from dbetto import AttrsDict, TextDB
+from dbetto import AttrsDict
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 from pygama.evt.build_tcm import build_tcm
 
 
@@ -21,15 +28,23 @@ def build_tier_tcm() -> None:
     argparser.add_argument("--log", help="log file", type=str)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["tier_tcm"]
+    config_dict = get_rule_config(
+        args.configs, "tier_tcm", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.input, "input")
+    prepare_output_paths(args.output)
+    # the config can either be a single file used for all fcids or a mapping
+    # of per-fcid config files
+    per_fcid_settings = None
     if isinstance(config_dict["inputs"]["config"], dict | AttrsDict):
-        settings = {
-            key: Props.read_from(val)
+        per_fcid_settings = {
+            int(key): Props.read_from(val)
             for key, val in config_dict["inputs"]["config"].items()
         }
+        settings = None
     else:
         settings = Props.read_from(config_dict["inputs"]["config"])
 
@@ -37,7 +52,7 @@ def build_tier_tcm() -> None:
     ch_list = lh5.ls(args.input, "/ch*")
 
     if len(ch_list) == 0:
-        msg = "no tables matching /ch* found in input file"
+        msg = f"no tables matching /ch* found in input file {args.input}"
         raise RuntimeError(msg)
 
     log.debug(ch_list)
@@ -50,17 +65,26 @@ def build_tier_tcm() -> None:
             fcid_channels[fcid] = []
         fcid_channels[fcid].append(f"/{ch}/raw")
 
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     # make a hardware_tcm_[fcid] for each fcid
     for fcid, fcid_dict in fcid_channels.items():
         msg = f"building tcm for fcid: {fcid}"
         log.info(msg)
+        if per_fcid_settings is not None:
+            if fcid not in per_fcid_settings:
+                msg = (
+                    f"no tcm config found for fcid {fcid}: the config mapping "
+                    f"only covers fcids {sorted(per_fcid_settings)}"
+                )
+                raise RuntimeError(msg)
+            fcid_settings = per_fcid_settings[fcid]
+        else:
+            fcid_settings = settings
         build_tcm(
             [(args.input, fcid_dict)],
             out_file=args.output,
             out_name=f"hardware_tcm_{fcid}",
             wo_mode="o",
-            **settings.get(fcid, settings),
+            **fcid_settings,
         )
         msg = f"built tcm for fcid: {fcid}"
         log.info(msg)

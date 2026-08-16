@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-ecal-part``: derive the partition-level
+energy calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,7 +12,16 @@ import pandas as pd
 import pygama.math.distributions as pgf
 import pygama.math.histogram as pgh
 from dbetto import Props, TextDB
-from legenddataflowscripts.utils import build_log, get_pulser_mask
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    check_pulser_mask,
+    get_channel_config,
+    get_pulser_mask,
+    get_rule_config,
+    prepare_output_paths,
+    require_config_keys,
+)
 from pygama.math.distributions import nb_poly
 from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
@@ -253,7 +265,11 @@ def calibrate_partition(
                     bin_width_kev=0.2 if nruns > 3 else 0.5,
                 )
             else:
-                err = f"2614.511 peak not found in {cal_energy_param} fit, reduced csqr {csqr[0] / csqr[1]} not below 10, check fit"
+                err = (
+                    f"2614.511 keV peak not found in the {cal_energy_param} fit and "
+                    f"its reduced chi-square {csqr[0] / csqr[1]:.1f} is not below "
+                    "100, check the fit"
+                )
                 raise ValueError(err)
 
         full_object_dict[cal_energy_param].get_energy_res_curve(
@@ -382,7 +398,7 @@ def calibrate_partition(
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
-            plot_dict["common"].update(partcal_plot_dict["common"])
+            plot_dict["common"].update(common_dict)
         elif common_dict is not None:
             plot_dict["common"] = common_dict
         plot_dict.update({"partition_ecal": partcal_plot_dict})
@@ -427,13 +443,19 @@ def par_geds_pht_ecal_part() -> None:
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_pht_partcal"]
+    config_dict = get_rule_config(
+        args.configs, "pars_pht_partcal", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
 
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.fit_results or []), *(args.plot_file or [])
+    )
+
     chmap = TextDB(path=args.metadata, lazy=True).on(
-        args.timestamp, system=args.datatype
+        args.timestamp, category=args.datatype
     )
 
     # par files
@@ -450,10 +472,19 @@ def par_geds_pht_ecal_part() -> None:
         inplots_dict = get_run_dict(args.inplots)
 
     # get files split by run
-    final_dict, _ = split_files_by_run(args.files)
+    final_dict, _ = split_files_by_run(args.input_files)
 
-    channel_dict = config_dict["inputs"]["pars_pht_partcal_config"][args.channel]
+    channel_dict = get_channel_config(
+        config_dict["inputs"]["pars_pht_partcal_config"],
+        args.channel,
+        name="pars_pht_partcal_config",
+    )
     kwarg_dict = Props.read_from(channel_dict)
+    require_config_keys(
+        kwarg_dict,
+        ["final_cut_field", "energy_params", "threshold"],
+        f"channel {args.channel} partcal config ({channel_dict})",
+    )
 
     params = [
         kwarg_dict["final_cut_field"],
@@ -476,6 +507,7 @@ def par_geds_pht_ecal_part() -> None:
     if "pulser_multiplicity_threshold" in kwarg_dict:
         kwarg_dict.pop("pulser_multiplicity_threshold")
 
+    check_pulser_mask(mask, threshold_mask, args.channel)
     data["is_pulser"] = mask[threshold_mask]
 
     for tstamp in cal_dicts:

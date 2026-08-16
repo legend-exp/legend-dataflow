@@ -1,3 +1,6 @@
+"""Helpers shared by the pht parameter scripts: splitting input files by run
+and updating/saving calibration dictionaries."""
+
 from __future__ import annotations
 
 import pickle as pkl
@@ -6,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 from dbetto import AttrsDict, Props
-from legenddataflowscripts.utils import convert_dict_np_to_float
+from legenddataflowscripts.utils import check_input_files, convert_dict_np_to_float
 
 from legenddataflow.methods.FileKey import (
     ChannelProcKey,
@@ -56,6 +59,7 @@ def split_files_by_run(infiles):
     files = sorted(
         np.unique(files)
     )  # need this as sometimes files get double counted as it somehow puts in the p%-* filelist and individual runs also
+    check_input_files(files, "--input-files")
 
     final_dict = {}
     all_file = run_splitter(sorted(files))
@@ -68,6 +72,7 @@ def split_files_by_run(infiles):
 
 def save_dict_to_files(files, out_dict):
     for file in files:
+        Path(file).parent.mkdir(parents=True, exist_ok=True)
         fk = ChannelProcKey.get_filekey_from_pattern(Path(file).name)
         if Path(file).suffix == ".pkl":
             with Path(file).open("wb") as w:

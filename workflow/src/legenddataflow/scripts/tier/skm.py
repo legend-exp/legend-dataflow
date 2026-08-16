@@ -1,12 +1,19 @@
+"""Console script ``build-tier-skm``: build the skm tier (flattened physics
+skim) from concatenated evt-tier data."""
+
 from __future__ import annotations
 
 import argparse
 
 import awkward as ak
 import lh5
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    get_rule_config,
+    prepare_output_paths,
+)
 from lgdo.types import Array, Struct, Table, VectorOfVectors
 
 
@@ -32,11 +39,14 @@ def build_tier_skm() -> None:
     args = argparser.parse_args()
 
     # load in config
-    config_dict = TextDB(args.configs, lazy=True).on(
-        args.timestamp, system=args.datatype
-    )["snakemake_rules"]["tier_skm"]
+    config_dict = get_rule_config(
+        args.configs, "tier_skm", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
+
+    check_input_files(args.evt_file, "--evt-file")
+    prepare_output_paths(args.output)
 
     skm_config_file = config_dict["inputs"]["skm_config"]
     evt_filter = Props.read_from(skm_config_file)["evt_filter"]
@@ -51,17 +61,24 @@ def build_tier_skm() -> None:
     # make it rectangular and make an LGDO Table
     out_table = Table(skm)
 
-    for field in out_fields:
+    # expand fields that refer to whole sub-tables into their leaf fields;
+    # iterate over a copy since out_fields is modified in the loop
+    for field in list(out_fields):
         items = field.split(".")
         ptr1 = out_table
-        for item in items[:-1]:
-            ptr1 = ptr1[item]
-
-        if isinstance(ptr1[items[-1]], Table):
-            out_fields.remove(field)
-            out_fields = get_all_out_fields(
-                ptr1[items[-1]], out_fields, current_field=field
+        try:
+            for item in items:
+                ptr1 = ptr1[item]
+        except KeyError as err:
+            msg = (
+                f"keep_fields entry {field!r} not found in the evt tier data: "
+                f"missing key {err}"
             )
+            raise KeyError(msg) from err
+
+        if isinstance(ptr1, Table):
+            out_fields.remove(field)
+            out_fields = get_all_out_fields(ptr1, out_fields, current_field=field)
 
     # remove unwanted columns
     out_table_skm = Table(size=len(out_table))

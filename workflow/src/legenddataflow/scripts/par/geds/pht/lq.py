@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-lq``: derive the partition-level LQ
+calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse
@@ -5,9 +8,18 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from dbetto import Props, TextDB
+from dbetto import Props
 from legenddataflowscripts.par.geds.hit.lq import run_lq_calibration
-from legenddataflowscripts.utils import build_log, get_pulser_mask
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    check_pulser_mask,
+    get_channel_config,
+    get_pulser_mask,
+    get_rule_config,
+    prepare_output_paths,
+    require_config_keys,
+)
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.lq_cal import *  # noqa: F403
 from pygama.pargen.utils import load_data
@@ -57,12 +69,20 @@ def par_geds_pht_lq() -> None:
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_pht_lqcal"]
+    config_dict = get_rule_config(
+        args.configs, "pars_pht_lqcal", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
 
-    channel_dict = config_dict["inputs"]["lqcal_config"][args.channel]
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.lq_results or []), *(args.plot_file or [])
+    )
+
+    channel_dict = get_channel_config(
+        config_dict["inputs"]["lqcal_config"], args.channel, name="lqcal_config"
+    )
     kwarg_dict = Props.read_from(channel_dict)
 
     # par files
@@ -79,10 +99,19 @@ def par_geds_pht_lq() -> None:
         inplots_dict = get_run_dict(args.inplots)
 
     # get files split by run
-    final_dict, _ = split_files_by_run(args.files)
+    final_dict, _ = split_files_by_run(args.input_files)
+
+    if "run_lq" not in kwarg_dict:
+        msg = f"lqcal config for {args.channel} is missing the required key 'run_lq'"
+        raise KeyError(msg)
 
     # run lq cal
     if kwarg_dict.pop("run_lq") is True:
+        require_config_keys(
+            kwarg_dict,
+            ["energy_param", "cal_energy_param", "cut_field", "threshold"],
+            f"channel {args.channel} lqcal config ({channel_dict})",
+        )
         params = [
             "lq80",
             "dt_eff",
@@ -107,6 +136,7 @@ def par_geds_pht_lq() -> None:
         if "pulser_multiplicity_threshold" in kwarg_dict:
             kwarg_dict.pop("pulser_multiplicity_threshold")
 
+        check_pulser_mask(mask, threshold_mask, args.channel)
         data["is_pulser"] = mask[threshold_mask]
         msg = f"{len(data.query('~is_pulser'))}  non pulser events"
         log.info(msg)
@@ -130,6 +160,8 @@ def par_geds_pht_lq() -> None:
             kwarg_dict,
             # gen_plots=bool(args.plot_file),
         )
+    else:
+        plot_dicts = inplots_dict
 
     if args.plot_file:
         save_dict_to_files(args.plot_file, plot_dicts)

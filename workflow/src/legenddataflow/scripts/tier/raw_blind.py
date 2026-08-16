@@ -20,8 +20,15 @@ import lh5
 import numexpr as ne
 import numpy as np
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import alias_table, build_log
-from legendmeta import LegendMetadata, TextDB
+from legenddataflowscripts.utils import (
+    alias_table,
+    build_log,
+    check_input_files,
+    get_rule_config,
+    parse_json_arg,
+    prepare_output_paths,
+)
+from legendmeta import LegendMetadata
 
 filter_map = {
     "zstd": hdf5plugin.Zstd(),
@@ -49,12 +56,20 @@ def build_tier_raw_blind() -> None:
     argparser.add_argument("--alias-table", help="Alias table", type=str, default=None)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True)
-    config_dict = configs.on(args.timestamp, system=args.datatype)["snakemake_rules"][
-        "tier_raw_blind"
-    ]
+    config_dict = get_rule_config(
+        args.configs, "tier_raw_blind", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.input, "--input")
+    check_input_files(args.blind_curve, "--blind-curve")
+    alias_map = (
+        parse_json_arg(args.alias_table, "--alias-table")
+        if args.alias_table is not None
+        else None
+    )
+    prepare_output_paths(args.output)
 
     hdf_settings = Props.read_from(config_dict["settings"])["hdf5_settings"]
 
@@ -79,19 +94,25 @@ def build_tier_raw_blind() -> None:
         for system, chan_dict in chmap.map("system", unique=False).items()
     }
 
-    main_channels = (
-        list(chans["geds"])
-        + list(chans["spms"])
-        + list(chans["auxs"])
-        + list(chans["blsns"])
-        + list(chans["puls"])
-    )
+    main_systems = ("geds", "spms", "auxs", "bsln", "puls")
+    missing_systems = [system for system in main_systems if system not in chans]
+    if missing_systems:
+        msg = (
+            f"systems {missing_systems} not found in the channel map for "
+            f"{args.timestamp}: available systems are {sorted(chans)}"
+        )
+        raise RuntimeError(msg)
+
+    main_channels = [chnum for system in main_systems for chnum in chans[system]]
 
     # rows that need blinding
     toblind = np.array([])
+    daqenergy = None
 
     log.info("Blinding Ge channels")
     start = time.time()
+
+    blind_curves = Props.read_from(args.blind_curve)
 
     # first, loop through the Ge detector channels, calibrate them and look for events that should be blinded
     for chnum in chans["geds"]:
@@ -103,9 +124,14 @@ def build_tier_raw_blind() -> None:
         daqenergy = lh5.read(f"ch{chnum}/raw/daqenergy", args.input)
 
         # read in calibration curve for this channel
-        blind_curve = Props.read_from(args.blind_curve)[chmap.map("daq.rawid").name][
-            "pars"
-        ]["operations"]
+        channel_name = chans["geds"][chnum].name
+        if channel_name not in blind_curves:
+            msg = (
+                f"no blinding curve found for channel {channel_name} (rawid {chnum}) "
+                f"in {args.blind_curve}"
+            )
+            raise RuntimeError(msg)
+        blind_curve = blind_curves[channel_name]["pars"]["operations"]
 
         # calibrate daq energy using pre existing curve
         daqenergy_cal = ne.evaluate(
@@ -120,6 +146,14 @@ def build_tier_raw_blind() -> None:
             toblind,
             np.nonzero(np.abs(np.asarray(daqenergy_cal) - centroid) <= width)[0],
         )
+
+    if daqenergy is None:
+        msg = (
+            f"no blindable Ge channels found in the channel map for {args.timestamp} "
+            "(all channels have analysis.is_blinded set to false), refusing to "
+            "produce an unblinded output file"
+        )
+        raise RuntimeError(msg)
 
     # remove duplicates
     toblind = np.unique(toblind)
@@ -178,6 +212,6 @@ def build_tier_raw_blind() -> None:
     log.info("Finished blinding Ge channels")
     msg = f"Time taken: {time.time() - start:.2f} seconds"
     log.info(msg)
-    if args.alias_table is not None:
+    if alias_map is not None:
         log.info("Creating alias table")
-        alias_table(args.output, args.alias_table)
+        alias_table(args.output, alias_map)

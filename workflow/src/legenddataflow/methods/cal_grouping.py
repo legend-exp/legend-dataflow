@@ -4,9 +4,11 @@ This module uses the partition database files to the necessary inputs for partit
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from dbetto import Props
+from legendmeta.utils import expand_runs as _expand_runs
 
 from .FileKey import ChannelProcKey, ProcessingFileKey
 from .paths import filelist_path
@@ -17,42 +19,47 @@ from .patterns import (
     get_pattern_plts_tmp_channel,
 )
 
+log = logging.getLogger(__name__)
+
 
 class CalGrouping:
+    """Resolve partition-level calibration groupings (from
+    ``cal_groupings.yaml``): which runs belong to each partition per channel,
+    and the corresponding filelists, parameter/plot files, log paths and
+    wildcard constraints."""
+
     def __init__(self, setup, input_file):
         self.datasets = Props.read_from(input_file)
         self.expand_runs()
         self.setup = setup
 
     def expand_runs(self):
+        """Expand ``r000..r005`` run-range strings into explicit run lists."""
         for channel, chan_dict in self.datasets.items():
             for part, part_dict in chan_dict.items():
                 for per, runs in part_dict.items():
-                    if isinstance(runs, str) and ".." in runs:
-                        start, end = runs.split("..")
-                        self.datasets[channel][part][per] = [
-                            f"r{x:03}" for x in range(int(start[1:]), int(end[1:]) + 1)
-                        ]
-                    if isinstance(runs, list):
-                        final_runs = []
-                        for run in runs:
-                            if ".." in run:
-                                start, end = run.split("..")
-                                final_runs += [
-                                    f"r{x:03}"
-                                    for x in range(int(start[1:]), int(end[1:]) + 1)
-                                ]
-                            else:
-                                final_runs.append(run)
-                        self.datasets[channel][part][per] = final_runs
+                    if runs != "all":
+                        self.datasets[channel][part][per] = _expand_runs(runs)
 
     def get_dataset(self, dataset, channel):
+        """Return the ``{period: runs}`` dict for a partition, with
+        channel-specific overrides applied on top of ``default``."""
+        if "default" not in self.datasets:
+            msg = "cal-groupings config has no 'default' section"
+            raise KeyError(msg)
         partition_dict = self.datasets["default"].copy()
         if channel in self.datasets:
             partition_dict.update(self.datasets[channel])
+        if dataset not in partition_dict:
+            msg = (
+                f"partition {dataset!r} not defined for channel {channel!r} "
+                f"(or 'default'): available partitions are {sorted(partition_dict)}"
+            )
+            raise KeyError(msg)
         return partition_dict[dataset]
 
     def get_filelists(self, dataset, channel, tier, experiment="l200", datatype="cal"):
+        """Return the filelist paths covering all runs in the partition."""
         dataset = self.get_dataset(dataset, channel)
         files = []
         for per in dataset:
@@ -81,6 +88,9 @@ class CalGrouping:
         extension="yaml",
         pattern_func=get_pattern_pars_tmp_channel,
     ):
+        """Select from ``catalog`` the per-channel parameter files whose keys
+        fall inside the partition's periods and runs, expanded with
+        ``pattern_func``."""
         dataset = self.get_dataset(dataset, channel)
         all_par_files = []
         for item in catalog.entries["all"]:
@@ -134,6 +144,7 @@ class CalGrouping:
         datatype="cal",
         name=None,
     ):
+        """Like :meth:`get_par_files` but for the pickled plot outputs."""
         return self.get_par_files(
             catalog,
             dataset,
@@ -157,6 +168,8 @@ class CalGrouping:
         datatype="cal",
         name=None,
     ):
+        """Build the log-file path for the partition job, derived from the
+        first matching parameter file."""
         par_files = self.get_par_files(
             catalog,
             dataset,
@@ -175,11 +188,19 @@ class CalGrouping:
             return fk.get_path_from_filekey(
                 get_pattern_log_channel(self.setup, name, processing_timestamp)
             )[0]
+        log.warning(
+            "partition %r channel %r tier %r resolved to no par files; "
+            "using placeholder log file name",
+            dataset,
+            channel,
+            tier,
+        )
         return "log.log"
 
     def get_timestamp(
         self, catalog, dataset, channel, tier, experiment="l200", datatype="cal"
     ):
+        """Return the timestamp of the partition's first parameter file."""
         par_files = self.get_par_files(
             catalog,
             dataset,
@@ -192,9 +213,18 @@ class CalGrouping:
         if len(par_files) > 0:
             fk = ChannelProcKey.get_filekey_from_pattern(Path(par_files[0]).name)
             return fk.timestamp
+        log.warning(
+            "partition %r channel %r tier %r resolved to no par files; "
+            "using placeholder timestamp",
+            dataset,
+            channel,
+            tier,
+        )
         return "20000101T000000Z"
 
     def get_wildcard_constraints(self, dataset, channel):
+        """Build the channel wildcard regex; for ``default`` it excludes
+        channels that have their own override for the partition's runs."""
         if channel == "default":
             exclude_chans = []
             default_runs = self.get_dataset(dataset, channel)

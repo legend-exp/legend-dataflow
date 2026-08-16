@@ -24,6 +24,8 @@ from .patterns import (
 
 
 def regex_from_filepattern(filepattern):
+    """Compile a Snakemake-style pattern (``{wildcard}`` placeholders) into an
+    anchored regex with named groups; repeated wildcards become backreferences."""
     f = []
     wildcards = []
     last = 0
@@ -49,6 +51,10 @@ def regex_from_filepattern(filepattern):
 class FileKey(
     namedtuple("FileKey", ["experiment", "period", "run", "datatype", "timestamp"])
 ):
+    """A ``{experiment}-{period}-{run}-{datatype}-{timestamp}`` key identifying
+    one DAQ cycle, with conversions between keys, filenames and path patterns.
+    Unknown components are represented by ``*``."""
+
     __slots__ = ()
 
     re_pattern = "(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+))?)?)?)?)?$"
@@ -79,16 +85,24 @@ class FileKey(
 
     @classmethod
     def get_filekey_from_pattern(cls, filename, pattern=None):
+        """Match ``filename`` against ``pattern`` (default: the class key
+        pattern) and build a key from the named groups; fields not present in
+        the pattern become ``*``. Raises :class:`ValueError` if the filename
+        doesn't match."""
         if isinstance(pattern, Path):
             pattern = pattern.as_posix()
         filename = str(filename)
-        key_pattern_rx = re.compile(
-            regex_from_filepattern(cls.key_pattern if pattern is None else pattern)
-        )
+        used_pattern = cls.key_pattern if pattern is None else pattern
+        key_pattern_rx = re.compile(regex_from_filepattern(used_pattern))
 
-        if key_pattern_rx.match(filename) is None:
-            return None
-        d = key_pattern_rx.match(filename).groupdict()
+        match = key_pattern_rx.match(filename)
+        if match is None:
+            msg = (
+                f"'{filename}' does not match the {cls.__name__} "
+                f"pattern '{used_pattern}'"
+            )
+            raise ValueError(msg)
+        d = match.groupdict()
         for entry in list(d):
             if entry not in cls._fields:
                 d.pop(entry)
@@ -107,8 +121,14 @@ class FileKey(
 
     @classmethod
     def parse_keypart(cls, keypart):
+        """Parse a possibly partial key (e.g. ``-l200-p00``); missing trailing
+        components become ``*``."""
         keypart_rx = re.compile(cls.re_pattern)
-        d = keypart_rx.match(keypart).groupdict()
+        match = keypart_rx.match(keypart)
+        if match is None:
+            msg = f"'{keypart}' cannot be parsed as a {cls.__name__} keypart"
+            raise ValueError(msg)
+        d = match.groupdict()
         for key in d:
             if d[key] is None:
                 d[key] = "*"
@@ -118,6 +138,9 @@ class FileKey(
         return cls(**d)
 
     def expand(self, file_pattern, **kwargs):
+        """Substitute this key's fields (overridden/extended by ``kwargs``,
+        whose values may be lists) into ``file_pattern``, returning the paths
+        for all combinations."""
         file_pattern = str(file_pattern)
         wildcard_dict = self._asdict()
         if kwargs is not None:
@@ -136,18 +159,22 @@ class FileKey(
             result.append(formatter.vformat(file_pattern, (), substitution))
         return result
 
-    def get_path_from_filekey(self, pattern, **kwargs):
-        if kwargs is None:
-            return self.expand(pattern, **kwargs)
-        for entry, value in kwargs.items():
+    def _resolve_dict_kwargs(self, kwargs):
+        """Resolve dict-valued kwargs by looking up the first of their keys
+        matching one of this key's fields; drop entries with no match."""
+        for entry, value in list(kwargs.items()):
             if isinstance(value, dict):
-                if len(next(iter(set(value).intersection(self._list())))) > 0:
-                    kwargs[entry] = value[
-                        next(iter(set(value).intersection(self._list())))
-                    ]
+                matches = set(value).intersection(self._list())
+                if matches:
+                    kwargs[entry] = value[next(iter(matches))]
                 else:
                     kwargs.pop(entry)
-        return self.expand(pattern, **kwargs)
+        return kwargs
+
+    def get_path_from_filekey(self, pattern, **kwargs):
+        """Expand ``pattern`` with this key; dict-valued kwargs are resolved by
+        looking up the first of their keys matching one of this key's fields."""
+        return self.expand(pattern, **self._resolve_dict_kwargs(kwargs))
 
     # get_path_from_key
     @classmethod
@@ -158,6 +185,7 @@ class FileKey(
 
     @staticmethod
     def tier_files(setup, keys, tier):
+        """Expand each key string in ``keys`` into its file path for ``tier``."""
         fn_pattern = get_pattern_tier(setup, tier)
         files = []
         for line in keys:
@@ -169,6 +197,9 @@ class FileKey(
 
 
 class ProcessingFileKey(FileKey):
+    """A :class:`FileKey` extended with a ``processing_step`` component of the
+    form ``{type}_{tier}[_{identifier}]`` (e.g. ``par_dsp_eopt``)."""
+
     _fields = (*FileKey._fields, "processing_step")
     key_pattern = processing_pattern()
 
@@ -212,20 +243,12 @@ class ProcessingFileKey(FileKey):
             pattern = pattern.as_posix()
         if not isinstance(pattern, str):
             pattern = pattern(self.tier, self.identifier)
-        if kwargs is None:
-            return self.expand(pattern, **kwargs)
-        for entry, value in kwargs.items():
-            if isinstance(value, dict):
-                if len(next(iter(set(value).intersection(self._list())))) > 0:
-                    kwargs[entry] = value[
-                        next(iter(set(value).intersection(self._list())))
-                    ]
-                else:
-                    kwargs.pop(entry)
-        return self.expand(pattern, **kwargs)
+        return self.expand(pattern, **self._resolve_dict_kwargs(kwargs))
 
 
 class ChannelProcKey(ProcessingFileKey):
+    """A :class:`ProcessingFileKey` extended with a ``channel`` component."""
+
     re_pattern = "all(-(?P<experiment>[^-]+)(\\-(?P<period>[^-]+)(\\-(?P<run>[^-]+)(\\-(?P<datatype>[^-]+)(\\-(?P<timestamp>[^-]+)(\\-(?P<channel>[^-]+))?)?)?)?)?)?$"
     key_pattern = full_channel_pattern_with_extension()
     _fields = (*ProcessingFileKey._fields, "channel")
@@ -251,6 +274,8 @@ class ChannelProcKey(ProcessingFileKey):
 
     @staticmethod
     def get_channel_files(keypart, par_pattern, chan_list):
+        """Expand ``par_pattern`` once per channel in ``chan_list``, using the
+        components parsed from ``keypart``."""
         if isinstance(par_pattern, Path):
             par_pattern = par_pattern.as_posix()
         d = ChannelProcKey.parse_keypart(keypart)
@@ -266,10 +291,7 @@ class ChannelProcKey(ProcessingFileKey):
 
 
 def per_grouper(files):
-    """
-    Returns list containing lists of each run
-    """
-
+    """Group files into one list per ``experiment-period``."""
     pers = []
     per_files = []
     for file in files:
@@ -284,7 +306,7 @@ def per_grouper(files):
 
 
 def run_grouper(files):
-    """Returns list containing lists of each run"""
+    """Group files into one list per ``experiment-period-run``."""
     runs = []
     run_files = []
     for file in files:
@@ -299,10 +321,7 @@ def run_grouper(files):
 
 
 def run_splitter(files):
-    """
-    Returns list containing lists of each run
-    """
-
+    """Group files into one list per ``period-run``."""
     runs = []
     run_files = []
     for file in files:

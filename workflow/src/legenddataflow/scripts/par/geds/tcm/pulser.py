@@ -1,12 +1,17 @@
+"""Console script ``par-geds-tcm-pulser``: identify pulser events in the tcm
+tier and save their ids."""
+
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
-import numpy as np
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    expand_filelist,
+    get_rule_config,
+    prepare_output_paths,
+)
 from pygama.pargen.data_cleaning import get_tcm_pulser_ids
 
 
@@ -21,35 +26,26 @@ def par_geds_tcm_pulser() -> None:
     argparser.add_argument("--channel", help="Channel", type=str, required=True)
     argparser.add_argument("--rawid", help="rawid", type=str, required=True)
 
-    argparser.add_argument(
-        "--pulser-file", help="pulser file", type=str, required=False
-    )
+    argparser.add_argument("--pulser-file", help="pulser file", type=str, required=True)
 
     argparser.add_argument("--tcm-files", help="tcm_files", nargs="*", type=str)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_tcm_pulser"]
+    config_dict = get_rule_config(
+        args.configs, "pars_tcm_pulser", args.timestamp, args.datatype
+    )
 
     build_log(config_dict, args.log)
+
+    prepare_output_paths(args.pulser_file)
 
     kwarg_dict = config_dict["inputs"]["pulser_config"]
     kwarg_dict = Props.read_from(kwarg_dict)
 
-    if (
-        isinstance(args.tcm_files, list)
-        and args.tcm_files[0].split(".")[-1] == "filelist"
-    ):
-        tcm_files = args.tcm_files[0]
-        with Path(tcm_files).open() as f:
-            tcm_files = f.read().splitlines()
-    else:
-        tcm_files = args.tcm_files
     # get pulser mask from tcm files
-    tcm_files = sorted(np.unique(tcm_files))
+    tcm_files = expand_filelist(args.tcm_files, "--tcm-files")
     ids, mask = get_tcm_pulser_ids(
         tcm_files, args.rawid, kwarg_dict.pop("pulser_multiplicity_threshold")
     )
 
-    Path(args.pulser_file).parent.mkdir(parents=True, exist_ok=True)
     Props.write_to(args.pulser_file, {"idxs": ids.tolist(), "mask": mask.tolist()})

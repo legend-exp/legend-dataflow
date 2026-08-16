@@ -17,9 +17,14 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numexpr as ne
 import numpy as np
-from dbetto import TextDB
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import build_log
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    expand_filelist,
+    get_rule_config,
+    prepare_output_paths,
+)
 from legendmeta import LegendMetadata
 from pygama.math.histogram import get_hist
 from pygama.pargen.energy_cal import get_i_local_maxima
@@ -47,10 +52,14 @@ def par_geds_raw_blindcheck() -> None:
     argparser.add_argument("--log", help="log file", type=str)
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["tier_raw_blind_check"]
+    config_dict = get_rule_config(
+        args.configs, "tier_raw_blind_check", args.timestamp, args.datatype
+    )
 
     log = build_log(config_dict, args.log)
+
+    check_input_files(args.blind_curve, "--blind-curve")
+    prepare_output_paths(args.output, args.plot_file)
 
     # get the usability status for this channel
 
@@ -62,12 +71,7 @@ def par_geds_raw_blindcheck() -> None:
     # read in calibration curve for this channel
     blind_curve = Props.read_from(args.blind_curve)[args.channel]["pars"]["operations"]
 
-    if isinstance(args.files, list) and args.files[0].split(".")[-1] == "filelist":
-        input_file = args.files[0]
-        with Path(input_file).open() as f:
-            input_file = f.read().splitlines()
-    else:
-        input_file = args.files
+    input_file = expand_filelist(args.files)
 
     # load in the data
     daqenergy = lh5.read_as(
@@ -113,7 +117,6 @@ def par_geds_raw_blindcheck() -> None:
     if (
         np.any(np.abs(maxs - 2614) < 5) and np.any(np.abs(maxs - 583) < 5)
     ) or det_status is False:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Props.write_to(
             args.output,
             {
@@ -122,5 +125,9 @@ def par_geds_raw_blindcheck() -> None:
             },
         )
     else:
-        msg = "peaks not found in daqenergy"
+        msg = (
+            f"blinding check failed for channel {args.channel}: no peaks found "
+            f"within 5 keV of both 583 and 2614 keV in the calibrated daqenergy "
+            f"(local maxima at {maxs} keV), the blinding calibration may be stale"
+        )
         raise RuntimeError(msg)

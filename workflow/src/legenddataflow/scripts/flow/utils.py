@@ -1,3 +1,5 @@
+"""Shared helpers for the flow scripts."""
+
 from __future__ import annotations
 
 from pathlib import Path

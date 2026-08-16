@@ -1,3 +1,6 @@
+"""Console script ``par-geds-pht-aoe``: derive the partition-level A/E
+calibration for a HPGe channel."""
+
 from __future__ import annotations
 
 import argparse
@@ -5,9 +8,18 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from dbetto import Props, TextDB
+from dbetto import Props
 from legenddataflowscripts.par.geds.hit.aoe import run_aoe_calibration
-from legenddataflowscripts.utils import build_log, get_pulser_mask
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    check_pulser_mask,
+    get_channel_config,
+    get_pulser_mask,
+    get_rule_config,
+    prepare_output_paths,
+    require_config_keys,
+)
 from pygama.pargen.AoE_cal import *  # noqa: F403
 from pygama.pargen.utils import load_data
 
@@ -56,12 +68,22 @@ def par_geds_pht_aoe() -> None:
     argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
     args = argparser.parse_args()
 
-    configs = TextDB(args.configs, lazy=True).on(args.timestamp, system=args.datatype)
-    config_dict = configs["snakemake_rules"]["pars_pht_aoecal"]
+    config_dict = get_rule_config(
+        args.configs, "pars_pht_aoecal", args.timestamp, args.datatype
+    )
 
-    log = build_log(config_dict, args.log)
+    build_log(config_dict, args.log)
 
-    channel_dict = config_dict["inputs"]["par_pht_aoecal_config"][args.channel]
+    check_input_files(args.pulser_files, "--pulser-files")
+    prepare_output_paths(
+        *(args.hit_pars or []), *(args.aoe_results or []), *(args.plot_file or [])
+    )
+
+    channel_dict = get_channel_config(
+        config_dict["inputs"]["par_pht_aoecal_config"],
+        args.channel,
+        name="par_pht_aoecal_config",
+    )
     kwarg_dict = Props.read_from(channel_dict)
 
     # par files
@@ -78,10 +100,15 @@ def par_geds_pht_aoe() -> None:
         inplots_dict = get_run_dict(args.inplots)
 
     # get files split by run
-    final_dict, _ = split_files_by_run(args.files)
+    final_dict, _ = split_files_by_run(args.input_files)
 
     # run aoe cal
     if kwarg_dict.get("run_aoe", True) is True:
+        require_config_keys(
+            kwarg_dict,
+            ["final_cut_field", "current_param", "energy_param", "cal_energy_param"],
+            f"channel {args.channel} aoecal config ({channel_dict})",
+        )
         params = [
             kwarg_dict["final_cut_field"],
             kwarg_dict["current_param"],
@@ -107,6 +134,7 @@ def par_geds_pht_aoe() -> None:
         )
 
         mask = get_pulser_mask(pulser_file=args.pulser_files)
+        check_pulser_mask(mask, threshold_mask, args.channel)
         data["is_pulser"] = mask[threshold_mask]
 
         for tstamp in cal_dicts:
@@ -124,8 +152,8 @@ def par_geds_pht_aoe() -> None:
             cal_dicts,
             results_dicts,
             object_dicts,
+            inplots_dict,
             config=channel_dict,
-            log=log,
             debug_mode=args.debug,
             # gen_plots=bool(args.plot_file),
         )
