@@ -74,9 +74,8 @@ def get_pattern_tier_daq(setup, extension="orca", check_in_cycle=True):
         / "{run}"
         / ("{experiment}-{period}-{run}-{datatype}-{timestamp}." + extension)
     )
-    if (
-        tier_path(setup) not in str(file_pattern.resolve(strict=False))
-        and check_in_cycle is True
+    if check_in_cycle is True and tier_path(setup) not in str(
+        file_pattern.resolve(strict=False)
     ):
         return "/tmp/" + file_pattern.name
     return file_pattern
@@ -120,9 +119,8 @@ def get_pattern_tier(setup, tier, check_in_cycle=True):
     else:
         msg = f"invalid tier {tier!r}"
         raise ValueError(msg)
-    if (
-        tier_path(setup) not in str(file_pattern.resolve(strict=False))
-        and check_in_cycle is True
+    if check_in_cycle is True and tier_path(setup) not in str(
+        file_pattern.resolve(strict=False)
     ):
         return "/tmp/" + file_pattern.name
     return file_pattern
@@ -163,9 +161,8 @@ def get_pattern_pars(
     else:
         msg = f"invalid tier {tier!r}"
         raise ValueError(msg)
-    if (
-        pars_path(setup) not in str(Path(file_pattern).resolve(strict=False))
-        and check_in_cycle is True
+    if check_in_cycle is True and pars_path(setup) not in str(
+        Path(file_pattern).resolve(strict=False)
     ):
         if name is None:
             return (

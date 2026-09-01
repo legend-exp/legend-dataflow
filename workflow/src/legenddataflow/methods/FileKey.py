@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 import string
 from collections import namedtuple
+from functools import cache
 from itertools import product
 from pathlib import Path
 
@@ -46,6 +47,13 @@ def regex_from_filepattern(filepattern):
     f.append(re.escape(filepattern[last:]))
     f.append("$")
     return "".join(f)
+
+
+@cache
+def compile_filepattern_regex(filepattern: str) -> re.Pattern:
+    """Compiled-regex cache for :func:`regex_from_filepattern`; only a handful
+    of distinct patterns exist, but they are matched against many filenames."""
+    return re.compile(regex_from_filepattern(filepattern))
 
 
 class FileKey(
@@ -93,7 +101,7 @@ class FileKey(
             pattern = pattern.as_posix()
         filename = str(filename)
         used_pattern = cls.key_pattern if pattern is None else pattern
-        key_pattern_rx = re.compile(regex_from_filepattern(used_pattern))
+        key_pattern_rx = compile_filepattern_regex(used_pattern)
 
         match = key_pattern_rx.match(filename)
         if match is None:
@@ -123,7 +131,7 @@ class FileKey(
     def parse_keypart(cls, keypart):
         """Parse a possibly partial key (e.g. ``-l200-p00``); missing trailing
         components become ``*``."""
-        keypart_rx = re.compile(cls.re_pattern)
+        keypart_rx = re.compile(cls.re_pattern)  # cached by re's internal cache
         match = keypart_rx.match(keypart)
         if match is None:
             msg = f"'{keypart}' cannot be parsed as a {cls.__name__} keypart"
