@@ -52,6 +52,37 @@ parameters are derived from `cal` runs, then applied to `phy` data.
   `generated/`. `execenv:` defines named environments (bare/lngs/sator/nersc);
   non-bare ones run in containers.
 
+## General code guidelines
+
+Prefer short, targeted changes. Inline comments should fit on the line next to
+the code they refer to; if code needs a long comment, make the code clearer instead.
+Docstrings follow numpy convention:
+
+```python
+def func(a, b):
+    """
+    One-line summary.
+
+    Parameters
+    ----------
+    a : str
+        description
+    b : float
+        description
+
+    Returns
+    -------
+    int
+        description
+    """
+```
+
+## Github guidelines
+
+Always run `pre-commit run -a` before committing. Keep commit messages, PR bodies,
+and history short and clean; avoid too many commits. Substantial AI contributions
+must be disclosed in the PR (see `AI_POLICY.md`).
+
 ## Commands
 
 ```bash
