@@ -3,7 +3,8 @@
 Snakemake evaluates ``input:``/``params:`` functions once per job, and several
 of them resolve parameter files through a validity catalog. Re-reading the
 YAML from disk on every call dominates DAG-build time on large targets, so
-catalogs are cached here per path, invalidated on mtime change.
+catalogs are cached here per path, invalidated when the file's mtime or size
+changes.
 """
 
 from __future__ import annotations
@@ -17,7 +18,8 @@ _CACHE: dict[str, tuple[tuple[int, int], Catalog]] = {}
 
 def cached_catalog_read(path) -> Catalog:
     """Return the :class:`dbetto.catalog.Catalog` parsed from ``path``, cached
-    on ``(path, mtime, size)``.
+    per path and invalidated when the file's mtime (nanoseconds) or size
+    changes.
 
     The returned catalog is shared between callers: neither it nor the lists
     returned by its ``valid_for()`` may be mutated.

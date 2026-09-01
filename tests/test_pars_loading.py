@@ -114,3 +114,39 @@ def test_get_par_file_missing_overwrite_validity(tmp_path):
 
         with pytest.raises(FileNotFoundError, match="par-overwrite validity file"):
             ParsCatalog.get_par_file(catalog, setup, "20230101T000000Z", "test_tier")
+
+
+def test_get_par_file_out_of_cycle_tier(tmp_path):
+    """When the tier pars path lies outside the cycle, the validity catalog is
+    read from that path (through the catalog cache) instead of from self."""
+    pars_dir = tmp_path / "external_pars"
+    pars_dir.mkdir()
+    (pars_dir / "validity.yaml").write_text(
+        "- valid_from: 20230101T000000Z\n  apply:\n    - file1.yaml\n"
+    )
+    overwrite_dir = tmp_path / "overwrite" / "test_tier"
+    overwrite_dir.mkdir(parents=True)
+    (overwrite_dir / "validity.yaml").write_text(
+        "- valid_from: 20230101T000000Z\n  apply:\n    - file3.yaml\n"
+    )
+    setup = {}
+
+    with (
+        patch("legenddataflow.methods.pars_loading.pars_path") as mock_pars_path,
+        patch(
+            "legenddataflow.methods.pars_loading.get_pars_path"
+        ) as mock_get_pars_path,
+        patch(
+            "legenddataflow.methods.pars_loading.par_overwrite_path"
+        ) as mock_par_overwrite_path,
+    ):
+        mock_pars_path.return_value = "/somewhere/else"
+        mock_get_pars_path.return_value = str(pars_dir)
+        mock_par_overwrite_path.return_value = str(tmp_path / "overwrite")
+
+        catalog = ParsCatalog({"all": []})
+        result = ParsCatalog.get_par_file(
+            catalog, setup, "20230201T000000Z", "test_tier"
+        )
+
+    assert result == [pars_dir / "file1.yaml", overwrite_dir / "file3.yaml"]
