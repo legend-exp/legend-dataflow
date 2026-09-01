@@ -53,7 +53,7 @@ dependencies = [
     "colorlog",
     "dbetto>=1.4",
     "pygama==2.7.0a2",
-    "dspeed==2.1.4",
+    "dspeed==2.4.0",
     "pylegendmeta==1.4.4",
     "legend-pydataobj==2.0.2",
     "legend-lh5io==0.2.6",
