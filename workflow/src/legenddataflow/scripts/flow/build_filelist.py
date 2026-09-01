@@ -3,7 +3,9 @@
 """Build the lists of input files matching a ``.gen`` production target,
 grouping keys by run and handling the per-tier concatenation rules."""
 
+import copy
 import glob
+from functools import cache
 from pathlib import Path
 
 from dbetto import Props
@@ -50,6 +52,32 @@ def get_analysis_runs(
     """
     This function reads in the ignore_keys and analysis_runs files and returns the dictionaries
     """
+
+    def _file_state(file):
+        if file is None or not Path(file).is_file():
+            return None
+        st = Path(file).stat()
+        return (st.st_mtime_ns, st.st_size)
+
+    analysis_runs, ignore_keys = _get_analysis_runs_cached(
+        str(ignore_keys_file) if ignore_keys_file is not None else None,
+        _file_state(ignore_keys_file),
+        str(analysis_runs_file) if analysis_runs_file is not None else None,
+        _file_state(analysis_runs_file),
+        file_selection,
+    )
+    # callers may mutate the result, so never hand out the cached objects
+    return copy.deepcopy(analysis_runs), copy.deepcopy(ignore_keys)
+
+
+@cache
+def _get_analysis_runs_cached(
+    ignore_keys_file,
+    _ignore_keys_state,
+    analysis_runs_file,
+    _analysis_runs_state,
+    file_selection,
+):
     ignore_keys = []
     analysis_runs = {}
 

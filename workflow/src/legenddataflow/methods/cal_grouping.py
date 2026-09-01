@@ -5,6 +5,7 @@ This module uses the partition database files to the necessary inputs for partit
 from __future__ import annotations
 
 import logging
+from functools import cache
 from pathlib import Path
 
 from dbetto import Props
@@ -20,6 +21,13 @@ from .patterns import (
 )
 
 log = logging.getLogger(__name__)
+
+
+@cache
+def _parse_par_filename(name: str) -> ProcessingFileKey:
+    """Filekeys are immutable, and the same ~10^4 par filenames are re-parsed
+    by every per-partition ``get_par_files`` call, so cache the parse."""
+    return ProcessingFileKey.get_filekey_from_pattern(name)
 
 
 class CalGrouping:
@@ -92,46 +100,30 @@ class CalGrouping:
         fall inside the partition's periods and runs, expanded with
         ``pattern_func``."""
         dataset = self.get_dataset(dataset, channel)
+        par_suffix = str(
+            get_pattern_pars(self.setup, tier, check_in_cycle=False).name
+        ).split("-")[-1]
         all_par_files = []
         for item in catalog.entries["all"]:
             par_files = item.file
             for par_file in par_files:
-                if (
-                    par_file.split("-")[-1]
-                    == str(
-                        get_pattern_pars(self.setup, tier, check_in_cycle=False).name
-                    ).split("-")[-1]
-                ):
+                if par_file.split("-")[-1] == par_suffix:
                     all_par_files.append(par_file)
         if channel == "default":
             channel = "{channel}"
+        pattern = pattern_func(self.setup, tier, name=name, extension=extension)
         selected_par_files = []
         for par_file in all_par_files:
-            fk = ProcessingFileKey.get_filekey_from_pattern(Path(par_file).name)
+            fk = _parse_par_filename(Path(par_file).name)
             if (
                 fk.datatype == datatype
                 and fk.experiment == experiment
                 and fk.period in list(dataset)
                 and (dataset[fk.period] == "all" or fk.run in dataset[fk.period])
             ):
-                if name is not None:
-                    selected_par_files.append(
-                        fk.get_path_from_filekey(
-                            pattern_func(
-                                self.setup, tier, name=name, extension=extension
-                            ),
-                            channel=channel,
-                        )[0]
-                    )
-                else:
-                    selected_par_files.append(
-                        fk.get_path_from_filekey(
-                            pattern_func(
-                                self.setup, tier, name=name, extension=extension
-                            ),
-                            channel=channel,
-                        )[0]
-                    )
+                selected_par_files.append(
+                    fk.get_path_from_filekey(pattern, channel=channel)[0]
+                )
         return selected_par_files
 
     def get_plt_files(

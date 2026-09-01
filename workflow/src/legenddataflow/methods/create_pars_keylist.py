@@ -5,17 +5,22 @@ This module creates the validity files used for determining the time validity of
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
 import numpy as np
 from dbetto import Props, time
 
-from .FileKey import FileKey, ProcessingFileKey, regex_from_filepattern
+from .catalog_cache import cached_catalog_read
+from .FileKey import FileKey, ProcessingFileKey, compile_filepattern_regex
 from .pars_loading import ParsCatalog
 from .patterns import par_validity_pattern
 
 log = logging.getLogger(__name__)
+
+# keylists gathered by get_par_catalog, shared between the per-tier catalog
+# builds (dsp/hit/psp/pht all glob the same raw tier); cached lists must not
+# be mutated
+_keylist_cache: dict[tuple, list] = {}
 
 
 class ParsKeyResolve(ParsCatalog):
@@ -87,7 +92,7 @@ class ParsKeyResolve(ParsCatalog):
         else:
             wildcard_dict = d._asdict()
 
-        tier_pattern_rx = re.compile(regex_from_filepattern(str(search_pattern)))
+        tier_pattern_rx = compile_filepattern_regex(str(search_pattern))
         key = FileKey.get_filekey_from_pattern(search_pattern, search_pattern)
         fn_glob_pattern = key.get_path_from_filekey(search_pattern, **wildcard_dict)[0]
         p = Path(fn_glob_pattern)
@@ -109,7 +114,7 @@ class ParsKeyResolve(ParsCatalog):
 
     @classmethod
     def apply_run_override(cls, hit_par_catalog, name_dict, run_overwrite_validity):
-        run_overwrite_catalog = ParsCatalog.read_from(run_overwrite_validity)
+        run_overwrite_catalog = cached_catalog_read(run_overwrite_validity)
 
         if "all" not in run_overwrite_catalog.entries:
             msg = (
@@ -197,10 +202,20 @@ class ParsKeyResolve(ParsCatalog):
         else:
             ignore_keys = None
 
-        keylist = []
-        for search_pattern in search_patterns:
-            for keypar in keypart:
-                keylist += ParsKeyResolve.get_keys(keypar, search_pattern, ignore_keys)
+        cache_key = (
+            tuple(keypart),
+            tuple(str(p) for p in search_patterns),
+            tuple(ignore_keys) if ignore_keys is not None else None,
+        )
+        keylist = _keylist_cache.get(cache_key)
+        if keylist is None:
+            keylist = []
+            for search_pattern in search_patterns:
+                for keypar in keypart:
+                    keylist += ParsKeyResolve.get_keys(
+                        keypar, search_pattern, ignore_keys
+                    )
+            _keylist_cache[cache_key] = keylist
 
         if len(keylist) != 0:
             keys = sorted(keylist, key=FileKey.get_unix_timestamp)

@@ -6,6 +6,7 @@ from pathlib import Path
 import json
 import re
 from legenddataflow.methods import patterns as patt
+from legenddataflow.methods import cached_catalog_read
 from dbetto.catalog import Catalog
 from dbetto import TextDB, AttrsDict
 from legenddataflowscripts.workflow import as_ro
@@ -17,10 +18,9 @@ def ro(path):
 
 def get_blinding_curve_file(wildcards):
     """func to get the blinding calibration curves from the overrides"""
-    par_files = Catalog.get_files(
-        Path(patt.par_overwrite_path(config)) / "raw" / "validity.yaml",
-        wildcards.timestamp,
-    )
+    par_files = cached_catalog_read(
+        Path(patt.par_overwrite_path(config)) / "raw" / "validity.yaml"
+    ).valid_for(wildcards.timestamp)
     if isinstance(par_files, str):
         return str(Path(patt.par_overwrite_path(config)) / "raw" / par_files)
     else:
@@ -33,7 +33,7 @@ def get_blinding_curve_file(wildcards):
 def get_blinding_check_file(wildcards, raw_catalog):
     """func to get the right blinding check file"""
     if isinstance(raw_catalog, (str, Path)):
-        par_files = Catalog.get_files(raw_catalog, wildcards.timestamp)
+        par_files = cached_catalog_read(raw_catalog).valid_for(wildcards.timestamp)
     else:
         par_files = raw_catalog.valid_for(wildcards.timestamp)
     if isinstance(par_files, str):
@@ -81,8 +81,7 @@ def get_input_par_file(
 ):
     allow_none = config.get("allow_none_par", False) or allow_none
     par_overwrite_file = Path(patt.par_overwrite_path(config)) / tier / "validity.yaml"
-    pars_files_overwrite = Catalog.get_files(
-        par_overwrite_file,
+    pars_files_overwrite = cached_catalog_read(par_overwrite_file).valid_for(
         wildcards.timestamp if wildcards is not None else timestamp,
         category=(
             wildcards.datatype
