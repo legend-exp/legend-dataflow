@@ -7,6 +7,7 @@ import yaml
 from dbetto import time
 from legenddataflowscripts.workflow import subst_vars
 
+import legenddataflow.methods.create_pars_keylist as cpk
 from legenddataflow.methods import (
     FileKey,
     ParsKeyResolve,
@@ -100,3 +101,26 @@ def test_apply_run_override_missing_all(tmp_path):
     hit_catalog = ParsCatalog({"other": []})
     with pytest.raises(ValueError, match="par catalog passed to apply_run_override"):
         ParsKeyResolve.apply_run_override(hit_catalog, {}, overwrite_validity)
+
+
+def test_get_par_catalog_keylist_memo():
+    search_pattern = patterns.get_pattern_tier_daq(
+        setup, extension="*", check_in_cycle=False
+    )
+    cpk._keylist_cache.clear()
+    cat1 = ParsKeyResolve.get_par_catalog(
+        "-*-*-*-cal", search_pattern, {"cal": ["par_dsp"]}
+    )
+    assert len(cpk._keylist_cache) == 1
+    cat2 = ParsKeyResolve.get_par_catalog(
+        "-*-*-*-cal", search_pattern, {"cal": ["par_hit"]}
+    )
+    # the filesystem scan is shared, but each name_dict gets its own catalog
+    assert len(cpk._keylist_cache) == 1
+    assert cat1 is not cat2
+    assert [e.valid_from for e in cat1.entries["all"]] == [
+        e.valid_from for e in cat2.entries["all"]
+    ]
+    assert any("par_dsp" in f for e in cat1.entries["all"] for f in e.file)
+    assert any("par_hit" in f for e in cat2.entries["all"] for f in e.file)
+    assert not any("par_hit" in f for e in cat1.entries["all"] for f in e.file)

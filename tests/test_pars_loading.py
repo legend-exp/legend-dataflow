@@ -61,7 +61,7 @@ def test_get_par_file(tmp_path):
             "legenddataflow.methods.pars_loading.par_overwrite_path"
         ) as mock_par_overwrite_path,
         patch(
-            "legenddataflow.methods.pars_loading.ParsCatalog.read_from"
+            "legenddataflow.methods.pars_loading.cached_catalog_read"
         ) as mock_read_from,
         patch(
             "legenddataflow.methods.pars_loading.ParsCatalog.valid_for"

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dbetto.catalog import Catalog
 
+from .catalog_cache import cached_catalog_read
 from .FileKey import ProcessingFileKey
 
 # from .patterns import
@@ -82,7 +83,7 @@ class ParsCatalog(Catalog):
             if not par_file.is_file():
                 msg = f"validity file {par_file} for tier {tier!r} does not exist"
                 raise FileNotFoundError(msg)
-            catalog = ParsCatalog.read_from(par_file)
+            catalog = cached_catalog_read(par_file)
             pars_files = catalog.valid_for(timestamp, allow_none=allow_none)
         else:
             pars_files = self.valid_for(timestamp, allow_none=allow_none)
@@ -96,7 +97,7 @@ class ParsCatalog(Catalog):
                 f"{tier!r} does not exist"
             )
             raise FileNotFoundError(msg)
-        overwrite_catalog = ParsCatalog.read_from(par_overwrite_file)
+        overwrite_catalog = cached_catalog_read(par_overwrite_file)
         pars_files_overwrite = overwrite_catalog.valid_for(
             timestamp, allow_none=allow_none
         )
