@@ -74,7 +74,7 @@ def build_tier_raw_orca() -> None:
         ged_channels = list(chmap.map("system", unique=False)["geds"].map("daq.rawid"))
 
         ged_config[next(iter(ged_config))]["geds"]["key_list"] = sorted(ged_channels)
-        Props.add_to(all_config, ged_config)
+        all_config = Props.add_to(all_config, ged_config)
 
         if args.inl_table is not None:
             log.info("Adding INL table to config")
@@ -90,7 +90,7 @@ def build_tier_raw_orca() -> None:
         spm_channels = list(chmap.map("system", unique=False)["spms"].map("daq.rawid"))
 
         spm_config[next(iter(spm_config))]["spms"]["key_list"] = sorted(spm_channels)
-        Props.add_to(all_config, spm_config)
+        all_config = Props.add_to(all_config, spm_config)
 
     if "muon_config" in list(channel_dict):
         muon_config = Props.read_from(channel_dict["muon_config"])
@@ -99,7 +99,7 @@ def build_tier_raw_orca() -> None:
         muon_config[top_key][next(iter(muon_config[top_key]))]["key_list"] = sorted(
             muon_channels
         )
-        Props.add_to(all_config, muon_config)
+        all_config = Props.add_to(all_config, muon_config)
 
     if "auxs_config" in list(channel_dict):
         aux_config = Props.read_from(channel_dict["auxs_config"])
@@ -119,7 +119,7 @@ def build_tier_raw_orca() -> None:
         aux_config[top_key][next(iter(aux_config[top_key]))]["key_list"] = sorted(
             aux_channels
         )
-        Props.add_to(all_config, aux_config)
+        all_config = Props.add_to(all_config, aux_config)
 
     log.info("Built raw config")
     log.info("Starting build raw")
