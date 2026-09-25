@@ -92,7 +92,6 @@ onstart:
             execenv.execenv_pyexe(config, "python")
             + "-c 'from dspeed.processors import *'"
         )
-
     raw_par_cat_file = Path(paths.pars_path(config)) / "raw" / "validity.yaml"
     if raw_par_cat_file.is_file():
         raw_par_cat_file.unlink()

@@ -72,7 +72,7 @@ def build_tier_raw_fcio() -> None:
 
     if "spms_config" in channel_dict:
         spm_config = Props.read_from(channel_dict.spms_config)
-        Props.add_to(all_config, spm_config)
+        all_config = Props.add_to(all_config, spm_config)
 
     if "auxs_config" in channel_dict:
         raise NotImplementedError()
