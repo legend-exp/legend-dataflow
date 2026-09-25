@@ -62,6 +62,7 @@ dependencies = [
     "pip",
     "snakemake-logger-plugin-rich",
     "snakemake-logger-plugin-snkmt",
+    "sqlalchemy[asyncio]",
 ]
 
 #"legend-dataflow-scripts @  file:///${PROJECT_ROOT}/../legend-dataflow-scripts",
