@@ -278,7 +278,7 @@ def get_pattern_plts_tmp_channel(setup, tier, name=None, extension="pkl"):
     )
 
 
-def get_pattern_plts(setup, tier, name=None):
+def get_pattern_plts(setup, tier, name=None, extension="dir"):
     if name is None:
         return (
             Path(f"{plts_path(setup)}")
@@ -286,7 +286,11 @@ def get_pattern_plts(setup, tier, name=None):
             / "cal"
             / "{period}"
             / "{run}"
-            / ("{experiment}-{period}-{run}-cal-{timestamp}-plt_" + tier + ".dir")
+            / (
+                "{experiment}-{period}-{run}-cal-{timestamp}-plt_"
+                + tier
+                + f".{extension}"
+            )
         )
     return (
         Path(f"{plts_path(setup)}")
@@ -299,7 +303,7 @@ def get_pattern_plts(setup, tier, name=None):
             + tier
             + "_"
             + name
-            + ".dir"
+            + f".{extension}"
         )
     )
 

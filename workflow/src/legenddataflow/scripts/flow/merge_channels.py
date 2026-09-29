@@ -13,11 +13,38 @@ from pathlib import Path
 import lh5
 from dbetto import AttrsDict
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import check_input_files
+from legenddataflowscripts.utils import check_input_files, plot_dict_to_lgdo
+from lgdo import Struct
 
 from legenddataflow.methods import ChannelProcKey
 
 from .utils import replace_path
+
+
+def merge_plot_data(channel_files, out_file) -> None:
+    """Write the data (not the figures) of per-channel plot pickles to one lh5 file.
+
+    Each channel lands under ``/<channel>``; ``common`` entries are gathered
+    under ``/common/<channel>``, mirroring the plot shelf layout.
+    """
+    common = {}
+    for channel in channel_files:
+        if Path(channel).suffix != ".pkl":
+            msg = f"input file {channel} is not a plot pickle"
+            raise RuntimeError(msg)
+        with Path(channel).open("rb") as r:
+            channel_dict = pkl.load(r)
+        fkey = ChannelProcKey.get_filekey_from_pattern(Path(channel).name)
+        if "common" in channel_dict:
+            common[fkey.channel] = channel_dict.pop("common")
+        struct = plot_dict_to_lgdo(channel_dict)
+        if struct is not None:
+            lh5.write(struct, name=fkey.channel, lh5_file=out_file, wo_mode="append")
+    common_struct = plot_dict_to_lgdo(common)
+    if common_struct is not None:
+        lh5.write(common_struct, name="common", lh5_file=out_file, wo_mode="append")
+    if not Path(out_file).exists():  # nothing convertible, still leave an output
+        lh5.write(Struct({}), name="empty", lh5_file=out_file, wo_mode="append")
 
 
 def merge_channels() -> None:
@@ -111,6 +138,9 @@ def merge_channels() -> None:
                 shelf[fkey.channel] = channel_dict
             if len(common_dict) > 0:
                 shelf["common"] = common_dict
+
+    elif file_extension == ".lh5" and Path(channel_files[0]).suffix == ".pkl":
+        merge_plot_data(channel_files, out_file)
 
     elif file_extension == ".lh5":
         if args.in_db:
