@@ -31,6 +31,27 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
 
     rule:
         input:
+            lambda wildcards: get_plt_chanlist(
+                config,
+                f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
+                tier,
+                det_status_textdb,
+                channelmap_textdb,
+                system=system,
+            ),
+        output:
+            patterns.get_pattern_plts(config, tier, extension="lh5"),
+        group:
+            f"merge-{tier}"
+        shell:
+            execenv_pyexe(config, "merge-channels") + \
+            "--input {input} "
+            "--output {output} "
+
+    set_last_rule_name(workflow, f"build_plt_data_{tier}")
+
+    rule:
+        input:
             lambda wildcards: get_par_chanlist(
                 config,
                 f"all-{wildcards.experiment}-{wildcards.period}-{wildcards.run}-cal-{wildcards.timestamp}-channels",
@@ -104,6 +125,7 @@ def build_merge_rules(tier, lh5_merge=False, lh5_tier=None, system="geds"):
                 datatype="cal",
             ) if lh5_merge is True else [],
             plts=patterns.get_pattern_plts(config, tier),
+            plt_data=patterns.get_pattern_plts(config, tier, extension="lh5"),
             objects=patterns.get_pattern_pars(
                 config,
                 tier,

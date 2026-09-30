@@ -3,10 +3,13 @@ from __future__ import annotations
 import pickle as pkl
 import shelve
 
+import legenddataflowscripts.utils
 import lh5
+import numpy as np
 import pytest
 import yaml
 from lgdo.types import Array, Struct
+from matplotlib.figure import Figure
 
 from legenddataflow.scripts.flow.merge_channels import merge_channels
 
@@ -124,3 +127,34 @@ def test_merge_channels_lh5(tmp_path, monkeypatch):
     assert out_db_dict == {
         channel: {"file": f"$_/{out_file.name}"} for channel in CHANNELS
     }
+
+
+def test_merge_channels_plot_data(tmp_path, monkeypatch):
+    if not hasattr(legenddataflowscripts.utils, "plot_dict_to_lgdo"):
+        pytest.skip("needs legend-dataflow-scripts with plot_dict_to_lgdo")
+    fig = Figure()
+    infiles = []
+    for i, channel in enumerate(CHANNELS):
+        f = _channel_file(tmp_path, channel, "pkl")
+        plot_dict = {
+            "ecal": {
+                "peak_fits": fig,
+                "peak_hists": {2614.511: {"counts": np.arange(3) + i}},
+            },
+            "common": {"spectrum": {"counts": np.ones(4) * i}},
+        }
+        with f.open("wb") as w:
+            pkl.dump(plot_dict, w)
+        infiles.append(str(f))
+    out_file = tmp_path / "l200-p03-r000-cal-20230101T000000Z-plt_hit.lh5"
+
+    _run(monkeypatch, ["--input", *infiles, "--output", str(out_file)])
+
+    assert sorted(lh5.ls(str(out_file))) == [*CHANNELS, "common"]
+    counts = lh5.read("ch1000001/ecal/peak_hists/2614p511/counts", str(out_file))
+    assert list(counts.nda) == [1, 2, 3]
+    assert "peak_fits" not in lh5.read(
+        "ch1000000/ecal", str(out_file)
+    )  # figures dropped
+    common = lh5.read("common/ch1000001/spectrum/counts", str(out_file))
+    assert list(common.nda) == [1, 1, 1, 1]
