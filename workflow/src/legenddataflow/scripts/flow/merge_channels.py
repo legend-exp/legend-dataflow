@@ -13,8 +13,7 @@ from pathlib import Path
 import lh5
 from dbetto import AttrsDict
 from dbetto.catalog import Props
-from legenddataflowscripts.utils import check_input_files, plot_dict_to_lgdo
-from lgdo import Struct
+from legenddataflowscripts.utils import check_input_files
 
 from legenddataflow.methods import ChannelProcKey
 
@@ -27,6 +26,10 @@ def merge_plot_data(channel_files, out_file) -> None:
     Each channel lands under ``/<channel>``; ``common`` entries are gathered
     under ``/common/<channel>``, mirroring the plot shelf layout.
     """
+    # only this mode needs plot_dict_to_lgdo (legend-dataflow-scripts >= 0.4.0)
+    from legenddataflowscripts.utils import plot_dict_to_lgdo  # noqa: PLC0415
+    from lgdo import Struct  # noqa: PLC0415
+
     common = {}
     for channel in channel_files:
         if Path(channel).suffix != ".pkl":

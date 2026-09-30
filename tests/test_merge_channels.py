@@ -3,6 +3,7 @@ from __future__ import annotations
 import pickle as pkl
 import shelve
 
+import legenddataflowscripts.utils
 import lh5
 import numpy as np
 import pytest
@@ -129,6 +130,8 @@ def test_merge_channels_lh5(tmp_path, monkeypatch):
 
 
 def test_merge_channels_plot_data(tmp_path, monkeypatch):
+    if not hasattr(legenddataflowscripts.utils, "plot_dict_to_lgdo"):
+        pytest.skip("needs legend-dataflow-scripts with plot_dict_to_lgdo")
     fig = Figure()
     infiles = []
     for i, channel in enumerate(CHANNELS):
