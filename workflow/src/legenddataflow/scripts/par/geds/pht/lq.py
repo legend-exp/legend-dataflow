@@ -20,8 +20,8 @@ from legenddataflowscripts.utils import (
     prepare_output_paths,
     require_config_keys,
 )
-from pygama.pargen.AoE_cal import *  # noqa: F403
-from pygama.pargen.lq_cal import *  # noqa: F403
+from pygama.pargen.AoE_cal import *
+from pygama.pargen.lq_cal import *
 from pygama.pargen.utils import load_data
 
 from .util import (
