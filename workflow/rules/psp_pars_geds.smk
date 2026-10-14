@@ -39,7 +39,7 @@ for key, dataset in part.datasets.items():
 
         if key == "default":
 
-            def raw_table_name(wildcards):
+            def raw_table_name(wildcards, tstamp=tstamp):
                 return get_table_name(
                     channelmap_textdb,
                     config,
@@ -148,7 +148,7 @@ for key, dataset in part.datasets.items():
             psp_rules[key] = [list(workflow.rules)[-1]]
         if key == "default":
 
-            def config_file(wildcards):
+            def config_file(wildcards, tstamp=tstamp):
                 return get_config_files(
                     dataflow_configs_texdb,
                     tstamp,
@@ -158,7 +158,7 @@ for key, dataset in part.datasets.items():
                     "dplms_pars",
                 )
 
-            def processing_chain(wildcards):
+            def processing_chain(wildcards, tstamp=tstamp):
                 return get_config_files(
                     dataflow_configs_texdb,
                     tstamp,
