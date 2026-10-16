@@ -136,7 +136,7 @@ def par_geds_pht_fast() -> None:
     final_dict = {}
     all_file = run_splitter(sorted(files))
     for filelist in all_file:
-        fk = ProcessingFileKey.get_filekey_from_pattern(Path(sorted(filelist)[0]).name)
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(min(filelist)).name)
         timestamp = fk.timestamp
         final_dict[timestamp] = sorted(filelist)
 

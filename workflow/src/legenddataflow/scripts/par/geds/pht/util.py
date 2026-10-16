@@ -64,7 +64,7 @@ def split_files_by_run(infiles):
     final_dict = {}
     all_file = run_splitter(sorted(files))
     for filelist in all_file:
-        fk = ProcessingFileKey.get_filekey_from_pattern(Path(sorted(filelist)[0]).name)
+        fk = ProcessingFileKey.get_filekey_from_pattern(Path(min(filelist)).name)
         final_dict[fk.timestamp] = sorted(filelist)
 
     return final_dict, files

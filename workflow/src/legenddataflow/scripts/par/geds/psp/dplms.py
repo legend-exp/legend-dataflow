@@ -249,7 +249,7 @@ def par_geds_psp_dplms() -> None:
         fft_tables = []
         eidxs_list = []
         raw_tables = []
-        for _, files in fft_runs.items():
+        for files in fft_runs.values():
             energies = lh5.read_as(
                 f"{args.raw_table_name}/daqenergy", files, library="np"
             )
@@ -350,7 +350,7 @@ def par_geds_psp_dplms() -> None:
 
     inplot_dict = get_run_dict(args.inplots) if args.inplots else {}
 
-    for _, entry in inplot_dict.items():
+    for entry in inplot_dict.values():
         entry.update({"dplms": plot_dict})
 
     lh5_path_by_ts = {

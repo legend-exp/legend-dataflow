@@ -20,8 +20,7 @@ def write_filelist(files, output_file, label=""):
             "all-{experiment}-{period}-{run}-{datatype}-{timestamp}-{tier}.gen"
         )
     with Path(output_file).open("w") as f:
-        for fn in files:
-            f.write(f"{fn}\n")
+        f.writelines(f"{fn}\n" for fn in files)
 
 
 if snakemake is not None:
