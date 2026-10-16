@@ -222,7 +222,7 @@ class CalGrouping:
             default_runs = self.get_dataset(dataset, channel)
             for chan, chan_dict in self.datasets.items():
                 if chan != "default":
-                    for _, dataset_dict in chan_dict.items():
+                    for dataset_dict in chan_dict.values():
                         for period, runs in dataset_dict.items():
                             if period in default_runs:
                                 for run in runs:

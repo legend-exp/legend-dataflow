@@ -86,7 +86,7 @@ def get_results_dict(ecal_class, data, cal_energy_param, selection_string):
     pk_dict = results_dict.get("peak_parameters", {})
 
     if len(pk_dict) > 0:
-        for _, dic in pk_dict.items():
+        for dic in pk_dict.values():
             dic["function"] = dic["function"].name
             dic["parameters"] = dic["parameters"].to_dict()
             dic["uncertainties"] = dic["uncertainties"].to_dict()

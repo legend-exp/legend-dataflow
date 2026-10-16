@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import pickle as pkl
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import matplotlib as mpl
@@ -81,7 +81,7 @@ def par_geds_psp_average() -> None:
     for field in ave_fields:
         keys = field.split(".")
         vals = []
-        for _tstamp, tstamp_dict in in_dicts.items():
+        for tstamp_dict in in_dicts.values():
             val = tstamp_dict.copy()
             for key in keys:
                 val = val[key]
@@ -127,7 +127,7 @@ def par_geds_psp_average() -> None:
         mean_val = np.nan if len(vals[~np.isnan(vals)]) == 0 else np.nanmedian(vals)
         mean = f"{round(mean_val, rounding)}*{unit}" if unit is not None else mean_val
 
-        for _tstamp, tstamp_dict in in_dicts.items():
+        for tstamp_dict in in_dicts.values():
             val = tstamp_dict
             for i, key in enumerate(keys):
                 if i == len(keys) - 1:
@@ -137,7 +137,11 @@ def par_geds_psp_average() -> None:
 
         fig = plt.figure()
         plt.scatter(
-            [datetime.strptime(tstamp, "%Y%m%dT%H%M%SZ") for tstamp in in_dicts], vals
+            [
+                datetime.strptime(tstamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+                for tstamp in in_dicts
+            ],
+            vals,
         )
         plt.axhline(y=mean_val, color="r", linestyle="-")
         plt.xlabel("time")
