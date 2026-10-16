@@ -44,7 +44,7 @@ for key, dataset in part.datasets.items():
 
         if key == "default":
 
-            def dsp_table_name(wildcards):
+            def dsp_table_name(wildcards, tstamp=tstamp):
                 return get_table_name(
                     channelmap_textdb,
                     config,
